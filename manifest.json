@@ -1,6 +1,6 @@
 {
-  "name": "PHO Loksewa MCQ Practice",
-  "short_name": "PHO Loksewa",
+  "name": "Health Loksewa - MCQ Practice",
+  "short_name": "Health Loksewa",
   "description": "MCQ practice app for Nepal PHO and Health Inspector Loksewa exam preparation",
   "start_url": "./index.html",
   "scope": "./",
