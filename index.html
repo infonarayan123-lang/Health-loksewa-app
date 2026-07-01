@@ -119,6 +119,31 @@
   }
   .ca-date{ font-size:11px; color:var(--gold); font-weight:700; margin-bottom:3px; letter-spacing:0.03em; }
 
+  .dash-card.c-resources{
+    background:linear-gradient(135deg,#6B4C9A,#4A3268);
+    grid-column:1 / -1;
+    flex-direction:row; align-items:center; gap:16px;
+  }
+  .link-card{
+    display:flex; align-items:center; gap:14px;
+    border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; margin-bottom:10px;
+    text-decoration:none; color:var(--ink);
+  }
+  .link-card .lc-icon{
+    width:40px; height:40px; border-radius:10px;
+    background:var(--bg); display:flex; align-items:center; justify-content:center;
+    font-size:19px; flex-shrink:0;
+  }
+  .link-card .lc-text h4{ font-family:'Tinos',serif; font-size:14.5px; margin-bottom:2px; }
+  .link-card .lc-text p{ font-size:12px; color:var(--ink-soft); }
+  .link-card .lc-arrow{ margin-left:auto; color:var(--ink-soft); font-size:16px; }
+  .link-group-label{
+    font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--crimson); margin:16px 0 8px;
+  }
+  .link-group-label:first-child{ margin-top:0; }
+
   /* ---------- Setup Screen ---------- */
   .screen{ display:none; flex:1; flex-direction:column; }
   .screen.active{ display:flex; }
@@ -360,7 +385,23 @@
           <div class="dc-label">General Knowledge</div>
           <div class="dc-sub">Quick GK practice</div>
         </button>
+        <button class="dash-card c-resources" id="cardResources">
+          <div class="dc-icon">🌐</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Resources &amp; News</div>
+            <div class="dc-sub">Official notices, e-papers &amp; documents</div>
+          </div>
+        </button>
       </div>
+    </div>
+  </div>
+
+  <!-- RESOURCES SCREEN -->
+  <div class="screen" id="resourcesScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Resources &amp; News Sites</div>
+      <div id="resourcesList"></div>
     </div>
   </div>
 
@@ -466,10 +507,11 @@ let secondsLeft = 0;
 const homeScreen = document.getElementById('homeScreen');
 const syllabusScreen = document.getElementById('syllabusScreen');
 const currentAffairsScreen = document.getElementById('currentAffairsScreen');
+const resourcesScreen = document.getElementById('resourcesScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, resourcesScreen, setupScreen, quizScreen, resultsScreen];
 
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -487,9 +529,45 @@ document.getElementById('cardGK').addEventListener('click', () => {
   const gkOption = [...sel.options].find(o => /general knowledge/i.test(o.value));
   if(gkOption) sel.value = gkOption.value;
 });
+document.getElementById('cardResources').addEventListener('click', () => showScreen(resourcesScreen));
 document.querySelectorAll('.back-link').forEach(b => {
   b.addEventListener('click', () => showScreen(homeScreen));
 });
+
+// ---------- Resources & News content (verified official/real sites) ----------
+const RESOURCE_GROUPS = [
+  {
+    label: "News & E-Papers",
+    items: [
+      {icon:"📰", name:"Gorkhapatra Online", url:"https://gorkhapatraonline.com/", desc:"Nepal's oldest national daily — includes a dedicated Loksewa section."},
+      {icon:"🩺", name:"Swasthya Khabar", url:"https://swasthyakhabar.com/", desc:"Nepal's independent health news portal — policy, budget & health sector updates."},
+    ]
+  },
+  {
+    label: "Official Government Sources",
+    items: [
+      {icon:"🏛️", name:"Public Service Commission (PSC)", url:"https://psc.gov.np/", desc:"Official exam notices, syllabus, results & vacancy announcements."},
+      {icon:"🏥", name:"Department of Health Services (DoHS)", url:"https://dohs.gov.np/", desc:"Annual Health Reports, program data & official health statistics."},
+      {icon:"⚕️", name:"Ministry of Health & Population (MoHP)", url:"https://mohp.gov.np/", desc:"National health policy, acts, and official publications."},
+    ]
+  }
+];
+function renderResources(){
+  document.getElementById('resourcesList').innerHTML = RESOURCE_GROUPS.map(group => `
+    <div class="link-group-label">${group.label}</div>
+    ${group.items.map(item => `
+      <a class="link-card" href="${item.url}" target="_blank" rel="noopener">
+        <div class="lc-icon">${item.icon}</div>
+        <div class="lc-text">
+          <h4>${item.name}</h4>
+          <p>${item.desc}</p>
+        </div>
+        <div class="lc-arrow">↗</div>
+      </a>
+    `).join('')}
+  `).join('');
+}
+renderResources();
 
 // ---------- Syllabus content (static, from official PSC syllabus) ----------
 const SYLLABUS_UNITS = [
