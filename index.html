@@ -78,6 +78,47 @@
     position:relative;
   }
 
+  /* ---------- Home Dashboard ---------- */
+  .home-body{ padding:20px 20px 24px; flex:1; }
+  .home-greeting{ font-size:13px; color:var(--ink-soft); margin-bottom:4px; }
+  .home-title{ font-family:'Tinos',serif; font-size:22px; margin-bottom:18px; }
+  .dash-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    margin-bottom:22px;
+  }
+  .dash-card{
+    border-radius:16px; padding:18px 14px;
+    display:flex; flex-direction:column; gap:10px;
+    cursor:pointer; border:none; text-align:left;
+    color:#fff; min-height:104px;
+    font-family:'Inter',sans-serif;
+  }
+  .dash-card .dc-icon{ font-size:26px; }
+  .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
+  .dash-card .dc-sub{ font-size:11px; opacity:0.85; }
+  .dash-card.c-quiz{ background:linear-gradient(135deg,#A62639,#7E1D2C); }
+  .dash-card.c-syllabus{ background:linear-gradient(135deg,#C9962C,#9C7420); }
+  .dash-card.c-current{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
+  .dash-card.c-gk{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
+  .section-title{ font-family:'Tinos',serif; font-size:17px; margin:8px 0 12px; }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:13px; font-weight:600; color:var(--navy);
+    cursor:pointer; padding:14px 20px 0;
+  }
+  .content-card{
+    border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .content-card h4{ font-family:'Tinos',serif; font-size:15px; margin-bottom:4px; }
+  .content-card p{ font-size:13px; color:var(--ink-soft); line-height:1.5; }
+  .weight-pill{
+    display:inline-block; font-family:'JetBrains Mono',monospace;
+    font-size:11px; font-weight:700; background:var(--crimson);
+    color:#fff; padding:2px 8px; border-radius:6px; margin-left:8px;
+  }
+  .ca-date{ font-size:11px; color:var(--gold); font-weight:700; margin-bottom:3px; letter-spacing:0.03em; }
+
   /* ---------- Setup Screen ---------- */
   .screen{ display:none; flex:1; flex-direction:column; }
   .screen.active{ display:flex; }
@@ -292,8 +333,58 @@
     <p>MCQ अभ्यास · Practice App · Nepal Public Service Commission style</p>
   </header>
 
+  <!-- HOME DASHBOARD -->
+  <div class="screen active" id="homeScreen">
+    <div class="home-body">
+      <div class="home-greeting">नमस्ते, Narayan 👋</div>
+      <div class="home-title">What do you want to study today?</div>
+
+      <div class="dash-grid">
+        <button class="dash-card c-quiz" id="cardQuiz">
+          <div class="dc-icon">📝</div>
+          <div class="dc-label">Practice Quiz</div>
+          <div class="dc-sub">Timed MCQs · negative marking</div>
+        </button>
+        <button class="dash-card c-syllabus" id="cardSyllabus">
+          <div class="dc-icon">📚</div>
+          <div class="dc-label">Syllabus</div>
+          <div class="dc-sub">Official PSC unit breakdown</div>
+        </button>
+        <button class="dash-card c-current" id="cardCurrent">
+          <div class="dc-icon">📰</div>
+          <div class="dc-label">Current Affairs</div>
+          <div class="dc-sub">Health &amp; public health news</div>
+        </button>
+        <button class="dash-card c-gk" id="cardGK">
+          <div class="dc-icon">🧠</div>
+          <div class="dc-label">General Knowledge</div>
+          <div class="dc-sub">Quick GK practice</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYLLABUS SCREEN -->
+  <div class="screen" id="syllabusScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Paper I — Health Inspector (Official PSC Syllabus)</div>
+      <div id="syllabusList"></div>
+    </div>
+  </div>
+
+  <!-- CURRENT AFFAIRS SCREEN -->
+  <div class="screen" id="currentAffairsScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Health &amp; Public Health — Current Affairs</div>
+      <div id="currentAffairsList"></div>
+    </div>
+  </div>
+
   <!-- SETUP SCREEN -->
-  <div class="screen active" id="setupScreen">
+  <div class="screen" id="setupScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
     <div class="setup">
       <div id="loadingMsg" class="loading">Loading your question bank…</div>
       <div id="setupForm" style="display:none;">
@@ -372,14 +463,76 @@ let answers = []; // { correct: bool|null (null = skipped), chosen, correctAnswe
 let timerInterval = null;
 let secondsLeft = 0;
 
+const homeScreen = document.getElementById('homeScreen');
+const syllabusScreen = document.getElementById('syllabusScreen');
+const currentAffairsScreen = document.getElementById('currentAffairsScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
+const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, setupScreen, quizScreen, resultsScreen];
 
 function showScreen(el){
-  [setupScreen, quizScreen, resultsScreen].forEach(s => s.classList.remove('active'));
+  ALL_SCREENS.forEach(s => s.classList.remove('active'));
   el.classList.add('active');
+  window.scrollTo(0,0);
 }
+
+// ---------- Dashboard navigation ----------
+document.getElementById('cardQuiz').addEventListener('click', () => showScreen(setupScreen));
+document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
+document.getElementById('cardCurrent').addEventListener('click', () => showScreen(currentAffairsScreen));
+document.getElementById('cardGK').addEventListener('click', () => {
+  showScreen(setupScreen);
+  const sel = document.getElementById('subjectSelect');
+  const gkOption = [...sel.options].find(o => /general knowledge/i.test(o.value));
+  if(gkOption) sel.value = gkOption.value;
+});
+document.querySelectorAll('.back-link').forEach(b => {
+  b.addEventListener('click', () => showScreen(homeScreen));
+});
+
+// ---------- Syllabus content (static, from official PSC syllabus) ----------
+const SYLLABUS_UNITS = [
+  {n:1, title:"Health and Public Health", weight:5, desc:"Meaning of health & disease, dimensions of disease, public health concept & history."},
+  {n:2, title:"Health Planning and Management", weight:20, desc:"Planning cycle, financial & drug management, health economics, decentralization, quality assurance."},
+  {n:3, title:"General Epidemiology", weight:10, desc:"Definitions, epidemiological methods, incidence/prevalence, screening, health indicators."},
+  {n:4, title:"Health Statistics", weight:5, desc:"Health information systems, data presentation, central tendency, sampling & significance."},
+  {n:5, title:"Demography", weight:5, desc:"Population trends, fertility/mortality/migration, urbanization, life expectancy."},
+  {n:6, title:"Applied Epidemiology & Disease Control", weight:20, desc:"Prevention & control of communicable and non-communicable diseases, elimination & eradication."},
+  {n:7, title:"Food and Nutrition", weight:5, desc:"Nutritional profiles & problems, assessment of nutritional status, food toxication & fortification."},
+  {n:8, title:"Environmental Health", weight:5, desc:"Water, air, housing, waste disposal, medical entomology, insecticide use."},
+  {n:9, title:"Occupational Health", weight:5, desc:"Occupational environment, hazards, prevention & worker protection."},
+  {n:10, title:"Health Education & Promotion", weight:10, desc:"BCC, health education media, community participation, school health."},
+  {n:11, title:"PHC, EHCS & MDGs", weight:5, desc:"Concept, components, status and prospects of Primary Health Care."},
+  {n:12, title:"International Health", weight:5, desc:"UN agencies (WHO, UNICEF, UNFPA), bilateral agencies working in Nepal."},
+];
+function renderSyllabus(){
+  document.getElementById('syllabusList').innerHTML = SYLLABUS_UNITS.map(u => `
+    <div class="content-card">
+      <h4>${u.n}. ${u.title}<span class="weight-pill">${u.weight}%</span></h4>
+      <p>${u.desc}</p>
+    </div>
+  `).join('');
+}
+
+// ---------- Current Affairs content ----------
+// 🔧 To add more items later, just add another {date, title, summary} object to this list.
+const CURRENT_AFFAIRS = [
+  {date:"2026-06", title:"DoHS Annual Health Report 2081/82 released", summary:"Latest national health data on service delivery, disease burden, and program performance published by the Department of Health Services."},
+  {date:"2026-05", title:"National Malaria Elimination Program update", summary:"Nepal continues progress toward malaria elimination targets under the federal health structure."},
+  {date:"2026-04", title:"Health Insurance Program expansion", summary:"Ongoing enrollment drives under Nepal's Health Insurance Board across provinces."},
+];
+function renderCurrentAffairs(){
+  document.getElementById('currentAffairsList').innerHTML = CURRENT_AFFAIRS.map(c => `
+    <div class="content-card">
+      <div class="ca-date">${c.date}</div>
+      <h4>${c.title}</h4>
+      <p>${c.summary}</p>
+    </div>
+  `).join('');
+}
+renderSyllabus();
+renderCurrentAffairs();
 
 // ---------- Load data ----------
 async function loadData(){
@@ -573,7 +726,7 @@ function reviewRow(q, i, status, chosen){
 }
 
 document.getElementById('restartBtn').addEventListener('click', () => {
-  showScreen(setupScreen);
+  showScreen(homeScreen);
 });
 
 loadData();
