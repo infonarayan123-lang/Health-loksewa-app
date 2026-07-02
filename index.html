@@ -160,6 +160,13 @@
   }
   .link-group-label:first-child{ margin-top:0; }
 
+  .gk-cat-btn.gk-c1{ background:linear-gradient(135deg,#A62639,#7E1D2C); }
+  .gk-cat-btn.gk-c2{ background:linear-gradient(135deg,#C9962C,#9C7420); }
+  .gk-cat-btn.gk-c3{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
+  .gk-cat-btn.gk-c4{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
+  .gk-cat-btn.gk-c5{ background:linear-gradient(135deg,#6B4C9A,#4A3268); }
+  .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#3A6B7A,#254852); }
+
   /* ---------- Setup Screen ---------- */
   .screen{ display:none; flex:1; flex-direction:column; }
   .screen.active{ display:flex; }
@@ -383,23 +390,23 @@
       <div class="dash-grid">
         <button class="dash-card c-quiz" id="cardQuiz">
           <div class="dc-icon">📝</div>
-          <div class="dc-label">Practice Quiz</div>
+          <div class="dc-label">Subject-wise MCQs</div>
           <div class="dc-sub">Timed MCQs · negative marking</div>
         </button>
         <button class="dash-card c-syllabus" id="cardSyllabus">
           <div class="dc-icon">📚</div>
           <div class="dc-label">Syllabus</div>
-          <div class="dc-sub">Official PSC unit breakdown</div>
+          <div class="dc-sub">Units &amp; downloadable PDFs</div>
         </button>
         <button class="dash-card c-current" id="cardCurrent">
           <div class="dc-icon">📰</div>
-          <div class="dc-label">Current Affairs</div>
-          <div class="dc-sub">Health &amp; public health news</div>
+          <div class="dc-label">New Update</div>
+          <div class="dc-sub">Official reports · view in-app</div>
         </button>
         <button class="dash-card c-gk" id="cardGK">
           <div class="dc-icon">🧠</div>
           <div class="dc-label">General Knowledge</div>
-          <div class="dc-sub">Quick GK practice</div>
+          <div class="dc-sub">Constitution · History · GK</div>
         </button>
         <button class="dash-card c-mock" id="cardMock">
           <div class="dc-icon">🏆</div>
@@ -434,15 +441,36 @@
     <div class="home-body">
       <div class="section-title">Paper I — Health Inspector (Official PSC Syllabus)</div>
       <div id="syllabusList"></div>
+
+      <div class="section-title" style="margin-top:22px;">Download Official Syllabus PDFs</div>
+      <div id="syllabusDocsList"></div>
     </div>
   </div>
 
-  <!-- CURRENT AFFAIRS SCREEN -->
+  <!-- NEW UPDATE SCREEN -->
   <div class="screen" id="currentAffairsScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">Health &amp; Public Health — Current Affairs</div>
+      <div class="section-title">New Update</div>
       <div id="currentAffairsList"></div>
+    </div>
+  </div>
+
+  <!-- DOCUMENT VIEWER SCREEN (in-app, no download link shown) -->
+  <div class="screen" id="docViewerScreen">
+    <div class="back-link" data-back="currentAffairs">← Back</div>
+    <div style="padding:0 20px 16px;">
+      <div class="section-title" id="docViewerTitle" style="margin-bottom:10px;"></div>
+      <iframe id="docViewerFrame" style="width:100%; height:70vh; border:1px solid var(--line); border-radius:12px;"></iframe>
+    </div>
+  </div>
+
+  <!-- GENERAL KNOWLEDGE CATEGORY SCREEN -->
+  <div class="screen" id="gkScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">General Knowledge — pick a topic</div>
+      <div class="dash-grid" id="gkCategoryGrid"></div>
     </div>
   </div>
 
@@ -529,11 +557,14 @@ let secondsLeft = 0;
 const homeScreen = document.getElementById('homeScreen');
 const syllabusScreen = document.getElementById('syllabusScreen');
 const currentAffairsScreen = document.getElementById('currentAffairsScreen');
+const docViewerScreen = document.getElementById('docViewerScreen');
+const gkScreen = document.getElementById('gkScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, resourcesScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, resourcesScreen, setupScreen, quizScreen, resultsScreen];
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen };
 
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -545,15 +576,13 @@ function showScreen(el){
 document.getElementById('cardQuiz').addEventListener('click', () => showScreen(setupScreen));
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
 document.getElementById('cardCurrent').addEventListener('click', () => showScreen(currentAffairsScreen));
-document.getElementById('cardGK').addEventListener('click', () => {
-  showScreen(setupScreen);
-  const sel = document.getElementById('subjectSelect');
-  const gkOption = [...sel.options].find(o => /general knowledge/i.test(o.value));
-  if(gkOption) sel.value = gkOption.value;
-});
+document.getElementById('cardGK').addEventListener('click', () => showScreen(gkScreen));
 document.getElementById('cardResources').addEventListener('click', () => showScreen(resourcesScreen));
 document.querySelectorAll('.back-link').forEach(b => {
-  b.addEventListener('click', () => showScreen(homeScreen));
+  b.addEventListener('click', () => {
+    const key = b.dataset.back || 'home';
+    showScreen(SCREEN_BY_KEY[key] || homeScreen);
+  });
 });
 
 // ---------- Resources & News content (verified official/real sites) ----------
@@ -615,23 +644,102 @@ function renderSyllabus(){
   `).join('');
 }
 
-// ---------- Current Affairs content ----------
-// 🔧 To add more items later, just add another {date, title, summary} object to this list.
-const CURRENT_AFFAIRS = [
-  {date:"2026-06", title:"DoHS Annual Health Report 2081/82 released", summary:"Latest national health data on service delivery, disease burden, and program performance published by the Department of Health Services."},
-  {date:"2026-05", title:"National Malaria Elimination Program update", summary:"Nepal continues progress toward malaria elimination targets under the federal health structure."},
-  {date:"2026-04", title:"Health Insurance Program expansion", summary:"Ongoing enrollment drives under Nepal's Health Insurance Board across provinces."},
+// ---------- Syllabus PDF downloads (by post, Federal & Province level) ----------
+// 🔧 To finish this: replace each "url" below with your real Google Drive share link
+// (Drive → right-click file → Share → "Anyone with the link" → Copy link).
+const SYLLABUS_DOCS = [
+  { post:"HA Loksewa Syllabus", levels:[
+      {label:"Federal", url:"#"},
+      {label:"Province", url:"#"},
+  ]},
+  { post:"PHO Loksewa Syllabus", levels:[
+      {label:"Federal", url:"#"},
+      {label:"Province", url:"#"},
+  ]},
+  { post:"AHW Loksewa Syllabus", levels:[
+      {label:"Federal", url:"#"},
+      {label:"Province", url:"#"},
+  ]},
+  { post:"ANM Loksewa Syllabus", levels:[
+      {label:"Federal", url:"#"},
+      {label:"Province", url:"#"},
+  ]},
+  { post:"Staff Nurse Loksewa Syllabus", levels:[
+      {label:"Federal", url:"#"},
+      {label:"Province", url:"#"},
+  ]},
 ];
-function renderCurrentAffairs(){
-  document.getElementById('currentAffairsList').innerHTML = CURRENT_AFFAIRS.map(c => `
-    <div class="content-card">
-      <div class="ca-date">${c.date}</div>
-      <h4>${c.title}</h4>
-      <p>${c.summary}</p>
-    </div>
+function renderSyllabusDocs(){
+  document.getElementById('syllabusDocsList').innerHTML = SYLLABUS_DOCS.map(doc => `
+    <div class="link-group-label">${doc.post}</div>
+    ${doc.levels.map(lv => `
+      <a class="link-card" href="${lv.url}" target="_blank" rel="noopener">
+        <div class="lc-icon">📄</div>
+        <div class="lc-text">
+          <h4>${doc.post} — ${lv.label}</h4>
+          <p>Tap to open &amp; download the official PDF</p>
+        </div>
+        <div class="lc-arrow">↓</div>
+      </a>
+    `).join('')}
   `).join('');
 }
+
+// ---------- General Knowledge categories (covers Section Officer, Naib Subba,
+// Kharidar, Police Inspector, Agriculture and other Loksewa exams, not just health) ----------
+const GK_CATEGORIES = [
+  {icon:"⚖️", subject:"Constitution of Nepal", css:"gk-c1", sub:"Rights, structure, amendments"},
+  {icon:"🏯", subject:"Nepal History", css:"gk-c2", sub:"Ancient to modern Nepal"},
+  {icon:"🗞️", subject:"Samsamayik / Current GK", css:"gk-c3", sub:"Recent national & global events"},
+  {icon:"🗺️", subject:"Geography of Nepal", css:"gk-c4", sub:"Physical, political, resources"},
+  {icon:"🔬", subject:"General Science", css:"gk-c5", sub:"Basic science for all Loksewa posts"},
+  {icon:"💻", subject:"Computer & IT", css:"gk-c6", sub:"Basics, MS Office, internet"},
+];
+function renderGkCategories(){
+  document.getElementById('gkCategoryGrid').innerHTML = GK_CATEGORIES.map(cat => `
+    <button class="dash-card ${cat.css} gk-cat-btn" data-subject="${cat.subject}" style="min-height:88px;">
+      <div class="dc-icon">${cat.icon}</div>
+      <div class="dc-label" style="font-size:13.5px;">${cat.subject}</div>
+      <div class="dc-sub">${cat.sub}</div>
+    </button>
+  `).join('');
+  document.querySelectorAll('.gk-cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showScreen(setupScreen);
+      const sel = document.getElementById('subjectSelect');
+      const opt = [...sel.options].find(o => o.value === btn.dataset.subject);
+      if(opt) sel.value = opt.value;
+    });
+  });
+}
+
+// ---------- New Update: official reports, viewable in-app (works offline once cached) ----------
+// 🔧 To add a new report: upload its PDF to your GitHub repo (e.g. docs/report-name.pdf),
+// add it to service-worker.js's FILES_TO_CACHE list for offline access, then add a line here.
+const NEW_UPDATES = [
+  {date:"2026-06", title:"DoHS Annual Health Report 2081/82", file:"docs/dohs-ahr-2081-82.pdf", desc:"Latest national health data — service delivery, disease burden & program performance."},
+];
+function renderCurrentAffairs(){
+  document.getElementById('currentAffairsList').innerHTML = NEW_UPDATES.map((c, i) => `
+    <div class="content-card" style="cursor:pointer;" data-doc-index="${i}">
+      <div class="ca-date">${c.date}</div>
+      <h4>${c.title}</h4>
+      <p>${c.desc}</p>
+    </div>
+  `).join('') || `<p style="color:var(--ink-soft); font-size:13px;">No updates yet — check back soon.</p>`;
+
+  document.querySelectorAll('[data-doc-index]').forEach(card => {
+    card.addEventListener('click', () => {
+      const doc = NEW_UPDATES[parseInt(card.dataset.docIndex, 10)];
+      document.getElementById('docViewerTitle').textContent = doc.title;
+      document.getElementById('docViewerFrame').src = doc.file;
+      showScreen(docViewerScreen);
+    });
+  });
+}
 renderSyllabus();
+renderSyllabusDocs();
+renderGkCategories();
 renderCurrentAffairs();
 
 // ---------- Load data (lazy — scales to 50,000+ questions) ----------
