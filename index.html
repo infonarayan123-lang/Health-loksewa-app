@@ -519,7 +519,6 @@
 // ============================================================
 const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyBHcmF7fh2s-XUmfMKMaQnUEa_Op_8Yp1h1Ho5oiTBGmcr8kE6rpptzHeeooAmL6n9LQ/exec";
 
-let allQuestions = [];
 let quizQuestions = [];
 let currentIndex = 0;
 let selectedCount = 20;
@@ -635,22 +634,22 @@ function renderCurrentAffairs(){
 renderSyllabus();
 renderCurrentAffairs();
 
-// ---------- Load data ----------
+// ---------- Load data (lazy — scales to 50,000+ questions) ----------
 async function loadData(){
   try{
-    const res = await fetch(SHEET_API_URL);
-    allQuestions = await res.json();
-    populateSubjects();
+    // Only fetch the lightweight subject list at startup, not all questions
+    const res = await fetch(`${SHEET_API_URL}?action=subjects`);
+    const subjects = await res.json();
+    populateSubjects(subjects);
     document.getElementById('loadingMsg').style.display = 'none';
     document.getElementById('setupForm').style.display = 'block';
   }catch(err){
     document.getElementById('loadingMsg').textContent =
-      "Could not load questions. Please check the SHEET_API_URL at the bottom of this file, and your internet connection.";
+      "Could not load subjects. Please check the SHEET_API_URL at the bottom of this file, and your internet connection.";
   }
 }
 
-function populateSubjects(){
-  const subjects = [...new Set(allQuestions.map(q => q.Subject).filter(Boolean))];
+function populateSubjects(subjects){
   const sel = document.getElementById('subjectSelect');
   sel.innerHTML = '<option value="__ALL__">All Subjects (Mixed)</option>' +
     subjects.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -665,26 +664,41 @@ document.getElementById('countRow').addEventListener('click', e => {
   selectedCount = parseInt(btn.dataset.n, 10);
 });
 
-// ---------- Start quiz ----------
-document.getElementById('startBtn').addEventListener('click', () => {
+// ---------- Start quiz (fetches only what's needed for this attempt) ----------
+document.getElementById('startBtn').addEventListener('click', async () => {
   const subject = document.getElementById('subjectSelect').value;
-  let pool = subject === '__ALL__' ? allQuestions : allQuestions.filter(q => q.Subject === subject);
-  pool = shuffle([...pool]).slice(0, selectedCount);
+  const startBtn = document.getElementById('startBtn');
+  startBtn.disabled = true;
+  startBtn.textContent = 'Loading questions…';
 
-  if(pool.length === 0){
-    alert('No questions found for this selection yet. Add more questions to your Google Sheet!');
-    return;
+  try{
+    // Server does the random picking — the phone never downloads more than it needs
+    const url = `${SHEET_API_URL}?action=random&count=${selectedCount}&subject=${encodeURIComponent(subject)}`;
+    const res = await fetch(url);
+    const pool = await res.json();
+
+    if(pool.length === 0){
+      alert('No questions found for this selection yet. Add more questions to your Google Sheet!');
+      startBtn.disabled = false;
+      startBtn.textContent = 'Start Quiz →';
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = quizQuestions.length * 45; // ~45 sec per question, matches real exam pace
+
+    buildOmrStrip();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    alert('Could not load questions. Please check your internet connection and try again.');
+  }finally{
+    startBtn.disabled = false;
+    startBtn.textContent = 'Start Quiz →';
   }
-
-  quizQuestions = pool;
-  currentIndex = 0;
-  answers = new Array(quizQuestions.length).fill(null);
-  secondsLeft = quizQuestions.length * 45; // ~45 sec per question, matches real exam pace
-
-  buildOmrStrip();
-  showScreen(quizScreen);
-  startTimer();
-  renderQuestion();
 });
 
 function shuffle(arr){
@@ -696,25 +710,37 @@ function shuffle(arr){
 }
 
 // ---------- Mock Test (real exam pattern: 100 Qs, 75 min, mixed subjects) ----------
-document.getElementById('cardMock').addEventListener('click', () => {
-  if(allQuestions.length === 0){
-    alert('Questions are still loading, please wait a moment and try again.');
-    return;
-  }
-  const pool = shuffle([...allQuestions]).slice(0, 100);
-  if(pool.length === 0){
-    alert('No questions available yet. Add MCQs to your Google Sheet first!');
-    return;
-  }
-  quizQuestions = pool;
-  currentIndex = 0;
-  answers = new Array(quizQuestions.length).fill(null);
-  secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+document.getElementById('cardMock').addEventListener('click', async () => {
+  const card = document.getElementById('cardMock');
+  const originalLabel = card.querySelector('.dc-label').textContent;
+  card.querySelector('.dc-label').textContent = 'Loading mock test…';
+  card.style.pointerEvents = 'none';
 
-  buildOmrStrip();
-  showScreen(quizScreen);
-  startTimer();
-  renderQuestion();
+  try{
+    const url = `${SHEET_API_URL}?action=random&count=100`;
+    const res = await fetch(url);
+    const pool = await res.json();
+
+    if(pool.length === 0){
+      alert('No questions available yet. Add MCQs to your Google Sheet first!');
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+
+    buildOmrStrip();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    alert('Could not load the mock test. Please check your internet connection and try again.');
+  }finally{
+    card.querySelector('.dc-label').textContent = originalLabel;
+    card.style.pointerEvents = 'auto';
+  }
 });
 
 // ---------- Timer ----------
