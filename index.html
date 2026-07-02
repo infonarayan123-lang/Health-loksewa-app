@@ -160,11 +160,11 @@
   }
   .link-group-label:first-child{ margin-top:0; }
 
-  .gk-cat-btn.gk-c1{ background:linear-gradient(135deg,#A62639,#7E1D2C); }
-  .gk-cat-btn.gk-c2{ background:linear-gradient(135deg,#C9962C,#9C7420); }
-  .gk-cat-btn.gk-c3{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
-  .gk-cat-btn.gk-c4{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
-  .gk-cat-btn.gk-c5{ background:linear-gradient(135deg,#6B4C9A,#4A3268); }
+  .gk-c1{ background:linear-gradient(135deg,#A62639,#7E1D2C); }
+  .gk-c2{ background:linear-gradient(135deg,#C9962C,#9C7420); }
+  .gk-c3{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
+  .gk-c4{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
+  .gk-c5{ background:linear-gradient(135deg,#6B4C9A,#4A3268); }
   .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#3A6B7A,#254852); }
 
   /* ---------- Setup Screen ---------- */
@@ -439,8 +439,8 @@
   <div class="screen" id="syllabusScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">Syllabus — choose your post</div>
-      <div class="dash-grid" id="syllabusPostGrid"></div>
+      <div class="section-title">Syllabus</div>
+      <div id="syllabusPostGrid"></div>
     </div>
   </div>
 
@@ -455,7 +455,7 @@
 
   <!-- DOCUMENT VIEWER SCREEN (in-app, no download link shown) -->
   <div class="screen" id="docViewerScreen">
-    <div class="back-link" data-back="currentAffairs">← Back</div>
+    <div class="back-link" data-back="dynamic">← Back</div>
     <div style="padding:0 20px 16px;">
       <div class="section-title" id="docViewerTitle" style="margin-bottom:10px;"></div>
       <iframe id="docViewerFrame" style="width:100%; height:70vh; border:1px solid var(--line); border-radius:12px;"></iframe>
@@ -561,7 +561,8 @@ const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
 const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, resourcesScreen, setupScreen, quizScreen, resultsScreen];
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen };
+let docViewerBackTarget = homeScreen;
 
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -578,7 +579,11 @@ document.getElementById('cardResources').addEventListener('click', () => showScr
 document.querySelectorAll('.back-link').forEach(b => {
   b.addEventListener('click', () => {
     const key = b.dataset.back || 'home';
-    showScreen(SCREEN_BY_KEY[key] || homeScreen);
+    if(key === 'dynamic'){
+      showScreen(docViewerBackTarget);
+    } else {
+      showScreen(SCREEN_BY_KEY[key] || homeScreen);
+    }
   });
 });
 
@@ -617,30 +622,54 @@ function renderResources(){
 }
 renderResources();
 
-// ---------- Syllabus: one Drive folder per post ----------
-// 🔧 HOW TO ADD YOUR LINK:
-// 1. In Google Drive, create a folder for each post and upload all 8 province PDFs inside it
-// 2. Right-click the FOLDER → Share → change to "Anyone with the link" → Copy link
-// 3. Paste that link between the quotes below, replacing the "#"
-// People will tap the card, which opens your Drive folder in their browser/Drive app —
-// they can then open and download whichever province's PDF they need.
+// ---------- Syllabus: one combined PDF per post, VIEW-ONLY in-app ----------
+// 🔧 HOW TO ADD YOUR FILE (view-only, download blocked):
+// 1. Upload ONE combined PDF per post to Google Drive (covers Federal + all 7 provinces)
+// 2. Right-click the file → Share
+// 3. Set access to "Anyone with the link" — Viewer
+// 4. Click the gear/settings icon inside the Share box → check
+//    "Disable download, print, and copy for viewers" → Done
+// 5. Copy link → paste it between the quotes below, replacing the "#"
+// The app automatically converts your normal share link into an embeddable
+// in-app viewer link — you don't need to edit the link format yourself.
 const SYLLABUS_POSTS = [
-  {key:"pho", icon:"🩺", label:"PHO Loksewa Syllabus", url:"https://drive.google.com/drive/folders/13n6T4eeqhJ9oy9l6aF72j0hei5GXYHJF?usp=sharing"},
-  {key:"ha", icon:"⚕️", label:"Health Assistant Syllabus", url:"https://drive.google.com/drive/folders/1AJLsFRIwmflVCM41yd1kQQ0YoQArbOvX?usp=sharing"},
-  {key:"sn", icon:"💉", label:"Staff Nurse Syllabus", url:"#"},
-  {key:"ahw", icon:"🏥", label:"AHW Syllabus", url:"#"},
-  {key:"anm", icon:"🤰", label:"ANM Syllabus", url:"#"},
+  {key:"pho", label:"PHO Loksewa Syllabus", url:"#"},
+  {key:"ha", label:"Health Assistant Syllabus", url:"#"},
+  {key:"sn", label:"Staff Nurse Syllabus", url:"#"},
+  {key:"ahw", label:"AHW Syllabus", url:"#"},
+  {key:"anm", label:"ANM Syllabus", url:"#"},
 ];
-const SYLLABUS_CARD_COLORS = ["gk-c1","gk-c2","gk-c3","gk-c4","gk-c5"];
+
+function driveEmbedUrl(shareUrl){
+  const m = shareUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? `https://drive.google.com/file/d/${m[1]}/preview` : shareUrl;
+}
 
 function renderSyllabusPosts(){
   document.getElementById('syllabusPostGrid').innerHTML = SYLLABUS_POSTS.map((post, i) => `
-    <a class="dash-card ${SYLLABUS_CARD_COLORS[i % SYLLABUS_CARD_COLORS.length]}" href="${post.url}" target="_blank" rel="noopener">
-      <div class="dc-icon">${post.icon}</div>
-      <div class="dc-label">${post.label}</div>
-      <div class="dc-sub">Federal + all 7 provinces</div>
+    <a class="link-card" href="#" data-index="${i}">
+      <div class="lc-text">
+        <h4>${post.label}</h4>
+        <p>Federal + all 7 provinces · view only</p>
+      </div>
+      <div class="lc-arrow">👁</div>
     </a>
   `).join('');
+
+  document.querySelectorAll('#syllabusPostGrid .link-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      const post = SYLLABUS_POSTS[parseInt(card.dataset.index, 10)];
+      if(post.url === '#'){
+        alert('This syllabus PDF hasn\'t been added yet — check back soon!');
+        return;
+      }
+      document.getElementById('docViewerTitle').textContent = post.label;
+      document.getElementById('docViewerFrame').src = driveEmbedUrl(post.url);
+      docViewerBackTarget = syllabusScreen;
+      showScreen(docViewerScreen);
+    });
+  });
 }
 
 // ---------- General Knowledge categories (covers Section Officer, Naib Subba,
@@ -691,6 +720,7 @@ function renderCurrentAffairs(){
       const doc = NEW_UPDATES[parseInt(card.dataset.docIndex, 10)];
       document.getElementById('docViewerTitle').textContent = doc.title;
       document.getElementById('docViewerFrame').src = doc.file;
+      docViewerBackTarget = currentAffairsScreen;
       showScreen(docViewerScreen);
     });
   });
