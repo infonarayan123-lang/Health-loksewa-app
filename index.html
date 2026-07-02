@@ -119,6 +119,22 @@
   }
   .ca-date{ font-size:11px; color:var(--gold); font-weight:700; margin-bottom:3px; letter-spacing:0.03em; }
 
+  .dash-card.c-mock{
+    background:linear-gradient(135deg,#2A2420,#171310);
+    grid-column:1 / -1;
+    flex-direction:row; align-items:center; gap:16px;
+    border:1.5px solid var(--gold);
+    position:relative;
+    overflow:hidden;
+  }
+  .dash-card.c-mock::after{
+    content:"REAL EXAM PATTERN";
+    position:absolute; top:8px; right:-30px;
+    background:var(--gold); color:#2A2420;
+    font-size:9px; font-weight:800; letter-spacing:0.04em;
+    padding:2px 32px; transform:rotate(35deg);
+  }
+
   .dash-card.c-resources{
     background:linear-gradient(135deg,#6B4C9A,#4A3268);
     grid-column:1 / -1;
@@ -384,6 +400,13 @@
           <div class="dc-icon">🧠</div>
           <div class="dc-label">General Knowledge</div>
           <div class="dc-sub">Quick GK practice</div>
+        </button>
+        <button class="dash-card c-mock" id="cardMock">
+          <div class="dc-icon">🏆</div>
+          <div style="text-align:left;">
+            <div class="dc-label" style="color:#fff;">Mock Test — 100 Questions</div>
+            <div class="dc-sub" style="color:#D8CFC2;">75 min · mixed subjects · negative marking</div>
+          </div>
         </button>
         <button class="dash-card c-resources" id="cardResources">
           <div class="dc-icon">🌐</div>
@@ -671,6 +694,28 @@ function shuffle(arr){
   }
   return arr;
 }
+
+// ---------- Mock Test (real exam pattern: 100 Qs, 75 min, mixed subjects) ----------
+document.getElementById('cardMock').addEventListener('click', () => {
+  if(allQuestions.length === 0){
+    alert('Questions are still loading, please wait a moment and try again.');
+    return;
+  }
+  const pool = shuffle([...allQuestions]).slice(0, 100);
+  if(pool.length === 0){
+    alert('No questions available yet. Add MCQs to your Google Sheet first!');
+    return;
+  }
+  quizQuestions = pool;
+  currentIndex = 0;
+  answers = new Array(quizQuestions.length).fill(null);
+  secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+
+  buildOmrStrip();
+  showScreen(quizScreen);
+  startTimer();
+  renderQuestion();
+});
 
 // ---------- Timer ----------
 function startTimer(){
