@@ -471,15 +471,26 @@
     </div>
   </div>
 
+  <!-- SUBJECT PICK SCREEN (Subject-wise MCQs step 1) -->
+  <div class="screen" id="subjectPickScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Subject-wise MCQs — choose a subject</div>
+      <div id="subjectPickList"></div>
+    </div>
+  </div>
+
   <!-- SETUP SCREEN -->
   <div class="screen" id="setupScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="back-link" data-back="subjectPick">← Change Subject</div>
     <div class="setup">
-      <div id="loadingMsg" class="loading">Loading your question bank…</div>
-      <div id="setupForm" style="display:none;">
+      <div id="loadingMsg" class="loading" style="display:none;">Loading your question bank…</div>
+      <div id="setupForm">
         <div class="field">
           <label>Subject / विषय</label>
-          <select id="subjectSelect"></select>
+          <div class="content-card" style="margin:0;">
+            <h4 id="chosenSubjectLabel">All Subjects (Mixed)</h4>
+          </div>
         </div>
         <div class="field">
           <label>Number of Questions</label>
@@ -547,6 +558,7 @@ const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyBHcmF7fh2s-XUmf
 let quizQuestions = [];
 let currentIndex = 0;
 let selectedCount = 20;
+let selectedSubject = '__ALL__';
 let answers = []; // { correct: bool|null (null = skipped), chosen, correctAnswer }
 let timerInterval = null;
 let secondsLeft = 0;
@@ -557,11 +569,12 @@ const currentAffairsScreen = document.getElementById('currentAffairsScreen');
 const docViewerScreen = document.getElementById('docViewerScreen');
 const gkScreen = document.getElementById('gkScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
+const subjectPickScreen = document.getElementById('subjectPickScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, resourcesScreen, setupScreen, quizScreen, resultsScreen];
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen };
+const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, resourcesScreen, subjectPickScreen, setupScreen, quizScreen, resultsScreen];
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen };
 let docViewerBackTarget = homeScreen;
 
 function showScreen(el){
@@ -571,7 +584,7 @@ function showScreen(el){
 }
 
 // ---------- Dashboard navigation ----------
-document.getElementById('cardQuiz').addEventListener('click', () => showScreen(setupScreen));
+document.getElementById('cardQuiz').addEventListener('click', () => showScreen(subjectPickScreen));
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
 document.getElementById('cardCurrent').addEventListener('click', () => showScreen(currentAffairsScreen));
 document.getElementById('cardGK').addEventListener('click', () => showScreen(gkScreen));
@@ -692,10 +705,9 @@ function renderGkCategories(){
   `).join('');
   document.querySelectorAll('.gk-cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      selectedSubject = btn.dataset.subject;
+      document.getElementById('chosenSubjectLabel').textContent = btn.dataset.subject;
       showScreen(setupScreen);
-      const sel = document.getElementById('subjectSelect');
-      const opt = [...sel.options].find(o => o.value === btn.dataset.subject);
-      if(opt) sel.value = opt.value;
     });
   });
 }
@@ -729,26 +741,42 @@ renderSyllabusPosts();
 renderGkCategories();
 renderCurrentAffairs();
 
-// ---------- Load data (lazy — scales to 50,000+ questions) ----------
-async function loadData(){
-  try{
-    // Only fetch the lightweight subject list at startup, not all questions
-    const res = await fetch(`${SHEET_API_URL}?action=subjects`);
-    const subjects = await res.json();
-    populateSubjects(subjects);
-    document.getElementById('loadingMsg').style.display = 'none';
-    document.getElementById('setupForm').style.display = 'block';
-  }catch(err){
-    document.getElementById('loadingMsg').textContent =
-      "Could not load subjects. Please check the SHEET_API_URL at the bottom of this file, and your internet connection.";
-  }
-}
+// ---------- Subject-wise MCQs: subject list (matches your official syllabus units exactly) ----------
+const SUBJECT_LIST = [
+  "All Subjects (Mixed)",
+  "Health and Public Health",
+  "Health Planning and Management",
+  "General Epidemiology",
+  "Health Statistics",
+  "Demography",
+  "Applied Epidemiology and Disease Control",
+  "Food and Nutrition",
+  "Environmental Health",
+  "Occupational Health",
+  "Health Education and Promotion",
+  "PHC, EHCS and MDGs",
+  "International Health",
+];
 
-function populateSubjects(subjects){
-  const sel = document.getElementById('subjectSelect');
-  sel.innerHTML = '<option value="__ALL__">All Subjects (Mixed)</option>' +
-    subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+function renderSubjectPick(){
+  document.getElementById('subjectPickList').innerHTML = SUBJECT_LIST.map(name => `
+    <a class="link-card" href="#" data-subject="${name}">
+      <div class="lc-text"><h4>${name}</h4></div>
+      <div class="lc-arrow">→</div>
+    </a>
+  `).join('');
+
+  document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      const name = card.dataset.subject;
+      selectedSubject = name === 'All Subjects (Mixed)' ? '__ALL__' : name;
+      document.getElementById('chosenSubjectLabel').textContent = name;
+      showScreen(setupScreen);
+    });
+  });
 }
+renderSubjectPick();
 
 // ---------- Count buttons ----------
 document.getElementById('countRow').addEventListener('click', e => {
@@ -761,19 +789,18 @@ document.getElementById('countRow').addEventListener('click', e => {
 
 // ---------- Start quiz (fetches only what's needed for this attempt) ----------
 document.getElementById('startBtn').addEventListener('click', async () => {
-  const subject = document.getElementById('subjectSelect').value;
   const startBtn = document.getElementById('startBtn');
   startBtn.disabled = true;
   startBtn.textContent = 'Loading questions…';
 
   try{
     // Server does the random picking — the phone never downloads more than it needs
-    const url = `${SHEET_API_URL}?action=random&count=${selectedCount}&subject=${encodeURIComponent(subject)}`;
+    const url = `${SHEET_API_URL}?action=random&count=${selectedCount}&subject=${encodeURIComponent(selectedSubject)}`;
     const res = await fetch(url);
     const pool = await res.json();
 
     if(pool.length === 0){
-      alert('No questions found for this selection yet. Add more questions to your Google Sheet!');
+      alert('No questions found for this subject yet. Add more questions to your Google Sheet!');
       startBtn.disabled = false;
       startBtn.textContent = 'Start Quiz →';
       return;
@@ -972,8 +999,6 @@ function reviewRow(q, i, status, chosen){
 document.getElementById('restartBtn').addEventListener('click', () => {
   showScreen(homeScreen);
 });
-
-loadData();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
