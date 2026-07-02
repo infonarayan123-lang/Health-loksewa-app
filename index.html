@@ -167,6 +167,39 @@
   .gk-c5{ background:linear-gradient(135deg,#6B4C9A,#4A3268); }
   .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#3A6B7A,#254852); }
 
+  .set-card{
+    display:flex; align-items:center; gap:14px;
+    border:1.5px solid var(--line); border-radius:12px;
+    padding:15px 16px; margin-bottom:10px;
+    cursor:pointer; background:#fff;
+  }
+  .set-card.locked{ opacity:0.55; cursor:not-allowed; background:var(--bg); }
+  .set-card.completed{ border-color:var(--correct); background:var(--correct-bg); }
+  .set-icon{
+    width:42px; height:42px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; font-weight:700; flex-shrink:0;
+    background:var(--navy); color:#fff;
+  }
+  .set-card.locked .set-icon{ background:#C6BEB2; }
+  .set-card.completed .set-icon{ background:var(--correct); }
+  .set-text h4{ font-family:'Tinos',serif; font-size:15px; margin-bottom:2px; }
+  .set-text p{ font-size:12px; color:var(--ink-soft); }
+  .set-badge{ margin-left:auto; font-size:18px; }
+  .result-message{
+    border-radius:12px; padding:16px; margin:14px 0;
+    font-size:14px; line-height:1.5; font-weight:600; text-align:center;
+  }
+  .result-message.excellent{ background:var(--correct-bg); color:#204F3E; }
+  .result-message.good{ background:#FFF6E8; color:#7A5B12; }
+  .result-message.needs-work{ background:var(--wrong-bg); color:#7A2018; }
+  .next-set-btn{
+    width:100%; padding:14px; margin-top:6px;
+    border:none; border-radius:12px;
+    background:var(--navy); color:#fff;
+    font-weight:700; font-size:14.5px; cursor:pointer;
+  }
+
   /* ---------- Setup Screen ---------- */
   .screen{ display:none; flex:1; flex-direction:column; }
   .screen.active{ display:flex; }
@@ -480,9 +513,19 @@
     </div>
   </div>
 
-  <!-- SETUP SCREEN -->
-  <div class="screen" id="setupScreen">
+  <!-- SET SELECTION SCREEN (Subject-wise MCQs step 2) -->
+  <div class="screen" id="setSelectScreen">
     <div class="back-link" data-back="subjectPick">← Change Subject</div>
+    <div class="home-body">
+      <div class="section-title" id="setSelectTitle">Sets</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Each set has 50 questions. Complete a set to unlock the next one.</p>
+      <div id="setSelectList"></div>
+    </div>
+  </div>
+
+  <!-- SETUP SCREEN (used only by General Knowledge Quick Practice) -->
+  <div class="screen" id="setupScreen">
+    <div class="back-link" data-back="gk">← Back to Topics</div>
     <div class="setup">
       <div id="loadingMsg" class="loading" style="display:none;">Loading your question bank…</div>
       <div id="setupForm">
@@ -541,8 +584,10 @@
         <div class="stat"><div class="stat-num" id="statWrong" style="color:var(--wrong)">0</div><div class="stat-label">Wrong</div></div>
         <div class="stat"><div class="stat-num" id="statSkip">0</div><div class="stat-label">Skipped</div></div>
       </div>
+      <div id="setResultMessage"></div>
+      <button class="next-set-btn" id="nextSetBtn" style="display:none;">Next Set →</button>
       <div id="reviewList"></div>
-      <button class="restart-btn" id="restartBtn">Practice Again</button>
+      <button class="restart-btn" id="restartBtn">Back to Home</button>
     </div>
   </div>
 
@@ -562,6 +607,7 @@ let selectedSubject = '__ALL__';
 let answers = []; // { correct: bool|null (null = skipped), chosen, correctAnswer }
 let timerInterval = null;
 let secondsLeft = 0;
+let currentSetInfo = null; // { subject, setNumber, totalSets } when running a locked Set; null otherwise
 
 const homeScreen = document.getElementById('homeScreen');
 const syllabusScreen = document.getElementById('syllabusScreen');
@@ -570,11 +616,12 @@ const docViewerScreen = document.getElementById('docViewerScreen');
 const gkScreen = document.getElementById('gkScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
+const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, resourcesScreen, subjectPickScreen, setupScreen, quizScreen, resultsScreen];
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen };
+const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, resourcesScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen };
 let docViewerBackTarget = homeScreen;
 
 function showScreen(el){
@@ -741,27 +788,25 @@ renderSyllabusPosts();
 renderGkCategories();
 renderCurrentAffairs();
 
-// ---------- Subject-wise MCQs: subject list (matches your official syllabus units exactly) ----------
-const SUBJECT_LIST = [
-  "All Subjects (Mixed)",
-  "Health and Public Health",
-  "Health Planning and Management",
-  "General Epidemiology",
-  "Health Statistics",
-  "Demography",
-  "Applied Epidemiology and Disease Control",
-  "Food and Nutrition",
-  "Environmental Health",
-  "Occupational Health",
-  "Health Education and Promotion",
-  "PHC, EHCS and MDGs",
-  "International Health",
-];
+// ---------- Subject-wise MCQs: subjects with live counts (fetched once at startup) ----------
+const SET_SIZE = 50;
+let SUBJECTS_WITH_COUNTS = []; // [{name, count}], populated by loadSubjectCounts()
+
+async function loadSubjectCounts(){
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=subjects`);
+    SUBJECTS_WITH_COUNTS = await res.json();
+  }catch(err){
+    SUBJECTS_WITH_COUNTS = [];
+  }
+  renderSubjectPick();
+}
 
 function renderSubjectPick(){
-  document.getElementById('subjectPickList').innerHTML = SUBJECT_LIST.map(name => `
-    <a class="link-card" href="#" data-subject="${name}">
-      <div class="lc-text"><h4>${name}</h4></div>
+  const list = SUBJECTS_WITH_COUNTS.length ? SUBJECTS_WITH_COUNTS : [{name:"All Subjects (Mixed)", count:0}];
+  document.getElementById('subjectPickList').innerHTML = list.map(s => `
+    <a class="link-card" href="#" data-subject="${s.name}" data-count="${s.count}">
+      <div class="lc-text"><h4>${s.name}</h4><p>${s.count} question${s.count===1?'':'s'} available</p></div>
       <div class="lc-arrow">→</div>
     </a>
   `).join('');
@@ -770,15 +815,108 @@ function renderSubjectPick(){
     card.addEventListener('click', (e) => {
       e.preventDefault();
       const name = card.dataset.subject;
-      selectedSubject = name === 'All Subjects (Mixed)' ? '__ALL__' : name;
-      document.getElementById('chosenSubjectLabel').textContent = name;
-      showScreen(setupScreen);
+      const count = parseInt(card.dataset.count, 10) || 0;
+      openSetSelect(name, count);
     });
   });
 }
-renderSubjectPick();
 
-// ---------- Count buttons ----------
+// ---------- Progress tracking (saved on-device, survives closing the app) ----------
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem('hl_progress') || '{}'); }
+  catch(e){ return {}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem('hl_progress', JSON.stringify(p)); }catch(e){}
+}
+function isSetUnlocked(subject, setNumber){
+  if(setNumber === 1) return true;
+  const p = loadProgress();
+  const completed = (p[subject] && p[subject].completed) || [];
+  return completed.includes(setNumber - 1);
+}
+function isSetCompleted(subject, setNumber){
+  const p = loadProgress();
+  const completed = (p[subject] && p[subject].completed) || [];
+  return completed.includes(setNumber);
+}
+function markSetCompleted(subject, setNumber, correctCount){
+  const p = loadProgress();
+  if(!p[subject]) p[subject] = { completed: [], scores: {} };
+  if(!p[subject].completed.includes(setNumber)) p[subject].completed.push(setNumber);
+  p[subject].scores[setNumber] = correctCount;
+  saveProgress(p);
+}
+
+// ---------- Set Selection screen ----------
+function openSetSelect(subjectName, count){
+  selectedSubject = subjectName === 'All Subjects (Mixed)' ? '__ALL__' : subjectName;
+  const totalSets = Math.max(1, Math.ceil(count / SET_SIZE));
+  document.getElementById('setSelectTitle').textContent = subjectName;
+
+  let html = '';
+  for(let i = 1; i <= totalSets; i++){
+    const unlocked = isSetUnlocked(selectedSubject, i);
+    const completed = isSetCompleted(selectedSubject, i);
+    const cls = completed ? 'completed' : (unlocked ? '' : 'locked');
+    const badge = completed ? '✓' : (unlocked ? '' : '🔒');
+    const questionsInSet = Math.min(SET_SIZE, count - (i-1)*SET_SIZE);
+    html += `
+      <div class="set-card ${cls}" data-set="${i}" data-unlocked="${unlocked}">
+        <div class="set-icon">${i}</div>
+        <div class="set-text">
+          <h4>Set ${i}</h4>
+          <p>${questionsInSet} questions${completed ? ' · Completed' : (unlocked ? '' : ' · Locked')}</p>
+        </div>
+        <div class="set-badge">${badge}</div>
+      </div>`;
+  }
+  document.getElementById('setSelectList').innerHTML = html;
+
+  document.querySelectorAll('#setSelectList .set-card').forEach(card => {
+    card.addEventListener('click', () => {
+      if(card.dataset.unlocked !== 'true'){
+        alert('Complete the previous set first to unlock this one!');
+        return;
+      }
+      startSet(selectedSubject, parseInt(card.dataset.set, 10), totalSets);
+    });
+  });
+
+  showScreen(setSelectScreen);
+}
+
+// ---------- Start a specific Set (fixed 50 questions, stable order per set) ----------
+async function startSet(subject, setNumber, totalSets){
+  try{
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}`;
+    const res = await fetch(url);
+    let pool = await res.json();
+    pool = shuffle([...pool]); // vary display order each attempt; same 50 questions each time
+
+    if(pool.length === 0){
+      alert('No questions found in this set yet.');
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = quizQuestions.length * 45;
+    currentSetInfo = { subject, setNumber, totalSets };
+
+    buildOmrStrip();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    alert('Could not load this set. Please check your internet connection and try again.');
+  }
+}
+
+loadSubjectCounts();
+
+// ---------- Count buttons (used by GK Quick Practice, not by locked Sets) ----------
 document.getElementById('countRow').addEventListener('click', e => {
   const btn = e.target.closest('.count-btn');
   if(!btn) return;
@@ -787,8 +925,9 @@ document.getElementById('countRow').addEventListener('click', e => {
   selectedCount = parseInt(btn.dataset.n, 10);
 });
 
-// ---------- Start quiz (fetches only what's needed for this attempt) ----------
+// ---------- Start quiz — used ONLY by GK Quick Practice (free count, no set-locking) ----------
 document.getElementById('startBtn').addEventListener('click', async () => {
+  currentSetInfo = null;
   const startBtn = document.getElementById('startBtn');
   startBtn.disabled = true;
   startBtn.textContent = 'Loading questions…';
@@ -833,6 +972,7 @@ function shuffle(arr){
 
 // ---------- Mock Test (real exam pattern: 100 Qs, 75 min, mixed subjects) ----------
 document.getElementById('cardMock').addEventListener('click', async () => {
+  currentSetInfo = null;
   const card = document.getElementById('cardMock');
   const originalLabel = card.querySelector('.dc-label').textContent;
   card.querySelector('.dc-label').textContent = 'Loading mock test…';
@@ -986,6 +1126,39 @@ function finishQuiz(){
   document.getElementById('statWrong').textContent = wrong;
   document.getElementById('statSkip').textContent = skipped;
   document.getElementById('reviewList').innerHTML = reviewHtml.join('');
+
+  // ---- Set-specific: performance message, unlock next set, "Next Set" button ----
+  const msgBox = document.getElementById('setResultMessage');
+  const nextBtn = document.getElementById('nextSetBtn');
+
+  if(currentSetInfo){
+    const { subject, setNumber, totalSets } = currentSetInfo;
+    markSetCompleted(subject, setNumber, correct);
+
+    let tier, text;
+    if(correct >= 46){
+      tier = 'excellent';
+      text = '🌟 Excellent! You\'re exam-ready — keep up this consistency.';
+    } else if(correct >= 40){
+      tier = 'good';
+      text = '👍 Good performance! Review your weak areas and keep practicing.';
+    } else {
+      tier = 'needs-work';
+      text = '💪 Needs improvement — revise this topic and try the set again.';
+    }
+    msgBox.innerHTML = `<div class="result-message ${tier}">${text}</div>`;
+
+    if(setNumber < totalSets){
+      nextBtn.style.display = 'block';
+      nextBtn.textContent = `Next: Set ${setNumber + 1} →`;
+      nextBtn.onclick = () => startSet(subject, setNumber + 1, totalSets);
+    } else {
+      nextBtn.style.display = 'none';
+    }
+  } else {
+    msgBox.innerHTML = '';
+    nextBtn.style.display = 'none';
+  }
 }
 
 function reviewRow(q, i, status, chosen){
@@ -997,6 +1170,7 @@ function reviewRow(q, i, status, chosen){
 }
 
 document.getElementById('restartBtn').addEventListener('click', () => {
+  currentSetInfo = null;
   showScreen(homeScreen);
 });
 
