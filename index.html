@@ -439,11 +439,8 @@
   <div class="screen" id="syllabusScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">Paper I — Health Inspector (Official PSC Syllabus)</div>
-      <div id="syllabusList"></div>
-
-      <div class="section-title" style="margin-top:22px;">Download Official Syllabus PDFs</div>
-      <div id="syllabusDocsList"></div>
+      <div class="section-title">Syllabus — choose your post</div>
+      <div class="dash-grid" id="syllabusPostGrid"></div>
     </div>
   </div>
 
@@ -620,68 +617,29 @@ function renderResources(){
 }
 renderResources();
 
-// ---------- Syllabus content (static, from official PSC syllabus) ----------
-const SYLLABUS_UNITS = [
-  {n:1, title:"Health and Public Health", weight:5, desc:"Meaning of health & disease, dimensions of disease, public health concept & history."},
-  {n:2, title:"Health Planning and Management", weight:20, desc:"Planning cycle, financial & drug management, health economics, decentralization, quality assurance."},
-  {n:3, title:"General Epidemiology", weight:10, desc:"Definitions, epidemiological methods, incidence/prevalence, screening, health indicators."},
-  {n:4, title:"Health Statistics", weight:5, desc:"Health information systems, data presentation, central tendency, sampling & significance."},
-  {n:5, title:"Demography", weight:5, desc:"Population trends, fertility/mortality/migration, urbanization, life expectancy."},
-  {n:6, title:"Applied Epidemiology & Disease Control", weight:20, desc:"Prevention & control of communicable and non-communicable diseases, elimination & eradication."},
-  {n:7, title:"Food and Nutrition", weight:5, desc:"Nutritional profiles & problems, assessment of nutritional status, food toxication & fortification."},
-  {n:8, title:"Environmental Health", weight:5, desc:"Water, air, housing, waste disposal, medical entomology, insecticide use."},
-  {n:9, title:"Occupational Health", weight:5, desc:"Occupational environment, hazards, prevention & worker protection."},
-  {n:10, title:"Health Education & Promotion", weight:10, desc:"BCC, health education media, community participation, school health."},
-  {n:11, title:"PHC, EHCS & MDGs", weight:5, desc:"Concept, components, status and prospects of Primary Health Care."},
-  {n:12, title:"International Health", weight:5, desc:"UN agencies (WHO, UNICEF, UNFPA), bilateral agencies working in Nepal."},
+// ---------- Syllabus: one Drive folder per post ----------
+// 🔧 HOW TO ADD YOUR LINK:
+// 1. In Google Drive, create a folder for each post and upload all 8 province PDFs inside it
+// 2. Right-click the FOLDER → Share → change to "Anyone with the link" → Copy link
+// 3. Paste that link between the quotes below, replacing the "#"
+// People will tap the card, which opens your Drive folder in their browser/Drive app —
+// they can then open and download whichever province's PDF they need.
+const SYLLABUS_POSTS = [
+  {key:"pho", icon:"🩺", label:"PHO Loksewa Syllabus", url:"https://drive.google.com/drive/folders/13n6T4eeqhJ9oy9l6aF72j0hei5GXYHJF?usp=sharing"},
+  {key:"ha", icon:"⚕️", label:"Health Assistant Syllabus", url:"#"},
+  {key:"sn", icon:"💉", label:"Staff Nurse Syllabus", url:"#"},
+  {key:"ahw", icon:"🏥", label:"AHW Syllabus", url:"#"},
+  {key:"anm", icon:"🤰", label:"ANM Syllabus", url:"#"},
 ];
-function renderSyllabus(){
-  document.getElementById('syllabusList').innerHTML = SYLLABUS_UNITS.map(u => `
-    <div class="content-card">
-      <h4>${u.n}. ${u.title}<span class="weight-pill">${u.weight}%</span></h4>
-      <p>${u.desc}</p>
-    </div>
-  `).join('');
-}
+const SYLLABUS_CARD_COLORS = ["gk-c1","gk-c2","gk-c3","gk-c4","gk-c5"];
 
-// ---------- Syllabus PDF downloads (by post, Federal & Province level) ----------
-// 🔧 To finish this: replace each "url" below with your real Google Drive share link
-// (Drive → right-click file → Share → "Anyone with the link" → Copy link).
-const SYLLABUS_DOCS = [
-  { post:"HA Loksewa Syllabus", levels:[
-      {label:"Federal", url:"#"},
-      {label:"Province", url:"#"},
-  ]},
-  { post:"PHO Loksewa Syllabus", levels:[
-      {label:"Federal", url:"#"},
-      {label:"Province", url:"#"},
-  ]},
-  { post:"AHW Loksewa Syllabus", levels:[
-      {label:"Federal", url:"#"},
-      {label:"Province", url:"#"},
-  ]},
-  { post:"ANM Loksewa Syllabus", levels:[
-      {label:"Federal", url:"#"},
-      {label:"Province", url:"#"},
-  ]},
-  { post:"Staff Nurse Loksewa Syllabus", levels:[
-      {label:"Federal", url:"#"},
-      {label:"Province", url:"#"},
-  ]},
-];
-function renderSyllabusDocs(){
-  document.getElementById('syllabusDocsList').innerHTML = SYLLABUS_DOCS.map(doc => `
-    <div class="link-group-label">${doc.post}</div>
-    ${doc.levels.map(lv => `
-      <a class="link-card" href="${lv.url}" target="_blank" rel="noopener">
-        <div class="lc-icon">📄</div>
-        <div class="lc-text">
-          <h4>${doc.post} — ${lv.label}</h4>
-          <p>Tap to open &amp; download the official PDF</p>
-        </div>
-        <div class="lc-arrow">↓</div>
-      </a>
-    `).join('')}
+function renderSyllabusPosts(){
+  document.getElementById('syllabusPostGrid').innerHTML = SYLLABUS_POSTS.map((post, i) => `
+    <a class="dash-card ${SYLLABUS_CARD_COLORS[i % SYLLABUS_CARD_COLORS.length]}" href="${post.url}" target="_blank" rel="noopener">
+      <div class="dc-icon">${post.icon}</div>
+      <div class="dc-label">${post.label}</div>
+      <div class="dc-sub">Federal + all 7 provinces</div>
+    </a>
   `).join('');
 }
 
@@ -737,8 +695,7 @@ function renderCurrentAffairs(){
     });
   });
 }
-renderSyllabus();
-renderSyllabusDocs();
+renderSyllabusPosts();
 renderGkCategories();
 renderCurrentAffairs();
 
