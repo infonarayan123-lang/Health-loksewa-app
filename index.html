@@ -654,7 +654,10 @@ function showScreen(el){
 }
 
 // ---------- Dashboard navigation ----------
-document.getElementById('cardQuiz').addEventListener('click', () => showScreen(subjectPickScreen));
+document.getElementById('cardQuiz').addEventListener('click', () => {
+  showScreen(subjectPickScreen);
+  if(!subjectsLoaded) loadSubjectCounts();
+});
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
 document.getElementById('cardCurrent').addEventListener('click', () => showScreen(currentAffairsScreen));
 document.getElementById('cardGK').addEventListener('click', () => showScreen(gkScreen));
@@ -811,14 +814,18 @@ renderSyllabusPosts();
 renderGkCategories();
 renderCurrentAffairs();
 
-// ---------- Subject-wise MCQs: subjects with live counts (fetched once at startup) ----------
+// ---------- Subject-wise MCQs: subjects with live counts (loaded ONLY when this section is opened) ----------
 const SET_SIZE = 50;
-let SUBJECTS_WITH_COUNTS = []; // [{name, count}], populated by loadSubjectCounts()
+let SUBJECTS_WITH_COUNTS = []; // [{name, count}], populated on demand by loadSubjectCounts()
+let subjectsLoaded = false;
 
 async function loadSubjectCounts(){
+  document.getElementById('subjectPickList').innerHTML =
+    `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading subjects…</p>`;
   try{
     const res = await fetch(`${SHEET_API_URL}?action=subjects`);
     SUBJECTS_WITH_COUNTS = await res.json();
+    subjectsLoaded = true;
   }catch(err){
     SUBJECTS_WITH_COUNTS = [];
   }
@@ -937,7 +944,8 @@ async function startSet(subject, setNumber, totalSets){
   }
 }
 
-loadSubjectCounts();
+// Subject counts now load on demand (see cardQuiz click handler above) — not at app startup,
+// so opening the app is instant and doesn't wait on network data it may not even need.
 
 // ---------- Count buttons (used by GK Quick Practice, not by locked Sets) ----------
 document.getElementById('countRow').addEventListener('click', e => {
