@@ -140,6 +140,9 @@
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
+  .link-card.is-loading{ opacity:0.55; cursor:default; }
+  .link-card.is-loading .lc-arrow{ opacity:0.3; }
+
   .link-card{
     display:flex; align-items:center; gap:14px;
     border:1px solid var(--line); border-radius:12px;
@@ -656,7 +659,7 @@ function showScreen(el){
 // ---------- Dashboard navigation ----------
 document.getElementById('cardQuiz').addEventListener('click', () => {
   showScreen(subjectPickScreen);
-  if(!subjectsLoaded) loadSubjectCounts();
+  renderSubjectPick(); // instant — no network call here at all
 });
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
 document.getElementById('cardCurrent').addEventListener('click', () => showScreen(currentAffairsScreen));
@@ -816,27 +819,30 @@ renderCurrentAffairs();
 
 // ---------- Subject-wise MCQs: subjects with live counts (loaded ONLY when this section is opened) ----------
 const SET_SIZE = 50;
-let SUBJECTS_WITH_COUNTS = []; // [{name, count}], populated on demand by loadSubjectCounts()
-let subjectsLoaded = false;
-
-async function loadSubjectCounts(){
-  document.getElementById('subjectPickList').innerHTML =
-    `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading subjects…</p>`;
-  try{
-    const res = await fetch(`${SHEET_API_URL}?action=subjects`);
-    SUBJECTS_WITH_COUNTS = await res.json();
-    subjectsLoaded = true;
-  }catch(err){
-    SUBJECTS_WITH_COUNTS = [];
-  }
-  renderSubjectPick();
-}
+// Known subject names — matches your Google Sheet tabs exactly. Shown INSTANTLY,
+// so the screen never sits blank waiting on the network; counts fill in right after.
+const KNOWN_SUBJECTS = [
+  "All Subjects (Mixed)",
+  "Health and Public Health",
+  "Health Planning and Management",
+  "General Epidemiology",
+  "Health Statistics",
+  "Demography",
+  "Applied Epidemiology and Disease Control",
+  "Food and Nutrition",
+  "Environmental Health",
+  "Occupational Health",
+  "Health Education and Promotion",
+  "PHC, EHCS and MDGs",
+  "International Health",
+];
+let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
 
 function renderSubjectPick(){
-  const list = SUBJECTS_WITH_COUNTS.length ? SUBJECTS_WITH_COUNTS : [{name:"All Subjects (Mixed)", count:0}];
-  document.getElementById('subjectPickList').innerHTML = list.map(s => `
-    <a class="link-card" href="#" data-subject="${s.name}" data-count="${s.count}">
-      <div class="lc-text"><h4>${s.name}</h4><p>${s.count} question${s.count===1?'':'s'} available</p></div>
+  // Purely instant — just names, no counts, no network call, no waiting.
+  document.getElementById('subjectPickList').innerHTML = SUBJECTS_WITH_COUNTS.map(s => `
+    <a class="link-card" href="#" data-subject="${s.name}">
+      <div class="lc-text"><h4>${s.name}</h4><p>Tap to begin</p></div>
       <div class="lc-arrow">→</div>
     </a>
   `).join('');
@@ -844,9 +850,7 @@ function renderSubjectPick(){
   document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
-      const name = card.dataset.subject;
-      const count = parseInt(card.dataset.count, 10) || 0;
-      openSetSelect(name, count);
+      openSetSelect(card.dataset.subject);
     });
   });
 }
@@ -878,25 +882,46 @@ function markSetCompleted(subject, setNumber, correctCount){
   saveProgress(p);
 }
 
-// ---------- Set Selection screen ----------
-function openSetSelect(subjectName, count){
+// ---------- Set Selection screen — opens INSTANTLY, no waiting on question counts ----------
+// We always show Set 1 (and any already-completed sets from your saved progress) right away.
+// The real question count is only checked in the background, purely to reveal whether
+// further sets exist — it never blocks you from starting Set 1 immediately.
+function openSetSelect(subjectName){
   selectedSubject = subjectName === 'All Subjects (Mixed)' ? '__ALL__' : subjectName;
-  const totalSets = Math.max(1, Math.ceil(count / SET_SIZE));
   document.getElementById('setSelectTitle').textContent = subjectName;
 
+  const p = loadProgress();
+  const completedSets = (p[selectedSubject] && p[selectedSubject].completed) || [];
+  const knownMaxSet = Math.max(1, ...completedSets.map(n => n + 1)); // show one set beyond your furthest progress
+
+  renderSetList(knownMaxSet, null); // null totalSets = still checking for more, in background
+  showScreen(setSelectScreen);
+
+  // Background check — does NOT block the screen above, just quietly refines it if more sets exist
+  fetch(`${SHEET_API_URL}?action=subjects`).then(r => r.json()).then(fresh => {
+    const match = fresh.find(f => f.name === subjectName);
+    const count = match ? match.count : 0;
+    const totalSets = Math.max(1, Math.ceil(count / SET_SIZE));
+    renderSetList(totalSets, count);
+  }).catch(() => {});
+}
+
+function renderSetList(totalSets, exactCount){
   let html = '';
   for(let i = 1; i <= totalSets; i++){
     const unlocked = isSetUnlocked(selectedSubject, i);
     const completed = isSetCompleted(selectedSubject, i);
     const cls = completed ? 'completed' : (unlocked ? '' : 'locked');
     const badge = completed ? '✓' : (unlocked ? '' : '🔒');
-    const questionsInSet = Math.min(SET_SIZE, count - (i-1)*SET_SIZE);
+    const questionsLabel = exactCount !== null
+      ? `${Math.min(SET_SIZE, exactCount - (i-1)*SET_SIZE)} questions`
+      : `up to ${SET_SIZE} questions`;
     html += `
       <div class="set-card ${cls}" data-set="${i}" data-unlocked="${unlocked}">
         <div class="set-icon">${i}</div>
         <div class="set-text">
           <h4>Set ${i}</h4>
-          <p>${questionsInSet} questions${completed ? ' · Completed' : (unlocked ? '' : ' · Locked')}</p>
+          <p>${questionsLabel}${completed ? ' · Completed' : (unlocked ? '' : ' · Locked')}</p>
         </div>
         <div class="set-badge">${badge}</div>
       </div>`;
@@ -912,11 +937,10 @@ function openSetSelect(subjectName, count){
       startSet(selectedSubject, parseInt(card.dataset.set, 10), totalSets);
     });
   });
-
-  showScreen(setSelectScreen);
 }
 
 // ---------- Start a specific Set (fixed 50 questions, stable order per set) ----------
+// This is the ONE moment a network fetch is genuinely unavoidable — we need real questions.
 async function startSet(subject, setNumber, totalSets){
   try{
     const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}`;
