@@ -127,6 +127,11 @@
     position:relative;
     overflow:hidden;
   }
+  .dash-card.c-mock.is-busy{ animation:pulseBusy 1.4s ease-in-out infinite; }
+  @keyframes pulseBusy{
+    0%, 100% { opacity:1; }
+    50% { opacity:0.72; }
+  }
   .dash-card.c-mock::after{
     content:"REAL EXAM PATTERN";
     position:absolute; top:8px; right:-30px;
@@ -1029,9 +1034,15 @@ function shuffle(arr){
 document.getElementById('cardMock').addEventListener('click', async () => {
   currentSetInfo = null;
   const card = document.getElementById('cardMock');
-  const originalLabel = card.querySelector('.dc-label').textContent;
-  card.querySelector('.dc-label').textContent = 'Loading mock test…';
+  const labelEl = card.querySelector('.dc-label');
+  const subEl = card.querySelector('.dc-sub');
+  const originalLabel = labelEl.textContent;
+  const originalSub = subEl.textContent;
+
+  labelEl.textContent = 'Building your mock exam…';
+  subEl.textContent = 'Gathering 100 questions from every subject — just a moment';
   card.style.pointerEvents = 'none';
+  card.classList.add('is-busy');
 
   try{
     const url = `${SHEET_API_URL}?action=random&count=100`;
@@ -1055,8 +1066,10 @@ document.getElementById('cardMock').addEventListener('click', async () => {
   }catch(err){
     alert('Could not load the mock test. Please check your internet connection and try again.');
   }finally{
-    card.querySelector('.dc-label').textContent = originalLabel;
+    labelEl.textContent = originalLabel;
+    subEl.textContent = originalSub;
     card.style.pointerEvents = 'auto';
+    card.classList.remove('is-busy');
   }
 });
 
