@@ -667,7 +667,10 @@ document.getElementById('cardQuiz').addEventListener('click', () => {
   renderSubjectPick(); // instant — no network call here at all
 });
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
-document.getElementById('cardCurrent').addEventListener('click', () => showScreen(currentAffairsScreen));
+document.getElementById('cardCurrent').addEventListener('click', () => {
+  showScreen(currentAffairsScreen);
+  renderCurrentAffairs();
+});
 document.getElementById('cardGK').addEventListener('click', () => showScreen(gkScreen));
 document.getElementById('cardResources').addEventListener('click', () => showScreen(resourcesScreen));
 document.querySelectorAll('.back-link').forEach(b => {
@@ -793,34 +796,38 @@ function renderGkCategories(){
   });
 }
 
-// ---------- New Update: official reports, viewable in-app (works offline once cached) ----------
-// 🔧 To add a new report: upload its PDF to your GitHub repo (e.g. docs/report-name.pdf),
-// add it to service-worker.js's FILES_TO_CACHE list for offline access, then add a line here.
-const NEW_UPDATES = [
-  {date:"2026-06", title:"DoHS Annual Health Report 2081/82", file:"docs/dohs-ahr-2081-82.pdf", desc:"Latest national health data — service delivery, disease burden & program performance."},
-];
-function renderCurrentAffairs(){
-  document.getElementById('currentAffairsList').innerHTML = NEW_UPDATES.map((c, i) => `
-    <div class="content-card" style="cursor:pointer;" data-doc-index="${i}">
-      <div class="ca-date">${c.date}</div>
-      <h4>${c.title}</h4>
-      <p>${c.desc}</p>
-    </div>
-  `).join('') || `<p style="color:var(--ink-soft); font-size:13px;">No updates yet — check back soon.</p>`;
+// ---------- New Update: reads directly from your "New Updates" Google Sheet tab ----------
+// 🔧 To add a new item: just add a row to the "New Updates" tab in your Google Sheet —
+// columns: Date | Title | Description | Link — it appears in the app automatically,
+// no code changes or redeployment needed.
+async function renderCurrentAffairs(){
+  document.getElementById('currentAffairsList').innerHTML =
+    `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading updates…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=updates`);
+    const updates = await res.json();
 
-  document.querySelectorAll('[data-doc-index]').forEach(card => {
-    card.addEventListener('click', () => {
-      const doc = NEW_UPDATES[parseInt(card.dataset.docIndex, 10)];
-      document.getElementById('docViewerTitle').textContent = doc.title;
-      document.getElementById('docViewerFrame').src = doc.file;
-      docViewerBackTarget = currentAffairsScreen;
-      showScreen(docViewerScreen);
-    });
-  });
+    if(updates.length === 0){
+      document.getElementById('currentAffairsList').innerHTML =
+        `<p style="color:var(--ink-soft); font-size:13px;">No updates yet — check back soon.</p>`;
+      return;
+    }
+
+    document.getElementById('currentAffairsList').innerHTML = updates.map(c => `
+      <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${c.Link}" target="_blank" rel="noopener">
+        <div class="ca-date">${c.Date}</div>
+        <h4>${c.Title}</h4>
+        <p>${c.Description}</p>
+      </a>
+    `).join('');
+  }catch(err){
+    document.getElementById('currentAffairsList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13px;">Could not load updates. Check your internet connection.</p>`;
+  }
 }
 renderSyllabusPosts();
 renderGkCategories();
-renderCurrentAffairs();
+// renderCurrentAffairs() now loads on demand when the New Update card is tapped (see click handler above)
 
 // ---------- Subject-wise MCQs: subjects with live counts (loaded ONLY when this section is opened) ----------
 const SET_SIZE = 50;
