@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pho-loksewa-v28';
+const CACHE_NAME = 'pho-loksewa-v27';
 const FILES_TO_CACHE = [
   './index.html',
   './manifest.json',
@@ -23,8 +23,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Always go to network for the live question data (Google Sheet),
+  // but use cache for the app shell itself so it opens instantly.
   if (event.request.url.includes('script.google.com')) {
-    return;
+    return; // let it go straight to network, don't cache quiz data
   }
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
