@@ -672,7 +672,10 @@ document.getElementById('cardCurrent').addEventListener('click', () => {
   renderCurrentAffairs();
 });
 document.getElementById('cardGK').addEventListener('click', () => showScreen(gkScreen));
-document.getElementById('cardResources').addEventListener('click', () => showScreen(resourcesScreen));
+document.getElementById('cardResources').addEventListener('click', () => {
+  showScreen(resourcesScreen);
+  renderResources();
+});
 document.querySelectorAll('.back-link').forEach(b => {
   b.addEventListener('click', () => {
     const key = b.dataset.back || 'home';
@@ -684,40 +687,51 @@ document.querySelectorAll('.back-link').forEach(b => {
   });
 });
 
-// ---------- Resources & News content (verified official/real sites) ----------
-const RESOURCE_GROUPS = [
-  {
-    label: "News & E-Papers",
-    items: [
-      {icon:"📰", name:"Gorkhapatra Online", url:"https://gorkhapatraonline.com/", desc:"Nepal's oldest national daily — includes a dedicated Loksewa section."},
-      {icon:"🩺", name:"Swasthya Khabar", url:"https://swasthyakhabar.com/", desc:"Nepal's independent health news portal — policy, budget & health sector updates."},
-    ]
-  },
-  {
-    label: "Official Government Sources",
-    items: [
-      {icon:"🏛️", name:"Public Service Commission (PSC)", url:"https://psc.gov.np/", desc:"Official exam notices, syllabus, results & vacancy announcements."},
-      {icon:"🏥", name:"Department of Health Services (DoHS)", url:"https://dohs.gov.np/", desc:"Annual Health Reports, program data & official health statistics."},
-      {icon:"⚕️", name:"Ministry of Health & Population (MoHP)", url:"https://mohp.gov.np/", desc:"National health policy, acts, and official publications."},
-    ]
+// ---------- Resources & News: reads directly from your "Resources" Google Sheet tab ----------
+// 🔧 To add a new resource: just add a row to the "Resources" tab — columns:
+// Category | Icon | Name | Description | Link — it appears in the app automatically.
+async function renderResources(){
+  document.getElementById('resourcesList').innerHTML =
+    `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading resources…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=resources`);
+    const items = await res.json();
+
+    if(items.length === 0){
+      document.getElementById('resourcesList').innerHTML =
+        `<p style="color:var(--ink-soft); font-size:13px;">No resources yet — check back soon.</p>`;
+      return;
+    }
+
+    // Group by Category, preserving the order categories first appear in the sheet
+    const groups = [];
+    items.forEach(item => {
+      let group = groups.find(g => g.label === item.Category);
+      if(!group){
+        group = { label: item.Category, items: [] };
+        groups.push(group);
+      }
+      group.items.push(item);
+    });
+
+    document.getElementById('resourcesList').innerHTML = groups.map(group => `
+      <div class="link-group-label">${group.label}</div>
+      ${group.items.map(item => `
+        <a class="link-card" href="${item.Link}" target="_blank" rel="noopener">
+          <div class="lc-icon">${item.Icon || '🔗'}</div>
+          <div class="lc-text">
+            <h4>${item.Name}</h4>
+            <p>${item.Description}</p>
+          </div>
+          <div class="lc-arrow">↗</div>
+        </a>
+      `).join('')}
+    `).join('');
+  }catch(err){
+    document.getElementById('resourcesList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13px;">Could not load resources. Check your internet connection.</p>`;
   }
-];
-function renderResources(){
-  document.getElementById('resourcesList').innerHTML = RESOURCE_GROUPS.map(group => `
-    <div class="link-group-label">${group.label}</div>
-    ${group.items.map(item => `
-      <a class="link-card" href="${item.url}" target="_blank" rel="noopener">
-        <div class="lc-icon">${item.icon}</div>
-        <div class="lc-text">
-          <h4>${item.name}</h4>
-          <p>${item.desc}</p>
-        </div>
-        <div class="lc-arrow">↗</div>
-      </a>
-    `).join('')}
-  `).join('');
 }
-renderResources();
 
 // ---------- Syllabus: one combined PDF per post, VIEW-ONLY in-app ----------
 // 🔧 HOW TO ADD YOUR FILE (view-only, download blocked):
