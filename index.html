@@ -464,7 +464,7 @@
         <button class="dash-card c-gk" id="cardGK">
           <div class="dc-icon">🧠</div>
           <div class="dc-label">General Knowledge</div>
-          <div class="dc-sub">Constitution · History · GK</div>
+          <div class="dc-sub">Constitution · Acts · Samsamayik</div>
         </button>
         <button class="dash-card c-mock" id="cardMock">
           <div class="dc-icon">🏆</div>
@@ -531,7 +531,7 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">General Knowledge — pick a topic</div>
-      <div class="dash-grid" id="gkCategoryGrid"></div>
+      <div id="gkCategoryGrid"></div>
     </div>
   </div>
 
@@ -671,7 +671,10 @@ document.getElementById('cardCurrent').addEventListener('click', () => {
   showScreen(currentAffairsScreen);
   renderCurrentAffairs();
 });
-document.getElementById('cardGK').addEventListener('click', () => showScreen(gkScreen));
+document.getElementById('cardGK').addEventListener('click', () => {
+  showScreen(gkScreen);
+  renderGkCategories();
+});
 document.getElementById('cardResources').addEventListener('click', () => {
   showScreen(resourcesScreen);
   renderResources();
@@ -802,29 +805,26 @@ function renderSyllabusPosts(){
   });
 }
 
-// ---------- General Knowledge categories (covers Section Officer, Naib Subba,
-// Kharidar, Police Inspector, Agriculture and other Loksewa exams, not just health) ----------
-const GK_CATEGORIES = [
-  {icon:"⚖️", subject:"Constitution of Nepal", css:"gk-c1", sub:"Rights, structure, amendments"},
-  {icon:"🏯", subject:"Nepal History", css:"gk-c2", sub:"Ancient to modern Nepal"},
-  {icon:"🗞️", subject:"Samsamayik / Current GK", css:"gk-c3", sub:"Recent national & global events"},
-  {icon:"🗺️", subject:"Geography of Nepal", css:"gk-c4", sub:"Physical, political, resources"},
-  {icon:"🔬", subject:"General Science", css:"gk-c5", sub:"Basic science for all Loksewa posts"},
-  {icon:"💻", subject:"Computer & IT", css:"gk-c6", sub:"Basics, MS Office, internet"},
+// ---------- General Knowledge: 3 categories, using the SAME Set-locked system as
+// Subject-wise MCQs (Set 1 unlocked, complete to unlock next, etc.) ----------
+// 🔧 Sheet tabs needed (exact names): "Constitution of Nepal", "Ain Sangraha (Acts Collection)",
+// "Samsamayik GK (Current Affairs)" — same column format as your other subject tabs.
+const KNOWN_GK_SUBJECTS = [
+  "Constitution of Nepal",
+  "Ain Sangraha (Acts Collection)",
+  "Samsamayik GK (Current Affairs)",
 ];
 function renderGkCategories(){
-  document.getElementById('gkCategoryGrid').innerHTML = GK_CATEGORIES.map(cat => `
-    <button class="dash-card ${cat.css} gk-cat-btn" data-subject="${cat.subject}" style="min-height:88px;">
-      <div class="dc-icon">${cat.icon}</div>
-      <div class="dc-label" style="font-size:13.5px;">${cat.subject}</div>
-      <div class="dc-sub">${cat.sub}</div>
-    </button>
+  document.getElementById('gkCategoryGrid').innerHTML = KNOWN_GK_SUBJECTS.map(name => `
+    <a class="link-card" href="#" data-subject="${name}">
+      <div class="lc-text"><h4>${name}</h4><p>Tap to begin</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
   `).join('');
-  document.querySelectorAll('.gk-cat-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedSubject = btn.dataset.subject;
-      document.getElementById('chosenSubjectLabel').textContent = btn.dataset.subject;
-      showScreen(setupScreen);
+  document.querySelectorAll('#gkCategoryGrid .link-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      openSetSelect(card.dataset.subject);
     });
   });
 }
