@@ -720,30 +720,35 @@ function paintResources(items){
   `).join('');
 }
 
+// Baked directly into the app — guarantees something real shows INSTANTLY, even the very
+// first time someone ever opens the app (before any cache exists). Update this occasionally
+// to match your Sheet, but it doesn't need to be perfect — the background fetch always
+// corrects it moments later.
+const FALLBACK_RESOURCES = [
+  {Category:"News & E-Papers", Icon:"📰", Name:"Gorkhapatra Online", Description:"Nepal's oldest national daily — includes a dedicated Loksewa section.", Link:"https://gorkhapatraonline.com/"},
+  {Category:"News & E-Papers", Icon:"🩺", Name:"Swasthya Khabar", Description:"Nepal's independent health news portal — policy, budget & health sector updates.", Link:"https://swasthyakhabar.com/"},
+  {Category:"Official Government Sources", Icon:"🏛️", Name:"Public Service Commission (PSC)", Description:"Official exam notices, syllabus, results & vacancy announcements.", Link:"https://psc.gov.np/"},
+  {Category:"Official Government Sources", Icon:"🏥", Name:"Department of Health Services (DoHS)", Description:"Annual Health Reports, program data & official health statistics.", Link:"https://dohs.gov.np/"},
+  {Category:"Official Government Sources", Icon:"⚕️", Name:"Ministry of Health & Population (MoHP)", Description:"National health policy, acts, and official publications.", Link:"https://mohp.gov.np/"},
+];
+
 async function renderResources(){
-  // Instant: show whatever we last saved on this phone, if anything, right away
+  // Instant, always: cached data if we have it, otherwise the baked-in starter list —
+  // never a blank "Loading" screen.
   let cached = null;
   try{ cached = JSON.parse(localStorage.getItem('hl_cache_resources') || 'null'); }catch(e){}
-
-  if(cached && cached.length){
-    paintResources(cached);
-  } else {
-    document.getElementById('resourcesList').innerHTML =
-      `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading resources…</p>`;
-  }
+  paintResources((cached && cached.length) ? cached : FALLBACK_RESOURCES);
 
   // Always refresh quietly in the background, so content stays current without blocking anything
   try{
     const res = await fetch(`${SHEET_API_URL}?action=resources`);
     const items = await res.json();
-    localStorage.setItem('hl_cache_resources', JSON.stringify(items));
-    paintResources(items);
-  }catch(err){
-    if(!cached){
-      document.getElementById('resourcesList').innerHTML =
-        `<p style="color:var(--ink-soft); font-size:13px;">Could not load resources. Check your internet connection.</p>`;
+    if(items.length){
+      localStorage.setItem('hl_cache_resources', JSON.stringify(items));
+      paintResources(items);
     }
-    // If we had cached data already showing, silently keep it — no need to alarm the user
+  }catch(err){
+    // Already showing cached or fallback data — nothing more to do, no need to alarm the user
   }
 }
 
@@ -843,37 +848,27 @@ function paintUpdates(updates){
   `).join('');
 }
 
+// Baked directly into the app — guarantees something real shows INSTANTLY, even the very
+// first time someone ever opens the app. Update occasionally to match your Sheet; the
+// background fetch always corrects it moments later regardless.
+const FALLBACK_UPDATES = [
+  {Date:"2016-2030", Title:"SDGs", Description:"Global development agenda adopted by the United Nations with 17 goals to end poverty, protect the planet, and ensure peace and prosperity for all by 2030.", Link:"https://drive.google.com/file/d/1NPHB7ttss-hI7LLkYPNppVy_8JqWX6G_/view?usp=sharing"},
+];
+
 async function renderCurrentAffairs(){
   let cached = null;
   try{ cached = JSON.parse(localStorage.getItem('hl_cache_updates') || 'null'); }catch(e){}
-
-  if(cached && cached.length){
-    paintUpdates(cached);
-  } else {
-    document.getElementById('currentAffairsList').innerHTML =
-      `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading updates…</p>`;
-  }
+  paintUpdates((cached && cached.length) ? cached : FALLBACK_UPDATES);
 
   try{
     const res = await fetch(`${SHEET_API_URL}?action=updates`);
     const updates = await res.json();
-
-    if(updates.length === 0){
-      document.getElementById('currentAffairsList').innerHTML =
-        `<p style="color:var(--ink-soft); font-size:13px;">No updates yet — check back soon.</p>`;
-      return;
+    if(updates.length){
+      localStorage.setItem('hl_cache_updates', JSON.stringify(updates));
+      paintUpdates(updates);
     }
-
-    document.getElementById('currentAffairsList').innerHTML = updates.map(c => `
-      <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${c.Link}" target="_blank" rel="noopener">
-        <div class="ca-date">${c.Date}</div>
-        <h4>${c.Title}</h4>
-        <p>${c.Description}</p>
-      </a>
-    `).join('');
   }catch(err){
-    document.getElementById('currentAffairsList').innerHTML =
-      `<p style="color:var(--ink-soft); font-size:13px;">Could not load updates. Check your internet connection.</p>`;
+    // Already showing cached or fallback data — nothing more to do, no need to alarm the user
   }
 }
 renderSyllabusPosts();
