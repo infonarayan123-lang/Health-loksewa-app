@@ -690,46 +690,60 @@ document.querySelectorAll('.back-link').forEach(b => {
 // ---------- Resources & News: reads directly from your "Resources" Google Sheet tab ----------
 // 🔧 To add a new resource: just add a row to the "Resources" tab — columns:
 // Category | Icon | Name | Description | Link — it appears in the app automatically.
+function paintResources(items){
+  if(items.length === 0){
+    document.getElementById('resourcesList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13px;">No resources yet — check back soon.</p>`;
+    return;
+  }
+  const groups = [];
+  items.forEach(item => {
+    let group = groups.find(g => g.label === item.Category);
+    if(!group){
+      group = { label: item.Category, items: [] };
+      groups.push(group);
+    }
+    group.items.push(item);
+  });
+  document.getElementById('resourcesList').innerHTML = groups.map(group => `
+    <div class="link-group-label">${group.label}</div>
+    ${group.items.map(item => `
+      <a class="link-card" href="${item.Link}" target="_blank" rel="noopener">
+        <div class="lc-icon">${item.Icon || '🔗'}</div>
+        <div class="lc-text">
+          <h4>${item.Name}</h4>
+          <p>${item.Description}</p>
+        </div>
+        <div class="lc-arrow">↗</div>
+      </a>
+    `).join('')}
+  `).join('');
+}
+
 async function renderResources(){
-  document.getElementById('resourcesList').innerHTML =
-    `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading resources…</p>`;
+  // Instant: show whatever we last saved on this phone, if anything, right away
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem('hl_cache_resources') || 'null'); }catch(e){}
+
+  if(cached && cached.length){
+    paintResources(cached);
+  } else {
+    document.getElementById('resourcesList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading resources…</p>`;
+  }
+
+  // Always refresh quietly in the background, so content stays current without blocking anything
   try{
     const res = await fetch(`${SHEET_API_URL}?action=resources`);
     const items = await res.json();
-
-    if(items.length === 0){
-      document.getElementById('resourcesList').innerHTML =
-        `<p style="color:var(--ink-soft); font-size:13px;">No resources yet — check back soon.</p>`;
-      return;
-    }
-
-    // Group by Category, preserving the order categories first appear in the sheet
-    const groups = [];
-    items.forEach(item => {
-      let group = groups.find(g => g.label === item.Category);
-      if(!group){
-        group = { label: item.Category, items: [] };
-        groups.push(group);
-      }
-      group.items.push(item);
-    });
-
-    document.getElementById('resourcesList').innerHTML = groups.map(group => `
-      <div class="link-group-label">${group.label}</div>
-      ${group.items.map(item => `
-        <a class="link-card" href="${item.Link}" target="_blank" rel="noopener">
-          <div class="lc-icon">${item.Icon || '🔗'}</div>
-          <div class="lc-text">
-            <h4>${item.Name}</h4>
-            <p>${item.Description}</p>
-          </div>
-          <div class="lc-arrow">↗</div>
-        </a>
-      `).join('')}
-    `).join('');
+    localStorage.setItem('hl_cache_resources', JSON.stringify(items));
+    paintResources(items);
   }catch(err){
-    document.getElementById('resourcesList').innerHTML =
-      `<p style="color:var(--ink-soft); font-size:13px;">Could not load resources. Check your internet connection.</p>`;
+    if(!cached){
+      document.getElementById('resourcesList').innerHTML =
+        `<p style="color:var(--ink-soft); font-size:13px;">Could not load resources. Check your internet connection.</p>`;
+    }
+    // If we had cached data already showing, silently keep it — no need to alarm the user
   }
 }
 
@@ -814,9 +828,32 @@ function renderGkCategories(){
 // 🔧 To add a new item: just add a row to the "New Updates" tab in your Google Sheet —
 // columns: Date | Title | Description | Link — it appears in the app automatically,
 // no code changes or redeployment needed.
+function paintUpdates(updates){
+  if(updates.length === 0){
+    document.getElementById('currentAffairsList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13px;">No updates yet — check back soon.</p>`;
+    return;
+  }
+  document.getElementById('currentAffairsList').innerHTML = updates.map(c => `
+    <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${c.Link}" target="_blank" rel="noopener">
+      <div class="ca-date">${c.Date}</div>
+      <h4>${c.Title}</h4>
+      <p>${c.Description}</p>
+    </a>
+  `).join('');
+}
+
 async function renderCurrentAffairs(){
-  document.getElementById('currentAffairsList').innerHTML =
-    `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading updates…</p>`;
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem('hl_cache_updates') || 'null'); }catch(e){}
+
+  if(cached && cached.length){
+    paintUpdates(cached);
+  } else {
+    document.getElementById('currentAffairsList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Loading updates…</p>`;
+  }
+
   try{
     const res = await fetch(`${SHEET_API_URL}?action=updates`);
     const updates = await res.json();
