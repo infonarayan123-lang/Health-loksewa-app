@@ -463,8 +463,8 @@
         </button>
         <button class="dash-card c-gk" id="cardGK">
           <div class="dc-icon">🧠</div>
-          <div class="dc-label">General Knowledge</div>
-          <div class="dc-sub">Constitution · Acts · Samsamayik</div>
+          <div class="dc-label">General Knowledge and Guidelines</div>
+          <div class="dc-sub">Constitution · Acts · Samsamayik · Guidelines</div>
         </button>
         <button class="dash-card c-mock" id="cardMock">
           <div class="dc-icon">🏆</div>
@@ -526,12 +526,39 @@
     </div>
   </div>
 
-  <!-- GENERAL KNOWLEDGE CATEGORY SCREEN -->
+  <!-- GENERAL KNOWLEDGE AND GUIDELINES — MAIN SCREEN -->
   <div class="screen" id="gkScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">General Knowledge — pick a topic</div>
+      <div class="section-title">General Knowledge and Guidelines</div>
       <div id="gkCategoryGrid"></div>
+    </div>
+  </div>
+
+  <!-- AIN SANGRAHA SUB-MENU -->
+  <div class="screen" id="ainSangrahaScreen">
+    <div class="back-link" data-back="gk">← Back</div>
+    <div class="home-body">
+      <div class="section-title">Ain Sangraha (Acts Collection)</div>
+      <div id="ainSangrahaGrid"></div>
+    </div>
+  </div>
+
+  <!-- SAMSAMAYIK SUB-MENU (MCQs or Documents) -->
+  <div class="screen" id="samsamayikScreen">
+    <div class="back-link" data-back="gk">← Back</div>
+    <div class="home-body">
+      <div class="section-title">Samsamayik</div>
+      <div id="samsamayikGrid"></div>
+    </div>
+  </div>
+
+  <!-- GENERIC DOCUMENT LIST SCREEN (reused for Constitution, Acts, Samsamayik Docs, Guidelines) -->
+  <div class="screen" id="docListScreen">
+    <div class="back-link" data-back="docListBack">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="docListTitle"></div>
+      <div id="docListContent"></div>
     </div>
   </div>
 
@@ -546,7 +573,7 @@
 
   <!-- SET SELECTION SCREEN (Subject-wise MCQs step 2) -->
   <div class="screen" id="setSelectScreen">
-    <div class="back-link" data-back="subjectPick">← Change Subject</div>
+    <div class="back-link" data-back="setSelectBack">← Back</div>
     <div class="home-body">
       <div class="section-title" id="setSelectTitle">Sets</div>
       <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Each set has 50 questions. Complete a set to unlock the next one.</p>
@@ -629,7 +656,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyAyxWvd5keAu3OsbLBmru3CDeBy-sReTzML0532USYTAmExlTrkHlNO2Z4iuIOTPYHHw/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbz4QprKtAXKePs6pe0hT_LyNRYphos9okImIsao2tnQeM11kRVthpGTY54l8VwUBOVPrg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -645,15 +672,20 @@ const syllabusScreen = document.getElementById('syllabusScreen');
 const currentAffairsScreen = document.getElementById('currentAffairsScreen');
 const docViewerScreen = document.getElementById('docViewerScreen');
 const gkScreen = document.getElementById('gkScreen');
+const ainSangrahaScreen = document.getElementById('ainSangrahaScreen');
+const samsamayikScreen = document.getElementById('samsamayikScreen');
+const docListScreen = document.getElementById('docListScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, resourcesScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen };
 let docViewerBackTarget = homeScreen;
+let setSelectBackTarget = subjectPickScreen;
+let docListBackTarget = gkScreen;
 
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -684,6 +716,10 @@ document.querySelectorAll('.back-link').forEach(b => {
     const key = b.dataset.back || 'home';
     if(key === 'dynamic'){
       showScreen(docViewerBackTarget);
+    } else if(key === 'setSelectBack'){
+      showScreen(setSelectBackTarget);
+    } else if(key === 'docListBack'){
+      showScreen(docListBackTarget);
     } else {
       showScreen(SCREEN_BY_KEY[key] || homeScreen);
     }
@@ -805,28 +841,137 @@ function renderSyllabusPosts(){
   });
 }
 
-// ---------- General Knowledge: 3 categories, using the SAME Set-locked system as
-// Subject-wise MCQs (Set 1 unlocked, complete to unlock next, etc.) ----------
-// 🔧 Sheet tabs needed (exact names): "Constitution of Nepal", "Ain Sangraha (Acts Collection)",
-// "Samsamayik GK (Current Affairs)" — same column format as your other subject tabs.
-const KNOWN_GK_SUBJECTS = [
-  "Constitution of Nepal",
-  "Ain Sangraha (Acts Collection)",
-  "Samsamayik GK (Current Affairs)",
-];
+// ---------- General Knowledge and Guidelines: 4 main options ----------
+// - Constitution of Nepal → documents only (like New Update)
+// - Ain Sangraha → sub-menu: Health Related Acts/Regulations, Other Acts and Regulations (documents only)
+// - Samsamayik → sub-menu: Practice MCQs (Set-locked quiz) OR View Documents
+// - Guidelines → documents only
+//
+// 🔧 Sheet tabs needed for DOCUMENTS (columns: Date | Title | Description | Link, same as "New Updates"):
+//   "Constitution Documents", "Health Acts and Regulations", "Other Acts and Regulations",
+//   "Samsamayik Documents", "Guidelines"
+// 🔧 Sheet tab needed for MCQs (columns: ID | Subject | Chapter | ... same as other subjects):
+//   "Samsamayik GK (Current Affairs)" — already set up
+
 function renderGkCategories(){
-  document.getElementById('gkCategoryGrid').innerHTML = KNOWN_GK_SUBJECTS.map(name => `
-    <a class="link-card" href="#" data-subject="${name}">
-      <div class="lc-text"><h4>${name}</h4><p>Tap to begin</p></div>
+  document.getElementById('gkCategoryGrid').innerHTML = `
+    <a class="link-card" href="#" id="gkConstitution">
+      <div class="lc-text"><h4>Constitution of Nepal</h4><p>Official document</p></div>
       <div class="lc-arrow">→</div>
     </a>
-  `).join('');
-  document.querySelectorAll('#gkCategoryGrid .link-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
-      openSetSelect(card.dataset.subject);
-    });
+    <a class="link-card" href="#" id="gkAinSangraha">
+      <div class="lc-text"><h4>Ain Sangraha (Acts Collection)</h4><p>Health &amp; other Acts/Regulations</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
+    <a class="link-card" href="#" id="gkSamsamayik">
+      <div class="lc-text"><h4>Samsamayik</h4><p>MCQs &amp; documents</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
+    <a class="link-card" href="#" id="gkGuidelines">
+      <div class="lc-text"><h4>Guidelines</h4><p>Official document</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
+  `;
+
+  document.getElementById('gkConstitution').addEventListener('click', (e) => {
+    e.preventDefault();
+    openDocList('Constitution of Nepal', 'Constitution Documents', gkScreen);
   });
+  document.getElementById('gkAinSangraha').addEventListener('click', (e) => {
+    e.preventDefault();
+    showScreen(ainSangrahaScreen);
+    renderAinSangraha();
+  });
+  document.getElementById('gkSamsamayik').addEventListener('click', (e) => {
+    e.preventDefault();
+    showScreen(samsamayikScreen);
+    renderSamsamayik();
+  });
+  document.getElementById('gkGuidelines').addEventListener('click', (e) => {
+    e.preventDefault();
+    openDocList('Guidelines', 'Guidelines', gkScreen);
+  });
+}
+
+function renderAinSangraha(){
+  document.getElementById('ainSangrahaGrid').innerHTML = `
+    <a class="link-card" href="#" id="ainHealth">
+      <div class="lc-text"><h4>Health Related Acts/Regulations</h4><p>Official documents</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
+    <a class="link-card" href="#" id="ainOther">
+      <div class="lc-text"><h4>Other Acts and Regulations</h4><p>Official documents</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
+  `;
+  document.getElementById('ainHealth').addEventListener('click', (e) => {
+    e.preventDefault();
+    openDocList('Health Related Acts/Regulations', 'Health Acts and Regulations', ainSangrahaScreen);
+  });
+  document.getElementById('ainOther').addEventListener('click', (e) => {
+    e.preventDefault();
+    openDocList('Other Acts and Regulations', 'Other Acts and Regulations', ainSangrahaScreen);
+  });
+}
+
+function renderSamsamayik(){
+  document.getElementById('samsamayikGrid').innerHTML = `
+    <a class="link-card" href="#" id="samsamayikMcq">
+      <div class="lc-text"><h4>Practice MCQs</h4><p>Timed quiz, Set-locked progression</p></div>
+      <div class="lc-arrow">📝</div>
+    </a>
+    <a class="link-card" href="#" id="samsamayikDocs">
+      <div class="lc-text"><h4>View Documents</h4><p>Notices &amp; reference material</p></div>
+      <div class="lc-arrow">📄</div>
+    </a>
+  `;
+  document.getElementById('samsamayikMcq').addEventListener('click', (e) => {
+    e.preventDefault();
+    setSelectBackTarget = samsamayikScreen;
+    openSetSelect('Samsamayik GK (Current Affairs)');
+  });
+  document.getElementById('samsamayikDocs').addEventListener('click', (e) => {
+    e.preventDefault();
+    openDocList('Samsamayik Documents', 'Samsamayik Documents', samsamayikScreen);
+  });
+}
+
+// ---------- Generic document list viewer (reused across all 5 document categories above) ----------
+function paintDocList(items){
+  if(items.length === 0){
+    document.getElementById('docListContent').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13px;">No documents yet — check back soon.</p>`;
+    return;
+  }
+  document.getElementById('docListContent').innerHTML = items.map(c => `
+    <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${c.Link}" target="_blank" rel="noopener">
+      <div class="ca-date">${c.Date}</div>
+      <h4>${c.Title}</h4>
+      <p>${c.Description}</p>
+    </a>
+  `).join('');
+}
+
+async function openDocList(title, sheetName, backTarget){
+  document.getElementById('docListTitle').textContent = title;
+  docListBackTarget = backTarget;
+  showScreen(docListScreen);
+
+  const cacheKey = 'hl_cache_doclist_' + sheetName;
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); }catch(e){}
+  paintDocList(cached && cached.length ? cached : []);
+
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=doclist&sheet=${encodeURIComponent(sheetName)}`);
+    const items = await res.json();
+    if(items.length){
+      localStorage.setItem(cacheKey, JSON.stringify(items));
+    }
+    paintDocList(items);
+  }catch(err){
+    // Keep showing cached data if we had any — no need to alarm the user
+  }
 }
 
 // ---------- New Update: reads directly from your "New Updates" Google Sheet tab ----------
@@ -908,6 +1053,7 @@ function renderSubjectPick(){
   document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
+      setSelectBackTarget = subjectPickScreen;
       openSetSelect(card.dataset.subject);
     });
   });
