@@ -80,6 +80,22 @@
 
   /* ---------- Home Dashboard ---------- */
   .home-body{ padding:20px 20px 24px; flex:1; }
+  .account-bar{ margin-bottom:16px; }
+  .signin-btn{
+    display:flex; align-items:center; gap:8px;
+    background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:9px 14px; font-size:13px; font-weight:600; color:var(--ink);
+    cursor:pointer;
+  }
+  .account-info{ display:flex; align-items:center; gap:8px; }
+  .account-photo{ width:28px; height:28px; border-radius:50%; }
+  .account-name{ font-size:13px; font-weight:600; color:var(--ink); }
+  .signout-btn{
+    margin-left:auto; background:none; border:none;
+    color:var(--crimson); font-size:12px; font-weight:600; cursor:pointer;
+    text-decoration:underline;
+  }
+
   .home-greeting{ font-size:13px; color:var(--ink-soft); margin-bottom:4px; }
   .home-title{ font-family:'Tinos',serif; font-size:22px; margin-bottom:18px; }
   .dash-grid{
@@ -442,6 +458,16 @@
   <!-- HOME DASHBOARD -->
   <div class="screen active" id="homeScreen">
     <div class="home-body">
+      <div class="account-bar" id="accountBar">
+        <button class="signin-btn" id="signInBtn">
+          <span>🔐</span> Sign in with Google
+        </button>
+        <div class="account-info" id="accountInfo" style="display:none;">
+          <img id="accountPhoto" class="account-photo" src="" alt="">
+          <span id="accountName" class="account-name"></span>
+          <button class="signout-btn" id="signOutBtn">Sign out</button>
+        </div>
+      </div>
       <div class="home-greeting">नमस्ते, Narayan 👋</div>
       <div class="home-title">What do you want to study today?</div>
 
@@ -650,6 +676,62 @@
   </div>
 
 </div>
+
+<!-- ---------- Firebase Authentication (optional Google Sign-In) ---------- -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD22QTLo3JSFSLRVeGwdCrZx4A9yCTw2sE",
+    authDomain: "health-loksewa.firebaseapp.com",
+    projectId: "health-loksewa",
+    storageBucket: "health-loksewa.firebasestorage.app",
+    messagingSenderId: "749045460666",
+    appId: "1:749045460666:web:96b6a7aebaf8e626db1c83",
+    measurementId: "G-2EPR31X8MQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  function updateAuthUI(user){
+    const signInBtn = document.getElementById('signInBtn');
+    const accountInfo = document.getElementById('accountInfo');
+    if(user){
+      signInBtn.style.display = 'none';
+      accountInfo.style.display = 'flex';
+      document.getElementById('accountPhoto').src = user.photoURL || '';
+      document.getElementById('accountName').textContent = user.displayName || user.email || 'Signed in';
+      try{
+        localStorage.setItem('hl_user', JSON.stringify({
+          uid: user.uid, name: user.displayName, email: user.email, photo: user.photoURL
+        }));
+      }catch(e){}
+    } else {
+      signInBtn.style.display = 'flex';
+      accountInfo.style.display = 'none';
+      try{ localStorage.removeItem('hl_user'); }catch(e){}
+    }
+  }
+
+  onAuthStateChanged(auth, (user) => updateAuthUI(user));
+
+  document.getElementById('signInBtn').addEventListener('click', async () => {
+    try{
+      await signInWithPopup(auth, provider);
+    }catch(err){
+      alert('Sign-in did not complete. Please try again.');
+    }
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', async () => {
+    try{ await signOut(auth); }catch(err){}
+  });
+</script>
 
 <script>
 // ============================================================
