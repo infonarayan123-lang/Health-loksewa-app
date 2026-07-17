@@ -668,9 +668,27 @@
     </div>
   </div>
 
-  <!-- SUBJECT PICK SCREEN (Subject-wise MCQs step 1) -->
-  <div class="screen" id="subjectPickScreen">
+  <!-- SUBJECT-WISE MCQs: STEP 0 — pick a post, same pattern as Syllabus -->
+  <div class="screen" id="mcqPostScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Subject-wise MCQs — choose a post</div>
+      <div id="mcqPostGrid"></div>
+    </div>
+  </div>
+
+  <!-- COMING SOON SCREEN (for posts without content yet) -->
+  <div class="screen" id="comingSoonScreen">
+    <div class="back-link" data-back="mcqPost">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="comingSoonTitle"></div>
+      <p style="color:var(--ink-soft); font-size:13.5px;">Content for this post hasn't been added yet — check back soon!</p>
+    </div>
+  </div>
+
+  <!-- SUBJECT PICK SCREEN (Subject-wise MCQs step 1 — currently Public Health Officer content) -->
+  <div class="screen" id="subjectPickScreen">
+    <div class="back-link" data-back="mcqPost">← Back to Posts</div>
     <div class="home-body">
       <div class="section-title">Subject-wise MCQs — choose a subject</div>
       <div id="subjectPickList"></div>
@@ -900,15 +918,17 @@ const samsamayikScreen = document.getElementById('samsamayikScreen');
 const docListScreen = document.getElementById('docListScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
+const mcqPostScreen = document.getElementById('mcqPostScreen');
+const comingSoonScreen = document.getElementById('comingSoonScreen');
 const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, mcqPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -921,8 +941,8 @@ function showScreen(el){
 
 // ---------- Dashboard navigation ----------
 document.getElementById('cardQuiz').addEventListener('click', () => {
-  showScreen(subjectPickScreen);
-  renderSubjectPick(); // instant — no network call here at all
+  showScreen(mcqPostScreen);
+  renderMcqPosts();
 });
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
 document.getElementById('cardCurrent').addEventListener('click', () => {
@@ -1266,6 +1286,37 @@ const KNOWN_SUBJECTS = [
   "International Health",
 ];
 let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
+
+// ---------- Subject-wise MCQs: Step 0 — pick a post (same pattern as Syllabus) ----------
+const MCQ_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true},
+  {key:"ha", label:"Health Assistant", ready:false},
+  {key:"sn", label:"Staff Nurse", ready:false},
+  {key:"ahw", label:"AHW", ready:false},
+  {key:"anm", label:"ANM", ready:false},
+];
+function renderMcqPosts(){
+  document.getElementById('mcqPostGrid').innerHTML = MCQ_POSTS.map(post => `
+    <a class="link-card" href="#" data-key="${post.key}">
+      <div class="lc-text"><h4>${post.label}</h4></div>
+      <div class="lc-arrow">→</div>
+    </a>
+  `).join('');
+
+  document.querySelectorAll('#mcqPostGrid .link-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      const post = MCQ_POSTS.find(p => p.key === card.dataset.key);
+      if(post.ready){
+        showScreen(subjectPickScreen);
+        renderSubjectPick();
+      } else {
+        document.getElementById('comingSoonTitle').textContent = post.label + ' — Subject-wise MCQs';
+        showScreen(comingSoonScreen);
+      }
+    });
+  });
+}
 
 function renderSubjectPick(){
   // Purely instant — just names, no counts, no network call, no waiting.
