@@ -768,9 +768,18 @@
     </div>
   </div>
 
+  <!-- MOCK TEST: STEP 0 — pick a post, same pattern as Syllabus / Subject-wise MCQs -->
+  <div class="screen" id="mockPostScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Mock Test — choose a post</div>
+      <div id="mockPostGrid"></div>
+    </div>
+  </div>
+
   <!-- COMING SOON SCREEN (for posts without content yet) -->
   <div class="screen" id="comingSoonScreen">
-    <div class="back-link" data-back="mcqPost">← Back</div>
+    <div class="back-link" data-back="comingSoonBack">← Back</div>
     <div class="home-body">
       <div class="section-title" id="comingSoonTitle"></div>
       <p style="color:var(--ink-soft); font-size:13.5px;">Content for this post hasn't been added yet — check back soon!</p>
@@ -873,6 +882,9 @@
     getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
     createUserWithEmailAndPassword, signInWithEmailAndPassword
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD22QTLo3JSFSLRVeGwdCrZx4A9yCTw2sE",
@@ -886,8 +898,10 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
   let isRegisterMode = false;
+  let currentUid = null;
 
   function showLoginError(msg){
     const errBox = document.getElementById('loginError');
@@ -1011,12 +1025,13 @@ const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const mcqPostScreen = document.getElementById('mcqPostScreen');
+const mockPostScreen = document.getElementById('mockPostScreen');
 const comingSoonScreen = document.getElementById('comingSoonScreen');
 const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, mcqPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -1024,6 +1039,7 @@ const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, 
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
+let comingSoonBackTarget = mcqPostScreen;
 
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -1062,6 +1078,8 @@ document.querySelectorAll('.back-link').forEach(b => {
       showScreen(setSelectBackTarget);
     } else if(key === 'docListBack'){
       showScreen(docListBackTarget);
+    } else if(key === 'comingSoonBack'){
+      showScreen(comingSoonBackTarget);
     } else {
       showScreen(SCREEN_BY_KEY[key] || homeScreen);
     }
@@ -1408,10 +1426,68 @@ function renderMcqPosts(){
         renderSubjectPick();
       } else {
         document.getElementById('comingSoonTitle').textContent = post.label + ' — Subject-wise MCQs';
+        comingSoonBackTarget = mcqPostScreen;
         showScreen(comingSoonScreen);
       }
     });
   });
+}
+
+// ---------- Mock Test: Step 0 — pick a post (same pattern as Syllabus / Subject-wise MCQs) ----------
+const MOCK_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true},
+  {key:"ha", label:"Health Assistant", ready:false},
+  {key:"sn", label:"Staff Nurse", ready:false},
+  {key:"ahw", label:"AHW", ready:false},
+  {key:"anm", label:"ANM", ready:false},
+];
+function renderMockPosts(){
+  document.getElementById('mockPostGrid').innerHTML = MOCK_POSTS.map(post => `
+    <a class="link-card" href="#" data-key="${post.key}">
+      <div class="lc-text"><h4>${post.label}</h4><p>100 Qs · 75 min · real exam pattern</p></div>
+      <div class="lc-arrow">🏆</div>
+    </a>
+  `).join('');
+
+  document.querySelectorAll('#mockPostGrid .link-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      const post = MOCK_POSTS.find(p => p.key === card.dataset.key);
+      if(post.ready){
+        startMockTest();
+      } else {
+        document.getElementById('comingSoonTitle').textContent = post.label + ' — Mock Test';
+        comingSoonBackTarget = mockPostScreen;
+        showScreen(comingSoonScreen);
+      }
+    });
+  });
+}
+
+async function startMockTest(){
+  currentSetInfo = null;
+  try{
+    const url = `${SHEET_API_URL}?action=random&count=100`;
+    const res = await fetch(url);
+    const pool = await res.json();
+
+    if(pool.length === 0){
+      alert('No questions available yet. Add MCQs to your Google Sheet first!');
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+
+    buildOmrStrip();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    alert('Could not load the mock test. Please check your internet connection and try again.');
+  }
 }
 
 function renderSubjectPick(){
@@ -1603,46 +1679,9 @@ function shuffle(arr){
 }
 
 // ---------- Mock Test (real exam pattern: 100 Qs, 75 min, mixed subjects) ----------
-document.getElementById('cardMock').addEventListener('click', async () => {
-  currentSetInfo = null;
-  const card = document.getElementById('cardMock');
-  const labelEl = card.querySelector('.dc-label');
-  const subEl = card.querySelector('.dc-sub');
-  const originalLabel = labelEl.textContent;
-  const originalSub = subEl.textContent;
-
-  labelEl.textContent = 'Building your mock exam…';
-  subEl.textContent = 'Gathering 100 questions from every subject — just a moment';
-  card.style.pointerEvents = 'none';
-  card.classList.add('is-busy');
-
-  try{
-    const url = `${SHEET_API_URL}?action=random&count=100`;
-    const res = await fetch(url);
-    const pool = await res.json();
-
-    if(pool.length === 0){
-      alert('No questions available yet. Add MCQs to your Google Sheet first!');
-      return;
-    }
-
-    quizQuestions = pool;
-    currentIndex = 0;
-    answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
-
-    buildOmrStrip();
-    showScreen(quizScreen);
-    startTimer();
-    renderQuestion();
-  }catch(err){
-    alert('Could not load the mock test. Please check your internet connection and try again.');
-  }finally{
-    labelEl.textContent = originalLabel;
-    subEl.textContent = originalSub;
-    card.style.pointerEvents = 'auto';
-    card.classList.remove('is-busy');
-  }
+document.getElementById('cardMock').addEventListener('click', () => {
+  showScreen(mockPostScreen);
+  renderMockPosts();
 });
 
 // ---------- Timer ----------
