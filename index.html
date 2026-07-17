@@ -215,6 +215,29 @@
   }
 
   /* ---------- AI Chat Screen ---------- */
+  .chat-header-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px 8px;
+  }
+  .chat-menu-wrap{ position:relative; }
+  .chat-menu-btn{
+    background:none; border:none; font-size:20px; font-weight:700;
+    color:var(--ink-soft); cursor:pointer; padding:4px 10px; line-height:1;
+  }
+  .chat-menu-dropdown{
+    display:none; position:absolute; right:0; top:34px;
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+    min-width:160px; overflow:hidden; z-index:20;
+  }
+  .chat-menu-dropdown.open{ display:block; }
+  .chat-menu-dropdown button{
+    width:100%; text-align:left; padding:12px 14px;
+    background:none; border:none; font-size:13.5px; font-weight:600;
+    color:var(--wrong); cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .chat-menu-dropdown button:active{ background:var(--wrong-bg); }
+
   .chat-screen-wrap{ display:flex; flex-direction:column; height:100%; }
   .chat-messages{
     flex:1; overflow-y:auto; padding:16px 20px;
@@ -655,7 +678,15 @@
 
   <!-- AI ASSISTANT CHAT SCREEN -->
   <div class="screen" id="aiChatScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="chat-header-row">
+      <div class="back-link" data-back="home" style="padding:0;">← Back to Home</div>
+      <div class="chat-menu-wrap">
+        <button class="chat-menu-btn" id="chatMenuBtn">⋮</button>
+        <div class="chat-menu-dropdown" id="chatMenuDropdown">
+          <button id="deleteChatBtn">🗑️ Delete Chat</button>
+        </div>
+      </div>
+    </div>
     <div class="chat-screen-wrap">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-input-row">
@@ -956,7 +987,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw6_7SQNQ8OwDIH7swKI_0atpJTxsBQda2-am07HKO5Z7sqL68H4hfiYq6V0kxE7AHj8g/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwSvWMtnQ_X3foslb04-fdbtFMlNMv0eyxQSZU6gvNS6rYHAqxi3q65yKOQqi44CIsNuw/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -1787,6 +1818,8 @@ document.getElementById('restartBtn').addEventListener('click', () => {
 let chatHistory = []; // [{role:'user'|'assistant', content:'...'}]
 let chatInitialized = false;
 
+const CHAT_GREETING = "नमस्ते! I'm your Health Loksewa assistant. Ask me about subjects, syllabus, how the app works, or study tips — I'm here to help. 🙂";
+
 function initChat(){
   if(chatInitialized) return; // don't reset the conversation every time they revisit
   chatInitialized = true;
@@ -1797,7 +1830,7 @@ function initChat(){
   }catch(e){ chatHistory = []; }
 
   if(chatHistory.length === 0){
-    appendBubble('ai', "नमस्ते! I'm your Health Loksewa assistant. Ask me about subjects, syllabus, how the app works, or study tips — I'm here to help. 🙂");
+    appendBubble('ai', CHAT_GREETING);
   } else {
     chatHistory.forEach(m => appendBubble(m.role === 'user' ? 'user' : 'ai', m.content));
   }
@@ -1805,6 +1838,27 @@ function initChat(){
   document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
   document.getElementById('chatInput').addEventListener('keydown', (e) => {
     if(e.key === 'Enter') sendChatMessage();
+  });
+
+  // ---- 3-dot menu: toggle open/closed ----
+  document.getElementById('chatMenuBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('chatMenuDropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', () => {
+    document.getElementById('chatMenuDropdown').classList.remove('open');
+  });
+
+  // ---- Delete Chat ----
+  document.getElementById('deleteChatBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('chatMenuDropdown').classList.remove('open');
+    if(confirm('Delete this entire chat conversation? This cannot be undone.')){
+      chatHistory = [];
+      try{ localStorage.removeItem('hl_chat_history'); }catch(err){}
+      document.getElementById('chatMessages').innerHTML = '';
+      appendBubble('ai', CHAT_GREETING);
+    }
   });
 }
 
