@@ -157,8 +157,16 @@
   /* ---------- Line 1: Continuous Marquee Ticker ---------- */
   .marquee-wrap{
     overflow:hidden; white-space:nowrap;
-    background:var(--navy); border-radius:10px;
+    background:linear-gradient(90deg, #A62639, #C9962C, #2F7D5D, #1B3B6F, #6B4C9A, #A62639);
+    background-size:300% 100%;
+    animation:rainbowShift 8s ease infinite;
+    border-radius:10px;
     padding:8px 0; margin-bottom:10px;
+  }
+  @keyframes rainbowShift{
+    0%{ background-position:0% 50%; }
+    50%{ background-position:100% 50%; }
+    100%{ background-position:0% 50%; }
   }
   .marquee-track{
     display:inline-block;
@@ -168,6 +176,7 @@
     display:inline-block;
     color:#fff; font-family:'Tinos',serif; font-size:12.5px; font-weight:700;
     letter-spacing:0.2px;
+    text-shadow:0 1px 3px rgba(0,0,0,0.3);
   }
   @keyframes marqueeScroll{
     from{ transform:translateX(0); }
@@ -196,6 +205,24 @@
   .carousel-dot.active{ background:var(--navy); width:18px; border-radius:4px; }
 
   /* ---------- Quote of the Day ---------- */
+  /* ---------- 6 Best Features: compact shortcuts ---------- */
+  .quick-shortcuts{
+    display:grid; grid-template-columns:repeat(3, 1fr);
+    gap:10px; margin-bottom:16px;
+  }
+  .qs-item{
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:12px 6px;
+    cursor:pointer;
+  }
+  .qs-item .qs-icon{
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px; color:#fff;
+  }
+  .qs-item .qs-label{ font-size:10.5px; font-weight:700; color:var(--ink); text-align:center; line-height:1.25; }
+
   .quote-banner{
     display:flex; gap:12px; align-items:flex-start;
     background:var(--panel); border:1px solid var(--line);
@@ -761,6 +788,9 @@
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
+      <!-- 6 BEST FEATURES: compact quick-access shortcuts -->
+      <div class="quick-shortcuts" id="quickShortcuts"></div>
+
       <!-- QUOTE OF THE DAY -->
       <div class="quote-banner" id="quoteBanner">
         <div class="quote-icon">❝</div>
@@ -1090,7 +1120,7 @@
     createUserWithEmailAndPassword, signInWithEmailAndPassword
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
-    getFirestore, doc, setDoc
+    getFirestore, doc, setDoc, getDoc
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1125,26 +1155,37 @@
     return 'Something went wrong. Please try again.';
   }
 
-  function updateAuthUI(user){
+  function paintUserInfo(name, email){
+    const firstLetter = name.trim().charAt(0).toUpperCase();
+    document.getElementById('headerAvatar').textContent = firstLetter;
+    document.getElementById('headerUsername').textContent = name;
+    document.getElementById('homeGreeting').textContent = `नमस्ते, ${name.split(' ')[0]}! 👋`;
+    document.getElementById('profileAvatarBig').textContent = firstLetter;
+    document.getElementById('profileName').textContent = name;
+    document.getElementById('profileEmail').textContent = email || '';
+  }
+
+  async function updateAuthUI(user){
     if(user){
-      const name = user.displayName || user.email || 'Student';
-      const firstLetter = name.trim().charAt(0).toUpperCase();
+      let name = user.displayName;
 
-      // Top header bar
-      document.getElementById('headerAvatar').textContent = firstLetter;
-      document.getElementById('headerUsername').textContent = name;
+      // Safety net: if this account has no displayName saved (e.g. registered
+      // before the Full Name field existed), check our own Firestore profile record.
+      if(!name){
+        try{
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if(snap.exists() && snap.data().fullName){
+            name = snap.data().fullName;
+          }
+        }catch(e){}
+      }
+      if(!name) name = user.email || 'Student';
 
-      // Home greeting
-      document.getElementById('homeGreeting').textContent = `नमस्ते, ${name.split(' ')[0]}! 👋`;
-
-      // Profile screen
-      document.getElementById('profileAvatarBig').textContent = firstLetter;
-      document.getElementById('profileName').textContent = name;
-      document.getElementById('profileEmail').textContent = user.email || '';
+      paintUserInfo(name, user.email);
 
       try{
         localStorage.setItem('hl_user', JSON.stringify({
-          uid: user.uid, name: user.displayName, email: user.email
+          uid: user.uid, name: name, email: user.email
         }));
       }catch(e){}
       window.showScreen(window.homeScreen);
@@ -1391,6 +1432,31 @@ function startCarouselAutoPlay(){
   }, 4000);
 }
 renderCarousel();
+
+// ---------- 6 Best Features: compact quick-access shortcuts ----------
+const QUICK_SHORTCUTS = [
+  { icon:'🏆', bg:'#A62639', label:'Mock Test', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
+  { icon:'📝', bg:'#1B3B6F', label:'Subject-wise MCQs', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
+  { icon:'🤖', bg:'#2F7D5D', label:'AI Assistant', action:() => { showScreen(aiChatScreen); initChat(); } },
+  { icon:'🎯', bg:'#B8860B', label:'Question of the Day', action:() => { showScreen(qotdScreen); loadQuestionOfDay(); } },
+  { icon:'🧠', bg:'#6B4C9A', label:'General Knowledge', action:() => { showScreen(gkScreen); renderGkCategories(); } },
+  { icon:'🌐', bg:'#2A5B6E', label:'Resources & News', action:() => { showScreen(resourcesScreen); renderResources(); } },
+];
+function renderQuickShortcuts(){
+  const wrap = document.getElementById('quickShortcuts');
+  wrap.innerHTML = QUICK_SHORTCUTS.map((s, i) => `
+    <div class="qs-item" data-index="${i}">
+      <div class="qs-icon" style="background:${s.bg};">${s.icon}</div>
+      <div class="qs-label">${s.label}</div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.qs-item').forEach(item => {
+    item.addEventListener('click', () => {
+      QUICK_SHORTCUTS[parseInt(item.dataset.index, 10)].action();
+    });
+  });
+}
+renderQuickShortcuts();
 
 // ---------- Quote of the Day (changes every day at midnight, same quote for everyone that day) ----------
 const DAILY_QUOTES = [
