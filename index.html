@@ -888,7 +888,7 @@
           <div class="dc-sub">Units &amp; downloadable PDFs</div>
         </button>
         <button class="dash-card c-current" id="cardCurrent">
-          <div class="dc-icon">📰</div>
+          <div class="dc-icon">🔄</div>
           <div class="dc-label">New Update</div>
           <div class="dc-sub">Official reports · view in-app</div>
         </button>
@@ -2039,7 +2039,7 @@ function renderMcqPosts(){
 // Exam format per post: Public Health Officer uses 100 questions worth 1 mark each;
 // other posts use 50 questions worth 2 marks each — both total 100 marks either way.
 const MOCK_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🩺", css:"gk-c1", questionCount:100, marksEach:1},
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🦠📊💰⚖️", css:"gk-c1", questionCount:100, marksEach:1},
   {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
@@ -2048,7 +2048,7 @@ const MOCK_POSTS = [
 function renderMockPosts(){
   document.getElementById('mockPostGrid').innerHTML = MOCK_POSTS.map(post => `
     <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}" style="min-height:100px;">
-      <div class="dc-icon">${post.icon}</div>
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
       <div class="dc-label" style="font-size:14px;">${post.label}</div>
       <div class="dc-sub">${post.questionCount} Qs · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
     </button>
