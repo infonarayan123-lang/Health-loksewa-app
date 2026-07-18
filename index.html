@@ -122,6 +122,14 @@
     background:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:14px;
     color:var(--ink); cursor:pointer;
   }
+  .btn-spinner{
+    display:inline-block; width:14px; height:14px;
+    border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
+    border-radius:50%; animation:spin 0.7s linear infinite;
+    vertical-align:middle; margin-right:2px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
   .login-toggle{
     text-align:center; margin-top:20px; font-size:13px; color:var(--ink-soft);
   }
@@ -882,9 +890,6 @@
     getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged,
     createUserWithEmailAndPassword, signInWithEmailAndPassword
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, setDoc
-  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD22QTLo3JSFSLRVeGwdCrZx4A9yCTw2sE",
@@ -898,15 +903,8 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  let db = null;
-  try{
-    db = getFirestore(app); // if Firestore isn't set up in the console, this must never block login
-  }catch(e){
-    db = null;
-  }
   const provider = new GoogleAuthProvider();
   let isRegisterMode = false;
-  let currentUid = null;
 
   function showLoginError(msg){
     const errBox = document.getElementById('loginError');
@@ -925,11 +923,10 @@
     return 'Something went wrong. Please try again.';
   }
 
-  async function updateAuthUI(user){
+  function updateAuthUI(user){
     const signInBtn = document.getElementById('signInBtn');
     const accountInfo = document.getElementById('accountInfo');
     if(user){
-      currentUid = user.uid;
       signInBtn.style.display = 'none';
       accountInfo.style.display = 'flex';
       document.getElementById('accountPhoto').src = user.photoURL || 'icon-192.png';
@@ -939,26 +936,8 @@
           uid: user.uid, name: user.displayName, email: user.email, photo: user.photoURL
         }));
       }catch(e){}
-
-      // ---- Load this user's cloud data (chat + progress), so it follows them to any device ----
-      // Hard 3-second timeout — login must NEVER wait longer than this, regardless of Firestore's state
-      if(db){
-        try{
-          const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
-          const snap = await Promise.race([getDoc(doc(db, "users", user.uid)), timeout]);
-          if(snap && snap.exists()){
-            const cloud = snap.data();
-            if(cloud.progress) localStorage.setItem('hl_progress', JSON.stringify(cloud.progress));
-            if(cloud.chatHistory) localStorage.setItem('hl_chat_history', JSON.stringify(cloud.chatHistory));
-          }
-        }catch(e){
-          // Timed out or failed — just continue with whatever's already on this device, no big deal
-        }
-      }
-
       window.showScreen(window.homeScreen);
     } else {
-      currentUid = null;
       signInBtn.style.display = 'flex';
       accountInfo.style.display = 'none';
       try{ localStorage.removeItem('hl_user'); }catch(e){}
@@ -966,24 +945,26 @@
     }
   }
 
-  // ---- Exposed globally so the main app script can push updates to the cloud ----
-  window.syncToCloud = async function(partialData){
-    if(!currentUid || !db) return; // not signed in or Firestore unavailable — nothing to sync
-    try{
-      await setDoc(doc(db, "users", currentUid), partialData, { merge: true });
-    }catch(e){
-      // Silent fail is fine — localStorage already has the data as a fallback
-    }
-  };
-
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
-  // Catch the result when Google redirects back to the app after sign-in
-  getRedirectResult(auth).catch((err) => {
-    if(err && err.code) showLoginError('Google sign-in did not complete. Please try again.');
-  });
+  // Handle the return from Google redirect sign-in using top-level await
+  // This runs immediately when the page loads after Google redirects back
+  try{
+    const result = await getRedirectResult(auth);
+    if(result && result.user){
+      // onAuthStateChanged above will handle navigating to home screen
+      console.log('Redirect sign-in successful:', result.user.email);
+    }
+  }catch(err){
+    if(err && err.code){
+      if(err.code === 'auth/unauthorized-domain'){
+        showLoginError('Google Sign-In is not available in the installed app. Please use Email/Password instead.');
+      } else {
+        showLoginError('Google sign-in failed: ' + err.code);
+      }
+    }
+  }
 
-  // ---- Email/Password Login or Register (same button, mode toggles) ----
   document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
     clearLoginError();
     const email = document.getElementById('loginEmail').value.trim();
@@ -994,14 +975,13 @@
     }
     const btn = document.getElementById('loginSubmitBtn');
     btn.disabled = true;
-    btn.textContent = isRegisterMode ? 'Creating account…' : 'Logging in…';
+    btn.innerHTML = '<span class="btn-spinner"></span>' + (isRegisterMode ? ' Creating account…' : ' Logging in…');
     try{
       if(isRegisterMode){
         await createUserWithEmailAndPassword(auth, email, password);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
-      // onAuthStateChanged handles the screen switch automatically
     }catch(err){
       showLoginError(friendlyError(err));
     }finally{
@@ -1010,7 +990,6 @@
     }
   });
 
-  // ---- Toggle between Login and Register modes ----
   document.getElementById('loginToggleLink').addEventListener('click', (e) => {
     e.preventDefault();
     isRegisterMode = !isRegisterMode;
@@ -1020,17 +999,14 @@
     document.getElementById('loginToggleLink').textContent = isRegisterMode ? 'Login' : 'Register now';
   });
 
-  // ---- Continue with Google (works for both login and register — Firebase handles both) ----
-  // Uses REDIRECT (not popup) — popups behave unreliably inside installed Android apps (TWA)
   document.getElementById('googleContinueBtn').addEventListener('click', async () => {
     clearLoginError();
     const btn = document.getElementById('googleContinueBtn');
     btn.disabled = true;
     try{
       await signInWithRedirect(auth, provider);
-      // Page will redirect away to Google now; getRedirectResult() handles the return above
     }catch(err){
-      showLoginError('Google sign-in did not start. Please try again.');
+      showLoginError('Google sign-in did not start: ' + (err.code || err.message));
       btn.disabled = false;
     }
   });
