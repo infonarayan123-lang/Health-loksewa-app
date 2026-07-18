@@ -224,13 +224,48 @@
   /* ---------- Quote of the Day ---------- */
   /* ---------- 6 Best Features: compact shortcuts ---------- */
   .quote-banner{
-    display:flex; gap:12px; align-items:flex-start;
-    background:var(--panel); border:1px solid var(--line);
-    border-left:4px solid var(--gold);
-    border-radius:12px; padding:14px 16px; margin-bottom:18px;
+    position:relative;
+    display:flex; align-items:center; gap:10px;
+    background:radial-gradient(ellipse at 30% 20%, #262220 0%, #0E0C0A 75%);
+    border-radius:16px; padding:22px 18px;
+    margin-bottom:18px;
+    overflow:hidden;
+    box-shadow:0 6px 20px rgba(0,0,0,0.35), inset 0 0 40px rgba(255,255,255,0.03);
   }
-  .quote-icon{ font-size:22px; color:var(--gold); font-family:'Tinos',serif; line-height:1; }
-  .quote-text{ font-size:13px; font-style:italic; color:var(--ink); line-height:1.5; }
+  .quote-mark{
+    font-family:'Tinos',serif; font-size:34px; line-height:1;
+    color:#fff; flex-shrink:0; opacity:0.9;
+    text-shadow:0 0 10px rgba(255,255,255,0.55), 0 0 22px rgba(255,255,255,0.25);
+  }
+  .quote-mark-right{ align-self:flex-end; }
+  .quote-text-wrap{
+    position:relative; flex:1; min-width:0;
+  }
+  .quote-text, .quote-text-shimmer{
+    font-family:'Kalam', cursive; font-weight:400;
+    font-size:14.5px; line-height:1.6;
+    text-align:center;
+  }
+  .quote-text{
+    color:#fff;
+    text-shadow:0 0 8px rgba(255,255,255,0.5), 0 0 16px rgba(255,255,255,0.2);
+    position:relative; z-index:1;
+  }
+  .quote-text-shimmer{
+    position:absolute; top:0; left:0; right:0;
+    background:linear-gradient(110deg,
+      #ff5a5a, #ffb347, #fff066, #6bffb0, #5ad1ff, #b58bff, #ff5a5a);
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text;
+    color:transparent; -webkit-text-fill-color:transparent;
+    mix-blend-mode:overlay; opacity:0.85;
+    animation:rainbowFlow 5s linear infinite;
+    z-index:2; pointer-events:none;
+  }
+  @keyframes rainbowFlow{
+    from{ background-position:0% 50%; }
+    to{ background-position:300% 50%; }
+  }
 
   /* ---------- Question of the Day card + screen ---------- */
   .dash-card.c-qotd.qotd-card{
@@ -829,8 +864,12 @@
 
       <!-- QUOTE OF THE DAY -->
       <div class="quote-banner" id="quoteBanner">
-        <div class="quote-icon">❝</div>
-        <div class="quote-text" id="quoteText">Loading today's quote…</div>
+        <div class="quote-mark quote-mark-left">"</div>
+        <div class="quote-text-wrap">
+          <div class="quote-text" id="quoteText">Loading today's quote…</div>
+          <div class="quote-text-shimmer" id="quoteTextShimmer" aria-hidden="true">Loading today's quote…</div>
+        </div>
+        <div class="quote-mark quote-mark-right">"</div>
       </div>
 
       <div class="home-greeting" id="homeGreeting">नमस्ते! 👋</div>
@@ -1548,7 +1587,8 @@ function showQuoteOfDay(){
   const now = new Date();
   const minuteOfDay = now.getHours() * 60 + now.getMinutes();
   const quote = DAILY_QUOTES[minuteOfDay % DAILY_QUOTES.length];
-  document.getElementById('quoteText').textContent = `"${quote}"`;
+  document.getElementById('quoteText').textContent = quote;
+  document.getElementById('quoteTextShimmer').textContent = quote;
 }
 showQuoteOfDay();
 // Re-check every minute so the quote rotates live without needing a restart
