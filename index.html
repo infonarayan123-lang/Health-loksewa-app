@@ -116,12 +116,6 @@
     content:""; flex:1; border-bottom:1px solid var(--line);
   }
   .login-divider span{ padding:0 12px; }
-  .google-btn{
-    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
-    padding:12px; border:1.5px solid var(--line); border-radius:10px;
-    background:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:14px;
-    color:var(--ink); cursor:pointer;
-  }
   .btn-spinner{
     display:inline-block; width:14px; height:14px;
     border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
@@ -579,27 +573,32 @@
   <div class="screen active" id="loginScreen">
     <div class="login-hero">
       <img src="icon-192.png" alt="Health Loksewa" class="login-logo">
-      <h1>Welcome!</h1>
-      <p>Sign in to continue to Health Loksewa</p>
+      <h1 id="loginHeading">Welcome!</h1>
+      <p id="loginSubtext">Sign in to continue to Health Loksewa</p>
     </div>
     <div class="login-body">
+      <div class="field" id="fieldFullName" style="display:none;">
+        <label>Full Name</label>
+        <input type="text" id="loginFullName" placeholder="Your full name" autocomplete="name">
+      </div>
       <div class="field">
         <label>Email</label>
         <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username">
       </div>
+      <div class="field" id="fieldPhone" style="display:none;">
+        <label>Phone Number</label>
+        <input type="tel" id="loginPhone" placeholder="98XXXXXXXX" autocomplete="tel">
+      </div>
       <div class="field">
-        <label>Password</label>
+        <label id="passwordLabel">Password</label>
         <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="field" id="fieldConfirmPassword" style="display:none;">
+        <label>Confirm Password</label>
+        <input type="password" id="loginConfirmPassword" placeholder="••••••••" autocomplete="new-password">
       </div>
       <div id="loginError" class="login-error" style="display:none;"></div>
       <button class="start-btn" id="loginSubmitBtn">Login</button>
-
-      <div class="login-divider"><span>Or Login with</span></div>
-
-      <button class="google-btn" id="googleContinueBtn">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.85 2.09-1.81 2.73v2.27h2.92c1.71-1.57 2.69-3.88 2.69-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.27c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.71a5.4 5.4 0 010-3.42V4.95H.96a9 9 0 000 8.1l3.01-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.95l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
-        Continue with Google
-      </button>
 
       <p class="login-toggle">
         <span id="loginToggleText">Don't have an account?</span>
@@ -611,10 +610,7 @@
   <div class="screen" id="homeScreen">
     <div class="home-body">
       <div class="account-bar" id="accountBar">
-        <button class="signin-btn" id="signInBtn">
-          <span>🔐</span> Sign in with Google
-        </button>
-        <div class="account-info" id="accountInfo" style="display:none;">
+        <div class="account-info" id="accountInfo">
           <img id="accountPhoto" class="account-photo" src="" alt="">
           <span id="accountName" class="account-name"></span>
           <button class="signout-btn" id="signOutBtn">Sign out</button>
@@ -883,13 +879,16 @@
 
 </div>
 
-<!-- ---------- Firebase Authentication (optional Google Sign-In) ---------- -->
+<!-- ---------- Firebase Authentication (mandatory Email/Password login + Firestore profile storage) ---------- -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
-    getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged,
+    getAuth, signOut, onAuthStateChanged, updateProfile,
     createUserWithEmailAndPassword, signInWithEmailAndPassword
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+  import {
+    getFirestore, doc, setDoc
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD22QTLo3JSFSLRVeGwdCrZx4A9yCTw2sE",
@@ -903,7 +902,7 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
+  const db = getFirestore(app);
   let isRegisterMode = false;
 
   function showLoginError(msg){
@@ -924,21 +923,18 @@
   }
 
   function updateAuthUI(user){
-    const signInBtn = document.getElementById('signInBtn');
     const accountInfo = document.getElementById('accountInfo');
     if(user){
-      signInBtn.style.display = 'none';
       accountInfo.style.display = 'flex';
       document.getElementById('accountPhoto').src = user.photoURL || 'icon-192.png';
       document.getElementById('accountName').textContent = user.displayName || user.email || 'Signed in';
       try{
         localStorage.setItem('hl_user', JSON.stringify({
-          uid: user.uid, name: user.displayName, email: user.email, photo: user.photoURL
+          uid: user.uid, name: user.displayName, email: user.email
         }));
       }catch(e){}
       window.showScreen(window.homeScreen);
     } else {
-      signInBtn.style.display = 'flex';
       accountInfo.style.display = 'none';
       try{ localStorage.removeItem('hl_user'); }catch(e){}
       window.showScreen(window.loginScreen);
@@ -947,38 +943,81 @@
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
-  // Handle the return from Google redirect sign-in using top-level await
-  // This runs immediately when the page loads after Google redirects back
-  try{
-    const result = await getRedirectResult(auth);
-    if(result && result.user){
-      // onAuthStateChanged above will handle navigating to home screen
-      console.log('Redirect sign-in successful:', result.user.email);
-    }
-  }catch(err){
-    if(err && err.code){
-      if(err.code === 'auth/unauthorized-domain'){
-        showLoginError('Google Sign-In is not available in the installed app. Please use Email/Password instead.');
-      } else {
-        showLoginError('Google sign-in failed: ' + err.code);
-      }
-    }
-  }
+  // ---- Toggle between Login and Register modes — shows/hides the extra fields ----
+  document.getElementById('loginToggleLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    isRegisterMode = !isRegisterMode;
+    clearLoginError();
 
+    document.getElementById('loginHeading').textContent = isRegisterMode ? 'Create Account' : 'Welcome!';
+    document.getElementById('loginSubtext').textContent = isRegisterMode
+      ? 'Register to start your Loksewa preparation'
+      : 'Sign in to continue to Health Loksewa';
+    document.getElementById('fieldFullName').style.display = isRegisterMode ? 'block' : 'none';
+    document.getElementById('fieldPhone').style.display = isRegisterMode ? 'block' : 'none';
+    document.getElementById('fieldConfirmPassword').style.display = isRegisterMode ? 'block' : 'none';
+    document.getElementById('passwordLabel').textContent = isRegisterMode ? 'Create Password' : 'Password';
+    document.getElementById('loginPassword').autocomplete = isRegisterMode ? 'new-password' : 'current-password';
+
+    document.getElementById('loginSubmitBtn').textContent = isRegisterMode ? 'Register' : 'Login';
+    document.getElementById('loginToggleText').textContent = isRegisterMode ? 'Already have an account?' : "Don't have an account?";
+    document.getElementById('loginToggleLink').textContent = isRegisterMode ? 'Login' : 'Register now';
+  });
+
+  // ---- Login or Register (same button, mode toggles which fields/validation apply) ----
   document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
     clearLoginError();
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
+
     if(!email || !password){
       showLoginError('Please enter both email and password.');
       return;
     }
+
+    let fullName = '', phone = '', confirmPassword = '';
+    if(isRegisterMode){
+      fullName = document.getElementById('loginFullName').value.trim();
+      phone = document.getElementById('loginPhone').value.trim();
+      confirmPassword = document.getElementById('loginConfirmPassword').value;
+
+      if(!fullName){
+        showLoginError('Please enter your full name.');
+        return;
+      }
+      if(!phone || !/^[0-9]{7,15}$/.test(phone)){
+        showLoginError('Please enter a valid phone number (numbers only).');
+        return;
+      }
+      if(password.length < 6){
+        showLoginError('Password should be at least 6 characters.');
+        return;
+      }
+      if(password !== confirmPassword){
+        showLoginError('Passwords do not match.');
+        return;
+      }
+    }
+
     const btn = document.getElementById('loginSubmitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="btn-spinner"></span>' + (isRegisterMode ? ' Creating account…' : ' Logging in…');
+
     try{
       if(isRegisterMode){
-        await createUserWithEmailAndPassword(auth, email, password);
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName: fullName });
+        // Save full profile (name + phone) to Firestore, tied to this account
+        try{
+          await setDoc(doc(db, 'users', cred.user.uid), {
+            fullName: fullName,
+            email: email,
+            phone: phone,
+            createdAt: new Date().toISOString()
+          });
+        }catch(fireErr){
+          // Account was created successfully even if this extra save fails — don't block the user
+        }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
@@ -987,27 +1026,6 @@
     }finally{
       btn.disabled = false;
       btn.textContent = isRegisterMode ? 'Register' : 'Login';
-    }
-  });
-
-  document.getElementById('loginToggleLink').addEventListener('click', (e) => {
-    e.preventDefault();
-    isRegisterMode = !isRegisterMode;
-    clearLoginError();
-    document.getElementById('loginSubmitBtn').textContent = isRegisterMode ? 'Register' : 'Login';
-    document.getElementById('loginToggleText').textContent = isRegisterMode ? 'Already have an account?' : "Don't have an account?";
-    document.getElementById('loginToggleLink').textContent = isRegisterMode ? 'Login' : 'Register now';
-  });
-
-  document.getElementById('googleContinueBtn').addEventListener('click', async () => {
-    clearLoginError();
-    const btn = document.getElementById('googleContinueBtn');
-    btn.disabled = true;
-    try{
-      await signInWithRedirect(auth, provider);
-    }catch(err){
-      showLoginError('Google sign-in did not start: ' + (err.code || err.message));
-      btn.disabled = false;
     }
   });
 
