@@ -1347,7 +1347,7 @@
 
     try{
       await sendPasswordResetEmail(auth, email);
-      alert('A password reset link has been sent to ' + email + '. Please check your inbox (and spam/junk folder), then follow the link to set a new password.');
+      alert('✅ Reset link sent to ' + email + '\n\nIf you don\'t see it in your Inbox within a few minutes, please check:\n• Spam / Junk folder\n• Promotions tab\n• Updates tab\n\n(This is a Gmail/email provider behavior, not an app problem — moving it to Inbox once found will help future emails arrive there directly.)');
     }catch(err){
       showLoginError(friendlyError(err));
     }finally{
