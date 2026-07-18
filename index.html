@@ -116,6 +116,18 @@
     content:""; flex:1; border-bottom:1px solid var(--line);
   }
   .login-divider span{ padding:0 12px; }
+  .app-loading-wrap{
+    display:flex; align-items:center; justify-content:center;
+    height:100vh; width:100%;
+    background:var(--bg);
+  }
+  .app-loading-spinner{
+    width:34px; height:34px;
+    border:3px solid var(--line); border-top-color:var(--navy);
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+  }
+
   .btn-spinner{
     display:inline-block; width:14px; height:14px;
     border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
@@ -812,7 +824,15 @@
 
   <!-- HOME DASHBOARD -->
   <!-- LOGIN / SPLASH SCREEN (required before Home) -->
-  <div class="screen active" id="loginScreen">
+  <!-- APP LOADING SCREEN — shown briefly while we check if you're already logged in,
+       so refreshing never flashes the Login screen for logged-in users -->
+  <div class="screen active" id="appLoadingScreen">
+    <div class="app-loading-wrap">
+      <div class="app-loading-spinner"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="loginScreen">
     <div class="login-hero">
       <img src="icon-192.png" alt="Health Loksewa" class="login-logo">
       <h1 id="loginHeading">Welcome!</h1>
@@ -1452,6 +1472,7 @@ let secondsLeft = 0;
 let currentSetInfo = null; // { subject, setNumber, totalSets } when running a locked Set; null otherwise
 let currentMarksPerQuestion = 1; // 1 for normal Sets/GK; Mock Test sets this per post (PHO=1, others=2)
 
+const appLoadingScreen = document.getElementById('appLoadingScreen');
 const loginScreen = document.getElementById('loginScreen');
 const homeScreen = document.getElementById('homeScreen');
 const syllabusScreen = document.getElementById('syllabusScreen');
@@ -1473,7 +1494,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
