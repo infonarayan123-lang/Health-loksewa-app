@@ -879,7 +879,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
-    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+    getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged,
     createUserWithEmailAndPassword, signInWithEmailAndPassword
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
@@ -969,6 +969,11 @@
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
+  // Catch the result when Google redirects back to the app after sign-in
+  getRedirectResult(auth).catch((err) => {
+    if(err && err.code) showLoginError('Google sign-in did not complete. Please try again.');
+  });
+
   // ---- Email/Password Login or Register (same button, mode toggles) ----
   document.getElementById('loginSubmitBtn').addEventListener('click', async () => {
     clearLoginError();
@@ -1007,12 +1012,17 @@
   });
 
   // ---- Continue with Google (works for both login and register — Firebase handles both) ----
+  // Uses REDIRECT (not popup) — popups behave unreliably inside installed Android apps (TWA)
   document.getElementById('googleContinueBtn').addEventListener('click', async () => {
     clearLoginError();
+    const btn = document.getElementById('googleContinueBtn');
+    btn.disabled = true;
     try{
-      await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
+      // Page will redirect away to Google now; getRedirectResult() handles the return above
     }catch(err){
-      showLoginError('Google sign-in did not complete. Please try again.');
+      showLoginError('Google sign-in did not start. Please try again.');
+      btn.disabled = false;
     }
   });
 
