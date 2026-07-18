@@ -526,6 +526,7 @@
   .link-group-label:first-child{ margin-top:0; }
 
   .gk-c1{ background:linear-gradient(135deg,#A62639,#7E1D2C); }
+  .mock-c-pho{ background:linear-gradient(135deg,#1B5FA8,#0F3B6E); }
   .gk-c2{ background:linear-gradient(135deg,#C9962C,#9C7420); }
   .gk-c3{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
   .gk-c4{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
@@ -2039,7 +2040,7 @@ function renderMcqPosts(){
 // Exam format per post: Public Health Officer uses 100 questions worth 1 mark each;
 // other posts use 50 questions worth 2 marks each — both total 100 marks either way.
 const MOCK_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🦠📊💰⚖️", css:"gk-c1", questionCount:100, marksEach:1},
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
   {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
