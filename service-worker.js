@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pho-loksewa-v52';
+const CACHE_NAME = 'pho-loksewa-v53';
 const FILES_TO_CACHE = [
   './index.html',
   './manifest.json',
@@ -28,7 +28,18 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('script.google.com')) {
     return; // let it go straight to network, don't cache quiz data
   }
+
+  // NETWORK-FIRST for the app shell: always try to get the latest code first.
+  // Only fall back to the cached copy if there's genuinely no internet connection.
+  // This ensures updates (like bug fixes) always reach the phone immediately,
+  // while still keeping the app usable offline as a safety net.
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((freshResponse) => {
+        const clone = freshResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return freshResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
