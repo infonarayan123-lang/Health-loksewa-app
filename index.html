@@ -134,6 +134,14 @@
     display:flex; align-items:center; justify-content:space-between;
     padding:14px 0 10px;
   }
+  .live-clock-line{
+    text-align:left;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px; font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .live-clock-line .clock-seconds{ color:var(--crimson); }
   .header-profile-btn{
     display:flex; align-items:center; gap:9px;
     background:none; border:none; cursor:pointer; padding:2px;
@@ -374,10 +382,6 @@
   }
 
   .home-greeting{ font-size:13px; color:var(--ink-soft); margin-bottom:4px; }
-  .nepali-date-line{
-    font-size:12px; color:var(--gold); font-weight:600;
-    margin-bottom:10px;
-  }
   .home-title{ font-family:'Tinos',serif; font-size:22px; margin-bottom:18px; }
   .dash-grid{
     display:grid; grid-template-columns:1fr 1fr; gap:12px;
@@ -867,6 +871,9 @@
         </div>
       </div>
 
+      <!-- LIVE CLOCK: date, day, and ticking time (updates every second) -->
+      <div class="live-clock-line" id="liveClockLine">Loading…</div>
+
       <!-- LINE 1: Continuous scrolling marquee ticker -->
       <div class="marquee-wrap">
         <div class="marquee-track">
@@ -892,7 +899,6 @@
       </div>
 
       <div class="home-greeting" id="homeGreeting">नमस्ते! 👋</div>
-      <div class="nepali-date-line" id="nepaliDateLine"></div>
       <div class="home-title">What do you want to study today?</div>
 
       <div class="dash-grid">
@@ -1617,19 +1623,36 @@ function startCarouselAutoPlay(){
 renderCarousel();
 
 // ---------- Nepali (Bikram Sambat) date with day, shown on the home screen ----------
-function showNepaliDate(){
+// ---------- Live clock: date, day, and ticking time (hour:minute:second), updates every second ----------
+const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function pad2(n){ return n.toString().padStart(2, '0'); }
+function updateLiveClock(){
+  const now = new Date();
+
+  // Nepali (Bikram Sambat) date, in Devanagari, with day name
+  let dateStr = '';
   try{
     if(typeof NepaliDate === 'undefined') throw new Error('library not loaded');
-    const nd = new NepaliDate();
-    const text = nd.format('ddd, DD MMMM YYYY', 'np'); // e.g. "आइतबार, १० फाल्गुण २०५४"
-    document.getElementById('nepaliDateLine').textContent = '📅 ' + text;
+    dateStr = new NepaliDate().format('ddd, DD MMMM YYYY', 'np');
   }catch(err){
-    document.getElementById('nepaliDateLine').textContent = ''; // fail silently, English date/greeting already shown above
+    // Fallback to English date if the Nepali library hasn't loaded yet
+    dateStr = `${WEEKDAY_NAMES[now.getDay()]}, ${MONTH_NAMES[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
   }
+
+  // 12-hour time with AM/PM, ticking live every second
+  let hours12 = now.getHours() % 12;
+  if(hours12 === 0) hours12 = 12;
+  const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+  const h = pad2(hours12);
+  const m = pad2(now.getMinutes());
+  const s = pad2(now.getSeconds());
+
+  document.getElementById('liveClockLine').innerHTML =
+    `📅 ${dateStr} &nbsp;·&nbsp; ⏰ ${h}:${m}:<span class="clock-seconds">${s}</span> ${ampm}`;
 }
-showNepaliDate();
-// Recheck at midnight-ish intervals so it updates automatically without needing an app restart
-setInterval(showNepaliDate, 60 * 60 * 1000);
+updateLiveClock();
+setInterval(updateLiveClock, 1000); // genuinely live — ticks every single second
 
 // ---------- Quote of the Day (changes every day at midnight, same quote for everyone that day) ----------
 // Kept ONLY as a fallback if there's no internet — normally quotes are freshly
