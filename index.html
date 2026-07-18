@@ -1633,11 +1633,11 @@ function updateLiveClock(){
   // Nepali (Bikram Sambat) date, in Devanagari, with day name
   let dateStr = '';
   try{
-    if(typeof NepaliDate === 'undefined') throw new Error('library not loaded');
+    if(typeof NepaliDate === 'undefined') throw new Error('NepaliDate is undefined - CDN script did not load or expose that name');
     dateStr = new NepaliDate().format('ddd, DD MMMM YYYY', 'np');
   }catch(err){
-    // Fallback to English date if the Nepali library hasn't loaded yet
-    dateStr = `${WEEKDAY_NAMES[now.getDay()]}, ${MONTH_NAMES[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+    // TEMPORARY DEBUG: show the exact reason instead of silently falling back
+    dateStr = 'DEBUG: ' + err.message;
   }
 
   // 12-hour time with AM/PM, ticking live every second
