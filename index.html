@@ -1040,7 +1040,9 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">Notifications</div>
-      <p style="color:var(--ink-soft); font-size:13.5px;">Notifications are coming soon — you'll see updates and announcements here.</p>
+      <div id="notificationsContent">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
     </div>
   </div>
 
@@ -1541,6 +1543,7 @@ document.getElementById('headerProfileBtn').addEventListener('click', () => {
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
+  loadNotifications();
 });
 document.getElementById('profileLogoutBtn').addEventListener('click', () => {
   window.doSignOut();
@@ -1642,6 +1645,39 @@ function startCarouselAutoPlay(){
   }, 4000);
 }
 renderCarousel();
+
+// ---------- Notifications: self-managing feed (Sheet-driven) + auto Question-of-Day entry ----------
+async function loadNotifications(){
+  const wrap = document.getElementById('notificationsContent');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+
+  // Build a "today's question is ready" entry automatically — always current, no Sheet needed for this one
+  const todayLabel = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  const qotdEntry = {
+    Date: todayLabel,
+    Title: '🎯 Question of the Day is ready!',
+    Description: 'A fresh question is waiting for you on the home screen — answer it before it changes tomorrow.'
+  };
+
+  let sheetEntries = [];
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=notifications`);
+    sheetEntries = await res.json();
+  }catch(err){
+    // Silently proceed with just the Question of the Day entry if the feed can't be reached
+  }
+
+  const allEntries = [qotdEntry, ...sheetEntries];
+
+  wrap.innerHTML = allEntries.map(n => `
+    <div class="content-card">
+      <div class="ca-date">${n.Date || ''}</div>
+      <h4>${n.Title || ''}</h4>
+      <p>${n.Description || ''}</p>
+    </div>
+  `).join('');
+}
+
 
 // ---------- Nepali (Bikram Sambat) date with day, shown on the home screen ----------
 // ---------- Live clock: date, day, and ticking time (hour:minute:second), updates every second ----------
