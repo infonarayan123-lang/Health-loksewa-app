@@ -1633,8 +1633,10 @@ function updateLiveClock(){
   // Nepali (Bikram Sambat) date, in Devanagari, with day name
   let dateStr = '';
   try{
-    if(typeof NepaliDate === 'undefined') throw new Error('NepaliDate is undefined - CDN script did not load or expose that name');
-    dateStr = new NepaliDate().format('ddd, DD MMMM YYYY', 'np');
+    if(typeof NepaliDate === 'undefined') throw new Error('NepaliDate is undefined - CDN script did not load');
+    // The UMD bundle sometimes exposes the actual class under .default instead of directly
+    const NDConstructor = (NepaliDate && NepaliDate.default) ? NepaliDate.default : NepaliDate;
+    dateStr = new NDConstructor().format('ddd, DD MMMM YYYY', 'np');
   }catch(err){
     // TEMPORARY DEBUG: show the exact reason instead of silently falling back
     dateStr = 'DEBUG: ' + err.message;
