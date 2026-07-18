@@ -831,6 +831,9 @@
         <label id="passwordLabel">Password</label>
         <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
       </div>
+      <p id="forgotPasswordWrap" style="text-align:right; margin-top:-8px; margin-bottom:14px;">
+        <a href="#" id="forgotPasswordLink" style="color:var(--navy); font-size:12.5px; font-weight:600; text-decoration:none;">Forgot Password?</a>
+      </p>
       <div class="field" id="fieldConfirmPassword" style="display:none;">
         <label>Confirm Password</label>
         <input type="password" id="loginConfirmPassword" placeholder="••••••••" autocomplete="new-password">
@@ -1198,7 +1201,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
     getAuth, signOut, onAuthStateChanged, updateProfile,
-    createUserWithEmailAndPassword, signInWithEmailAndPassword
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc
@@ -1324,6 +1327,32 @@
     document.getElementById('loginSubmitBtn').textContent = isRegisterMode ? 'Register' : 'Login';
     document.getElementById('loginToggleText').textContent = isRegisterMode ? 'Already have an account?' : "Don't have an account?";
     document.getElementById('loginToggleLink').textContent = isRegisterMode ? 'Login' : 'Register now';
+    document.getElementById('forgotPasswordWrap').style.display = isRegisterMode ? 'none' : 'block';
+  });
+
+  // ---- Forgot Password: sends a secure reset link to the registered email ----
+  document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    clearLoginError();
+    const email = document.getElementById('loginEmail').value.trim();
+
+    if(!email){
+      showLoginError('Please type your email address above first, then tap "Forgot Password?" again.');
+      return;
+    }
+
+    const link = document.getElementById('forgotPasswordLink');
+    const originalText = link.textContent;
+    link.textContent = 'Sending…';
+
+    try{
+      await sendPasswordResetEmail(auth, email);
+      alert('A password reset link has been sent to ' + email + '. Please check your inbox (and spam/junk folder), then follow the link to set a new password.');
+    }catch(err){
+      showLoginError(friendlyError(err));
+    }finally{
+      link.textContent = originalText;
+    }
   });
 
   // ---- Login or Register (same button, mode toggles which fields/validation apply) ----
