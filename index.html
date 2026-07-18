@@ -206,23 +206,6 @@
 
   /* ---------- Quote of the Day ---------- */
   /* ---------- 6 Best Features: compact shortcuts ---------- */
-  .quick-shortcuts{
-    display:grid; grid-template-columns:repeat(3, 1fr);
-    gap:10px; margin-bottom:16px;
-  }
-  .qs-item{
-    display:flex; flex-direction:column; align-items:center; gap:5px;
-    background:var(--panel); border:1px solid var(--line);
-    border-radius:12px; padding:12px 6px;
-    cursor:pointer;
-  }
-  .qs-item .qs-icon{
-    width:38px; height:38px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size:17px; color:#fff;
-  }
-  .qs-item .qs-label{ font-size:10.5px; font-weight:700; color:var(--ink); text-align:center; line-height:1.25; }
-
   .quote-banner{
     display:flex; gap:12px; align-items:flex-start;
     background:var(--panel); border:1px solid var(--line);
@@ -787,9 +770,6 @@
         <div class="carousel-track" id="carouselTrack"></div>
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
-
-      <!-- 6 BEST FEATURES: compact quick-access shortcuts -->
-      <div class="quick-shortcuts" id="quickShortcuts"></div>
 
       <!-- QUOTE OF THE DAY -->
       <div class="quote-banner" id="quoteBanner">
@@ -1423,19 +1403,19 @@ applyDarkModePreference();
 
 // ---------- Auto-sliding carousel ----------
 const CAROUSEL_SLIDES = [
-  { bg:'linear-gradient(135deg,#1B3B6F,#0F274D)', icon:'📚', title:'1000+ MCQs Ready', sub:'Practice Health and Public Health right now' },
-  { bg:'linear-gradient(135deg,#A62639,#7E1D2C)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice' },
-  { bg:'linear-gradient(135deg,#2F7D5D,#1F5A41)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips' },
-  { bg:'linear-gradient(135deg,#6B4C9A,#4A3268)', icon:'🧠', title:'General Knowledge and Guidelines', sub:'Constitution, Acts, Samsamayik &amp; more' },
-  { bg:'linear-gradient(135deg,#B8860B,#7A5A0A)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day' },
-  { bg:'linear-gradient(135deg,#2A5B6E,#1A3D49)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents' },
+  { bg:'linear-gradient(135deg,#1B3B6F,#0F274D)', icon:'📝', title:'Subject-wise MCQs', sub:'1000+ questions, Set-locked progression', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
+  { bg:'linear-gradient(135deg,#A62639,#7E1D2C)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
+  { bg:'linear-gradient(135deg,#2F7D5D,#1F5A41)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
+  { bg:'linear-gradient(135deg,#6B4C9A,#4A3268)', icon:'🧠', title:'General Knowledge and Guidelines', sub:'Constitution, Acts, Samsamayik &amp; more', action:() => { showScreen(gkScreen); renderGkCategories(); } },
+  { bg:'linear-gradient(135deg,#B8860B,#7A5A0A)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { showScreen(qotdScreen); loadQuestionOfDay(); } },
+  { bg:'linear-gradient(135deg,#2A5B6E,#1A3D49)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
 ];
 let carouselIndex = 0;
 let carouselTimer = null;
 function renderCarousel(){
   const track = document.getElementById('carouselTrack');
-  track.innerHTML = CAROUSEL_SLIDES.map(s => `
-    <div class="carousel-slide" style="background:${s.bg};">
+  track.innerHTML = CAROUSEL_SLIDES.map((s, i) => `
+    <div class="carousel-slide" style="background:${s.bg}; cursor:pointer;" data-index="${i}">
       <div class="cs-icon">${s.icon}</div>
       <div><h4>${s.title}</h4><p>${s.sub}</p></div>
     </div>
@@ -1443,6 +1423,11 @@ function renderCarousel(){
   document.getElementById('carouselDots').innerHTML = CAROUSEL_SLIDES.map((_, i) =>
     `<div class="carousel-dot ${i===0?'active':''}"></div>`
   ).join('');
+  document.querySelectorAll('.carousel-slide').forEach(slide => {
+    slide.addEventListener('click', () => {
+      CAROUSEL_SLIDES[parseInt(slide.dataset.index, 10)].action();
+    });
+  });
   startCarouselAutoPlay();
 }
 function startCarouselAutoPlay(){
@@ -1456,31 +1441,6 @@ function startCarouselAutoPlay(){
   }, 4000);
 }
 renderCarousel();
-
-// ---------- 6 Best Features: compact quick-access shortcuts ----------
-const QUICK_SHORTCUTS = [
-  { icon:'🏆', bg:'#A62639', label:'Mock Test', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
-  { icon:'📝', bg:'#1B3B6F', label:'Subject-wise MCQs', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
-  { icon:'🤖', bg:'#2F7D5D', label:'AI Assistant', action:() => { showScreen(aiChatScreen); initChat(); } },
-  { icon:'🎯', bg:'#B8860B', label:'Question of the Day', action:() => { showScreen(qotdScreen); loadQuestionOfDay(); } },
-  { icon:'🧠', bg:'#6B4C9A', label:'General Knowledge', action:() => { showScreen(gkScreen); renderGkCategories(); } },
-  { icon:'🌐', bg:'#2A5B6E', label:'Resources & News', action:() => { showScreen(resourcesScreen); renderResources(); } },
-];
-function renderQuickShortcuts(){
-  const wrap = document.getElementById('quickShortcuts');
-  wrap.innerHTML = QUICK_SHORTCUTS.map((s, i) => `
-    <div class="qs-item" data-index="${i}">
-      <div class="qs-icon" style="background:${s.bg};">${s.icon}</div>
-      <div class="qs-label">${s.label}</div>
-    </div>
-  `).join('');
-  document.querySelectorAll('.qs-item').forEach(item => {
-    item.addEventListener('click', () => {
-      QUICK_SHORTCUTS[parseInt(item.dataset.index, 10)].action();
-    });
-  });
-}
-renderQuickShortcuts();
 
 // ---------- Quote of the Day (changes every day at midnight, same quote for everyone that day) ----------
 const DAILY_QUOTES = [
