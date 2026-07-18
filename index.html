@@ -173,6 +173,16 @@
     font-size:16px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
   }
+  .notif-btn-wrap{ position:relative; }
+  .notif-badge{
+    position:absolute; top:-4px; right:-4px;
+    min-width:16px; height:16px; padding:0 3px;
+    background:var(--crimson); color:#fff;
+    border-radius:9px; border:1.5px solid var(--bg);
+    font-size:9.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    line-height:1;
+  }
 
   /* ---------- Line 1: Continuous Marquee Ticker ---------- */
   .marquee-wrap{
@@ -886,7 +896,10 @@
           <span class="header-username" id="headerUsername">Loading…</span>
         </button>
         <div class="header-icons">
-          <button class="header-icon-btn" id="headerNotifBtn">🔔</button>
+          <button class="header-icon-btn notif-btn-wrap" id="headerNotifBtn">
+            🔔
+            <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+          </button>
           <button class="header-icon-btn" id="headerDarkBtn">🌙</button>
         </div>
       </div>
@@ -1647,29 +1660,24 @@ function startCarouselAutoPlay(){
 renderCarousel();
 
 // ---------- Notifications: self-managing feed (Sheet-driven) + auto Question-of-Day entry ----------
-async function loadNotifications(){
-  const wrap = document.getElementById('notificationsContent');
-  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
-
-  // Build a "today's question is ready" entry automatically — always current, no Sheet needed for this one
+function getTodaysQotdEntry(){
   const todayLabel = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-  const qotdEntry = {
+  return {
     Date: todayLabel,
     Title: '🎯 Question of the Day is ready!',
     Description: 'A fresh question is waiting for you on the home screen — answer it before it changes tomorrow.'
   };
+}
 
-  let sheetEntries = [];
-  try{
-    const res = await fetch(`${SHEET_API_URL}?action=notifications`);
-    sheetEntries = await res.json();
-  }catch(err){
-    // Silently proceed with just the Question of the Day entry if the feed can't be reached
+function paintNotifications(entries){
+  const wrap = document.getElementById('notificationsContent');
+  // Filter out any blank/empty rows (no unnecessary empty boxes)
+  const clean = entries.filter(n => n && n.Title && n.Title.trim() !== '');
+  if(clean.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No notifications yet.</p>`;
+    return;
   }
-
-  const allEntries = [qotdEntry, ...sheetEntries];
-
-  wrap.innerHTML = allEntries.map(n => `
+  wrap.innerHTML = clean.map(n => `
     <div class="content-card">
       <div class="ca-date">${n.Date || ''}</div>
       <h4>${n.Title || ''}</h4>
@@ -1677,6 +1685,62 @@ async function loadNotifications(){
     </div>
   `).join('');
 }
+
+async function loadNotifications(){
+  // Instant: show cached notifications immediately (or at least today's Question of Day entry),
+  // never a blank "Loading…" screen
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem('hl_cache_notifications') || 'null'); }catch(e){}
+  const instantEntries = [getTodaysQotdEntry(), ...(cached || [])];
+  paintNotifications(instantEntries);
+
+  // Quietly refresh in the background
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=notifications`);
+    const sheetEntries = await res.json();
+    localStorage.setItem('hl_cache_notifications', JSON.stringify(sheetEntries));
+    paintNotifications([getTodaysQotdEntry(), ...sheetEntries]);
+
+    // Mark all as "seen" now that the user has opened this screen — clears the badge
+    try{ localStorage.setItem('hl_notif_seen_count', String(sheetEntries.length + 1)); }catch(e){}
+    updateNotificationBadge();
+  }catch(err){
+    // Keep showing cached/instant data — no need to alarm the user
+  }
+}
+
+// ---------- Unread notification badge (red count on the bell icon) ----------
+async function updateNotificationBadge(){
+  let seenCount = 0;
+  try{ seenCount = parseInt(localStorage.getItem('hl_notif_seen_count') || '0', 10); }catch(e){}
+
+  let totalCount = 1; // the always-present Question of the Day entry counts as 1
+  try{
+    let cached = JSON.parse(localStorage.getItem('hl_cache_notifications') || '[]');
+    totalCount = 1 + cached.filter(n => n && n.Title).length;
+  }catch(e){}
+
+  paintBadge(Math.max(0, totalCount - seenCount));
+
+  // Refresh the true count quietly in the background
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=notifications`);
+    const sheetEntries = await res.json();
+    localStorage.setItem('hl_cache_notifications', JSON.stringify(sheetEntries));
+    const freshTotal = 1 + sheetEntries.filter(n => n && n.Title).length;
+    paintBadge(Math.max(0, freshTotal - seenCount));
+  }catch(err){}
+}
+function paintBadge(count){
+  const badge = document.getElementById('notifBadge');
+  if(count <= 0){
+    badge.style.display = 'none';
+    return;
+  }
+  badge.textContent = count > 99 ? '99+' : String(count);
+  badge.style.display = 'flex';
+}
+updateNotificationBadge(); // check once on app load
 
 
 // ---------- Nepali (Bikram Sambat) date with day, shown on the home screen ----------
