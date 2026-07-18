@@ -941,16 +941,18 @@
       }catch(e){}
 
       // ---- Load this user's cloud data (chat + progress), so it follows them to any device ----
+      // Hard 3-second timeout — login must NEVER wait longer than this, regardless of Firestore's state
       if(db){
         try{
-          const snap = await getDoc(doc(db, "users", user.uid));
-          if(snap.exists()){
+          const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
+          const snap = await Promise.race([getDoc(doc(db, "users", user.uid)), timeout]);
+          if(snap && snap.exists()){
             const cloud = snap.data();
             if(cloud.progress) localStorage.setItem('hl_progress', JSON.stringify(cloud.progress));
             if(cloud.chatHistory) localStorage.setItem('hl_chat_history', JSON.stringify(cloud.chatHistory));
           }
         }catch(e){
-          // If cloud load fails, we just continue with whatever's already on this device
+          // Timed out or failed — just continue with whatever's already on this device, no big deal
         }
       }
 
