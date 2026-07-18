@@ -216,17 +216,39 @@
   .quote-text{ font-size:13px; font-style:italic; color:var(--ink); line-height:1.5; }
 
   /* ---------- Question of the Day card + screen ---------- */
-  .dash-card.c-qotd{
+  .dash-card.c-qotd.qotd-card{
     background:linear-gradient(135deg,#B8860B,#7A5A0A);
     grid-column:1 / -1;
-    flex-direction:row; align-items:center; gap:16px;
+    flex-direction:column; align-items:stretch; gap:10px;
+    cursor:default; min-height:0;
+    padding:18px;
   }
+  .qotd-card-header{ display:flex; align-items:center; gap:10px; }
+  .qotd-card-header .dc-icon{ font-size:20px; }
+  .qotd-card-body{ color:#fff; font-size:13px; }
+  .qotd-card-body .qotd-q-text{
+    font-family:'Tinos',serif; font-size:14.5px; margin-bottom:12px; line-height:1.45;
+  }
+  .qotd-opt-btn{
+    display:block; width:100%; text-align:left;
+    padding:10px 12px; margin-bottom:7px;
+    border:1.5px solid rgba(255,255,255,0.35); border-radius:9px;
+    background:rgba(255,255,255,0.1); color:#fff;
+    font-family:'Inter',sans-serif; font-size:12.5px; cursor:pointer;
+  }
+  .qotd-opt-btn:active{ background:rgba(255,255,255,0.25); }
+  .qotd-opt-btn.correct-opt{ background:rgba(47,125,93,0.75); border-color:#2F7D5D; }
+  .qotd-opt-btn.wrong-opt{ background:rgba(192,57,43,0.75); border-color:#C0392B; }
   .qotd-answered-msg{
-    text-align:center; padding:40px 20px;
+    text-align:center; padding:14px 6px 6px; color:#fff;
   }
-  .qotd-answered-msg .big-icon{ font-size:44px; margin-bottom:12px; }
-  .qotd-answered-msg h3{ font-family:'Tinos',serif; font-size:18px; margin-bottom:8px; }
-  .qotd-answered-msg p{ color:var(--ink-soft); font-size:13.5px; }
+  .qotd-answered-msg .big-icon{ font-size:34px; margin-bottom:6px; }
+  .qotd-answered-msg h3{ font-family:'Tinos',serif; font-size:15px; margin-bottom:4px; }
+  .qotd-answered-msg p{ opacity:0.9; font-size:12.5px; }
+  .qotd-explanation-box{
+    background:rgba(255,255,255,0.12); border-radius:9px;
+    padding:10px 12px; margin-top:8px; font-size:12px; color:#fff; line-height:1.5;
+  }
 
   /* ---------- Profile Screen ---------- */
   .profile-hero{
@@ -822,13 +844,13 @@
             <div class="dc-sub">Ask about syllabus, subjects, study tips &amp; more</div>
           </div>
         </button>
-        <button class="dash-card c-qotd" id="cardQotd">
-          <div class="dc-icon">🎯</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Question of the Day</div>
-            <div class="dc-sub">One free question, updated daily</div>
+        <div class="dash-card c-qotd qotd-card" id="cardQotd">
+          <div class="qotd-card-header">
+            <div class="dc-icon">🎯</div>
+            <div class="dc-label" style="color:#fff;">Question of the Day</div>
           </div>
-        </button>
+          <div id="qotdCardContent" class="qotd-card-body">Loading today's question…</div>
+        </div>
       </div>
 
       <div class="app-footer">
@@ -903,16 +925,6 @@
     </div>
   </div>
 
-  <!-- QUESTION OF THE DAY SCREEN -->
-  <div class="screen" id="qotdScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
-    <div class="home-body">
-      <div class="section-title">🎯 Question of the Day</div>
-      <div id="qotdContent">
-        <p style="color:var(--ink-soft); font-size:13.5px;">Loading today's question…</p>
-      </div>
-    </div>
-  </div>
 
   <!-- SYLLABUS SCREEN -->
   <div class="screen" id="syllabusScreen">
@@ -1322,7 +1334,6 @@ const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
-const qotdScreen = document.getElementById('qotdScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const mcqPostScreen = document.getElementById('mcqPostScreen');
 const mockPostScreen = document.getElementById('mockPostScreen');
@@ -1331,7 +1342,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, notificationsScreen, qotdScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -1369,10 +1380,8 @@ document.getElementById('cardAi').addEventListener('click', () => {
   showScreen(aiChatScreen);
   initChat();
 });
-document.getElementById('cardQotd').addEventListener('click', () => {
-  showScreen(qotdScreen);
-  loadQuestionOfDay();
-});
+// Question of the Day is now inline on the dashboard card itself — no tap-to-navigate needed
+// (see loadQuestionOfDay() call further below, which runs automatically on page load)
 
 // ---------- Header bar: profile / notifications / dark mode ----------
 document.getElementById('headerProfileBtn').addEventListener('click', () => {
@@ -1407,7 +1416,7 @@ const CAROUSEL_SLIDES = [
   { bg:'linear-gradient(135deg,#A62639,#7E1D2C)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
   { bg:'linear-gradient(135deg,#2F7D5D,#1F5A41)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
   { bg:'linear-gradient(135deg,#6B4C9A,#4A3268)', icon:'🧠', title:'General Knowledge and Guidelines', sub:'Constitution, Acts, Samsamayik &amp; more', action:() => { showScreen(gkScreen); renderGkCategories(); } },
-  { bg:'linear-gradient(135deg,#B8860B,#7A5A0A)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { showScreen(qotdScreen); loadQuestionOfDay(); } },
+  { bg:'linear-gradient(135deg,#B8860B,#7A5A0A)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { document.getElementById('cardQotd').scrollIntoView({behavior:'smooth', block:'center'}); } },
   { bg:'linear-gradient(135deg,#2A5B6E,#1A3D49)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
 ];
 let carouselIndex = 0;
@@ -1461,21 +1470,15 @@ const DAILY_QUOTES = [
   "Dreams don't work unless you do.",
 ];
 function showQuoteOfDay(){
-  const today = new Date();
-  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-  const quote = DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
-  document.getElementById('quoteText').textContent = quote;
+  // Rotates every 1 minute — index changes based on the current minute-of-day
+  const now = new Date();
+  const minuteOfDay = now.getHours() * 60 + now.getMinutes();
+  const quote = DAILY_QUOTES[minuteOfDay % DAILY_QUOTES.length];
+  document.getElementById('quoteText').textContent = `"${quote}"`;
 }
 showQuoteOfDay();
-// Check every hour whether the date has changed, so the quote flips at midnight without needing a restart
-let lastQuoteDay = new Date().getDate();
-setInterval(() => {
-  const nowDay = new Date().getDate();
-  if(nowDay !== lastQuoteDay){
-    lastQuoteDay = nowDay;
-    showQuoteOfDay();
-  }
-}, 60 * 60 * 1000);
+// Re-check every minute so the quote rotates live without needing a restart
+setInterval(showQuoteOfDay, 60 * 1000);
 
 // ---------- Question of the Day ----------
 async function loadQuestionOfDay(){
@@ -1490,39 +1493,34 @@ async function loadQuestionOfDay(){
     return;
   }
 
-  document.getElementById('qotdContent').innerHTML =
-    `<p style="color:var(--ink-soft); font-size:13.5px;">Loading today's question…</p>`;
+  document.getElementById('qotdCardContent').innerHTML = 'Loading today\'s question…';
 
   try{
     const res = await fetch(`${SHEET_API_URL}?action=questionOfDay`);
     const q = await res.json();
     if(!q || !q.Question){
-      document.getElementById('qotdContent').innerHTML =
-        `<p style="color:var(--ink-soft); font-size:13.5px;">No question available yet — check back soon!</p>`;
+      document.getElementById('qotdCardContent').innerHTML = 'No question available yet — check back soon!';
       return;
     }
     paintQotdQuestion(q, todayKey);
   }catch(err){
-    document.getElementById('qotdContent').innerHTML =
-      `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load today's question. Check your internet connection.</p>`;
+    document.getElementById('qotdCardContent').innerHTML = 'Could not load today\'s question. Check your internet connection.';
   }
 }
 
 function paintQotdQuestion(q, todayKey){
   const letters = ['A','B','C','D'];
-  document.getElementById('qotdContent').innerHTML = `
-    <div class="content-card">
-      <h4 style="margin-bottom:14px;">${q.Question}</h4>
-      <div id="qotdOptions">
-        ${letters.map(l => `
-          <button class="qotd-option-btn" data-letter="${l}" style="display:block; width:100%; text-align:left; padding:12px 14px; margin-bottom:8px; border:1.5px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13.5px; cursor:pointer;">
-            <b>${l}.</b> ${q['Option' + l]}
-          </button>
-        `).join('')}
-      </div>
+  document.getElementById('qotdCardContent').innerHTML = `
+    <div class="qotd-q-text">${q.Question}</div>
+    <div id="qotdOptions">
+      ${letters.map(l => `
+        <button class="qotd-opt-btn" data-letter="${l}">
+          <b>${l}.</b> ${q['Option' + l]}
+        </button>
+      `).join('')}
     </div>
   `;
-  document.querySelectorAll('.qotd-option-btn').forEach(btn => {
+  document.querySelectorAll('.qotd-opt-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const chosen = btn.dataset.letter;
       const correct = chosen === q.CorrectAnswer;
@@ -1535,21 +1533,28 @@ function paintQotdQuestion(q, todayKey){
 
 function paintQotdAnswered(data){
   const { question, chosen, correct } = data;
-  document.getElementById('qotdContent').innerHTML = `
+  const letters = ['A','B','C','D'];
+  document.getElementById('qotdCardContent').innerHTML = `
     <div class="qotd-answered-msg">
       <div class="big-icon">${correct ? '🎉' : '📘'}</div>
       <h3>Thank you for your response!</h3>
       <p>${correct ? "You got it right — well done! 🌟" : "Not quite — here's the correct answer below."}</p>
     </div>
-    <div class="content-card">
-      <h4 style="margin-bottom:10px;">${question.Question}</h4>
-      <p style="font-size:13px; margin-bottom:8px;"><b>Your answer:</b> ${chosen} — ${correct ? '✅ Correct' : '❌ Incorrect'}</p>
-      <p style="font-size:13px; margin-bottom:8px;"><b>Correct answer:</b> ${question.CorrectAnswer} — ${question['Option' + question.CorrectAnswer]}</p>
-      <p style="font-size:12.5px; color:var(--ink-soft);">${question.Explanation || ''}</p>
+    <div class="qotd-q-text" style="margin-top:8px;">${question.Question}</div>
+    <div id="qotdOptions">
+      ${letters.map(l => {
+        let cls = '';
+        if(l === question.CorrectAnswer) cls = 'correct-opt';
+        else if(l === chosen) cls = 'wrong-opt';
+        return `<div class="qotd-opt-btn ${cls}" style="cursor:default;"><b>${l}.</b> ${question['Option' + l]}</div>`;
+      }).join('')}
     </div>
-    <p style="text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:14px;">Come back tomorrow for a new question! 🗓️</p>
+    <div class="qotd-explanation-box">${question.Explanation || ''}</div>
+    <p style="text-align:center; opacity:0.85; font-size:11.5px; margin-top:10px;">Come back tomorrow for a new question! 🗓️</p>
   `;
 }
+// Load the day's question automatically as soon as the dashboard is ready — no tap needed
+loadQuestionOfDay();
 
 document.querySelectorAll('.back-link').forEach(b => {
   b.addEventListener('click', () => {
