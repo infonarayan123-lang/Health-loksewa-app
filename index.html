@@ -27,6 +27,18 @@
     --line:#E4DDD1;
     --radius:14px;
   }
+  body.dark-mode{
+    --bg:#15130F;
+    --panel:#211E19;
+    --ink:#F0EBE2;
+    --ink-soft:#A69B8C;
+    --line:#3A342B;
+    --correct-bg:#1B2E24;
+    --wrong-bg:#301F1C;
+  }
+  body.dark-mode .content-card,
+  body.dark-mode .link-card,
+  body.dark-mode .set-card{ background:var(--panel); }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:var(--bg);
@@ -128,6 +140,112 @@
     text-align:center; margin-top:20px; font-size:13px; color:var(--ink-soft);
   }
   .login-toggle a{ color:var(--navy); font-weight:700; text-decoration:none; margin-left:4px; }
+
+  /* ---------- Top Header Bar ---------- */
+  .app-header-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0 10px;
+  }
+  .header-profile-btn{
+    display:flex; align-items:center; gap:9px;
+    background:none; border:none; cursor:pointer; padding:2px;
+  }
+  .header-avatar{
+    width:34px; height:34px; border-radius:50%;
+    background:var(--navy); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; font-family:'Tinos',serif;
+    flex-shrink:0;
+  }
+  .header-username{ font-size:13.5px; font-weight:700; color:var(--ink); }
+  .header-icons{ display:flex; gap:6px; }
+  .header-icon-btn{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--panel); border:1px solid var(--line);
+    font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- Auto-sliding Carousel ---------- */
+  .carousel-wrap{ margin-bottom:14px; }
+  .carousel-track{
+    display:flex; overflow-x:hidden; scroll-behavior:smooth;
+    border-radius:16px;
+  }
+  .carousel-slide{
+    min-width:100%; padding:22px 20px;
+    display:flex; align-items:center; gap:14px;
+    color:#fff; border-radius:16px;
+  }
+  .carousel-slide .cs-icon{ font-size:30px; }
+  .carousel-slide h4{ font-family:'Tinos',serif; font-size:16px; margin-bottom:3px; }
+  .carousel-slide p{ font-size:12px; opacity:0.9; }
+  .carousel-dots{ display:flex; justify-content:center; gap:6px; margin-top:8px; }
+  .carousel-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--line);
+    transition:background 0.2s;
+  }
+  .carousel-dot.active{ background:var(--navy); width:18px; border-radius:4px; }
+
+  /* ---------- Quote of the Day ---------- */
+  .quote-banner{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--panel); border:1px solid var(--line);
+    border-left:4px solid var(--gold);
+    border-radius:12px; padding:14px 16px; margin-bottom:18px;
+  }
+  .quote-icon{ font-size:22px; color:var(--gold); font-family:'Tinos',serif; line-height:1; }
+  .quote-text{ font-size:13px; font-style:italic; color:var(--ink); line-height:1.5; }
+
+  /* ---------- Question of the Day card + screen ---------- */
+  .dash-card.c-qotd{
+    background:linear-gradient(135deg,#B8860B,#7A5A0A);
+    grid-column:1 / -1;
+    flex-direction:row; align-items:center; gap:16px;
+  }
+  .qotd-answered-msg{
+    text-align:center; padding:40px 20px;
+  }
+  .qotd-answered-msg .big-icon{ font-size:44px; margin-bottom:12px; }
+  .qotd-answered-msg h3{ font-family:'Tinos',serif; font-size:18px; margin-bottom:8px; }
+  .qotd-answered-msg p{ color:var(--ink-soft); font-size:13.5px; }
+
+  /* ---------- Profile Screen ---------- */
+  .profile-hero{
+    text-align:center; padding:36px 20px 26px;
+    background:linear-gradient(160deg, #1B3B6F 0%, #6B4C9A 100%);
+    color:#fff; border-radius:0 0 24px 24px;
+  }
+  .profile-avatar-big{
+    width:64px; height:64px; border-radius:50%;
+    background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:700; font-family:'Tinos',serif;
+    margin:0 auto 12px;
+  }
+  .profile-hero h2{ font-family:'Tinos',serif; font-size:19px; margin-bottom:3px; }
+  .profile-hero p{ font-size:12.5px; opacity:0.85; }
+  .profile-status-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:14px 16px; margin:18px 20px 6px;
+  }
+  .profile-status-row .status-label{ font-size:13px; color:var(--ink-soft); }
+  .profile-status-row .status-value{ font-weight:700; color:var(--ink); font-size:14px; }
+  .upgrade-btn{
+    background:var(--gold); color:#fff; border:none;
+    padding:8px 14px; border-radius:20px; font-size:12px; font-weight:700;
+    cursor:pointer;
+  }
+  .profile-menu{ padding:14px 20px 30px; }
+  .profile-menu-item{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 4px; border-bottom:1px solid var(--line);
+    cursor:pointer; background:none; border-left:none; border-right:none; border-top:none;
+    width:100%; text-align:left; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink);
+  }
+  .profile-menu-item.logout{ color:var(--wrong); }
+  .pm-icon{ font-size:17px; width:22px; text-align:center; }
 
   .account-bar{ margin-bottom:16px; }
   .signin-btn{
@@ -608,15 +726,33 @@
   </div>
 
   <div class="screen" id="homeScreen">
-    <div class="home-body">
-      <div class="account-bar" id="accountBar">
-        <div class="account-info" id="accountInfo">
-          <img id="accountPhoto" class="account-photo" src="" alt="">
-          <span id="accountName" class="account-name"></span>
-          <button class="signout-btn" id="signOutBtn">Sign out</button>
+    <div class="home-body" style="padding-top:0;">
+
+      <!-- TOP HEADER BAR -->
+      <div class="app-header-bar">
+        <button class="header-profile-btn" id="headerProfileBtn">
+          <span class="header-avatar" id="headerAvatar">?</span>
+          <span class="header-username" id="headerUsername">Loading…</span>
+        </button>
+        <div class="header-icons">
+          <button class="header-icon-btn" id="headerNotifBtn">🔔</button>
+          <button class="header-icon-btn" id="headerDarkBtn">🌙</button>
         </div>
       </div>
-      <div class="home-greeting">नमस्ते, Narayan 👋</div>
+
+      <!-- AUTO-SLIDING CAROUSEL -->
+      <div class="carousel-wrap" id="carouselWrap">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <div class="carousel-dots" id="carouselDots"></div>
+      </div>
+
+      <!-- QUOTE OF THE DAY -->
+      <div class="quote-banner" id="quoteBanner">
+        <div class="quote-icon">❝</div>
+        <div class="quote-text" id="quoteText">Loading today's quote…</div>
+      </div>
+
+      <div class="home-greeting" id="homeGreeting">नमस्ते! 👋</div>
       <div class="home-title">What do you want to study today?</div>
 
       <div class="dash-grid">
@@ -661,6 +797,13 @@
             <div class="dc-sub">Ask about syllabus, subjects, study tips &amp; more</div>
           </div>
         </button>
+        <button class="dash-card c-qotd" id="cardQotd">
+          <div class="dc-icon">🎯</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Question of the Day</div>
+            <div class="dc-sub">One free question, updated daily</div>
+          </div>
+        </button>
       </div>
 
       <div class="app-footer">
@@ -696,6 +839,51 @@
       <div class="chat-input-row">
         <input type="text" id="chatInput" placeholder="Ask about subjects, syllabus, study tips…">
         <button class="chat-send-btn" id="chatSendBtn">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div class="screen" id="profileScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="profile-hero">
+      <div class="profile-avatar-big" id="profileAvatarBig">?</div>
+      <h2 id="profileName">Loading…</h2>
+      <p id="profileEmail"></p>
+    </div>
+    <div class="profile-status-row">
+      <div>
+        <div class="status-label">Account Status</div>
+        <div class="status-value">Free</div>
+      </div>
+      <button class="upgrade-btn" id="upgradeNowBtn">Upgrade Now</button>
+    </div>
+    <div class="profile-menu">
+      <button class="profile-menu-item"><span class="pm-icon">📞</span> Contact Us</button>
+      <button class="profile-menu-item"><span class="pm-icon">ℹ️</span> About Us</button>
+      <button class="profile-menu-item"><span class="pm-icon">💬</span> Feedback</button>
+      <button class="profile-menu-item"><span class="pm-icon">⭐</span> Rate Us</button>
+      <button class="profile-menu-item"><span class="pm-icon">📄</span> Terms and Conditions</button>
+      <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon">🚪</span> Logout</button>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS SCREEN (placeholder for now) -->
+  <div class="screen" id="notificationsScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Notifications</div>
+      <p style="color:var(--ink-soft); font-size:13.5px;">Notifications are coming soon — you'll see updates and announcements here.</p>
+    </div>
+  </div>
+
+  <!-- QUESTION OF THE DAY SCREEN -->
+  <div class="screen" id="qotdScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">🎯 Question of the Day</div>
+      <div id="qotdContent">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading today's question…</p>
       </div>
     </div>
   </div>
@@ -923,11 +1111,22 @@
   }
 
   function updateAuthUI(user){
-    const accountInfo = document.getElementById('accountInfo');
     if(user){
-      accountInfo.style.display = 'flex';
-      document.getElementById('accountPhoto').src = user.photoURL || 'icon-192.png';
-      document.getElementById('accountName').textContent = user.displayName || user.email || 'Signed in';
+      const name = user.displayName || user.email || 'Student';
+      const firstLetter = name.trim().charAt(0).toUpperCase();
+
+      // Top header bar
+      document.getElementById('headerAvatar').textContent = firstLetter;
+      document.getElementById('headerUsername').textContent = name.split(' ')[0];
+
+      // Home greeting
+      document.getElementById('homeGreeting').textContent = `नमस्ते, ${name.split(' ')[0]}! 👋`;
+
+      // Profile screen
+      document.getElementById('profileAvatarBig').textContent = firstLetter;
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('profileEmail').textContent = user.email || '';
+
       try{
         localStorage.setItem('hl_user', JSON.stringify({
           uid: user.uid, name: user.displayName, email: user.email
@@ -935,11 +1134,14 @@
       }catch(e){}
       window.showScreen(window.homeScreen);
     } else {
-      accountInfo.style.display = 'none';
       try{ localStorage.removeItem('hl_user'); }catch(e){}
       window.showScreen(window.loginScreen);
     }
   }
+
+  window.doSignOut = async function(){
+    try{ await signOut(auth); }catch(err){}
+  };
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
@@ -1028,10 +1230,6 @@
       btn.textContent = isRegisterMode ? 'Register' : 'Login';
     }
   });
-
-  document.getElementById('signOutBtn').addEventListener('click', async () => {
-    try{ await signOut(auth); }catch(err){}
-  });
 </script>
 
 <script>
@@ -1039,7 +1237,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxFBnSNpSt0Z0W96-sanWHhlh6MmkuPal8e7M0Db37o5xmJQle8lUBv3luYO0sXGx1zQA/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwFowZahcRqI8QQW7geGM8N7qpBxpPQ0hmGeBvnVBaxsePfqXog-eB1_h7tvBmRI2-eWA/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -1062,6 +1260,9 @@ const samsamayikScreen = document.getElementById('samsamayikScreen');
 const docListScreen = document.getElementById('docListScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
+const profileScreen = document.getElementById('profileScreen');
+const notificationsScreen = document.getElementById('notificationsScreen');
+const qotdScreen = document.getElementById('qotdScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const mcqPostScreen = document.getElementById('mcqPostScreen');
 const mockPostScreen = document.getElementById('mockPostScreen');
@@ -1070,7 +1271,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, notificationsScreen, qotdScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -1108,6 +1309,181 @@ document.getElementById('cardAi').addEventListener('click', () => {
   showScreen(aiChatScreen);
   initChat();
 });
+document.getElementById('cardQotd').addEventListener('click', () => {
+  showScreen(qotdScreen);
+  loadQuestionOfDay();
+});
+
+// ---------- Header bar: profile / notifications / dark mode ----------
+document.getElementById('headerProfileBtn').addEventListener('click', () => {
+  showScreen(profileScreen);
+});
+document.getElementById('headerNotifBtn').addEventListener('click', () => {
+  showScreen(notificationsScreen);
+});
+document.getElementById('profileLogoutBtn').addEventListener('click', () => {
+  window.doSignOut();
+});
+document.getElementById('upgradeNowBtn').addEventListener('click', () => {
+  alert('Premium plans are coming soon! Stay tuned.');
+});
+
+// ---------- Dark mode ----------
+function applyDarkModePreference(){
+  const isDark = localStorage.getItem('hl_dark_mode') === '1';
+  document.body.classList.toggle('dark-mode', isDark);
+  document.getElementById('headerDarkBtn').textContent = isDark ? '☀️' : '🌙';
+}
+document.getElementById('headerDarkBtn').addEventListener('click', () => {
+  const isDark = document.body.classList.toggle('dark-mode');
+  document.getElementById('headerDarkBtn').textContent = isDark ? '☀️' : '🌙';
+  try{ localStorage.setItem('hl_dark_mode', isDark ? '1' : '0'); }catch(e){}
+});
+applyDarkModePreference();
+
+// ---------- Auto-sliding carousel ----------
+const CAROUSEL_SLIDES = [
+  { bg:'linear-gradient(135deg,#1B3B6F,#0F274D)', icon:'📚', title:'1000+ MCQs Ready', sub:'Practice Health and Public Health right now' },
+  { bg:'linear-gradient(135deg,#A62639,#7E1D2C)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice' },
+  { bg:'linear-gradient(135deg,#2F7D5D,#1F5A41)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips' },
+  { bg:'linear-gradient(135deg,#6B4C9A,#4A3268)', icon:'🧠', title:'General Knowledge and Guidelines', sub:'Constitution, Acts, Samsamayik &amp; more' },
+];
+let carouselIndex = 0;
+let carouselTimer = null;
+function renderCarousel(){
+  const track = document.getElementById('carouselTrack');
+  track.innerHTML = CAROUSEL_SLIDES.map(s => `
+    <div class="carousel-slide" style="background:${s.bg};">
+      <div class="cs-icon">${s.icon}</div>
+      <div><h4>${s.title}</h4><p>${s.sub}</p></div>
+    </div>
+  `).join('');
+  document.getElementById('carouselDots').innerHTML = CAROUSEL_SLIDES.map((_, i) =>
+    `<div class="carousel-dot ${i===0?'active':''}"></div>`
+  ).join('');
+  startCarouselAutoPlay();
+}
+function startCarouselAutoPlay(){
+  if(carouselTimer) clearInterval(carouselTimer);
+  carouselTimer = setInterval(() => {
+    carouselIndex = (carouselIndex + 1) % CAROUSEL_SLIDES.length;
+    const track = document.getElementById('carouselTrack');
+    track.style.transform = `translateX(-${carouselIndex * 100}%)`;
+    track.style.transition = 'transform 0.5s ease';
+    document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
+  }, 4000);
+}
+renderCarousel();
+
+// ---------- Quote of the Day (changes every day at midnight, same quote for everyone that day) ----------
+const DAILY_QUOTES = [
+  "Success is the sum of small efforts, repeated day in and day out.",
+  "The expert in anything was once a beginner.",
+  "Discipline is choosing between what you want now and what you want most.",
+  "Small daily improvements lead to stunning results.",
+  "Your future is created by what you do today, not tomorrow.",
+  "Hard work beats talent when talent doesn't work hard.",
+  "The only way to do great work is to keep going even when it's hard.",
+  "Every question you solve today is one step closer to your goal.",
+  "Consistency is what transforms average into excellence.",
+  "Believe you can, and you're halfway there.",
+  "Don't watch the clock; do what it does — keep going.",
+  "A little progress each day adds up to big results.",
+  "Preparation is the key that unlocks opportunity.",
+  "Your only limit is the one you set for yourself.",
+  "Dreams don't work unless you do.",
+];
+function showQuoteOfDay(){
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+  const quote = DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
+  document.getElementById('quoteText').textContent = quote;
+}
+showQuoteOfDay();
+// Check every hour whether the date has changed, so the quote flips at midnight without needing a restart
+let lastQuoteDay = new Date().getDate();
+setInterval(() => {
+  const nowDay = new Date().getDate();
+  if(nowDay !== lastQuoteDay){
+    lastQuoteDay = nowDay;
+    showQuoteOfDay();
+  }
+}, 60 * 60 * 1000);
+
+// ---------- Question of the Day ----------
+async function loadQuestionOfDay(){
+  const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, resets at midnight (device time)
+  const answeredKey = 'hl_qotd_answered_' + todayKey;
+
+  let answeredData = null;
+  try{ answeredData = JSON.parse(localStorage.getItem(answeredKey) || 'null'); }catch(e){}
+
+  if(answeredData){
+    paintQotdAnswered(answeredData);
+    return;
+  }
+
+  document.getElementById('qotdContent').innerHTML =
+    `<p style="color:var(--ink-soft); font-size:13.5px;">Loading today's question…</p>`;
+
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=questionOfDay`);
+    const q = await res.json();
+    if(!q || !q.Question){
+      document.getElementById('qotdContent').innerHTML =
+        `<p style="color:var(--ink-soft); font-size:13.5px;">No question available yet — check back soon!</p>`;
+      return;
+    }
+    paintQotdQuestion(q, todayKey);
+  }catch(err){
+    document.getElementById('qotdContent').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load today's question. Check your internet connection.</p>`;
+  }
+}
+
+function paintQotdQuestion(q, todayKey){
+  const letters = ['A','B','C','D'];
+  document.getElementById('qotdContent').innerHTML = `
+    <div class="content-card">
+      <h4 style="margin-bottom:14px;">${q.Question}</h4>
+      <div id="qotdOptions">
+        ${letters.map(l => `
+          <button class="qotd-option-btn" data-letter="${l}" style="display:block; width:100%; text-align:left; padding:12px 14px; margin-bottom:8px; border:1.5px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13.5px; cursor:pointer;">
+            <b>${l}.</b> ${q['Option' + l]}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  document.querySelectorAll('.qotd-option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const chosen = btn.dataset.letter;
+      const correct = chosen === q.CorrectAnswer;
+      const answeredData = { question: q, chosen, correct };
+      try{ localStorage.setItem('hl_qotd_answered_' + todayKey, JSON.stringify(answeredData)); }catch(e){}
+      paintQotdAnswered(answeredData);
+    });
+  });
+}
+
+function paintQotdAnswered(data){
+  const { question, chosen, correct } = data;
+  document.getElementById('qotdContent').innerHTML = `
+    <div class="qotd-answered-msg">
+      <div class="big-icon">${correct ? '🎉' : '📘'}</div>
+      <h3>Thank you for your response!</h3>
+      <p>${correct ? "You got it right — well done! 🌟" : "Not quite — here's the correct answer below."}</p>
+    </div>
+    <div class="content-card">
+      <h4 style="margin-bottom:10px;">${question.Question}</h4>
+      <p style="font-size:13px; margin-bottom:8px;"><b>Your answer:</b> ${chosen} — ${correct ? '✅ Correct' : '❌ Incorrect'}</p>
+      <p style="font-size:13px; margin-bottom:8px;"><b>Correct answer:</b> ${question.CorrectAnswer} — ${question['Option' + question.CorrectAnswer]}</p>
+      <p style="font-size:12.5px; color:var(--ink-soft);">${question.Explanation || ''}</p>
+    </div>
+    <p style="text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:14px;">Come back tomorrow for a new question! 🗓️</p>
+  `;
+}
+
 document.querySelectorAll('.back-link').forEach(b => {
   b.addEventListener('click', () => {
     const key = b.dataset.back || 'home';
