@@ -898,7 +898,12 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  let db = null;
+  try{
+    db = getFirestore(app); // if Firestore isn't set up in the console, this must never block login
+  }catch(e){
+    db = null;
+  }
   const provider = new GoogleAuthProvider();
   let isRegisterMode = false;
   let currentUid = null;
@@ -936,15 +941,17 @@
       }catch(e){}
 
       // ---- Load this user's cloud data (chat + progress), so it follows them to any device ----
-      try{
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if(snap.exists()){
-          const cloud = snap.data();
-          if(cloud.progress) localStorage.setItem('hl_progress', JSON.stringify(cloud.progress));
-          if(cloud.chatHistory) localStorage.setItem('hl_chat_history', JSON.stringify(cloud.chatHistory));
+      if(db){
+        try{
+          const snap = await getDoc(doc(db, "users", user.uid));
+          if(snap.exists()){
+            const cloud = snap.data();
+            if(cloud.progress) localStorage.setItem('hl_progress', JSON.stringify(cloud.progress));
+            if(cloud.chatHistory) localStorage.setItem('hl_chat_history', JSON.stringify(cloud.chatHistory));
+          }
+        }catch(e){
+          // If cloud load fails, we just continue with whatever's already on this device
         }
-      }catch(e){
-        // If cloud load fails, we just continue with whatever's already on this device
       }
 
       window.showScreen(window.homeScreen);
@@ -959,7 +966,7 @@
 
   // ---- Exposed globally so the main app script can push updates to the cloud ----
   window.syncToCloud = async function(partialData){
-    if(!currentUid) return; // not signed in, nothing to sync
+    if(!currentUid || !db) return; // not signed in or Firestore unavailable — nothing to sync
     try{
       await setDoc(doc(db, "users", currentUid), partialData, { merge: true });
     }catch(e){
