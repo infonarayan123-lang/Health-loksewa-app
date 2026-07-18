@@ -746,10 +746,12 @@
   .feedback.show{ display:block; }
   .feedback.correct-fb{ background:var(--correct-bg); color:#204F3E; }
   .feedback.wrong-fb{ background:var(--wrong-bg); color:#7A2018; }
+  body.dark-mode .feedback.correct-fb{ color:#8FD9A8; }
+  body.dark-mode .feedback.wrong-fb{ color:#F0A99C; }
   .feedback b{ display:block; margin-bottom:4px; font-family:'Tinos',serif; font-size:14.5px; }
 
   .quiz-nav{
-    padding:16px 20px 22px;
+    padding:12px 20px 16px;
     border-top:1px solid var(--line);
   }
   .next-btn{
@@ -759,7 +761,7 @@
     font-weight:700; font-size:15px;
     cursor:pointer;
   }
-  .next-btn:disabled{ background:#D8CFC2; cursor:not-allowed; }
+  .next-btn:disabled{ background:var(--line); color:var(--ink-soft); cursor:not-allowed; }
 
   /* ---------- Results Screen ---------- */
   .results{ padding:26px 20px; flex:1; }
@@ -1166,7 +1168,7 @@
       <div class="feedback" id="feedbackBox"></div>
     </div>
     <div class="quiz-nav">
-      <button class="next-btn" id="nextBtn" disabled>Select an answer to continue</button>
+      <button class="next-btn" id="nextBtn" disabled>Select an answer, then tap to continue</button>
     </div>
   </div>
 
@@ -2359,7 +2361,7 @@ function renderQuestion(){
   document.getElementById('feedbackBox').innerHTML = '';
   document.getElementById('nextBtn').disabled = true;
   document.getElementById('nextBtn').textContent =
-    currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Select an answer to continue';
+    currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Select an answer, then tap to continue';
 
   refreshOmrStrip();
 
