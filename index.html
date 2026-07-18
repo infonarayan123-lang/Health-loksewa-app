@@ -374,6 +374,10 @@
   }
 
   .home-greeting{ font-size:13px; color:var(--ink-soft); margin-bottom:4px; }
+  .nepali-date-line{
+    font-size:12px; color:var(--gold); font-weight:600;
+    margin-bottom:10px;
+  }
   .home-title{ font-family:'Tinos',serif; font-size:22px; margin-bottom:18px; }
   .dash-grid{
     display:grid; grid-template-columns:1fr 1fr; gap:12px;
@@ -888,6 +892,7 @@
       </div>
 
       <div class="home-greeting" id="homeGreeting">नमस्ते! 👋</div>
+      <div class="nepali-date-line" id="nepaliDateLine"></div>
       <div class="home-title">What do you want to study today?</div>
 
       <div class="dash-grid">
@@ -1421,6 +1426,9 @@
   });
 </script>
 
+<!-- Nepali (Bikram Sambat) date converter — shows today's Nepali date with day on the home screen -->
+<script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js"></script>
+
 <script>
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
@@ -1607,6 +1615,21 @@ function startCarouselAutoPlay(){
   }, 4000);
 }
 renderCarousel();
+
+// ---------- Nepali (Bikram Sambat) date with day, shown on the home screen ----------
+function showNepaliDate(){
+  try{
+    if(typeof NepaliDate === 'undefined') throw new Error('library not loaded');
+    const nd = new NepaliDate();
+    const text = nd.format('ddd, DD MMMM YYYY', 'np'); // e.g. "आइतबार, १० फाल्गुण २०५४"
+    document.getElementById('nepaliDateLine').textContent = '📅 ' + text;
+  }catch(err){
+    document.getElementById('nepaliDateLine').textContent = ''; // fail silently, English date/greeting already shown above
+  }
+}
+showNepaliDate();
+// Recheck at midnight-ish intervals so it updates automatically without needing an app restart
+setInterval(showNepaliDate, 60 * 60 * 1000);
 
 // ---------- Quote of the Day (changes every day at midnight, same quote for everyone that day) ----------
 // Kept ONLY as a fallback if there's no internet — normally quotes are freshly
