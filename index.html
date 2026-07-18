@@ -1220,7 +1220,7 @@
     if(code.includes('invalid-email')) return 'Please enter a valid email address.';
     if(code.includes('weak-password')) return 'Password should be at least 6 characters.';
     if(code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) return 'Incorrect email or password.';
-    return 'Something went wrong. Please try again.';
+    return 'DEBUG - unexpected error code: ' + (code || 'no code') + ' | message: ' + (err && err.message ? err.message : 'no message');
   }
 
   function paintUserInfo(name, email){
