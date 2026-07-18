@@ -639,8 +639,8 @@
         <button class="dash-card c-mock" id="cardMock">
           <div class="dc-icon">🏆</div>
           <div style="text-align:left;">
-            <div class="dc-label" style="color:#fff;">Mock Test — 100 Questions</div>
-            <div class="dc-sub" style="color:#D8CFC2;">75 min · mixed subjects · negative marking</div>
+            <div class="dc-label" style="color:#fff;">Mock Test — Loksewa Pattern</div>
+            <div class="dc-sub" style="color:#D8CFC2;">Simulates the real exam experience</div>
           </div>
         </button>
         <button class="dash-card c-resources" id="cardResources">
@@ -773,7 +773,7 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">Mock Test — choose a post</div>
-      <div id="mockPostGrid"></div>
+      <div class="dash-grid" id="mockPostGrid"></div>
     </div>
   </div>
 
@@ -920,10 +920,11 @@
     return 'Something went wrong. Please try again.';
   }
 
-  function updateAuthUI(user){
+  async function updateAuthUI(user){
     const signInBtn = document.getElementById('signInBtn');
     const accountInfo = document.getElementById('accountInfo');
     if(user){
+      currentUid = user.uid;
       signInBtn.style.display = 'none';
       accountInfo.style.display = 'flex';
       document.getElementById('accountPhoto').src = user.photoURL || 'icon-192.png';
@@ -933,14 +934,38 @@
           uid: user.uid, name: user.displayName, email: user.email, photo: user.photoURL
         }));
       }catch(e){}
+
+      // ---- Load this user's cloud data (chat + progress), so it follows them to any device ----
+      try{
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if(snap.exists()){
+          const cloud = snap.data();
+          if(cloud.progress) localStorage.setItem('hl_progress', JSON.stringify(cloud.progress));
+          if(cloud.chatHistory) localStorage.setItem('hl_chat_history', JSON.stringify(cloud.chatHistory));
+        }
+      }catch(e){
+        // If cloud load fails, we just continue with whatever's already on this device
+      }
+
       window.showScreen(window.homeScreen);
     } else {
+      currentUid = null;
       signInBtn.style.display = 'flex';
       accountInfo.style.display = 'none';
       try{ localStorage.removeItem('hl_user'); }catch(e){}
       window.showScreen(window.loginScreen);
     }
   }
+
+  // ---- Exposed globally so the main app script can push updates to the cloud ----
+  window.syncToCloud = async function(partialData){
+    if(!currentUid) return; // not signed in, nothing to sync
+    try{
+      await setDoc(doc(db, "users", currentUid), partialData, { merge: true });
+    }catch(e){
+      // Silent fail is fine — localStorage already has the data as a fallback
+    }
+  };
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
@@ -1011,6 +1036,7 @@ let answers = []; // { correct: bool|null (null = skipped), chosen, correctAnswe
 let timerInterval = null;
 let secondsLeft = 0;
 let currentSetInfo = null; // { subject, setNumber, totalSets } when running a locked Set; null otherwise
+let currentMarksPerQuestion = 1; // 1 for normal Sets/GK; Mock Test sets this per post (PHO=1, others=2)
 
 const loginScreen = document.getElementById('loginScreen');
 const homeScreen = document.getElementById('homeScreen');
@@ -1434,27 +1460,29 @@ function renderMcqPosts(){
 }
 
 // ---------- Mock Test: Step 0 — pick a post (same pattern as Syllabus / Subject-wise MCQs) ----------
+// Exam format per post: Public Health Officer uses 100 questions worth 1 mark each;
+// other posts use 50 questions worth 2 marks each — both total 100 marks either way.
 const MOCK_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true},
-  {key:"ha", label:"Health Assistant", ready:false},
-  {key:"sn", label:"Staff Nurse", ready:false},
-  {key:"ahw", label:"AHW", ready:false},
-  {key:"anm", label:"ANM", ready:false},
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🩺", css:"gk-c1", questionCount:100, marksEach:1},
+  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
+  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
+  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
+  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
   document.getElementById('mockPostGrid').innerHTML = MOCK_POSTS.map(post => `
-    <a class="link-card" href="#" data-key="${post.key}">
-      <div class="lc-text"><h4>${post.label}</h4><p>100 Qs · 75 min · real exam pattern</p></div>
-      <div class="lc-arrow">🏆</div>
-    </a>
+    <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}" style="min-height:100px;">
+      <div class="dc-icon">${post.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">${post.questionCount} Qs · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
+    </button>
   `).join('');
 
-  document.querySelectorAll('#mockPostGrid .link-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
+  document.querySelectorAll('.mock-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
       const post = MOCK_POSTS.find(p => p.key === card.dataset.key);
       if(post.ready){
-        startMockTest();
+        startMockTest(post);
       } else {
         document.getElementById('comingSoonTitle').textContent = post.label + ' — Mock Test';
         comingSoonBackTarget = mockPostScreen;
@@ -1464,10 +1492,10 @@ function renderMockPosts(){
   });
 }
 
-async function startMockTest(){
+async function startMockTest(post){
   currentSetInfo = null;
   try{
-    const url = `${SHEET_API_URL}?action=random&count=100`;
+    const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}`;
     const res = await fetch(url);
     const pool = await res.json();
 
@@ -1480,6 +1508,7 @@ async function startMockTest(){
     currentIndex = 0;
     answers = new Array(quizQuestions.length).fill(null);
     secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+    currentMarksPerQuestion = post.marksEach;
 
     buildOmrStrip();
     showScreen(quizScreen);
@@ -1508,13 +1537,14 @@ function renderSubjectPick(){
   });
 }
 
-// ---------- Progress tracking (saved on-device, survives closing the app) ----------
+// ---------- Progress tracking (saved on-device AND synced to the cloud when signed in) ----------
 function loadProgress(){
   try{ return JSON.parse(localStorage.getItem('hl_progress') || '{}'); }
   catch(e){ return {}; }
 }
 function saveProgress(p){
   try{ localStorage.setItem('hl_progress', JSON.stringify(p)); }catch(e){}
+  if(window.syncToCloud) window.syncToCloud({ progress: p });
 }
 function isSetUnlocked(subject, setNumber){
   if(setNumber === 1) return true;
@@ -1785,6 +1815,7 @@ function finishQuiz(){
 
   let correct = 0, wrong = 0, skipped = 0, score = 0;
   const reviewHtml = [];
+  const marks = currentMarksPerQuestion; // 1 for normal quizzes; PHO Mock=1, other posts' Mock=2
 
   quizQuestions.forEach((q, i) => {
     const a = answers[i];
@@ -1792,19 +1823,22 @@ function finishQuiz(){
       skipped++;
       reviewHtml.push(reviewRow(q, i, 'Skipped', '—'));
     } else if(a.correct){
-      correct++; score += 1;
+      correct++; score += marks;
       reviewHtml.push(reviewRow(q, i, 'Correct', a.chosen));
     } else {
-      wrong++; score -= 0.2;
+      wrong++; score -= (marks * 0.2);
       reviewHtml.push(reviewRow(q, i, 'Wrong', a.chosen));
     }
   });
 
-  document.getElementById('finalScore').textContent = score.toFixed(1) + ' / ' + quizQuestions.length;
+  const totalMarks = quizQuestions.length * marks;
+  document.getElementById('finalScore').textContent = score.toFixed(1) + ' / ' + totalMarks;
   document.getElementById('statCorrect').textContent = correct;
   document.getElementById('statWrong').textContent = wrong;
   document.getElementById('statSkip').textContent = skipped;
   document.getElementById('reviewList').innerHTML = reviewHtml.join('');
+
+  currentMarksPerQuestion = 1; // reset back to default for the next quiz (Sets/GK always use 1)
 
   // ---- Set-specific: performance message, unlock next set, "Next Set" button ----
   const msgBox = document.getElementById('setResultMessage');
@@ -1895,6 +1929,7 @@ function initChat(){
     if(confirm('Delete this entire chat conversation? This cannot be undone.')){
       chatHistory = [];
       try{ localStorage.removeItem('hl_chat_history'); }catch(err){}
+      if(window.syncToCloud) window.syncToCloud({ chatHistory: [] });
       document.getElementById('chatMessages').innerHTML = '';
       appendBubble('ai', CHAT_GREETING);
     }
@@ -1939,7 +1974,9 @@ async function sendChatMessage(){
     thinkingBubble.textContent = reply;
     thinkingBubble.classList.remove('thinking');
     chatHistory.push({role:'assistant', content:reply});
-    try{ localStorage.setItem('hl_chat_history', JSON.stringify(chatHistory.slice(-20))); }catch(e){}
+    const trimmedHistory = chatHistory.slice(-20);
+    try{ localStorage.setItem('hl_chat_history', JSON.stringify(trimmedHistory)); }catch(e){}
+    if(window.syncToCloud) window.syncToCloud({ chatHistory: trimmedHistory });
   }catch(err){
     thinkingBubble.textContent = "Sorry, I couldn't connect right now. Please check your internet and try again.";
     thinkingBubble.classList.remove('thinking');
