@@ -39,6 +39,20 @@
   body.dark-mode .content-card,
   body.dark-mode .link-card,
   body.dark-mode .set-card{ background:var(--panel); }
+
+  /* ---------- Theme Colors: swap accent colors, independent of light/dark mode ---------- */
+  body.theme-forest{ --navy:#1F5A41; --crimson:#2F7D5D; }
+  body.theme-purple{ --navy:#4A3268; --crimson:#6B4C9A; }
+  body.theme-sunset{ --navy:#B8560A; --crimson:#D9731C; }
+
+  .theme-swatches{ display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; }
+  .theme-swatch{
+    width:52px; height:52px; border-radius:50%; cursor:pointer;
+    border:3px solid transparent; display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:#fff;
+  }
+  .theme-swatch.active{ border-color:var(--ink); }
+
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:var(--bg);
@@ -322,6 +336,36 @@
     background:linear-gradient(135deg,#6B4C9A,#4A3268);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
+  }
+  .dash-card.c-video{
+    background:linear-gradient(135deg,#C0392B,#8E2A20);
+    grid-column:1 / -1;
+    flex-direction:row; align-items:center; gap:16px;
+  }
+  .video-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:12px; margin-bottom:14px;
+  }
+  .video-item .vi-frame-wrap{
+    position:relative; width:100%; padding-top:56.25%; /* 16:9 */
+    border-radius:8px; overflow:hidden; margin-bottom:10px; background:#000;
+  }
+  .video-item .vi-frame-wrap iframe{
+    position:absolute; top:0; left:0; width:100%; height:100%; border:none;
+  }
+  .video-item .vi-title{ font-family:'Tinos',serif; font-weight:700; font-size:14px; margin-bottom:4px; }
+  .video-item .vi-desc{ font-size:12px; color:var(--ink-soft); }
+
+  .certificate-banner{
+    background:linear-gradient(135deg,#B8860B,#7A5A0A);
+    border-radius:14px; padding:16px 18px; margin-bottom:16px;
+    color:#fff; text-align:center;
+  }
+  .certificate-banner h4{ font-family:'Tinos',serif; font-size:16px; margin-bottom:6px; }
+  .certificate-banner p{ font-size:12px; opacity:0.9; margin-bottom:12px; }
+  .certificate-banner button{
+    background:#fff; color:#7A5A0A; border:none; padding:10px 20px;
+    border-radius:20px; font-weight:700; font-size:13px; cursor:pointer;
   }
   .formula-search-box{
     width:100%; padding:12px 14px; margin-bottom:14px;
@@ -1161,6 +1205,13 @@
             <div class="dc-sub">Formulas &amp; key facts, searchable</div>
           </div>
         </button>
+        <button class="dash-card c-video" id="cardVideo">
+          <div class="dc-icon">🎥</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Video Lessons</div>
+            <div class="dc-sub">Short videos explaining key topics</div>
+          </div>
+        </button>
       </div>
 
       <div class="app-footer">
@@ -1217,6 +1268,10 @@
       <button class="upgrade-btn" id="upgradeNowBtn">Upgrade Now</button>
     </div>
     <div class="profile-menu">
+      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
+        <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎨 App Theme</div>
+        <div class="theme-swatches" id="themeSwatches"></div>
+      </div>
       <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon">📞</span> Contact Us</button>
       <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon">ℹ️</span> About Us</button>
       <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon">💬</span> Feedback</button>
@@ -1279,6 +1334,10 @@
         <div class="lc-text"><h4>🔔 Daily Study Reminder</h4><p>Get reminded to practice every day</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToRevision">
+        <div class="lc-text"><h4>🔄 Revision Mode</h4><p>Re-practice questions you got wrong or bookmarked</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
     </div>
   </div>
 
@@ -1301,6 +1360,17 @@
         <h4 style="margin-bottom:8px;">ℹ️ How this works</h4>
         <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.6;">Your preferred time is saved to your account. Actual notification delivery depends on your device allowing notifications for this app, and on background delivery setup — reminders may not always arrive at the exact minute chosen, especially with the app fully closed.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- REVISION MODE -->
+  <div class="screen" id="revisionScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔄 Revision Mode</div>
+      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:16px;">Combines questions you got wrong and questions you've bookmarked — the ones most worth reviewing.</p>
+      <div id="revisionSummary"></div>
+      <button class="start-btn" id="startRevisionBtn" style="margin-top:14px;">Start Revision Quiz</button>
     </div>
   </div>
 
@@ -1333,6 +1403,17 @@
       <div class="section-title">🔢 Quick Reference</div>
       <input type="text" class="formula-search-box" id="formulaSearchBox" placeholder="Search formulas… e.g. IMR, MMR, TFR">
       <div id="formulaListContent"></div>
+    </div>
+  </div>
+
+  <!-- VIDEO LESSONS -->
+  <div class="screen" id="videoScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">🎥 Video Lessons</div>
+      <div id="videoListContent">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
     </div>
   </div>
 
@@ -1472,6 +1553,7 @@
     <div class="home-body">
       <div class="section-title" id="setSelectTitle">Sets</div>
       <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Each set has 50 questions. Complete a set to unlock the next one.</p>
+      <div id="certificateBanner"></div>
       <div id="setSelectList"></div>
     </div>
   </div>
@@ -1859,8 +1941,10 @@ const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
 const formulaScreen = document.getElementById('formulaScreen');
+const videoScreen = document.getElementById('videoScreen');
 const notesScreen = document.getElementById('notesScreen');
 const reminderScreen = document.getElementById('reminderScreen');
+const revisionScreen = document.getElementById('revisionScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const pastQuestionsYearScreen = document.getElementById('pastQuestionsYearScreen');
@@ -1871,7 +1955,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, notesScreen, reminderScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -1938,11 +2022,94 @@ document.getElementById('cardFormula').addEventListener('click', () => {
   renderFormulas('');
 });
 
+// ---------- Video Lessons ----------
+document.getElementById('cardVideo').addEventListener('click', () => {
+  showScreen(videoScreen);
+  renderVideoLessons();
+});
+function extractYouTubeId(url){
+  if(!url) return '';
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^&?/]+)/);
+  return match ? match[1] : '';
+}
+async function renderVideoLessons(){
+  const wrap = document.getElementById('videoListContent');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=videoLessons`);
+    const videos = await res.json();
+    const clean = videos.filter(v => v && v.Title && v.YouTubeURL);
+
+    if(clean.length === 0){
+      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No videos added yet — check back soon!</p>`;
+      return;
+    }
+
+    wrap.innerHTML = clean.map(v => {
+      const vid = extractYouTubeId(v.YouTubeURL);
+      return `
+        <div class="video-item">
+          <div class="vi-frame-wrap">
+            ${vid ? `<iframe src="https://www.youtube.com/embed/${vid}" allowfullscreen title="${v.Title}"></iframe>` : ''}
+          </div>
+          <div class="vi-title">${v.Title}</div>
+          <div class="vi-desc">${v.Description || ''}</div>
+        </div>
+      `;
+    }).join('');
+  }catch(err){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load videos. Check your internet connection.</p>`;
+  }
+}
+
 // ---------- Daily Study Reminder (foundation: preference + permission; full delivery needs FCM setup) ----------
 document.getElementById('goToReminder').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(reminderScreen);
   renderReminderSettings();
+});
+
+// ---------- Revision Mode ----------
+document.getElementById('goToRevision').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(revisionScreen);
+  renderRevisionSummary();
+});
+function getRevisionPool(){
+  const wrongList = getWrongQuestions();
+  const bookmarkList = getBookmarks();
+  const combined = [...wrongList];
+  bookmarkList.forEach(b => {
+    if(!combined.some(w => questionKey(w) === questionKey(b))) combined.push(b);
+  });
+  return combined;
+}
+function renderRevisionSummary(){
+  const pool = getRevisionPool();
+  const startBtn = document.getElementById('startRevisionBtn');
+  if(pool.length === 0){
+    document.getElementById('revisionSummary').innerHTML = `
+      <div class="content-card">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Nothing to revise yet — questions you get wrong or bookmark during practice will show up here automatically.</p>
+      </div>
+    `;
+    startBtn.style.display = 'none';
+    return;
+  }
+  document.getElementById('revisionSummary').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-tile"><div class="st-num">${getWrongQuestions().length}</div><div class="st-label">Wrong Questions</div></div>
+      <div class="stat-tile"><div class="st-num">${getBookmarks().length}</div><div class="st-label">Bookmarked</div></div>
+    </div>
+    <p style="color:var(--ink-soft); font-size:12.5px; margin-top:6px;">${pool.length} question${pool.length !== 1 ? 's' : ''} ready for revision (duplicates removed).</p>
+  `;
+  startBtn.style.display = 'block';
+}
+document.getElementById('startRevisionBtn').addEventListener('click', () => {
+  const pool = getRevisionPool();
+  if(pool.length === 0) return;
+  currentSetInfo = null; // revision quizzes don't lock into the normal Set progression
+  launchQuiz(shuffle([...pool]), 'Revision', 0, 0);
 });
 
 function renderReminderSettings(){
@@ -2196,6 +2363,7 @@ function renderBookmarks(){
 // ---------- Header bar: profile / notifications / dark mode ----------
 document.getElementById('headerProfileBtn').addEventListener('click', () => {
   showScreen(profileScreen);
+  renderThemeSwatches();
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
@@ -2330,6 +2498,37 @@ document.getElementById('headerDarkBtn').addEventListener('click', () => {
   try{ localStorage.setItem('hl_dark_mode', isDark ? '1' : '0'); }catch(e){}
 });
 applyDarkModePreference();
+
+// ---------- Theme Colors: Navy (default), Forest, Purple, Sunset ----------
+const APP_THEMES = [
+  { key:'navy', label:'Navy Blue', swatch:'linear-gradient(135deg,#1B3B6F,#A62639)' },
+  { key:'forest', label:'Forest Green', swatch:'linear-gradient(135deg,#1F5A41,#2F7D5D)' },
+  { key:'purple', label:'Deep Purple', swatch:'linear-gradient(135deg,#4A3268,#6B4C9A)' },
+  { key:'sunset', label:'Sunset Orange', swatch:'linear-gradient(135deg,#B8560A,#D9731C)' },
+];
+function applyThemePreference(){
+  let theme = 'navy';
+  try{ theme = localStorage.getItem('hl_theme') || 'navy'; }catch(e){}
+  APP_THEMES.forEach(t => document.body.classList.remove('theme-' + t.key));
+  if(theme !== 'navy') document.body.classList.add('theme-' + theme);
+  return theme;
+}
+function renderThemeSwatches(){
+  const active = applyThemePreference();
+  document.getElementById('themeSwatches').innerHTML = APP_THEMES.map(t => `
+    <div class="theme-swatch ${t.key === active ? 'active' : ''}" data-theme="${t.key}" style="background:${t.swatch};" title="${t.label}">
+      ${t.key === active ? '✓' : ''}
+    </div>
+  `).join('');
+  document.querySelectorAll('.theme-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      try{ localStorage.setItem('hl_theme', sw.dataset.theme); }catch(e){}
+      applyThemePreference();
+      renderThemeSwatches();
+    });
+  });
+}
+applyThemePreference(); // apply immediately on app load, before Profile is even opened
 
 // ---------- Auto-sliding carousel ----------
 const CAROUSEL_SLIDES = [
@@ -3297,6 +3496,105 @@ function renderSetList(totalSets, exactCount){
       startSet(selectedSubject, parseInt(card.dataset.set, 10), totalSets);
     });
   });
+
+  // ---- Certificate: show if every Set in this subject is completed ----
+  const certWrap = document.getElementById('certificateBanner');
+  let allDone = true;
+  for(let i = 1; i <= totalSets; i++){
+    if(!isSetCompleted(selectedSubject, i)){ allDone = false; break; }
+  }
+  if(allDone && totalSets > 0){
+    certWrap.innerHTML = `
+      <div class="certificate-banner">
+        <h4>🎓 Subject Complete!</h4>
+        <p>You've finished all ${totalSets} Sets of ${selectedSubject}. Download your certificate!</p>
+        <button id="generateCertBtn">Download Certificate</button>
+      </div>
+    `;
+    document.getElementById('generateCertBtn').addEventListener('click', () => {
+      generateCertificate(selectedSubject, totalSets);
+    });
+  } else {
+    certWrap.innerHTML = '';
+  }
+}
+
+// ---------- Certificate Generator: draws a real downloadable image using Canvas ----------
+function generateCertificate(subject, totalSets){
+  let userName = 'Student';
+  try{ userName = JSON.parse(localStorage.getItem('hl_user') || '{}').name || 'Student'; }catch(e){}
+
+  // Compute average score across this subject's completed sets
+  const p = loadProgress();
+  const entry = p[subject];
+  let totalCorrect = 0, totalPossible = 0;
+  if(entry){
+    Object.values(entry.scores).forEach(s => {
+      if(s && typeof s === 'object'){
+        totalCorrect += s.correct || 0;
+        totalPossible += (s.correct || 0) + (s.wrong || 0) + (s.skipped || 0);
+      }
+    });
+  }
+  const pct = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+  const tier = pct >= 85 ? 'Excellent!' : pct >= 70 ? 'Great Job!' : 'Well Done!';
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1000; canvas.height = 700;
+  const ctx = canvas.getContext('2d');
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, 1000, 700);
+  grad.addColorStop(0, '#1B3B6F');
+  grad.addColorStop(1, '#6B4C9A');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1000, 700);
+
+  // Inner white card
+  ctx.fillStyle = '#FDFBF6';
+  ctx.fillRect(40, 40, 920, 620);
+
+  // Gold border
+  ctx.strokeStyle = '#C9962C';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(60, 60, 880, 580);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#C9962C';
+  ctx.font = '22px Georgia';
+  ctx.fillText('CERTIFICATE OF COMPLETION', 500, 150);
+
+  ctx.fillStyle = '#2A2420';
+  ctx.font = 'bold 44px Georgia';
+  ctx.fillText(userName, 500, 260);
+
+  ctx.font = '18px Georgia';
+  ctx.fillStyle = '#6B6055';
+  ctx.fillText('has successfully completed all ' + totalSets + ' Sets of', 500, 310);
+
+  ctx.font = 'bold 28px Georgia';
+  ctx.fillStyle = '#1B3B6F';
+  ctx.fillText(subject, 500, 355);
+
+  ctx.font = '20px Georgia';
+  ctx.fillStyle = '#2F7D5D';
+  ctx.fillText('Score: ' + pct + '% — ' + tier, 500, 410);
+
+  ctx.font = '14px Georgia';
+  ctx.fillStyle = '#A69B8C';
+  const dateStr = new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+  ctx.fillText(dateStr, 500, 550);
+
+  ctx.font = 'italic 16px Georgia';
+  ctx.fillStyle = '#6B6055';
+  ctx.fillText('Health Loksewa — Nepal Health Service Exam Preparation', 500, 600);
+
+  canvas.toBlob(blob => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Health-Loksewa-Certificate-' + subject.replace(/\s+/g, '-') + '.png';
+    link.click();
+  });
 }
 
 // ---------- Start a specific Set (fixed 50 questions, stable order per set) ----------
@@ -3511,6 +3809,28 @@ function toggleBookmark(q){
   saveBookmarks(list);
 }
 
+// ---------- Revision Mode: tracks wrong-answered questions for smart re-practice ----------
+function getWrongQuestions(){
+  try{ return JSON.parse(localStorage.getItem('hl_wrong_questions') || '[]'); }
+  catch(e){ return []; }
+}
+function saveWrongQuestions(list){
+  try{ localStorage.setItem('hl_wrong_questions', JSON.stringify(list.slice(0, 200))); }catch(e){} // cap to avoid unbounded growth
+}
+function addToWrongQuestions(q){
+  const key = questionKey(q);
+  let list = getWrongQuestions();
+  if(!list.some(w => questionKey(w) === key)){
+    list.unshift(q);
+    saveWrongQuestions(list);
+  }
+}
+function removeFromWrongQuestions(q){
+  const key = questionKey(q);
+  const list = getWrongQuestions().filter(w => questionKey(w) !== key);
+  saveWrongQuestions(list);
+}
+
 function handleAnswer(letter){
   if(answers[currentIndex] !== null) return; // already answered
   const q = quizQuestions[currentIndex];
@@ -3570,9 +3890,11 @@ function finishQuiz(){
     } else if(a.correct){
       correct++; score += marks;
       reviewHtml.push(reviewRow(q, i, 'Correct', a.chosen));
+      removeFromWrongQuestions(q); // got it right this time — no longer needs revision
     } else {
       wrong++; score -= (marks * 0.2);
       reviewHtml.push(reviewRow(q, i, 'Wrong', a.chosen));
+      addToWrongQuestions(q);
     }
   });
 
@@ -3659,9 +3981,19 @@ function renderSubjectBreakdown(){
           <div>${r.icon} ${r.label}</div>
         </div>
       `).join('')}
-      ${weakest && weakest.pct < 80 ? `<div class="breakdown-recommend">💡 Recommended: Practice more ${weakest.subj}</div>` : ''}
+      ${weakest && weakest.pct < 80 ? `
+        <div class="breakdown-recommend">💡 Recommended: Practice more ${weakest.subj}</div>
+        <button class="start-btn" id="practiceWeakBtn" style="margin-top:10px;">🎯 Practice ${weakest.subj} Now</button>
+      ` : ''}
     </div>
   `;
+
+  if(weakest && weakest.pct < 80){
+    document.getElementById('practiceWeakBtn').addEventListener('click', () => {
+      setSelectBackTarget = homeScreen;
+      openSetSelect(weakest.subj);
+    });
+  }
 }
 
 function reviewRow(q, i, status, chosen){
