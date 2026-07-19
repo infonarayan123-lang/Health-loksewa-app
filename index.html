@@ -2561,30 +2561,51 @@ function renderSetList(totalSets, exactCount){
 // ---------- Start a specific Set (fixed 50 questions, stable order per set) ----------
 // This is the ONE moment a network fetch is genuinely unavoidable — we need real questions.
 async function startSet(subject, setNumber, totalSets){
+  const cacheKey = 'hl_set_cache_' + subject + '_' + setNumber;
+
   try{
+    if(!navigator.onLine){
+      throw new Error('offline'); // skip straight to the cached-copy fallback below
+    }
     const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}`;
     const res = await fetch(url);
     let pool = await res.json();
-    pool = shuffle([...pool]); // vary display order each attempt; same 50 questions each time
 
     if(pool.length === 0){
       alert('No questions found in this set yet.');
       return;
     }
 
-    quizQuestions = pool;
-    currentIndex = 0;
-    answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = quizQuestions.length * 45;
-    currentSetInfo = { subject, setNumber, totalSets };
+    // Save a copy for offline retries later, before shuffling display order
+    try{ localStorage.setItem(cacheKey, JSON.stringify(pool)); }catch(e){}
 
-    buildOmrStrip();
-    showScreen(quizScreen);
-    startTimer();
-    renderQuestion();
+    pool = shuffle([...pool]); // vary display order each attempt; same 50 questions each time
+    launchQuiz(pool, subject, setNumber, totalSets);
   }catch(err){
-    alert('Could not load this set. Please check your internet connection and try again.');
+    // Network failed or we're offline — try the cached copy from a previous successful load
+    let cachedPool = null;
+    try{ cachedPool = JSON.parse(localStorage.getItem(cacheKey) || 'null'); }catch(e){}
+
+    if(cachedPool && cachedPool.length > 0){
+      alert('📴 You appear to be offline — loading this Set from your last saved copy instead.');
+      launchQuiz(shuffle([...cachedPool]), subject, setNumber, totalSets);
+    } else {
+      alert('Could not load this set. Please check your internet connection and try again. (This Set hasn\'t been downloaded before, so it isn\'t available offline yet.)');
+    }
   }
+}
+
+function launchQuiz(pool, subject, setNumber, totalSets){
+  quizQuestions = pool;
+  currentIndex = 0;
+  answers = new Array(quizQuestions.length).fill(null);
+  secondsLeft = quizQuestions.length * 45;
+  currentSetInfo = { subject, setNumber, totalSets };
+
+  buildOmrStrip();
+  showScreen(quizScreen);
+  startTimer();
+  renderQuestion();
 }
 
 // Subject counts now load on demand (see cardQuiz click handler above) — not at app startup,
