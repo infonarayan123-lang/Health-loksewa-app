@@ -391,6 +391,14 @@
   .legal-info-content ul{ margin:0 0 10px 20px; }
   .legal-info-content li{ margin-bottom:5px; }
   .legal-info-content a{ color:var(--navy); }
+  .social-icons-row{
+    display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;
+  }
+  .social-icon-btn{
+    width:44px; height:44px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:19px; text-decoration:none; color:#fff;
+  }
   .profile-menu-item{
     display:flex; align-items:center; gap:12px;
     padding:14px 4px; border-bottom:1px solid var(--line);
@@ -1601,8 +1609,25 @@ function openLegalInfo(title, htmlContent){
 document.getElementById('menuContactUs').addEventListener('click', () => {
   openLegalInfo('Contact Us', `
     <p>Have a question, found a bug, or need help with your account? We'd love to hear from you.</p>
+
+    <h3>Phone</h3>
+    <p><a href="tel:+9779811685190">+977 981-1685190</a></p>
+
     <h3>Email</h3>
     <p><a href="mailto:infonarayan123@gmail.com">infonarayan123@gmail.com</a></p>
+    <p><a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>
+
+    <h3>Follow / Message Us</h3>
+    <!-- 🔧 TODO: replace each href="#" below with your real profile/page links -->
+    <div class="social-icons-row">
+      <a href="#" class="social-icon-btn" style="background:#1877F2;" title="Facebook">📘</a>
+      <a href="#" class="social-icon-btn" style="background:#FF0000;" title="YouTube">▶️</a>
+      <a href="#" class="social-icon-btn" style="background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4);" title="Instagram">📷</a>
+      <a href="#" class="social-icon-btn" style="background:#25D366;" title="WhatsApp">💬</a>
+      <a href="#" class="social-icon-btn" style="background:#7360F2;" title="Viber">📞</a>
+      <a href="#" class="social-icon-btn" style="background:#0A66C2;" title="LinkedIn">💼</a>
+    </div>
+
     <p>We typically respond within a few days. Please include as much detail as possible (your account email, what happened, and any screenshots) so we can help quickly.</p>
   `);
 });
@@ -1622,7 +1647,7 @@ document.getElementById('menuFeedback').addEventListener('click', () => {
   openLegalInfo('Feedback', `
     <p>Your feedback helps make Health Loksewa better for everyone. Tell us what you love, what's confusing, or what you'd like to see added.</p>
     <h3>Send Feedback</h3>
-    <p><a href="mailto:infonarayan123@gmail.com?subject=Health%20Loksewa%20Feedback">infonarayan123@gmail.com</a></p>
+    <p><a href="mailto:healthloksewa026@gmail.com?subject=Health%20Loksewa%20Feedback">healthloksewa026@gmail.com</a></p>
   `);
 });
 
@@ -1648,7 +1673,7 @@ document.getElementById('menuPrivacyPolicy').addEventListener('click', () => {
     <h3>Your Rights</h3>
     <p>You can edit your name anytime from your Profile, reset your password anytime, and request full account deletion by contacting us.</p>
     <h3>Contact</h3>
-    <p>Questions or deletion requests: <a href="mailto:infonarayan123@gmail.com">infonarayan123@gmail.com</a></p>
+    <p>Questions or deletion requests: <a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>
   `);
 });
 
@@ -1667,7 +1692,7 @@ document.getElementById('menuTerms').addEventListener('click', () => {
     <h3>No Warranty</h3>
     <p>The app is provided "as is." We are not liable for exam results or decisions made based on app content.</p>
     <h3>Contact</h3>
-    <p>Questions about these Terms: <a href="mailto:infonarayan123@gmail.com">infonarayan123@gmail.com</a></p>
+    <p>Questions about these Terms: <a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>
   `);
 });
 
