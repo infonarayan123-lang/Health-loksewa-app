@@ -378,6 +378,19 @@
     cursor:pointer;
   }
   .profile-menu{ padding:14px 20px 30px; }
+  .legal-info-content{
+    font-size:13.5px; line-height:1.7; color:var(--ink);
+    padding-bottom:30px;
+  }
+  .legal-info-content h3{
+    font-family:'Tinos',serif; font-size:16px; margin:20px 0 8px;
+    color:var(--navy);
+  }
+  .legal-info-content h3:first-child{ margin-top:0; }
+  .legal-info-content p{ margin-bottom:10px; }
+  .legal-info-content ul{ margin:0 0 10px 20px; }
+  .legal-info-content li{ margin-bottom:5px; }
+  .legal-info-content a{ color:var(--navy); }
   .profile-menu-item{
     display:flex; align-items:center; gap:12px;
     padding:14px 4px; border-bottom:1px solid var(--line);
@@ -1039,12 +1052,22 @@
       <button class="upgrade-btn" id="upgradeNowBtn">Upgrade Now</button>
     </div>
     <div class="profile-menu">
-      <button class="profile-menu-item"><span class="pm-icon">📞</span> Contact Us</button>
-      <button class="profile-menu-item"><span class="pm-icon">ℹ️</span> About Us</button>
-      <button class="profile-menu-item"><span class="pm-icon">💬</span> Feedback</button>
-      <button class="profile-menu-item"><span class="pm-icon">⭐</span> Rate Us</button>
-      <button class="profile-menu-item"><span class="pm-icon">📄</span> Terms and Conditions</button>
+      <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon">📞</span> Contact Us</button>
+      <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon">ℹ️</span> About Us</button>
+      <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon">💬</span> Feedback</button>
+      <button class="profile-menu-item" id="menuRateUs"><span class="pm-icon">⭐</span> Rate Us</button>
+      <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon">🔒</span> Privacy Policy</button>
+      <button class="profile-menu-item" id="menuTerms"><span class="pm-icon">📄</span> Terms and Conditions</button>
       <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon">🚪</span> Logout</button>
+    </div>
+  </div>
+
+  <!-- LEGAL / INFO SCREEN — reused for Contact Us, About Us, Feedback, Privacy Policy, Terms -->
+  <div class="screen" id="legalInfoScreen">
+    <div class="back-link" data-back="legalInfoBack">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="legalInfoTitle"></div>
+      <div id="legalInfoContent" class="legal-info-content"></div>
     </div>
   </div>
 
@@ -1500,6 +1523,7 @@ const docListScreen = document.getElementById('docListScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
+const legalInfoScreen = document.getElementById('legalInfoScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const mcqPostScreen = document.getElementById('mcqPostScreen');
@@ -1509,7 +1533,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -1518,6 +1542,7 @@ let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
 let comingSoonBackTarget = mcqPostScreen;
+let legalInfoBackTarget = profileScreen;
 
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -1563,6 +1588,87 @@ document.getElementById('profileLogoutBtn').addEventListener('click', () => {
 });
 document.getElementById('upgradeNowBtn').addEventListener('click', () => {
   alert('Premium plans are coming soon! Stay tuned.');
+});
+
+// ---------- Profile menu: Contact Us, About Us, Feedback, Rate Us, Privacy Policy, Terms ----------
+function openLegalInfo(title, htmlContent){
+  document.getElementById('legalInfoTitle').textContent = title;
+  document.getElementById('legalInfoContent').innerHTML = htmlContent;
+  legalInfoBackTarget = profileScreen;
+  showScreen(legalInfoScreen);
+}
+
+document.getElementById('menuContactUs').addEventListener('click', () => {
+  openLegalInfo('Contact Us', `
+    <p>Have a question, found a bug, or need help with your account? We'd love to hear from you.</p>
+    <h3>Email</h3>
+    <p><a href="mailto:infonarayan123@gmail.com">infonarayan123@gmail.com</a></p>
+    <p>We typically respond within a few days. Please include as much detail as possible (your account email, what happened, and any screenshots) so we can help quickly.</p>
+  `);
+});
+
+document.getElementById('menuAboutUs').addEventListener('click', () => {
+  openLegalInfo('About Us', `
+    <p>Health Loksewa is an independent educational app built to help students in Nepal prepare for government Loksewa health service examinations — Public Health Officer, Health Assistant, Staff Nurse, AHW, and ANM.</p>
+    <h3>Our Mission</h3>
+    <p>To make focused, structured, and consistent Loksewa exam preparation accessible to everyone, right from their phone — with organized MCQ practice, real exam-pattern mock tests, and helpful study tools.</p>
+    <h3>Developer</h3>
+    <p>Health Loksewa is created and maintained by Narayan Prasad Rimal.</p>
+    <p style="margin-top:16px; font-size:12px; color:var(--ink-soft);">Health Loksewa is an independent app and is not affiliated with the Public Service Commission (Lok Sewa Aayog) or the Government of Nepal.</p>
+  `);
+});
+
+document.getElementById('menuFeedback').addEventListener('click', () => {
+  openLegalInfo('Feedback', `
+    <p>Your feedback helps make Health Loksewa better for everyone. Tell us what you love, what's confusing, or what you'd like to see added.</p>
+    <h3>Send Feedback</h3>
+    <p><a href="mailto:infonarayan123@gmail.com?subject=Health%20Loksewa%20Feedback">infonarayan123@gmail.com</a></p>
+  `);
+});
+
+document.getElementById('menuRateUs').addEventListener('click', () => {
+  alert('Thank you for wanting to rate us! Once Health Loksewa is live on the Play Store, this button will take you straight there. 🙂');
+});
+
+document.getElementById('menuPrivacyPolicy').addEventListener('click', () => {
+  openLegalInfo('Privacy Policy', `
+    <p style="color:var(--ink-soft); font-size:12px;">Last updated: July 2026</p>
+    <p>Health Loksewa ("the App") is an educational app for Nepal Loksewa health service exam preparation. This policy explains what we collect and how we use it.</p>
+    <h3>Information We Collect</h3>
+    <ul>
+      <li>Full Name</li>
+      <li>Email address</li>
+      <li>Phone number</li>
+      <li>Password (securely encrypted via Firebase — we never see it in readable form)</li>
+    </ul>
+    <h3>How We Use It</h3>
+    <p>To create your account, let you log in, recover your password, and save your quiz progress. We never sell or trade your information.</p>
+    <h3>Third-Party Services</h3>
+    <p>We use Google Firebase (account storage), Google Sheets/Apps Script (content delivery), and Groq (powers the optional AI Assistant chat — only your typed messages are sent, never your account details).</p>
+    <h3>Your Rights</h3>
+    <p>You can edit your name anytime from your Profile, reset your password anytime, and request full account deletion by contacting us.</p>
+    <h3>Contact</h3>
+    <p>Questions or deletion requests: <a href="mailto:infonarayan123@gmail.com">infonarayan123@gmail.com</a></p>
+  `);
+});
+
+document.getElementById('menuTerms').addEventListener('click', () => {
+  openLegalInfo('Terms and Conditions', `
+    <p style="color:var(--ink-soft); font-size:12px;">Last updated: July 2026</p>
+    <p>By using Health Loksewa, you agree to these Terms.</p>
+    <h3>About This App</h3>
+    <p>Health Loksewa is an independent, privately-developed study tool. It is <b>not affiliated with, endorsed by, or officially connected to</b> the Public Service Commission (Lok Sewa Aayog), the Government of Nepal, or any government body.</p>
+    <h3>Educational Purpose Only</h3>
+    <p>All content is provided for self-study purposes. We make reasonable efforts to ensure accuracy but do not guarantee every question or document is error-free. Always cross-check important information with official PSC publications.</p>
+    <h3>Your Account</h3>
+    <p>You're responsible for keeping your password confidential and for all activity under your account.</p>
+    <h3>Acceptable Use</h3>
+    <p>Don't misuse the app, attempt unauthorized access, scrape content, or post abusive content through the AI Assistant or any other feature.</p>
+    <h3>No Warranty</h3>
+    <p>The app is provided "as is." We are not liable for exam results or decisions made based on app content.</p>
+    <h3>Contact</h3>
+    <p>Questions about these Terms: <a href="mailto:infonarayan123@gmail.com">infonarayan123@gmail.com</a></p>
+  `);
 });
 
 // ---------- Dark mode ----------
@@ -1896,6 +2002,8 @@ document.querySelectorAll('.back-link').forEach(b => {
       showScreen(docListBackTarget);
     } else if(key === 'comingSoonBack'){
       showScreen(comingSoonBackTarget);
+    } else if(key === 'legalInfoBack'){
+      showScreen(legalInfoBackTarget);
     } else {
       showScreen(SCREEN_BY_KEY[key] || homeScreen);
     }
