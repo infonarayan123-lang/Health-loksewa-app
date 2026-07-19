@@ -254,6 +254,20 @@
 
   /* ---------- Quote of the Day ---------- */
   /* ---------- 6 Best Features: compact shortcuts ---------- */
+  .countdown-banner{
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(135deg,#A62639,#7E1D2C);
+    border-radius:14px; padding:14px 18px; margin-bottom:14px;
+    color:#fff;
+  }
+  .countdown-banner .cd-label{ font-size:12px; opacity:0.85; margin-bottom:2px; }
+  .countdown-banner .cd-title{ font-family:'Tinos',serif; font-size:14.5px; font-weight:700; }
+  .countdown-banner .cd-days{
+    font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700;
+    text-align:right;
+  }
+  .countdown-banner .cd-days-label{ font-size:10px; opacity:0.85; text-align:right; }
+
   .quote-banner{
     position:relative;
     display:flex; align-items:center; gap:10px;
@@ -303,6 +317,58 @@
     background:linear-gradient(135deg,#3A6B7A,#254852);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
+  }
+  .dash-card.c-formula{
+    background:linear-gradient(135deg,#6B4C9A,#4A3268);
+    grid-column:1 / -1;
+    flex-direction:row; align-items:center; gap:16px;
+  }
+  .formula-search-box{
+    width:100%; padding:12px 14px; margin-bottom:14px;
+    border:1.5px solid var(--line); border-radius:10px;
+    font-family:'Inter',sans-serif; font-size:14px;
+    background:var(--panel); color:var(--ink);
+  }
+  .formula-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px; margin-bottom:10px;
+  }
+  .formula-item .fi-name{ font-family:'Tinos',serif; font-size:14.5px; font-weight:700; color:var(--navy); margin-bottom:5px; }
+  .formula-item .fi-formula{
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink);
+    background:var(--bg); padding:8px 10px; border-radius:8px; margin-bottom:6px;
+  }
+  .formula-item .fi-note{ font-size:12px; color:var(--ink-soft); }
+
+  .note-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px; margin-bottom:10px;
+  }
+  .note-item .ni-header{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+  .note-item .ni-title{ font-family:'Tinos',serif; font-weight:700; font-size:14px; color:var(--ink); }
+  .note-item .ni-meta{ font-size:10.5px; color:var(--ink-soft); }
+  .note-item .ni-body{ font-size:13px; color:var(--ink); line-height:1.5; white-space:pre-wrap; }
+  .note-item .ni-actions{ display:flex; gap:14px; margin-top:8px; }
+  .note-item .ni-actions button{
+    background:none; border:none; font-size:11.5px; font-weight:700; cursor:pointer; padding:0;
+  }
+
+  /* ---------- Detailed Results: subject-wise breakdown (Mock Test) ---------- */
+  .breakdown-wrap{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:16px; margin:16px 0;
+  }
+  .breakdown-wrap h4{ font-family:'Tinos',serif; font-size:15px; margin-bottom:12px; }
+  .breakdown-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px;
+  }
+  .breakdown-row:last-child{ border-bottom:none; }
+  .breakdown-row .br-subject{ color:var(--ink); flex:1; }
+  .breakdown-row .br-score{ font-family:'JetBrains Mono',monospace; font-weight:700; margin:0 8px; }
+  .breakdown-recommend{
+    margin-top:12px; padding:10px 12px; background:var(--wrong-bg); border-radius:8px;
+    font-size:12.5px; color:var(--wrong); font-weight:600;
   }
 
   /* ---------- My Progress hub ---------- */
@@ -1016,6 +1082,9 @@
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
+      <!-- EXAM COUNTDOWN TIMER -->
+      <div class="countdown-banner" id="countdownBanner"></div>
+
       <!-- QUOTE OF THE DAY -->
       <div class="quote-banner" id="quoteBanner">
         <div class="quote-mark quote-mark-left">"</div>
@@ -1083,6 +1152,13 @@
           <div style="text-align:left;">
             <div class="dc-label">My Progress</div>
             <div class="dc-sub">Stats, streak, leaderboard &amp; bookmarks</div>
+          </div>
+        </button>
+        <button class="dash-card c-formula" id="cardFormula">
+          <div class="dc-icon">🔢</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Quick Reference</div>
+            <div class="dc-sub">Formulas &amp; key facts, searchable</div>
           </div>
         </button>
       </div>
@@ -1195,6 +1271,36 @@
         <div class="lc-text"><h4>⭐ My Bookmarks</h4><p>Review questions you've saved</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToNotes">
+        <div class="lc-text"><h4>📝 My Notes</h4><p>Your own study notes, saved on this device</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToReminder">
+        <div class="lc-text"><h4>🔔 Daily Study Reminder</h4><p>Get reminded to practice every day</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- DAILY STUDY REMINDER SETTINGS -->
+  <div class="screen" id="reminderScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔔 Daily Study Reminder</div>
+      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:16px;">Choose a time, and we'll try to remind you to keep your streak going.</p>
+
+      <div class="field">
+        <label>Reminder Time</label>
+        <input type="time" id="reminderTimeInput" value="18:00">
+      </div>
+
+      <button class="start-btn" id="saveReminderBtn">Enable Daily Reminder</button>
+      <p id="reminderStatusMsg" style="font-size:12.5px; color:var(--ink-soft); margin-top:12px; text-align:center;"></p>
+
+      <div class="content-card" style="margin-top:20px;">
+        <h4 style="margin-bottom:8px;">ℹ️ How this works</h4>
+        <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.6;">Your preferred time is saved to your account. Actual notification delivery depends on your device allowing notifications for this app, and on background delivery setup — reminders may not always arrive at the exact minute chosen, especially with the app fully closed.</p>
+      </div>
     </div>
   </div>
 
@@ -1217,6 +1323,26 @@
       <div id="bookmarksContent">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
+    </div>
+  </div>
+
+  <!-- FORMULA / QUICK REFERENCE SHEET -->
+  <div class="screen" id="formulaScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">🔢 Quick Reference</div>
+      <input type="text" class="formula-search-box" id="formulaSearchBox" placeholder="Search formulas… e.g. IMR, MMR, TFR">
+      <div id="formulaListContent"></div>
+    </div>
+  </div>
+
+  <!-- MY NOTES -->
+  <div class="screen" id="notesScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📝 My Notes</div>
+      <button class="start-btn" id="addNoteBtn" style="margin-bottom:16px;">+ Add New Note</button>
+      <div id="notesListContent"></div>
     </div>
   </div>
 
@@ -1331,6 +1457,15 @@
     </div>
   </div>
 
+  <!-- PAST QUESTIONS: choose a year -->
+  <div class="screen" id="pastQuestionsYearScreen">
+    <div class="back-link" data-back="subjectPick">← Back to Subjects</div>
+    <div class="home-body">
+      <div class="section-title">📜 Past Questions — choose a year</div>
+      <div id="pastQuestionsYearList"></div>
+    </div>
+  </div>
+
   <!-- SET SELECTION SCREEN (Subject-wise MCQs step 2) -->
   <div class="screen" id="setSelectScreen">
     <div class="back-link" data-back="setSelectBack">← Back</div>
@@ -1410,6 +1545,7 @@
       </div>
       <div id="setResultMessage"></div>
       <button class="next-set-btn" id="nextSetBtn" style="display:none;">Next Set →</button>
+      <div id="subjectBreakdown"></div>
       <div id="reviewList"></div>
       <button class="restart-btn" id="restartBtn">Back to Home</button>
     </div>
@@ -1553,6 +1689,20 @@
       return results;
     }catch(err){
       return [];
+    }
+  };
+
+  // ---- Daily Study Reminder: save the user's chosen time to their profile ----
+  window.saveReminderPreference = async function(time){
+    const user = auth.currentUser;
+    if(!user) return;
+    try{
+      await setDoc(doc(db, 'users', user.uid), {
+        reminderTime: time,
+        reminderEnabled: true
+      }, { merge: true });
+    }catch(err){
+      // Non-critical — the local preference is still saved either way
     }
   };
 
@@ -1708,8 +1858,12 @@ const legalInfoScreen = document.getElementById('legalInfoScreen');
 const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
+const formulaScreen = document.getElementById('formulaScreen');
+const notesScreen = document.getElementById('notesScreen');
+const reminderScreen = document.getElementById('reminderScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
+const pastQuestionsYearScreen = document.getElementById('pastQuestionsYearScreen');
 const mcqPostScreen = document.getElementById('mcqPostScreen');
 const mockPostScreen = document.getElementById('mockPostScreen');
 const comingSoonScreen = document.getElementById('comingSoonScreen');
@@ -1717,7 +1871,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, progressScreen, leaderboardScreen, bookmarksScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, notesScreen, reminderScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -1774,6 +1928,191 @@ document.getElementById('goToBookmarks').addEventListener('click', (e) => {
   showScreen(bookmarksScreen);
   renderBookmarks();
 });
+document.getElementById('goToNotes').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(notesScreen);
+  renderNotes();
+});
+document.getElementById('cardFormula').addEventListener('click', () => {
+  showScreen(formulaScreen);
+  renderFormulas('');
+});
+
+// ---------- Daily Study Reminder (foundation: preference + permission; full delivery needs FCM setup) ----------
+document.getElementById('goToReminder').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(reminderScreen);
+  renderReminderSettings();
+});
+
+function renderReminderSettings(){
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('hl_reminder_pref') || 'null'); }catch(err){}
+
+  const timeInput = document.getElementById('reminderTimeInput');
+  const statusMsg = document.getElementById('reminderStatusMsg');
+  const saveBtn = document.getElementById('saveReminderBtn');
+
+  if(saved && saved.enabled){
+    timeInput.value = saved.time;
+    saveBtn.textContent = 'Update Reminder Time';
+    statusMsg.textContent = `✅ Reminder set for ${saved.time} daily.`;
+  } else {
+    saveBtn.textContent = 'Enable Daily Reminder';
+    statusMsg.textContent = '';
+  }
+}
+
+document.getElementById('saveReminderBtn').addEventListener('click', async () => {
+  const time = document.getElementById('reminderTimeInput').value;
+  const statusMsg = document.getElementById('reminderStatusMsg');
+
+  if(!time){
+    statusMsg.textContent = 'Please choose a time first.';
+    return;
+  }
+
+  // Request browser notification permission (needed for any local/future push delivery)
+  if('Notification' in window){
+    try{
+      const permission = await Notification.requestPermission();
+      if(permission !== 'granted'){
+        statusMsg.textContent = '⚠️ Notifications are blocked for this app. Please enable them in your phone/browser settings for reminders to work.';
+      }
+    }catch(err){}
+  }
+
+  // Save the preference locally, and to Firestore if signed in (so it's ready for real delivery later)
+  const pref = { enabled: true, time };
+  try{ localStorage.setItem('hl_reminder_pref', JSON.stringify(pref)); }catch(err){}
+  if(window.saveReminderPreference){
+    window.saveReminderPreference(time);
+  }
+
+  statusMsg.textContent = `✅ Reminder set for ${time} daily.`;
+  document.getElementById('saveReminderBtn').textContent = 'Update Reminder Time';
+});
+
+// ---------- Formula / Quick Reference Sheet ----------
+const FORMULAS = [
+  { name:'Infant Mortality Rate (IMR)', formula:'Infant deaths (0-1 yr) / Live births × 1000', note:'Per 1000 live births, in a given year' },
+  { name:'Maternal Mortality Ratio (MMR)', formula:'Maternal deaths / Live births × 100,000', note:'Per 100,000 live births' },
+  { name:'Crude Birth Rate (CBR)', formula:'Live births / Mid-year population × 1000', note:'Per 1000 population' },
+  { name:'Crude Death Rate (CDR)', formula:'Total deaths / Mid-year population × 1000', note:'Per 1000 population' },
+  { name:'Total Fertility Rate (TFR)', formula:'Sum of Age-Specific Fertility Rates × 5', note:'Average children per woman over reproductive lifespan' },
+  { name:'Neonatal Mortality Rate', formula:'Deaths under 28 days / Live births × 1000', note:'Per 1000 live births' },
+  { name:'Under-5 Mortality Rate (U5MR)', formula:'Deaths under 5 years / Live births × 1000', note:'Per 1000 live births' },
+  { name:'Case Fatality Rate (CFR)', formula:'Deaths from a disease / Total cases of that disease × 100', note:'Measures killing power of a disease' },
+  { name:'Incidence Rate', formula:'New cases in a period / Population at risk × 100 (or 1000)', note:'Measures rate of new disease occurrence' },
+  { name:'Prevalence Rate', formula:'Total existing cases / Total population × 100', note:'Old + new cases, at a point in time' },
+  { name:'Sensitivity', formula:'True Positives / (True Positives + False Negatives) × 100', note:'Ability of a test to correctly identify true cases' },
+  { name:'Specificity', formula:'True Negatives / (True Negatives + False Positives) × 100', note:'Ability of a test to correctly identify non-cases' },
+  { name:'Positive Predictive Value (PPV)', formula:'True Positives / (True Positives + False Positives) × 100', note:'Probability that a positive test is truly positive' },
+  { name:'Attack Rate', formula:'New cases during an outbreak / Population at risk × 100', note:'Used specifically during epidemics/outbreaks' },
+  { name:'Secondary Attack Rate', formula:'New cases among contacts / Total susceptible contacts × 100', note:'Measures communicability among close contacts' },
+  { name:'Standard Deviation (SD)', formula:'√(Σ(x - mean)² / n)', note:'Measures spread/variability of data' },
+  { name:'Body Mass Index (BMI)', formula:'Weight (kg) / Height (m)²', note:'18.5-24.9 = Normal range' },
+  { name:'Net Reproduction Rate (NRR)', formula:'Value of 1 = Replacement level fertility', note:'Each woman replaced by exactly 1 daughter on average' },
+];
+
+function renderFormulas(searchTerm){
+  const term = (searchTerm || '').toLowerCase().trim();
+  const filtered = term
+    ? FORMULAS.filter(f => f.name.toLowerCase().includes(term) || f.note.toLowerCase().includes(term))
+    : FORMULAS;
+
+  const wrap = document.getElementById('formulaListContent');
+  if(filtered.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No formulas match "${searchTerm}".</p>`;
+    return;
+  }
+  wrap.innerHTML = filtered.map(f => `
+    <div class="formula-item">
+      <div class="fi-name">${f.name}</div>
+      <div class="fi-formula">${f.formula}</div>
+      <div class="fi-note">${f.note}</div>
+    </div>
+  `).join('');
+}
+document.getElementById('formulaSearchBox').addEventListener('input', (e) => {
+  renderFormulas(e.target.value);
+});
+
+// ---------- My Notes: free-text study notes, saved on-device ----------
+function getNotes(){
+  try{ return JSON.parse(localStorage.getItem('hl_notes') || '[]'); }
+  catch(e){ return []; }
+}
+function saveNotes(list){
+  try{ localStorage.setItem('hl_notes', JSON.stringify(list)); }catch(e){}
+}
+function renderNotes(){
+  const wrap = document.getElementById('notesListContent');
+  const notes = getNotes();
+
+  if(notes.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No notes yet — tap "+ Add New Note" to write your first one.</p>`;
+    return;
+  }
+
+  wrap.innerHTML = notes.map((n, i) => `
+    <div class="note-item">
+      <div class="ni-header">
+        <div>
+          <div class="ni-title">${n.title || 'Untitled Note'}</div>
+          <div class="ni-meta">${n.subject || 'General'}${n.chapter ? ' · ' + n.chapter : ''} · ${n.date || ''}</div>
+        </div>
+      </div>
+      <div class="ni-body">${n.body || ''}</div>
+      <div class="ni-actions">
+        <button style="color:var(--navy);" data-edit="${i}">✏️ Edit</button>
+        <button style="color:var(--wrong);" data-delete="${i}">🗑️ Delete</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(!confirm('Delete this note?')) return;
+      const idx = parseInt(btn.dataset.delete, 10);
+      const notes = getNotes();
+      notes.splice(idx, 1);
+      saveNotes(notes);
+      renderNotes();
+    });
+  });
+  document.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.edit, 10);
+      openNoteEditor(idx);
+    });
+  });
+}
+function openNoteEditor(existingIndex){
+  const notes = getNotes();
+  const existing = existingIndex !== undefined ? notes[existingIndex] : null;
+
+  const subject = prompt('Subject (e.g. Health Planning and Management):', existing ? existing.subject : '');
+  if(subject === null) return; // cancelled
+  const chapter = prompt('Chapter (optional):', existing ? existing.chapter : '') || '';
+  const title = prompt('Note title:', existing ? existing.title : '') || 'Untitled Note';
+  const body = prompt('Your note:', existing ? existing.body : '');
+  if(body === null) return;
+
+  const noteData = {
+    subject: subject.trim(), chapter: chapter.trim(), title: title.trim(), body: body.trim(),
+    date: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+  };
+
+  if(existing){
+    notes[existingIndex] = noteData;
+  } else {
+    notes.unshift(noteData);
+  }
+  saveNotes(notes);
+  renderNotes();
+}
+document.getElementById('addNoteBtn').addEventListener('click', () => openNoteEditor());
 
 function renderProgressScreen(){
   const streak = getStudyStreak();
@@ -2072,6 +2411,35 @@ function startCarouselAutoPlay(){
   }, 4000);
 }
 renderCarousel();
+
+// ---------- Exam Countdown Timer ----------
+// 🔧 TODO: update this date whenever the real PHO exam date is announced/changes
+const EXAM_COUNTDOWN_DATE = new Date('2026-12-15T00:00:00');
+const EXAM_COUNTDOWN_LABEL = 'PHO Exam Countdown';
+
+function showExamCountdown(){
+  const now = new Date();
+  const diffMs = EXAM_COUNTDOWN_DATE - now;
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const wrap = document.getElementById('countdownBanner');
+
+  if(daysLeft <= 0){
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.innerHTML = `
+    <div>
+      <div class="cd-label">📅 ${EXAM_COUNTDOWN_LABEL}</div>
+      <div class="cd-title">Stay consistent — every day counts!</div>
+    </div>
+    <div>
+      <div class="cd-days">${daysLeft}</div>
+      <div class="cd-days-label">days remaining</div>
+    </div>
+  `;
+}
+showExamCountdown();
+setInterval(showExamCountdown, 60 * 60 * 1000); // recheck hourly, no need for per-second updates
 
 // ---------- Notifications: self-managing feed (Sheet-driven) + auto Question-of-Day entry ----------
 function getTodaysQotdEntry(){
@@ -2726,6 +3094,26 @@ async function startMockTest(post){
   }
 }
 
+// ---------- Past Questions: choose a year, then use the normal Set-locked system ----------
+// 🔧 Sheet tabs needed (exact names): "Past Questions 2079", "Past Questions 2080",
+// "Past Questions 2081", "Past Questions 2082" — same MCQ column format as other subjects.
+const PAST_QUESTION_YEARS = ['2079', '2080', '2081', '2082'];
+function renderPastQuestionYears(){
+  document.getElementById('pastQuestionsYearList').innerHTML = PAST_QUESTION_YEARS.map(year => `
+    <a class="link-card" href="#" data-year="${year}">
+      <div class="lc-text"><h4>${year} Questions</h4><p>Real past exam questions from ${year}</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
+  `).join('');
+  document.querySelectorAll('#pastQuestionsYearList .link-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      setSelectBackTarget = pastQuestionsYearScreen;
+      openSetSelect('Past Questions ' + card.dataset.year);
+    });
+  });
+}
+
 function renderSubjectPick(){
   // Purely instant — just names, no counts, no network call, no waiting.
   document.getElementById('subjectPickList').innerHTML = SUBJECTS_WITH_COUNTS.map(s => `
@@ -2738,6 +3126,11 @@ function renderSubjectPick(){
   document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
+      if(card.dataset.subject === 'Past Questions'){
+        showScreen(pastQuestionsYearScreen);
+        renderPastQuestionYears();
+        return;
+      }
       setSelectBackTarget = subjectPickScreen;
       openSetSelect(card.dataset.subject);
     });
@@ -3189,6 +3582,7 @@ function finishQuiz(){
   document.getElementById('statWrong').textContent = wrong;
   document.getElementById('statSkip').textContent = skipped;
   document.getElementById('reviewList').innerHTML = reviewHtml.join('');
+  renderSubjectBreakdown();
 
   currentMarksPerQuestion = 1; // reset back to default for the next quiz (Sets/GK always use 1)
 
@@ -3224,6 +3618,50 @@ function finishQuiz(){
     msgBox.innerHTML = '';
     nextBtn.style.display = 'none';
   }
+}
+
+function renderSubjectBreakdown(){
+  const wrap = document.getElementById('subjectBreakdown');
+
+  // Only meaningful for mixed-subject quizzes (Mock Test / All Subjects) — a single-subject
+  // Set already IS one subject, so a "breakdown" wouldn't add anything useful there.
+  const subjectsInThisQuiz = new Set(quizQuestions.map(q => q.Subject || 'General'));
+  if(currentSetInfo || subjectsInThisQuiz.size <= 1){
+    wrap.innerHTML = '';
+    return;
+  }
+
+  const bySubject = {};
+  quizQuestions.forEach((q, i) => {
+    const subj = q.Subject || 'General';
+    if(!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0 };
+    bySubject[subj].total++;
+    if(answers[i] && answers[i].correct) bySubject[subj].correct++;
+  });
+
+  const rows = Object.keys(bySubject).map(subj => {
+    const { correct, total } = bySubject[subj];
+    const pct = Math.round((correct / total) * 100);
+    const icon = pct >= 80 ? '✅' : pct >= 50 ? '👍' : '⚠️';
+    const label = pct >= 80 ? 'Strong!' : pct >= 50 ? '' : 'Weak area!';
+    return { subj, correct, total, pct, icon, label };
+  }).sort((a, b) => a.pct - b.pct); // weakest first, most useful to see right away
+
+  const weakest = rows[0];
+
+  wrap.innerHTML = `
+    <div class="breakdown-wrap">
+      <h4>📈 Subject-wise Breakdown</h4>
+      ${rows.map(r => `
+        <div class="breakdown-row">
+          <div class="br-subject">${r.subj}</div>
+          <div class="br-score">${r.correct}/${r.total}</div>
+          <div>${r.icon} ${r.label}</div>
+        </div>
+      `).join('')}
+      ${weakest && weakest.pct < 80 ? `<div class="breakdown-recommend">💡 Recommended: Practice more ${weakest.subj}</div>` : ''}
+    </div>
+  `;
 }
 
 function reviewRow(q, i, status, chosen){
