@@ -561,6 +561,22 @@
     padding:8px 14px; border-radius:20px; font-size:12px; font-weight:700;
     cursor:pointer;
   }
+  .premium-hero{
+    text-align:center; padding:30px 20px;
+    background:linear-gradient(160deg, #B8860B 0%, #7A5A0A 100%);
+    color:#fff; border-radius:16px; margin-bottom:16px;
+  }
+  .premium-hero h2{ font-family:'Tinos',serif; font-size:22px; margin-bottom:4px; }
+  .premium-hero p{ font-size:14px; opacity:0.9; }
+  .premium-features{ margin-bottom:16px; }
+  .pf-row{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; margin-bottom:8px; font-size:13px; color:var(--ink);
+  }
+  .premium-active-badge{
+    background:var(--correct-bg); color:var(--correct); border-radius:10px;
+    padding:12px 14px; text-align:center; font-weight:700; font-size:13.5px; margin-top:14px;
+  }
   .profile-menu{ padding:14px 20px 30px; }
   .legal-info-content{
     font-size:13.5px; line-height:1.7; color:var(--ink);
@@ -787,6 +803,10 @@
   .set-text h4{ font-family:'Tinos',serif; font-size:15px; margin-bottom:2px; }
   .set-text p{ font-size:12px; color:var(--ink-soft); }
   .set-badge{ margin-left:auto; font-size:18px; }
+  .pdf-download-btn{
+    background:none; border:none; font-size:18px; cursor:pointer;
+    padding:4px 6px; flex-shrink:0;
+  }
   .result-message{
     border-radius:12px; padding:16px; margin:14px 0;
     font-size:14px; line-height:1.5; font-weight:600; text-align:center;
@@ -1263,7 +1283,7 @@
     <div class="profile-status-row">
       <div>
         <div class="status-label">Account Status</div>
-        <div class="status-value">Free</div>
+        <div class="status-value" id="accountStatusValue">Free</div>
       </div>
       <button class="upgrade-btn" id="upgradeNowBtn">Upgrade Now</button>
     </div>
@@ -1288,6 +1308,38 @@
     <div class="home-body">
       <div class="section-title" id="legalInfoTitle"></div>
       <div id="legalInfoContent" class="legal-info-content"></div>
+    </div>
+  </div>
+
+  <!-- PREMIUM UPGRADE SCREEN -->
+  <div class="screen" id="upgradeScreen">
+    <div class="back-link" data-back="premiumBack">← Back</div>
+    <div class="home-body">
+      <div class="premium-hero">
+        <div style="font-size:34px; margin-bottom:8px;">💎</div>
+        <h2>Health Loksewa Premium</h2>
+        <p>NPR 99 / month</p>
+      </div>
+
+      <div class="premium-features">
+        <div class="pf-row">🤖 <b>Unlimited AI Assistant</b> — no daily message limit</div>
+        <div class="pf-row">📄 <b>Download Sets as PDF</b> — study offline, print anytime</div>
+        <div class="pf-row">📊 <b>Advanced Analytics</b> — deeper insights into your progress</div>
+        <div class="pf-row">🚫 <b>Ad-free experience</b> (once ads are added to the free version)</div>
+      </div>
+
+      <div class="content-card">
+        <h4 style="margin-bottom:10px;">👉 How to activate Premium</h4>
+        <ol style="padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink);">
+          <li>Send <b>NPR 99</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
+          <li>Take a screenshot of your payment confirmation</li>
+          <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
+          <li>Your account will be manually activated within 24 hours</li>
+        </ol>
+      </div>
+
+      <p style="text-align:center; font-size:12px; color:var(--ink-soft); margin-top:14px;">Already paid and waiting for activation? Just check back here — this page will show "✅ Premium Active" once it's done.</p>
+      <div id="premiumStatusBadge"></div>
     </div>
   </div>
 
@@ -1788,6 +1840,54 @@
     }
   };
 
+  // ---- Premium status (Path B: manually flipped "premium: true" by Narayan in Firestore) ----
+  window.checkPremiumStatus = async function(){
+    const user = auth.currentUser;
+    if(!user) return false;
+    try{
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists() || snap.data().premium !== true) return false;
+
+      const expiresAt = snap.data().premiumExpiresAt;
+      if(expiresAt && new Date(expiresAt) < new Date()){
+        // Expired — automatically revert to free, no manual action needed
+        try{ await setDoc(ref, { premium: false }, { merge: true }); }catch(e){}
+        return false;
+      }
+      return true;
+    }catch(err){
+      return false;
+    }
+  };
+
+  // ---- AI Chat daily message limit (10/day free, unlimited for premium) ----
+  window.checkAndIncrementChatCount = async function(){
+    const user = auth.currentUser;
+    if(!user) return { allowed: true, remaining: 999 }; // fail open if somehow not logged in
+
+    const isPremium = await window.checkPremiumStatus();
+    if(isPremium) return { allowed: true, remaining: Infinity };
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    try{
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {};
+      let count = (data.chatCountDate === todayKey) ? (data.chatCountToday || 0) : 0;
+
+      if(count >= 10){
+        return { allowed: false, remaining: 0 };
+      }
+
+      count++;
+      await setDoc(ref, { chatCountDate: todayKey, chatCountToday: count }, { merge: true });
+      return { allowed: true, remaining: 10 - count };
+    }catch(err){
+      return { allowed: true, remaining: 999 }; // fail open on error — don't block users due to a glitch
+    }
+  };
+
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
   // ---- Toggle between Login and Register modes — shows/hides the extra fields ----
@@ -1906,6 +2006,9 @@
 <!-- Nepali (Bikram Sambat) date converter — shows today's Nepali date with day on the home screen -->
 <script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js"></script>
 
+<!-- jsPDF — used for the Premium "Download Set as PDF" feature -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 <script>
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
@@ -1937,6 +2040,7 @@ const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
+const upgradeScreen = document.getElementById('upgradeScreen');
 const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
@@ -1955,7 +2059,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -1965,6 +2069,7 @@ let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
 let comingSoonBackTarget = mcqPostScreen;
 let legalInfoBackTarget = profileScreen;
+let premiumBackTarget = profileScreen;
 
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -2361,9 +2466,12 @@ function renderBookmarks(){
 }
 
 // ---------- Header bar: profile / notifications / dark mode ----------
-document.getElementById('headerProfileBtn').addEventListener('click', () => {
+document.getElementById('headerProfileBtn').addEventListener('click', async () => {
   showScreen(profileScreen);
   renderThemeSwatches();
+  const isPremium = await refreshPremiumStatus();
+  document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
+  document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
@@ -2373,8 +2481,33 @@ document.getElementById('profileLogoutBtn').addEventListener('click', () => {
   window.doSignOut();
 });
 document.getElementById('upgradeNowBtn').addEventListener('click', () => {
-  alert('Premium plans are coming soon! Stay tuned.');
+  premiumBackTarget = profileScreen;
+  showScreen(upgradeScreen);
+  renderPremiumStatus();
 });
+
+// ---------- Premium status checking (Path B: manual activation via eSewa) ----------
+async function isPremiumUser(){
+  try{
+    const cached = JSON.parse(localStorage.getItem('hl_premium_status') || 'null');
+    if(cached !== null) return cached;
+  }catch(e){}
+  return false;
+}
+async function refreshPremiumStatus(){
+  if(!window.checkPremiumStatus) return false;
+  const isPremium = await window.checkPremiumStatus();
+  try{ localStorage.setItem('hl_premium_status', JSON.stringify(isPremium)); }catch(e){}
+  return isPremium;
+}
+async function renderPremiumStatus(){
+  const badge = document.getElementById('premiumStatusBadge');
+  badge.innerHTML = '';
+  const isPremium = await refreshPremiumStatus();
+  if(isPremium){
+    badge.innerHTML = `<div class="premium-active-badge">✅ Premium Active — thank you for supporting Health Loksewa!</div>`;
+  }
+}
 
 // ---------- Profile menu: Contact Us, About Us, Feedback, Rate Us, Privacy Policy, Terms ----------
 function openLegalInfo(title, htmlContent){
@@ -2879,6 +3012,8 @@ document.querySelectorAll('.back-link').forEach(b => {
       showScreen(comingSoonBackTarget);
     } else if(key === 'legalInfoBack'){
       showScreen(legalInfoBackTarget);
+    } else if(key === 'premiumBack'){
+      showScreen(premiumBackTarget);
     } else {
       showScreen(SCREEN_BY_KEY[key] || homeScreen);
     }
@@ -3482,10 +3617,18 @@ function renderSetList(totalSets, exactCount){
           <h4>Set ${i}</h4>
           <p>${questionsLabel}${completed ? ' · Completed' : (unlocked ? '' : ' · Locked')}</p>
         </div>
+        ${unlocked ? `<button class="pdf-download-btn" data-pdf-set="${i}" title="Download as PDF">📄</button>` : ''}
         <div class="set-badge">${badge}</div>
       </div>`;
   }
   document.getElementById('setSelectList').innerHTML = html;
+
+  document.querySelectorAll('.pdf-download-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't also trigger the set-card's own click (which starts the quiz)
+      downloadSetAsPdf(selectedSubject, parseInt(btn.dataset.pdfSet, 10));
+    });
+  });
 
   document.querySelectorAll('#setSelectList .set-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -3520,6 +3663,74 @@ function renderSetList(totalSets, exactCount){
 }
 
 // ---------- Certificate Generator: draws a real downloadable image using Canvas ----------
+// ---------- Premium: Download a Set as PDF ----------
+async function downloadSetAsPdf(subject, setNumber){
+  const isPremium = await refreshPremiumStatus();
+  if(!isPremium){
+    if(confirm('📄 Downloading Sets as PDF is a Premium feature (NPR 99/month). Want to see Premium plans?')){
+      premiumBackTarget = setSelectScreen;
+      showScreen(upgradeScreen);
+      renderPremiumStatus();
+    }
+    return;
+  }
+
+  if(typeof window.jspdf === 'undefined'){
+    alert('PDF tool is still loading — please try again in a moment.');
+    return;
+  }
+
+  try{
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}`;
+    const res = await fetch(url);
+    const questions = await res.json();
+
+    if(questions.length === 0){
+      alert('No questions found in this set.');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    const pageWidth = 190;
+    let y = 20;
+
+    pdf.setFontSize(16);
+    pdf.text(`${subject} — Set ${setNumber}`, 10, y);
+    y += 6;
+    pdf.setFontSize(10);
+    pdf.setTextColor(120);
+    pdf.text('Health Loksewa — healthloksewa app', 10, y);
+    pdf.setTextColor(0);
+    y += 12;
+
+    questions.forEach((q, i) => {
+      if(y > 270){ pdf.addPage(); y = 20; }
+      pdf.setFontSize(11);
+      const qLines = pdf.splitTextToSize(`${i+1}. ${q.Question}`, pageWidth);
+      pdf.text(qLines, 10, y);
+      y += qLines.length * 6 + 2;
+
+      pdf.setFontSize(10);
+      ['A','B','C','D'].forEach(letter => {
+        if(y > 275){ pdf.addPage(); y = 20; }
+        const optLines = pdf.splitTextToSize(`   ${letter}. ${q['Option' + letter] || ''}`, pageWidth);
+        pdf.text(optLines, 10, y);
+        y += optLines.length * 5.5;
+      });
+
+      pdf.setTextColor(47, 125, 93);
+      pdf.text(`   ✓ Answer: ${q.CorrectAnswer}`, 10, y);
+      pdf.setTextColor(0);
+      y += 8;
+    });
+
+    pdf.save(`${subject}-Set-${setNumber}.pdf`);
+  }catch(err){
+    alert('Could not generate the PDF. Please check your internet connection and try again.');
+  }
+}
+
 function generateCertificate(subject, totalSets){
   let userName = 'Student';
   try{ userName = JSON.parse(localStorage.getItem('hl_user') || '{}').name || 'Student'; }catch(e){}
@@ -4072,6 +4283,15 @@ async function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if(!text) return;
+
+  // ---- Daily message limit check (10/day free, unlimited premium) ----
+  if(window.checkAndIncrementChatCount){
+    const limitCheck = await window.checkAndIncrementChatCount();
+    if(!limitCheck.allowed){
+      appendBubble('ai', "You've reached today's free limit of 10 messages. Upgrade to Premium for unlimited AI Assistant access, or come back tomorrow! 💎");
+      return;
+    }
+  }
 
   input.value = '';
   document.getElementById('chatSendBtn').disabled = true;
