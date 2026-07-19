@@ -577,6 +577,12 @@
     background:var(--correct-bg); color:var(--correct); border-radius:10px;
     padding:12px 14px; text-align:center; font-weight:700; font-size:13.5px; margin-top:14px;
   }
+  .esewa-pay-btn{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+    background:#60BB46; color:#fff; border:none; padding:15px;
+    border-radius:12px; font-weight:700; font-size:15px; cursor:pointer;
+  }
+  .esewa-pay-btn:disabled{ opacity:0.6; cursor:not-allowed; }
   .profile-menu{ padding:14px 20px 30px; }
   .legal-info-content{
     font-size:13.5px; line-height:1.7; color:var(--ink);
@@ -1328,15 +1334,24 @@
         <div class="pf-row">🚫 <b>Ad-free experience</b> (once ads are added to the free version)</div>
       </div>
 
-      <div class="content-card">
-        <h4 style="margin-bottom:10px;">👉 How to activate Premium</h4>
-        <ol style="padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink);">
-          <li>Send <b>NPR 99</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
-          <li>Take a screenshot of your payment confirmation</li>
-          <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
-          <li>Your account will be manually activated within 24 hours</li>
-        </ol>
-      </div>
+      <button class="esewa-pay-btn" id="esewaPayBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
+        Pay NPR 99 with eSewa
+      </button>
+      <p id="esewaPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 16px;"></p>
+
+      <details style="margin-bottom:16px;">
+        <summary style="font-size:12.5px; color:var(--ink-soft); cursor:pointer;">Or activate manually instead</summary>
+        <div class="content-card" style="margin-top:10px;">
+          <h4 style="margin-bottom:10px;">👉 Manual activation</h4>
+          <ol style="padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink);">
+            <li>Send <b>NPR 99</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
+            <li>Take a screenshot of your payment confirmation</li>
+            <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
+            <li>Your account will be manually activated within 24 hours</li>
+          </ol>
+        </div>
+      </details>
 
       <p style="text-align:center; font-size:12px; color:var(--ink-soft); margin-top:14px;">Already paid and waiting for activation? Just check back here — this page will show "✅ Premium Active" once it's done.</p>
       <div id="premiumStatusBadge"></div>
@@ -1764,6 +1779,7 @@
         }));
       }catch(e){}
       window.showScreen(window.homeScreen);
+      if(window.checkForEsewaReturnAndActivate) window.checkForEsewaReturnAndActivate();
     } else {
       try{ localStorage.removeItem('hl_user'); }catch(e){}
       window.showScreen(window.loginScreen);
@@ -1862,6 +1878,24 @@
   };
 
   // ---- AI Chat daily message limit (10/day free, unlimited for premium) ----
+  // ---- Activate Premium after a verified eSewa payment (30 days from now) ----
+  window.activatePremiumAfterPayment = async function(){
+    const user = auth.currentUser;
+    if(!user) return;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    try{
+      await setDoc(doc(db, 'users', user.uid), {
+        premium: true,
+        premiumExpiresAt: expiresAt.toISOString().slice(0, 10),
+        premiumActivatedAt: new Date().toISOString()
+      }, { merge: true });
+    }catch(err){
+      // Rethrow so the caller can alert the user — this is important enough not to fail silently
+      throw err;
+    }
+  };
+
   window.checkAndIncrementChatCount = async function(){
     const user = auth.currentUser;
     if(!user) return { allowed: true, remaining: 999 }; // fail open if somehow not logged in
@@ -2506,8 +2540,93 @@ async function renderPremiumStatus(){
   const isPremium = await refreshPremiumStatus();
   if(isPremium){
     badge.innerHTML = `<div class="premium-active-badge">✅ Premium Active — thank you for supporting Health Loksewa!</div>`;
+    document.getElementById('esewaPayBtn').style.display = 'none';
+  } else {
+    document.getElementById('esewaPayBtn').style.display = 'flex';
   }
 }
+
+// ---------- eSewa Payment: fully automatic (currently on test/sandbox credentials) ----------
+document.getElementById('esewaPayBtn').addEventListener('click', async () => {
+  let userInfo = null;
+  try{ userInfo = JSON.parse(localStorage.getItem('hl_user') || 'null'); }catch(e){}
+  if(!userInfo || !userInfo.uid){
+    alert('Please make sure you are logged in first.');
+    return;
+  }
+
+  const btn = document.getElementById('esewaPayBtn');
+  const statusEl = document.getElementById('esewaPayStatus');
+  btn.disabled = true;
+  statusEl.textContent = 'Connecting to eSewa…';
+
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=99`);
+    const fields = await res.json();
+
+    if(!fields.payment_url){
+      statusEl.textContent = 'Could not start payment. Please try again.';
+      btn.disabled = false;
+      return;
+    }
+
+    // Build and auto-submit a hidden form — this is how eSewa's payment gateway expects the request
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = fields.payment_url;
+    ['amount','tax_amount','total_amount','transaction_uuid','product_code',
+     'product_service_charge','product_delivery_charge','success_url','failure_url',
+     'signed_field_names','signature'].forEach(key => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = fields[key];
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit(); // navigates the browser to eSewa's checkout page
+  }catch(err){
+    statusEl.textContent = 'Could not connect to eSewa. Please check your internet and try again.';
+    btn.disabled = false;
+  }
+});
+
+// ---------- eSewa Payment: handle the redirect BACK after payment completes ----------
+async function checkForEsewaReturnAndActivate(){
+  const params = new URLSearchParams(window.location.search);
+  const dataParam = params.get('data');
+  if(!dataParam) return; // not returning from an eSewa payment — nothing to do
+
+  // Clean the URL immediately so refreshing doesn't re-trigger this
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=verifyEsewaPayment&data=${encodeURIComponent(dataParam)}`);
+    const result = await res.json();
+
+    if(!result.valid){
+      alert('⚠️ Payment could not be verified (' + (result.reason || 'unknown') + '). If you were charged, please contact support with your payment screenshot.');
+      return;
+    }
+
+    let userInfo = null;
+    try{ userInfo = JSON.parse(localStorage.getItem('hl_user') || 'null'); }catch(e){}
+
+    if(!userInfo || userInfo.uid !== result.uid){
+      alert('⚠️ Payment verified, but the logged-in account doesn\'t match. Please contact support to activate your Premium manually.');
+      return;
+    }
+
+    if(window.activatePremiumAfterPayment){
+      await window.activatePremiumAfterPayment();
+      alert('🎉 Payment successful! Your Premium is now active — thank you for supporting Health Loksewa!');
+      try{ localStorage.setItem('hl_premium_status', 'true'); }catch(e){}
+    }
+  }catch(err){
+    alert('Payment verification failed due to a connection issue. If you were charged, please contact support.');
+  }
+}
+window.checkForEsewaReturnAndActivate = checkForEsewaReturnAndActivate;
 
 // ---------- Profile menu: Contact Us, About Us, Feedback, Rate Us, Privacy Policy, Terms ----------
 function openLegalInfo(title, htmlContent){
