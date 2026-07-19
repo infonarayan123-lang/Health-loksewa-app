@@ -299,6 +299,80 @@
   }
 
   /* ---------- Question of the Day card + screen ---------- */
+  .dash-card.c-progress{
+    background:linear-gradient(135deg,#3A6B7A,#254852);
+    grid-column:1 / -1;
+    flex-direction:row; align-items:center; gap:16px;
+  }
+
+  /* ---------- My Progress hub ---------- */
+  .streak-banner{
+    display:flex; align-items:center; gap:14px;
+    background:linear-gradient(135deg,#B8860B,#7A5A0A);
+    border-radius:14px; padding:16px 18px; margin-bottom:16px;
+  }
+  .streak-fire{ font-size:34px; }
+  .streak-count{ font-family:'Tinos',serif; font-size:17px; font-weight:700; color:#fff; }
+  .streak-sub{ font-size:11.5px; color:rgba(255,255,255,0.85); margin-top:2px; }
+
+  .stats-grid{
+    display:grid; grid-template-columns:repeat(2, 1fr);
+    gap:10px; margin-bottom:14px;
+  }
+  .stat-tile{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px; text-align:center;
+  }
+  .stat-tile .st-num{ font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--navy); }
+  .stat-tile .st-label{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+
+  .progress-detail-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;
+  }
+  .progress-detail-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+  }
+  .pd-label{ font-size:11px; color:var(--ink-soft); margin-bottom:4px; }
+  .pd-value{ font-size:13.5px; font-weight:700; color:var(--ink); }
+
+  /* ---------- Leaderboard ---------- */
+  .leaderboard-row{
+    display:flex; align-items:center; gap:12px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; margin-bottom:9px;
+  }
+  .leaderboard-row.is-you{ border-color:var(--gold); background:var(--correct-bg); }
+  .lb-rank{
+    width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:13px; flex-shrink:0;
+    background:var(--bg); color:var(--ink-soft);
+  }
+  .lb-rank.top1{ background:#F5C518; color:#5A4200; }
+  .lb-rank.top2{ background:#C6C6C6; color:#3A3A3A; }
+  .lb-rank.top3{ background:#D8935A; color:#4A2E0E; }
+  .lb-name{ flex:1; font-size:13.5px; font-weight:600; color:var(--ink); }
+  .lb-pct{ font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--navy); font-size:14px; }
+
+  /* ---------- Bookmarks ---------- */
+  .bookmark-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px; margin-bottom:10px;
+  }
+  .bookmark-item .bq-subject{ font-size:11px; color:var(--gold); font-weight:700; text-transform:uppercase; margin-bottom:5px; }
+  .bookmark-item .bq-text{ font-size:13.5px; color:var(--ink); margin-bottom:8px; line-height:1.5; }
+  .bookmark-item .bq-answer{ font-size:12px; color:var(--correct); font-weight:600; margin-bottom:6px; }
+  .bookmark-remove-btn{
+    font-size:11.5px; color:var(--wrong); background:none; border:none;
+    font-weight:700; cursor:pointer; padding:0;
+  }
+
+  /* ---------- Bookmark star on quiz questions ---------- */
+  .bookmark-star-btn{
+    background:none; border:none; font-size:22px; cursor:pointer;
+    padding:2px 4px; line-height:1; flex-shrink:0;
+  }
+
   .dash-card.c-qotd.qotd-card{
     /* Notebook paper: warm off-white base + faint ruled blue lines + subtle paper texture */
     background-color:#F7F1DE;
@@ -1004,6 +1078,13 @@
           </div>
           <div id="qotdCardContent" class="qotd-card-body">Loading today's question…</div>
         </div>
+        <button class="dash-card c-progress" id="cardProgress">
+          <div class="dc-icon">📊</div>
+          <div style="text-align:left;">
+            <div class="dc-label">My Progress</div>
+            <div class="dc-sub">Stats, streak, leaderboard &amp; bookmarks</div>
+          </div>
+        </button>
       </div>
 
       <div class="app-footer">
@@ -1076,6 +1157,66 @@
     <div class="home-body">
       <div class="section-title" id="legalInfoTitle"></div>
       <div id="legalInfoContent" class="legal-info-content"></div>
+    </div>
+  </div>
+
+  <!-- MY PROGRESS HUB — stats, streak, links to Leaderboard and Bookmarks -->
+  <div class="screen" id="progressScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">My Progress</div>
+
+      <div class="streak-banner" id="streakBanner">
+        <div class="streak-fire">🔥</div>
+        <div>
+          <div class="streak-count" id="streakCount">0 day streak</div>
+          <div class="streak-sub">Keep practicing daily to grow your streak!</div>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="progressStatsGrid"></div>
+
+      <div class="progress-detail-row">
+        <div class="progress-detail-card">
+          <div class="pd-label">💪 Strongest Subject</div>
+          <div class="pd-value" id="strongestSubject">—</div>
+        </div>
+        <div class="progress-detail-card">
+          <div class="pd-label">📘 Needs Practice</div>
+          <div class="pd-value" id="weakestSubject">—</div>
+        </div>
+      </div>
+
+      <a class="link-card" href="#" id="goToLeaderboard">
+        <div class="lc-text"><h4>🏆 Leaderboard</h4><p>See how you rank against other students</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToBookmarks">
+        <div class="lc-text"><h4>⭐ My Bookmarks</h4><p>Review questions you've saved</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="screen" id="leaderboardScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🏆 Leaderboard — Top 10</div>
+      <div id="leaderboardContent">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY BOOKMARKS -->
+  <div class="screen" id="bookmarksScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⭐ My Bookmarks</div>
+      <div id="bookmarksContent">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
     </div>
   </div>
 
@@ -1242,7 +1383,10 @@
       <div class="omr-strip" id="omrStrip"></div>
     </div>
     <div class="quiz-body">
-      <div class="q-tag" id="qTag">EPIDEMIOLOGY</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="q-tag" id="qTag">EPIDEMIOLOGY</div>
+        <button class="bookmark-star-btn" id="bookmarkStarBtn" title="Bookmark this question">☆</button>
+      </div>
       <div class="q-text" id="qText">Question text here</div>
       <div id="optionsWrap"></div>
       <div class="feedback" id="feedbackBox"></div>
@@ -1281,7 +1425,7 @@
     createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
-    getFirestore, doc, setDoc, getDoc
+    getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1381,6 +1525,35 @@
 
   window.doSignOut = async function(){
     try{ await signOut(auth); }catch(err){}
+  };
+
+  // ---- Leaderboard: sync this user's stats to Firestore, and fetch the top 10 ----
+  window.syncStatsToLeaderboard = async function(stats){
+    const user = auth.currentUser;
+    if(!user) return;
+    try{
+      await setDoc(doc(db, 'leaderboard', user.uid), {
+        name: user.displayName || 'Student',
+        totalCorrect: stats.totalCorrect,
+        totalAttempted: stats.totalAttempted,
+        overallPct: stats.overallPct,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }catch(err){
+      // Non-critical — if this fails, the user's own progress is still saved locally either way
+    }
+  };
+
+  window.fetchLeaderboard = async function(){
+    try{
+      const q = query(collection(db, 'leaderboard'), orderBy('overallPct', 'desc'), limit(10));
+      const snap = await getDocs(q);
+      const results = [];
+      snap.forEach(docSnap => results.push(docSnap.data()));
+      return results;
+    }catch(err){
+      return [];
+    }
   };
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
@@ -1532,6 +1705,9 @@ const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
+const progressScreen = document.getElementById('progressScreen');
+const leaderboardScreen = document.getElementById('leaderboardScreen');
+const bookmarksScreen = document.getElementById('bookmarksScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const mcqPostScreen = document.getElementById('mcqPostScreen');
@@ -1541,11 +1717,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, progressScreen, leaderboardScreen, bookmarksScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -1582,6 +1758,101 @@ document.getElementById('cardAi').addEventListener('click', () => {
 });
 // Question of the Day is now inline on the dashboard card itself — no tap-to-navigate needed
 // (see loadQuestionOfDay() call further below, which runs automatically on page load)
+
+// ---------- My Progress hub ----------
+document.getElementById('cardProgress').addEventListener('click', () => {
+  showScreen(progressScreen);
+  renderProgressScreen();
+});
+document.getElementById('goToLeaderboard').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(leaderboardScreen);
+  renderLeaderboard();
+});
+document.getElementById('goToBookmarks').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(bookmarksScreen);
+  renderBookmarks();
+});
+
+function renderProgressScreen(){
+  const streak = getStudyStreak();
+  document.getElementById('streakCount').textContent = streak === 1 ? '1 day streak' : `${streak} day streak`;
+  document.getElementById('streakBanner').style.opacity = streak > 0 ? '1' : '0.6';
+
+  const stats = computeProgressStats();
+  document.getElementById('progressStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${stats.totalAttempted}</div><div class="st-label">Questions Attempted</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.overallPct}%</div><div class="st-label">Overall Accuracy</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.totalCorrect}</div><div class="st-label">Correct Answers</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.totalSets}</div><div class="st-label">Sets Completed</div></div>
+  `;
+
+  document.getElementById('strongestSubject').textContent = stats.strongest ? `${stats.strongest.subject} (${stats.strongest.pct}%)` : 'Complete a Set to see this';
+  document.getElementById('weakestSubject').textContent = stats.weakest ? `${stats.weakest.subject} (${stats.weakest.pct}%)` : 'Complete a Set to see this';
+}
+
+async function renderLeaderboard(){
+  const wrap = document.getElementById('leaderboardContent');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+
+  if(!window.fetchLeaderboard){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Leaderboard needs you to be signed in.</p>`;
+    return;
+  }
+
+  const results = await window.fetchLeaderboard();
+  if(results.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No leaderboard entries yet — complete a Set to be the first!</p>`;
+    return;
+  }
+
+  let myName = '';
+  try{ myName = JSON.parse(localStorage.getItem('hl_user') || '{}').name || ''; }catch(e){}
+
+  const medalRanks = ['top1','top2','top3'];
+  wrap.innerHTML = results.map((r, i) => {
+    const isYou = r.name === myName;
+    const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    const rankClass = medalRanks[i] || '';
+    return `
+      <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
+        <div class="lb-rank ${rankClass}">${rankIcon}</div>
+        <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
+        <div class="lb-pct">${r.overallPct}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderBookmarks(){
+  const wrap = document.getElementById('bookmarksContent');
+  const list = getBookmarks();
+
+  if(list.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No bookmarks yet — tap the ☆ star on any question during practice to save it here.</p>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map((q, i) => `
+    <div class="bookmark-item">
+      <div class="bq-subject">${q.Subject || ''}${q.Chapter ? ' · ' + q.Chapter : ''}</div>
+      <div class="bq-text">${q.Question}</div>
+      <div class="bq-answer">✅ ${q.CorrectAnswer}: ${q['Option' + q.CorrectAnswer] || ''}</div>
+      <button class="bookmark-remove-btn" data-index="${i}">✕ Remove</button>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.bookmark-remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.index, 10);
+      const current = getBookmarks();
+      current.splice(idx, 1);
+      saveBookmarks(current);
+      renderBookmarks();
+    });
+  });
+}
 
 // ---------- Header bar: profile / notifications / dark mode ----------
 document.getElementById('headerProfileBtn').addEventListener('click', () => {
@@ -2493,12 +2764,89 @@ function isSetCompleted(subject, setNumber){
   const completed = (p[subject] && p[subject].completed) || [];
   return completed.includes(setNumber);
 }
-function markSetCompleted(subject, setNumber, correctCount){
+function markSetCompleted(subject, setNumber, correctCount, wrongCount, skippedCount){
   const p = loadProgress();
   if(!p[subject]) p[subject] = { completed: [], scores: {} };
   if(!p[subject].completed.includes(setNumber)) p[subject].completed.push(setNumber);
-  p[subject].scores[setNumber] = correctCount;
+  p[subject].scores[setNumber] = { correct: correctCount, wrong: wrongCount, skipped: skippedCount };
   saveProgress(p);
+  updateStudyStreak();
+  if(window.syncStatsToLeaderboard){
+    window.syncStatsToLeaderboard(computeProgressStats());
+  }
+}
+
+// ---------- Study Streak: tracks consecutive days of practice (like Duolingo) ----------
+function updateStudyStreak(){
+  const todayKey = new Date().toISOString().slice(0, 10);
+  let lastDate = null, streak = 0;
+  try{
+    lastDate = localStorage.getItem('hl_streak_last_date');
+    streak = parseInt(localStorage.getItem('hl_streak_count') || '0', 10);
+  }catch(e){}
+
+  if(lastDate === todayKey) return; // already counted today, no change
+
+  if(lastDate){
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = yesterday.toISOString().slice(0, 10);
+    streak = (lastDate === yesterdayKey) ? streak + 1 : 1; // continued streak, or reset if a day was missed
+  } else {
+    streak = 1; // very first day ever
+  }
+
+  try{
+    localStorage.setItem('hl_streak_count', String(streak));
+    localStorage.setItem('hl_streak_last_date', todayKey);
+  }catch(e){}
+}
+function getStudyStreak(){
+  try{
+    const lastDate = localStorage.getItem('hl_streak_last_date');
+    const streak = parseInt(localStorage.getItem('hl_streak_count') || '0', 10);
+    if(!lastDate) return 0;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = yesterday.toISOString().slice(0, 10);
+    // If they haven't practiced today OR yesterday, the streak has been broken (even if not yet reset in storage)
+    if(lastDate !== todayKey && lastDate !== yesterdayKey) return 0;
+    return streak;
+  }catch(e){ return 0; }
+}
+
+// ---------- Progress stats, computed from locally saved Set results ----------
+function computeProgressStats(){
+  const p = loadProgress();
+  let totalCorrect = 0, totalWrong = 0, totalSkipped = 0, totalSets = 0;
+  const subjectAverages = [];
+
+  Object.keys(p).forEach(subject => {
+    const entry = p[subject];
+    let subjCorrect = 0, subjTotal = 0;
+    (entry.completed || []).forEach(setNum => {
+      const s = entry.scores[setNum];
+      if(s && typeof s === 'object'){
+        totalCorrect += s.correct || 0;
+        totalWrong += s.wrong || 0;
+        totalSkipped += s.skipped || 0;
+        subjCorrect += s.correct || 0;
+        subjTotal += (s.correct || 0) + (s.wrong || 0) + (s.skipped || 0);
+      }
+      totalSets++;
+    });
+    if(subjTotal > 0){
+      subjectAverages.push({ subject, pct: Math.round((subjCorrect / subjTotal) * 100) });
+    }
+  });
+
+  subjectAverages.sort((a,b) => b.pct - a.pct);
+  const strongest = subjectAverages[0] || null;
+  const weakest = subjectAverages[subjectAverages.length - 1] || null;
+  const totalAttempted = totalCorrect + totalWrong + totalSkipped;
+  const overallPct = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0;
+
+  return { totalAttempted, totalCorrect, totalWrong, totalSets, strongest, weakest, overallPct };
 }
 
 // ---------- Set Selection screen — opens INSTANTLY, no waiting on question counts ----------
@@ -2732,6 +3080,42 @@ function renderQuestion(){
   document.querySelectorAll('.option').forEach(opt => {
     opt.addEventListener('click', () => handleAnswer(opt.dataset.letter));
   });
+
+  // ---- Bookmark star: reflect current question's saved state ----
+  const starBtn = document.getElementById('bookmarkStarBtn');
+  starBtn.textContent = isBookmarked(q) ? '★' : '☆';
+  starBtn.style.color = isBookmarked(q) ? 'var(--gold)' : 'var(--ink-soft)';
+  starBtn.onclick = () => {
+    toggleBookmark(q);
+    starBtn.textContent = isBookmarked(q) ? '★' : '☆';
+    starBtn.style.color = isBookmarked(q) ? 'var(--gold)' : 'var(--ink-soft)';
+  };
+}
+
+// ---------- Bookmarks: save questions for later review ----------
+function getBookmarks(){
+  try{ return JSON.parse(localStorage.getItem('hl_bookmarks') || '[]'); }
+  catch(e){ return []; }
+}
+function saveBookmarks(list){
+  try{ localStorage.setItem('hl_bookmarks', JSON.stringify(list)); }catch(e){}
+}
+function questionKey(q){
+  return (q.Subject || '') + '::' + (q.Question || '').slice(0, 80);
+}
+function isBookmarked(q){
+  const key = questionKey(q);
+  return getBookmarks().some(b => questionKey(b) === key);
+}
+function toggleBookmark(q){
+  const key = questionKey(q);
+  let list = getBookmarks();
+  if(list.some(b => questionKey(b) === key)){
+    list = list.filter(b => questionKey(b) !== key);
+  } else {
+    list.unshift(q); // newest bookmark first
+  }
+  saveBookmarks(list);
 }
 
 function handleAnswer(letter){
@@ -2814,7 +3198,7 @@ function finishQuiz(){
 
   if(currentSetInfo){
     const { subject, setNumber, totalSets } = currentSetInfo;
-    markSetCompleted(subject, setNumber, correct);
+    markSetCompleted(subject, setNumber, correct, wrong, skipped);
 
     let tier, text;
     if(correct >= 46){
