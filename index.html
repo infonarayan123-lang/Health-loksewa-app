@@ -3060,9 +3060,6 @@ function renderDictionary(searchTerm){
 document.getElementById('dictionarySearchBox').addEventListener('input', (e) => renderDictionary(e.target.value));
 
 // ---------- Calculator Hub ----------
-document.getElementById('cardCalculator').addEventListener('click', () => {
-  showScreen(calculatorScreen);
-});
 document.getElementById('goToBasicCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(basicCalcScreen);
