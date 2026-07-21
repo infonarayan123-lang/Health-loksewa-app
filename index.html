@@ -1441,13 +1441,6 @@
             <div class="dc-sub">Key terms &amp; definitions, searchable</div>
           </div>
         </button>
-        <button class="dash-card c-calculator" id="cardCalculator">
-          <div class="dc-icon">🧮</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Health Calculator</div>
-            <div class="dc-sub">BMI, IMR, MMR &amp; more — enter values, get results</div>
-          </div>
-        </button>
         <button class="dash-card c-faqs" id="cardFaqs">
           <div class="dc-icon">❓</div>
           <div style="text-align:left;">
@@ -1754,7 +1747,7 @@
   <div class="screen" id="calculatorScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">🧮 Health Calculator</div>
+      <div class="section-title">🧮 Calculator Hub</div>
       <a class="link-card" href="#" id="goToBasicCalc">
         <div class="lc-text"><h4>🔢 Calculator</h4><p>Normal calculator for quick arithmetic</p></div>
         <div class="lc-arrow">→</div>
@@ -2110,14 +2103,14 @@
   <button class="bottom-nav-item" id="navHome" data-nav="home">
     <span class="bn-icon">🏠</span><span class="bn-label">Home</span>
   </button>
-  <button class="bottom-nav-item" id="navMcqs" data-nav="mcqs">
-    <span class="bn-icon">📝</span><span class="bn-label">MCQs</span>
+  <button class="bottom-nav-item" id="navBookmark" data-nav="bookmark">
+    <span class="bn-icon">⭐</span><span class="bn-label">Bookmark</span>
   </button>
-  <button class="bottom-nav-item" id="navMock" data-nav="mock">
-    <span class="bn-icon">🏆</span><span class="bn-label">Mock Test</span>
+  <button class="bottom-nav-item" id="navCalculator" data-nav="calculator">
+    <span class="bn-icon">🧮</span><span class="bn-label">Calculator</span>
   </button>
-  <button class="bottom-nav-item" id="navProfile" data-nav="profile">
-    <span class="bn-icon">👤</span><span class="bn-label">Profile</span>
+  <button class="bottom-nav-item" id="navRevision" data-nav="revision">
+    <span class="bn-icon">🔄</span><span class="bn-label">Revision</span>
   </button>
 </div>
 
@@ -2702,15 +2695,15 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const mcqScreens = [mcqPostScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen];
-  const mockScreens = [mockPostScreen];
-  const profileScreens = [profileScreen, legalInfoScreen, upgradeScreen];
+  const bookmarkScreens = [bookmarksScreen];
+  const calculatorScreens = [calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
+  const revisionScreens = [revisionScreen];
 
   let activeKey = '';
   if(homeScreens.includes(activeScreen)) activeKey = 'home';
-  else if(mcqScreens.includes(activeScreen)) activeKey = 'mcqs';
-  else if(mockScreens.includes(activeScreen)) activeKey = 'mock';
-  else if(profileScreens.includes(activeScreen)) activeKey = 'profile';
+  else if(bookmarkScreens.includes(activeScreen)) activeKey = 'bookmark';
+  else if(calculatorScreens.includes(activeScreen)) activeKey = 'calculator';
+  else if(revisionScreens.includes(activeScreen)) activeKey = 'revision';
 
   document.querySelectorAll('.bottom-nav-item').forEach(item => {
     item.classList.toggle('active', item.dataset.nav === activeKey);
@@ -2727,23 +2720,16 @@ document.getElementById('cardQuiz').addEventListener('click', () => {
 document.getElementById('navHome').addEventListener('click', () => {
   showScreen(homeScreen);
 });
-document.getElementById('navMcqs').addEventListener('click', () => {
-  showScreen(mcqPostScreen);
-  renderMcqPosts();
+document.getElementById('navBookmark').addEventListener('click', () => {
+  showScreen(bookmarksScreen);
+  renderBookmarks();
 });
-document.getElementById('navMock').addEventListener('click', () => {
-  showScreen(mockPostScreen);
-  renderMockPosts();
+document.getElementById('navCalculator').addEventListener('click', () => {
+  showScreen(calculatorScreen);
 });
-document.getElementById('navProfile').addEventListener('click', async () => {
-  showScreen(profileScreen);
-  renderThemeSwatches();
-  renderFontSizePicker();
-  renderExamTypePicker();
-  renderHighContrastToggle();
-  const isPremium = await refreshPremiumStatus();
-  document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
-  document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
+document.getElementById('navRevision').addEventListener('click', () => {
+  showScreen(revisionScreen);
+  renderRevisionSummary();
 });
 
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
@@ -3073,7 +3059,7 @@ function renderDictionary(searchTerm){
 }
 document.getElementById('dictionarySearchBox').addEventListener('input', (e) => renderDictionary(e.target.value));
 
-// ---------- Health Calculator ----------
+// ---------- Calculator Hub ----------
 document.getElementById('cardCalculator').addEventListener('click', () => {
   showScreen(calculatorScreen);
 });
