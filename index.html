@@ -430,6 +430,17 @@
     margin-top:12px; padding:12px; background:var(--correct-bg); border-radius:8px;
     text-align:center; font-weight:700; color:var(--correct); font-size:15px;
   }
+  .basic-calc-grid{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+  }
+  .basic-calc-key{
+    padding:16px 0; border:none; border-radius:10px;
+    background:var(--bg); color:var(--ink); font-size:17px; font-weight:600; cursor:pointer;
+    border:1.5px solid var(--line);
+  }
+  .basic-calc-key.op{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  .basic-calc-key.equals{ background:var(--gold); color:#fff; border-color:var(--gold); }
+  .basic-calc-key.clear{ background:var(--wrong); color:#fff; border-color:var(--wrong); }
 
   .faq-item{
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
@@ -1724,29 +1735,69 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">🧮 Health Calculator</div>
+      <a class="link-card" href="#" id="goToBasicCalc">
+        <div class="lc-text"><h4>🔢 Calculator</h4><p>Normal calculator for quick arithmetic</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToBmiCalc">
+        <div class="lc-text"><h4>⚖️ BMI Calculator</h4><p>Body Mass Index from weight &amp; height</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToIndicatorCalc">
+        <div class="lc-text"><h4>📊 Indicator Calculator</h4><p>Major public health indicators (IMR, MMR &amp; more)</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
 
+  <!-- BASIC CALCULATOR -->
+  <div class="screen" id="basicCalcScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔢 Calculator</div>
       <div class="calc-card">
-        <h4>BMI Calculator</h4>
+        <input type="text" id="basicCalcDisplay" readonly style="width:100%; padding:16px; font-size:24px; text-align:right; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); margin-bottom:12px; font-family:'JetBrains Mono',monospace;" value="0">
+        <div id="basicCalcKeys" class="basic-calc-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BMI CALCULATOR -->
+  <div class="screen" id="bmiCalcScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚖️ BMI Calculator</div>
+      <div class="calc-card">
         <div class="calc-field"><label>Weight (kg)</label><input type="number" id="bmiWeight" placeholder="e.g. 60"></div>
         <div class="calc-field"><label>Height (cm)</label><input type="number" id="bmiHeight" placeholder="e.g. 165"></div>
         <button class="calc-btn" id="calcBmiBtn">Calculate BMI</button>
         <div id="bmiResult"></div>
       </div>
+    </div>
+  </div>
 
-      <div class="calc-card">
-        <h4>IMR Calculator (Infant Mortality Rate)</h4>
-        <div class="calc-field"><label>Infant deaths (under 1 year)</label><input type="number" id="imrDeaths" placeholder="e.g. 25"></div>
-        <div class="calc-field"><label>Live births</label><input type="number" id="imrBirths" placeholder="e.g. 1000"></div>
-        <button class="calc-btn" id="calcImrBtn">Calculate IMR</button>
-        <div id="imrResult"></div>
-      </div>
+  <!-- INDICATOR CALCULATOR -->
+  <div class="screen" id="indicatorCalcScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📊 Indicator Calculator</div>
+      <div id="indicatorCalcList">
+        <div class="calc-card">
+          <h4>IMR Calculator (Infant Mortality Rate)</h4>
+          <div class="calc-field"><label>Infant deaths (under 1 year)</label><input type="number" id="imrDeaths" placeholder="e.g. 25"></div>
+          <div class="calc-field"><label>Live births</label><input type="number" id="imrBirths" placeholder="e.g. 1000"></div>
+          <button class="calc-btn" id="calcImrBtn">Calculate IMR</button>
+          <div id="imrResult"></div>
+        </div>
 
-      <div class="calc-card">
-        <h4>MMR Calculator (Maternal Mortality Ratio)</h4>
-        <div class="calc-field"><label>Maternal deaths</label><input type="number" id="mmrDeaths" placeholder="e.g. 15"></div>
-        <div class="calc-field"><label>Live births</label><input type="number" id="mmrBirths" placeholder="e.g. 10000"></div>
-        <button class="calc-btn" id="calcMmrBtn">Calculate MMR</button>
-        <div id="mmrResult"></div>
+        <div class="calc-card">
+          <h4>MMR Calculator (Maternal Mortality Ratio)</h4>
+          <div class="calc-field"><label>Maternal deaths</label><input type="number" id="mmrDeaths" placeholder="e.g. 15"></div>
+          <div class="calc-field"><label>Live births</label><input type="number" id="mmrBirths" placeholder="e.g. 10000"></div>
+          <button class="calc-btn" id="calcMmrBtn">Calculate MMR</button>
+          <div id="mmrResult"></div>
+        </div>
+        <!-- 🔧 More indicator calculators will be added here once Narayan shares the full list -->
       </div>
     </div>
   </div>
@@ -2563,6 +2614,9 @@ const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
 const dictionaryScreen = document.getElementById('dictionaryScreen');
 const calculatorScreen = document.getElementById('calculatorScreen');
+const basicCalcScreen = document.getElementById('basicCalcScreen');
+const bmiCalcScreen = document.getElementById('bmiCalcScreen');
+const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
 const studyGroupsScreen = document.getElementById('studyGroupsScreen');
@@ -2580,11 +2634,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, faqsScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -2935,6 +2989,76 @@ document.getElementById('dictionarySearchBox').addEventListener('input', (e) => 
 document.getElementById('cardCalculator').addEventListener('click', () => {
   showScreen(calculatorScreen);
 });
+document.getElementById('goToBasicCalc').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(basicCalcScreen);
+  renderBasicCalcKeys();
+});
+document.getElementById('goToBmiCalc').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(bmiCalcScreen);
+});
+document.getElementById('goToIndicatorCalc').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(indicatorCalcScreen);
+});
+
+// ---------- Basic Calculator (normal arithmetic calculator) ----------
+let basicCalcExpression = '';
+function renderBasicCalcKeys(){
+  const keys = ['7','8','9','C','4','5','6','÷','1','2','3','×','0','.','=','−','+'];
+  const wrap = document.getElementById('basicCalcKeys');
+  wrap.innerHTML = `
+    <button class="basic-calc-key" data-key="7">7</button>
+    <button class="basic-calc-key" data-key="8">8</button>
+    <button class="basic-calc-key" data-key="9">9</button>
+    <button class="basic-calc-key clear" data-key="C">C</button>
+    <button class="basic-calc-key" data-key="4">4</button>
+    <button class="basic-calc-key" data-key="5">5</button>
+    <button class="basic-calc-key" data-key="6">6</button>
+    <button class="basic-calc-key op" data-key="÷">÷</button>
+    <button class="basic-calc-key" data-key="1">1</button>
+    <button class="basic-calc-key" data-key="2">2</button>
+    <button class="basic-calc-key" data-key="3">3</button>
+    <button class="basic-calc-key op" data-key="×">×</button>
+    <button class="basic-calc-key" data-key="0">0</button>
+    <button class="basic-calc-key" data-key=".">.</button>
+    <button class="basic-calc-key op" data-key="−">−</button>
+    <button class="basic-calc-key op" data-key="+">+</button>
+    <button class="basic-calc-key equals" data-key="=" style="grid-column:span 4;">=</button>
+  `;
+  basicCalcExpression = '';
+  document.getElementById('basicCalcDisplay').value = '0';
+
+  document.querySelectorAll('.basic-calc-key').forEach(btn => {
+    btn.addEventListener('click', () => handleBasicCalcKey(btn.dataset.key));
+  });
+}
+function handleBasicCalcKey(key){
+  const display = document.getElementById('basicCalcDisplay');
+  if(key === 'C'){
+    basicCalcExpression = '';
+    display.value = '0';
+    return;
+  }
+  if(key === '='){
+    try{
+      const safeExpr = basicCalcExpression.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+      // Only allow safe characters — numbers, operators, decimal point, parentheses
+      if(!/^[0-9+\-*/.() ]+$/.test(safeExpr)) throw new Error('invalid');
+      const result = Function('"use strict"; return (' + safeExpr + ')')();
+      display.value = Number.isFinite(result) ? String(Math.round(result * 1e8) / 1e8) : 'Error';
+      basicCalcExpression = Number.isFinite(result) ? String(result) : '';
+    }catch(err){
+      display.value = 'Error';
+      basicCalcExpression = '';
+    }
+    return;
+  }
+  basicCalcExpression += key;
+  display.value = basicCalcExpression;
+}
+
 document.getElementById('calcBmiBtn').addEventListener('click', () => {
   const w = parseFloat(document.getElementById('bmiWeight').value);
   const hCm = parseFloat(document.getElementById('bmiHeight').value);
