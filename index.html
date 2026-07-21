@@ -89,7 +89,27 @@
     display:flex;
     flex-direction:column;
     box-shadow:0 0 40px rgba(0,0,0,0.06);
+    padding-bottom:64px; /* leaves room for the fixed bottom nav bar */
   }
+  .bottom-nav{
+    display:none; /* JS shows this once the correct screen is active — prevents flashing during initial load */
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px;
+    justify-content:space-around; align-items:center;
+    background:var(--panel); border-top:1px solid var(--line);
+    padding:8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index:100;
+    box-shadow:0 -2px 12px rgba(0,0,0,0.06);
+  }
+  .bottom-nav-item{
+    background:none; border:none; display:flex; flex-direction:column;
+    align-items:center; gap:2px; cursor:pointer; padding:4px 8px;
+    color:var(--ink-soft); flex:1;
+  }
+  .bottom-nav-item .bn-icon{ font-size:20px; }
+  .bottom-nav-item .bn-label{ font-size:10px; font-weight:600; }
+  .bottom-nav-item.active{ color:var(--navy); }
+  .bottom-nav-item.active .bn-icon{ transform:scale(1.1); }
 
   /* ---------- Header ---------- */
   .login-brand-tag{
@@ -2085,6 +2105,22 @@
 
 </div>
 
+<!-- FIXED BOTTOM NAVIGATION BAR -->
+<div class="bottom-nav" id="bottomNav">
+  <button class="bottom-nav-item" id="navHome" data-nav="home">
+    <span class="bn-icon">🏠</span><span class="bn-label">Home</span>
+  </button>
+  <button class="bottom-nav-item" id="navMcqs" data-nav="mcqs">
+    <span class="bn-icon">📝</span><span class="bn-label">MCQs</span>
+  </button>
+  <button class="bottom-nav-item" id="navMock" data-nav="mock">
+    <span class="bn-icon">🏆</span><span class="bn-label">Mock Test</span>
+  </button>
+  <button class="bottom-nav-item" id="navProfile" data-nav="profile">
+    <span class="bn-icon">👤</span><span class="bn-label">Profile</span>
+  </button>
+</div>
+
 <!-- ---------- Firebase Authentication (mandatory Email/Password login + Firestore profile storage) ---------- -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
@@ -2651,6 +2687,34 @@ function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
   el.classList.add('active');
   window.scrollTo(0,0);
+  updateBottomNav(el);
+}
+
+const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, quizScreen]; // full-focus screens, no bottom nav
+function updateBottomNav(activeScreen){
+  const nav = document.getElementById('bottomNav');
+  if(!nav) return;
+
+  if(BOTTOM_NAV_HIDDEN_SCREENS.includes(activeScreen)){
+    nav.style.display = 'none';
+    return;
+  }
+  nav.style.display = 'flex';
+
+  const homeScreens = [window.homeScreen];
+  const mcqScreens = [mcqPostScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen];
+  const mockScreens = [mockPostScreen];
+  const profileScreens = [profileScreen, legalInfoScreen, upgradeScreen];
+
+  let activeKey = '';
+  if(homeScreens.includes(activeScreen)) activeKey = 'home';
+  else if(mcqScreens.includes(activeScreen)) activeKey = 'mcqs';
+  else if(mockScreens.includes(activeScreen)) activeKey = 'mock';
+  else if(profileScreens.includes(activeScreen)) activeKey = 'profile';
+
+  document.querySelectorAll('.bottom-nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.nav === activeKey);
+  });
 }
 
 // ---------- Dashboard navigation ----------
@@ -2658,6 +2722,30 @@ document.getElementById('cardQuiz').addEventListener('click', () => {
   showScreen(mcqPostScreen);
   renderMcqPosts();
 });
+
+// ---------- Fixed Bottom Navigation Bar ----------
+document.getElementById('navHome').addEventListener('click', () => {
+  showScreen(homeScreen);
+});
+document.getElementById('navMcqs').addEventListener('click', () => {
+  showScreen(mcqPostScreen);
+  renderMcqPosts();
+});
+document.getElementById('navMock').addEventListener('click', () => {
+  showScreen(mockPostScreen);
+  renderMockPosts();
+});
+document.getElementById('navProfile').addEventListener('click', async () => {
+  showScreen(profileScreen);
+  renderThemeSwatches();
+  renderFontSizePicker();
+  renderExamTypePicker();
+  renderHighContrastToggle();
+  const isPremium = await refreshPremiumStatus();
+  document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
+  document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
+});
+
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
 document.getElementById('cardCurrent').addEventListener('click', () => {
   showScreen(currentAffairsScreen);
