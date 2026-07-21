@@ -96,20 +96,68 @@
     position:fixed; bottom:0; left:50%; transform:translateX(-50%);
     width:100%; max-width:480px;
     justify-content:space-around; align-items:center;
-    background:var(--panel); border-top:1px solid var(--line);
-    padding:8px 0 max(8px, env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, #1a1a1f 0%, #0a0a0d 100%);
+    border-top:1px solid rgba(255,255,255,0.08);
+    border-radius:22px 22px 0 0;
+    padding:10px 6px max(10px, env(safe-area-inset-bottom));
     z-index:100;
-    box-shadow:0 -2px 12px rgba(0,0,0,0.06);
+    box-shadow:0 -8px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
   }
   .bottom-nav-item{
     background:none; border:none; display:flex; flex-direction:column;
-    align-items:center; gap:2px; cursor:pointer; padding:4px 8px;
-    color:var(--ink-soft); flex:1;
+    align-items:center; gap:4px; cursor:pointer; padding:6px 4px;
+    color:rgba(255,255,255,0.45); flex:1;
+    transition:color 0.2s ease;
   }
-  .bottom-nav-item .bn-icon{ font-size:20px; }
-  .bottom-nav-item .bn-label{ font-size:10px; font-weight:600; }
-  .bottom-nav-item.active{ color:var(--navy); }
-  .bottom-nav-item.active .bn-icon{ transform:scale(1.1); }
+  .bottom-nav-item .bn-icon-wrap{
+    width:42px; height:42px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:19px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.06);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.08), 0 2px 4px rgba(0,0,0,0.3);
+    transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .bottom-nav-item .bn-label{ font-size:9.5px; font-weight:700; letter-spacing:0.2px; }
+
+  /* Per-icon accent glow colors, applied when active */
+  .bottom-nav-item[data-nav="home"].active .bn-icon-wrap{
+    background:radial-gradient(circle at 35% 30%, #FFA05C, #E8641A);
+    box-shadow:0 0 16px rgba(255,140,50,0.65), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.4);
+    animation:floatHover 2s ease-in-out infinite;
+  }
+  .bottom-nav-item[data-nav="bookmark"].active .bn-icon-wrap{
+    background:radial-gradient(circle at 35% 30%, #7C6FF0, #4A3FC7);
+    box-shadow:0 0 16px rgba(120,100,240,0.65), inset 0 3px 6px rgba(0,0,0,0.45), inset 0 -1px 1px rgba(255,255,255,0.15);
+    transform:scale(0.92) translateY(1px); /* pressed depth effect */
+  }
+  .bottom-nav-item[data-nav="calculator"].active .bn-icon-wrap{
+    background:radial-gradient(circle at 35% 30%, #FF8A5C, #D9530A);
+    box-shadow:0 0 16px rgba(255,120,50,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
+    animation:keyBounce 1.6s ease-in-out infinite;
+  }
+  .bottom-nav-item[data-nav="revision"].active .bn-icon-wrap{
+    background:radial-gradient(circle at 35% 30%, #5CE68C, #1FA85C);
+    box-shadow:0 0 16px rgba(60,230,140,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
+    animation:spinRefresh 3s linear infinite;
+  }
+  .bottom-nav-item.active{ color:#fff; }
+  .bottom-nav-item.active .bn-label{ text-shadow:0 0 8px rgba(255,255,255,0.4); }
+
+  .bottom-nav-item:active .bn-icon-wrap{ transform:scale(0.88); }
+
+  @keyframes floatHover{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-3px); }
+  }
+  @keyframes keyBounce{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.06); }
+  }
+  @keyframes spinRefresh{
+    0%{ transform:rotate(0deg); }
+    100%{ transform:rotate(360deg); }
+  }
 
   /* ---------- Header ---------- */
   .login-brand-tag{
@@ -2101,16 +2149,16 @@
 <!-- FIXED BOTTOM NAVIGATION BAR -->
 <div class="bottom-nav" id="bottomNav">
   <button class="bottom-nav-item" id="navHome" data-nav="home">
-    <span class="bn-icon">🏠</span><span class="bn-label">Home</span>
+    <span class="bn-icon-wrap"><span class="bn-icon">🏠</span></span><span class="bn-label">Home</span>
   </button>
   <button class="bottom-nav-item" id="navBookmark" data-nav="bookmark">
-    <span class="bn-icon">⭐</span><span class="bn-label">Bookmark</span>
+    <span class="bn-icon-wrap"><span class="bn-icon">🔖</span></span><span class="bn-label">Bookmark</span>
   </button>
   <button class="bottom-nav-item" id="navCalculator" data-nav="calculator">
-    <span class="bn-icon">🧮</span><span class="bn-label">Calculator</span>
+    <span class="bn-icon-wrap"><span class="bn-icon">🧮</span></span><span class="bn-label">Calculator</span>
   </button>
   <button class="bottom-nav-item" id="navRevision" data-nav="revision">
-    <span class="bn-icon">🔄</span><span class="bn-label">Revision</span>
+    <span class="bn-icon-wrap"><span class="bn-icon">🔄</span></span><span class="bn-label">Revision</span>
   </button>
 </div>
 
