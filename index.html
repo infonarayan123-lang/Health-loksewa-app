@@ -45,6 +45,23 @@
   body.theme-purple{ --navy:#4A3268; --crimson:#6B4C9A; }
   body.theme-sunset{ --navy:#B8560A; --crimson:#D9731C; }
 
+  /* ---------- High Contrast Mode (accessibility) ---------- */
+  body.high-contrast{
+    --bg:#FFFFFF; --panel:#FFFFFF; --ink:#000000; --ink-soft:#000000;
+    --line:#000000; --navy:#0000CC; --crimson:#CC0000; --gold:#8B6000;
+    --correct:#006600; --correct-bg:#FFFFFF; --wrong:#CC0000; --wrong-bg:#FFFFFF;
+  }
+  body.high-contrast.dark-mode{
+    --bg:#000000; --panel:#000000; --ink:#FFFFFF; --ink-soft:#FFFFFF;
+    --line:#FFFFFF; --navy:#66B2FF; --crimson:#FF6666; --gold:#FFD966;
+    --correct:#66FF66; --correct-bg:#000000; --wrong:#FF6666; --wrong-bg:#000000;
+  }
+  body.high-contrast *{ border-width:2px !important; }
+  body.high-contrast .option,
+  body.high-contrast .link-card,
+  body.high-contrast .content-card,
+  body.high-contrast .set-card{ border:2px solid var(--ink) !important; }
+
   .theme-swatches{ display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; }
   .theme-swatch{
     width:52px; height:52px; border-radius:50%; cursor:pointer;
@@ -1191,11 +1208,11 @@
           <span class="header-username" id="headerUsername">Loading…</span>
         </button>
         <div class="header-icons">
-          <button class="header-icon-btn notif-btn-wrap" id="headerNotifBtn">
+          <button class="header-icon-btn notif-btn-wrap" id="headerNotifBtn" aria-label="Notifications">
             🔔
             <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
           </button>
-          <button class="header-icon-btn" id="headerDarkBtn">🌙</button>
+          <button class="header-icon-btn" id="headerDarkBtn" aria-label="Toggle dark mode">🌙</button>
         </div>
       </div>
 
@@ -1383,6 +1400,13 @@
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
         <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎯 Which exam are you preparing for?</div>
         <div id="examTypeRow"></div>
+      </div>
+      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:13px; font-weight:700; color:var(--ink);">♿ High Contrast Mode</div>
+          <div style="font-size:11px; color:var(--ink-soft);">Maximum contrast for better visibility</div>
+        </div>
+        <button class="font-size-btn" id="highContrastToggle" style="flex:none; width:52px;">OFF</button>
       </div>
       <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon">📞</span> Contact Us</button>
       <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon">ℹ️</span> About Us</button>
@@ -1825,7 +1849,7 @@
     <div class="quiz-body">
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div class="q-tag" id="qTag">EPIDEMIOLOGY</div>
-        <button class="bookmark-star-btn" id="bookmarkStarBtn" title="Bookmark this question">☆</button>
+        <button class="bookmark-star-btn" id="bookmarkStarBtn" title="Bookmark this question" aria-label="Bookmark this question">☆</button>
       </div>
       <div class="q-text" id="qText">Question text here</div>
       <div id="optionsWrap"></div>
@@ -3040,6 +3064,7 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   renderThemeSwatches();
   renderFontSizePicker();
   renderExamTypePicker();
+  renderHighContrastToggle();
   const isPremium = await refreshPremiumStatus();
   document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
   document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
@@ -3372,6 +3397,26 @@ function renderExamTypePicker(){
     });
   });
 }
+
+// ---------- High Contrast Mode (accessibility) ----------
+function applyHighContrastPreference(){
+  let on = false;
+  try{ on = localStorage.getItem('hl_high_contrast') === '1'; }catch(e){}
+  document.body.classList.toggle('high-contrast', on);
+  return on;
+}
+function renderHighContrastToggle(){
+  const on = applyHighContrastPreference();
+  const btn = document.getElementById('highContrastToggle');
+  btn.textContent = on ? 'ON' : 'OFF';
+  btn.classList.toggle('active', on);
+}
+document.getElementById('highContrastToggle').addEventListener('click', () => {
+  const currentlyOn = document.body.classList.contains('high-contrast');
+  try{ localStorage.setItem('hl_high_contrast', currentlyOn ? '0' : '1'); }catch(e){}
+  renderHighContrastToggle();
+});
+applyHighContrastPreference(); // apply immediately on app load
 
 // ---------- Auto-sliding carousel ----------
 const CAROUSEL_SLIDES = [
