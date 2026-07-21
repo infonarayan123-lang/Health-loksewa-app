@@ -383,6 +383,69 @@
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
+  .dash-card.c-healthdays{
+    background:linear-gradient(135deg,#8E44AD,#5B2C6F);
+    grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
+  }
+  .dash-card.c-dictionary{
+    background:linear-gradient(135deg,#16697A,#0D3B45);
+    grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
+  }
+  .dash-card.c-calculator{
+    background:linear-gradient(135deg,#D35400,#973D00);
+    grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
+  }
+  .dash-card.c-faqs{
+    background:linear-gradient(135deg,#455A64,#263238);
+    grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
+  }
+
+  .healthday-item, .dict-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px; margin-bottom:10px;
+  }
+  .healthday-item .hd-date{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--gold); font-weight:700; margin-bottom:4px; }
+  .healthday-item .hd-title{ font-family:'Tinos',serif; font-weight:700; font-size:14px; margin-bottom:4px; }
+  .healthday-item .hd-desc{ font-size:12px; color:var(--ink-soft); }
+  .dict-item .di-term{ font-family:'Tinos',serif; font-weight:700; font-size:14px; color:var(--navy); margin-bottom:4px; }
+  .dict-item .di-def{ font-size:12.5px; color:var(--ink); line-height:1.5; }
+
+  .calc-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:16px; margin-bottom:14px;
+  }
+  .calc-card h4{ font-family:'Tinos',serif; font-size:15px; margin-bottom:12px; }
+  .calc-field{ margin-bottom:10px; }
+  .calc-field label{ font-size:12px; color:var(--ink-soft); display:block; margin-bottom:4px; }
+  .calc-field input{
+    width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px;
+    font-family:'Inter',sans-serif; font-size:14px; background:var(--bg); color:var(--ink);
+  }
+  .calc-btn{
+    width:100%; padding:11px; border:none; border-radius:8px;
+    background:var(--navy); color:#fff; font-weight:700; font-size:13.5px; cursor:pointer;
+    margin-top:4px;
+  }
+  .calc-result{
+    margin-top:12px; padding:12px; background:var(--correct-bg); border-radius:8px;
+    text-align:center; font-weight:700; color:var(--correct); font-size:15px;
+  }
+
+  .faq-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    margin-bottom:8px; overflow:hidden;
+  }
+  .faq-question{
+    padding:14px; cursor:pointer; font-weight:700; font-size:13.5px; color:var(--ink);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .faq-answer{
+    max-height:0; overflow:hidden; transition:max-height 0.25s ease;
+    padding:0 14px; font-size:12.5px; color:var(--ink-soft); line-height:1.6;
+  }
+  .faq-item.open .faq-answer{ max-height:300px; padding:0 14px 14px; }
+  .faq-item.open .faq-chevron{ transform:rotate(180deg); }
+  .faq-chevron{ transition:transform 0.2s; }
   .mnemonic-item{
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
     padding:14px; margin-bottom:10px;
@@ -1333,6 +1396,34 @@
             <div class="dc-sub">Memory tricks for hard-to-remember facts</div>
           </div>
         </button>
+        <button class="dash-card c-healthdays" id="cardHealthDays">
+          <div class="dc-icon">📅</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Health Days</div>
+            <div class="dc-sub">Important national &amp; international observance days</div>
+          </div>
+        </button>
+        <button class="dash-card c-dictionary" id="cardDictionary">
+          <div class="dc-icon">📚</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Health Dictionary</div>
+            <div class="dc-sub">Key terms &amp; definitions, searchable</div>
+          </div>
+        </button>
+        <button class="dash-card c-calculator" id="cardCalculator">
+          <div class="dc-icon">🧮</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Health Calculator</div>
+            <div class="dc-sub">BMI, IMR, MMR &amp; more — enter values, get results</div>
+          </div>
+        </button>
+        <button class="dash-card c-faqs" id="cardFaqs">
+          <div class="dc-icon">❓</div>
+          <div style="text-align:left;">
+            <div class="dc-label">FAQs</div>
+            <div class="dc-sub">Common questions about the app, answered</div>
+          </div>
+        </button>
       </div>
 
       <div class="app-footer">
@@ -1605,6 +1696,67 @@
       <div class="section-title">🧩 Mnemonics Library</div>
       <input type="text" class="formula-search-box" id="mnemonicsSearchBox" placeholder="Search… e.g. prevention, iceberg">
       <div id="mnemonicsListContent"></div>
+    </div>
+  </div>
+
+  <!-- HEALTH DAYS -->
+  <div class="screen" id="healthDaysScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">📅 Health Days</div>
+      <input type="text" class="formula-search-box" id="healthDaysSearchBox" placeholder="Search… e.g. TB, AIDS, immunization">
+      <div id="healthDaysListContent"></div>
+    </div>
+  </div>
+
+  <!-- HEALTH DICTIONARY -->
+  <div class="screen" id="dictionaryScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">📚 Health Dictionary</div>
+      <input type="text" class="formula-search-box" id="dictionarySearchBox" placeholder="Search a term…">
+      <div id="dictionaryListContent"></div>
+    </div>
+  </div>
+
+  <!-- HEALTH CALCULATOR -->
+  <div class="screen" id="calculatorScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">🧮 Health Calculator</div>
+
+      <div class="calc-card">
+        <h4>BMI Calculator</h4>
+        <div class="calc-field"><label>Weight (kg)</label><input type="number" id="bmiWeight" placeholder="e.g. 60"></div>
+        <div class="calc-field"><label>Height (cm)</label><input type="number" id="bmiHeight" placeholder="e.g. 165"></div>
+        <button class="calc-btn" id="calcBmiBtn">Calculate BMI</button>
+        <div id="bmiResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>IMR Calculator (Infant Mortality Rate)</h4>
+        <div class="calc-field"><label>Infant deaths (under 1 year)</label><input type="number" id="imrDeaths" placeholder="e.g. 25"></div>
+        <div class="calc-field"><label>Live births</label><input type="number" id="imrBirths" placeholder="e.g. 1000"></div>
+        <button class="calc-btn" id="calcImrBtn">Calculate IMR</button>
+        <div id="imrResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>MMR Calculator (Maternal Mortality Ratio)</h4>
+        <div class="calc-field"><label>Maternal deaths</label><input type="number" id="mmrDeaths" placeholder="e.g. 15"></div>
+        <div class="calc-field"><label>Live births</label><input type="number" id="mmrBirths" placeholder="e.g. 10000"></div>
+        <button class="calc-btn" id="calcMmrBtn">Calculate MMR</button>
+        <div id="mmrResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQs -->
+  <div class="screen" id="faqsScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">❓ Frequently Asked Questions</div>
+      <div id="faqsListContent"></div>
     </div>
   </div>
 
@@ -2408,6 +2560,10 @@ const bookmarksScreen = document.getElementById('bookmarksScreen');
 const formulaScreen = document.getElementById('formulaScreen');
 const videoScreen = document.getElementById('videoScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
+const healthDaysScreen = document.getElementById('healthDaysScreen');
+const dictionaryScreen = document.getElementById('dictionaryScreen');
+const calculatorScreen = document.getElementById('calculatorScreen');
+const faqsScreen = document.getElementById('faqsScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
 const studyGroupsScreen = document.getElementById('studyGroupsScreen');
 const groupDetailScreen = document.getElementById('groupDetailScreen');
@@ -2424,7 +2580,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, mnemonicsScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, faqsScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
@@ -2691,6 +2847,166 @@ document.getElementById('cardMnemonics').addEventListener('click', () => {
   showScreen(mnemonicsScreen);
   renderMnemonics('');
 });
+
+// ---------- Health Days ----------
+document.getElementById('cardHealthDays').addEventListener('click', () => {
+  showScreen(healthDaysScreen);
+  renderHealthDays('');
+});
+const HEALTH_DAYS = [
+  { date:'January 30', title:'World Leprosy Day', desc:'Raises awareness about leprosy, its prevention, and treatment.' },
+  { date:'March 8', title:'International Women\'s Day', desc:'Celebrates women\'s achievements and advocates for gender equality, including in health.' },
+  { date:'March 24', title:'World Tuberculosis (TB) Day', desc:'Marks Robert Koch\'s 1882 discovery of the TB bacterium; raises public awareness of TB\'s epidemic.' },
+  { date:'April 7', title:'World Health Day', desc:'Marks the founding of WHO in 1948; each year highlights a different global health priority.' },
+  { date:'April 25', title:'World Malaria Day', desc:'Highlights global efforts to control malaria.' },
+  { date:'May 31', title:'World No Tobacco Day', desc:'Raises awareness of tobacco\'s health risks and advocates for effective policies to reduce use.' },
+  { date:'June 5', title:'World Environment Day', desc:'Promotes awareness and action for environmental protection, closely tied to public health.' },
+  { date:'July 28', title:'World Hepatitis Day', desc:'Raises awareness of viral hepatitis and encourages prevention, testing, and treatment.' },
+  { date:'August 1-7', title:'World Breastfeeding Week', desc:'Promotes breastfeeding for optimal infant and maternal health.' },
+  { date:'September 21', title:'World Alzheimer\'s Day', desc:'Raises awareness about dementia and Alzheimer\'s disease.' },
+  { date:'September 28', title:'World Rabies Day', desc:'Raises awareness of rabies prevention, closely tied to Nepal\'s dog vaccination programs.' },
+  { date:'October 10', title:'World Mental Health Day', desc:'Raises awareness of mental health issues and mobilizes support.' },
+  { date:'October 16', title:'World Food Day', desc:'Marks the founding of the FAO; promotes awareness of food security and nutrition.' },
+  { date:'November 14', title:'World Diabetes Day', desc:'Raises awareness of diabetes as a growing global health issue.' },
+  { date:'December 1', title:'World AIDS Day', desc:'Raises awareness of HIV/AIDS and supports those living with it.' },
+  { date:'December 3', title:'International Day of Persons with Disabilities', desc:'Promotes the rights and well-being of people with disabilities.' },
+];
+function renderHealthDays(searchTerm){
+  const term = (searchTerm || '').toLowerCase().trim();
+  const filtered = term
+    ? HEALTH_DAYS.filter(d => d.title.toLowerCase().includes(term) || d.desc.toLowerCase().includes(term))
+    : HEALTH_DAYS;
+  const wrap = document.getElementById('healthDaysListContent');
+  if(filtered.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No results for "${searchTerm}".</p>`;
+    return;
+  }
+  wrap.innerHTML = filtered.map(d => `
+    <div class="healthday-item">
+      <div class="hd-date">📅 ${d.date}</div>
+      <div class="hd-title">${d.title}</div>
+      <div class="hd-desc">${d.desc}</div>
+    </div>
+  `).join('');
+}
+document.getElementById('healthDaysSearchBox').addEventListener('input', (e) => renderHealthDays(e.target.value));
+
+// ---------- Health Dictionary ----------
+document.getElementById('cardDictionary').addEventListener('click', () => {
+  showScreen(dictionaryScreen);
+  renderDictionary('');
+});
+const DICTIONARY_TERMS = [
+  { term:'Epidemiology', def:'The study of the distribution and determinants of health-related states or events in specified populations, and the application of this study to control health problems.' },
+  { term:'Incidence', def:'The number of NEW cases of a disease occurring in a population during a specified time period.' },
+  { term:'Prevalence', def:'The total number of EXISTING cases (new + old) of a disease in a population at a given point in time.' },
+  { term:'Endemic', def:'A disease that is constantly present at a baseline level within a particular geographic area or population.' },
+  { term:'Epidemic', def:'A sudden increase in disease cases above what is normally expected in a given population/area.' },
+  { term:'Pandemic', def:'An epidemic that has spread across multiple countries or continents, affecting a large number of people.' },
+  { term:'Morbidity', def:'The state of being unhealthy or having a disease — used to describe illness rates in a population.' },
+  { term:'Mortality', def:'The state of being subject to death — used to describe death rates in a population.' },
+  { term:'Herd Immunity', def:'Indirect protection from an infectious disease that occurs when a large percentage of a population is immune, reducing the likelihood of disease spread.' },
+  { term:'Vector', def:'A living organism (usually an insect) that transmits an infectious pathogen from one host to another, e.g., mosquitoes transmitting malaria.' },
+  { term:'Zoonotic Disease', def:'A disease that can be transmitted from animals to humans (e.g., rabies).' },
+  { term:'Fomite', def:'An inanimate object (like clothing or utensils) that can carry infectious organisms and transfer disease.' },
+  { term:'Nosocomial Infection', def:'An infection acquired in a hospital or healthcare setting, not present at the time of admission.' },
+  { term:'Sentinel Surveillance', def:'A monitoring system using select healthcare sites to detect trends in disease occurrence within a broader population.' },
+];
+function renderDictionary(searchTerm){
+  const term = (searchTerm || '').toLowerCase().trim();
+  const filtered = term
+    ? DICTIONARY_TERMS.filter(d => d.term.toLowerCase().includes(term) || d.def.toLowerCase().includes(term))
+    : DICTIONARY_TERMS;
+  const wrap = document.getElementById('dictionaryListContent');
+  if(filtered.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No terms match "${searchTerm}".</p>`;
+    return;
+  }
+  wrap.innerHTML = filtered.map(d => `
+    <div class="dict-item">
+      <div class="di-term">${d.term}</div>
+      <div class="di-def">${d.def}</div>
+    </div>
+  `).join('');
+}
+document.getElementById('dictionarySearchBox').addEventListener('input', (e) => renderDictionary(e.target.value));
+
+// ---------- Health Calculator ----------
+document.getElementById('cardCalculator').addEventListener('click', () => {
+  showScreen(calculatorScreen);
+});
+document.getElementById('calcBmiBtn').addEventListener('click', () => {
+  const w = parseFloat(document.getElementById('bmiWeight').value);
+  const hCm = parseFloat(document.getElementById('bmiHeight').value);
+  const resultEl = document.getElementById('bmiResult');
+  if(!w || !hCm || w <= 0 || hCm <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid weight and height.</p>`;
+    return;
+  }
+  const hM = hCm / 100;
+  const bmi = w / (hM * hM);
+  let category = 'Normal';
+  if(bmi < 18.5) category = 'Underweight';
+  else if(bmi >= 25 && bmi < 30) category = 'Overweight';
+  else if(bmi >= 30) category = 'Obese';
+  resultEl.innerHTML = `<div class="calc-result">BMI: ${bmi.toFixed(1)} — ${category}</div>`;
+});
+document.getElementById('calcImrBtn').addEventListener('click', () => {
+  const deaths = parseFloat(document.getElementById('imrDeaths').value);
+  const births = parseFloat(document.getElementById('imrBirths').value);
+  const resultEl = document.getElementById('imrResult');
+  if(!births || births <= 0 || deaths < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const imr = (deaths / births) * 1000;
+  resultEl.innerHTML = `<div class="calc-result">IMR: ${imr.toFixed(2)} per 1000 live births</div>`;
+});
+document.getElementById('calcMmrBtn').addEventListener('click', () => {
+  const deaths = parseFloat(document.getElementById('mmrDeaths').value);
+  const births = parseFloat(document.getElementById('mmrBirths').value);
+  const resultEl = document.getElementById('mmrResult');
+  if(!births || births <= 0 || deaths < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const mmr = (deaths / births) * 100000;
+  resultEl.innerHTML = `<div class="calc-result">MMR: ${mmr.toFixed(1)} per 100,000 live births</div>`;
+});
+
+// ---------- FAQs ----------
+document.getElementById('cardFaqs').addEventListener('click', () => {
+  showScreen(faqsScreen);
+  renderFaqs();
+});
+const FAQS = [
+  { q:'How does the Set-locked system work?', a:'Each subject is split into Sets of 50 questions. You must complete one Set before the next one unlocks — this helps you build knowledge step by step instead of skipping around randomly.' },
+  { q:'How is Mock Test scoring calculated?', a:'Mock Test uses the real PSC exam pattern with negative marking: correct answers earn full marks, wrong answers deduct 20% of that question\'s mark value, matching the actual exam.' },
+  { q:'Can I use the app without internet?', a:'Once you\'ve opened a Set while online, it\'s saved for offline retries. New/unseen Sets, Mock Test, AI Assistant, and live features like Quotes always need internet.' },
+  { q:'How do I upgrade to Premium?', a:'Go to Profile → Upgrade Now, and pay via eSewa directly in the app — Premium activates automatically once payment is verified.' },
+  { q:'What does Premium unlock?', a:'Unlimited AI Assistant messages (free users get 10/day), downloading Sets as PDF, and more features being added over time.' },
+  { q:'I forgot my password — what do I do?', a:'On the login screen, tap "Forgot Password?", enter your email, and you\'ll receive a reset link.' },
+  { q:'How does the Weekly Tournament work?', a:'Everyone gets the same 50 questions each week (changes every Monday). Complete it once — your score goes on that week\'s leaderboard.' },
+  { q:'Can I change which exam post I\'m preparing for?', a:'Yes — go to Profile and select your target post under "Which exam are you preparing for?" anytime.' },
+];
+function renderFaqs(){
+  const wrap = document.getElementById('faqsListContent');
+  wrap.innerHTML = FAQS.map((f, i) => `
+    <div class="faq-item" data-faq="${i}">
+      <div class="faq-question">
+        <span>${f.q}</span>
+        <span class="faq-chevron">▾</span>
+      </div>
+      <div class="faq-answer">${f.a}</div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-question').addEventListener('click', () => {
+      item.classList.toggle('open');
+    });
+  });
+}
+
 const MNEMONICS = [
   { topic:'Levels of Prevention', trick:'PP-S-T: Papa PST कसरी बिर्सन्छ?', explain:'PP = Primordial (society-level, before risk factors exist), P = Primary (individual, before disease), S = Secondary (screening/early detection), T = Tertiary (rehabilitation after disease)' },
   { topic:'Iceberg Phenomenon', trick:'Only the TIP is visible — most disease is HIDDEN below', explain:'~10% of disease is clinically apparent (visible above water); ~90% is subclinical/undetected (hidden below water) — a core epidemiology concept' },
