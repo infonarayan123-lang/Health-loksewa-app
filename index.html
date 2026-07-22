@@ -356,7 +356,7 @@
   .countdown-banner{
     display:flex; align-items:center; justify-content:space-between;
     background:linear-gradient(135deg,#A62639,#7E1D2C);
-    border-radius:14px; padding:14px 18px; margin-bottom:14px;
+    border-radius:14px; padding:14px 18px; margin-bottom:8px;
     color:#fff;
   }
   .countdown-banner .cd-label{ font-size:12px; opacity:0.85; margin-bottom:2px; }
@@ -366,6 +366,9 @@
     text-align:right;
   }
   .countdown-banner .cd-days-label{ font-size:10px; opacity:0.85; text-align:right; }
+  .countdown-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:14px; }
+  .countdown-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:all 0.25s ease; }
+  .countdown-dot.active{ background:var(--crimson); width:16px; border-radius:4px; }
 
   .quote-banner{
     position:relative;
@@ -1379,8 +1382,9 @@
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
 
-      <!-- EXAM COUNTDOWN TIMER -->
+      <!-- EXAM COUNTDOWN TIMER (auto-rotating slideshow of all upcoming Federal/Provincial exams) -->
       <div class="countdown-banner" id="countdownBanner"></div>
+      <div class="countdown-dots" id="countdownDots"></div>
 
       <!-- QUOTE OF THE DAY -->
       <div class="quote-banner" id="quoteBanner">
@@ -3965,7 +3969,6 @@ function renderExamTypePicker(){
       try{ localStorage.setItem('hl_exam_type', btn.dataset.exam); }catch(e){}
       if(window.saveExamTypePreference) window.saveExamTypePreference(btn.dataset.exam);
       renderExamTypePicker();
-      if(typeof showExamCountdown === 'function') showExamCountdown();
     });
   });
 }
@@ -4071,46 +4074,92 @@ function startCarouselAutoPlay(){
 }
 renderCarousel();
 
-// ---------- Exam Countdown Timer ----------
-// 🔧 TODO: update this date whenever the real exam date is announced/changes
-const EXAM_COUNTDOWN_DATE = new Date('2026-12-15T00:00:00');
-const EXAM_TYPE_LABELS = {
-  pho: 'Public Health Officer',
-  ha: 'Health Assistant',
-  sn: 'Staff Nurse',
-  ahw: 'AHW',
-  anm: 'ANM',
-};
+// ---------- Provincial & Federal Exam Countdown Slideshow ----------
+// Fully Sheet-driven: add/edit/remove rows anytime in the "Exam Dates" tab (Name | Date columns) —
+// every row with a future date automatically appears here and rotates through, no code changes needed.
+let rawExamDates = [];   // raw [{Name, Date}] as returned by the Sheet
+let provinceExams = [];  // computed: [{name, daysLeft}], future-only, soonest first
+let examSlideIndex = 0;
+let examSlideTimer = null;
 
-function showExamCountdown(){
+function computeUpcomingExams(){
   const now = new Date();
-  const diffMs = EXAM_COUNTDOWN_DATE - now;
-  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-  const wrap = document.getElementById('countdownBanner');
+  provinceExams = (rawExamDates || [])
+    .map(e => {
+      const d = new Date(String(e.Date || '') + 'T00:00:00');
+      const daysLeft = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+      return { name: e.Name || 'Exam', daysLeft };
+    })
+    .filter(e => !isNaN(e.daysLeft) && e.daysLeft > 0)
+    .sort((a, b) => a.daysLeft - b.daysLeft);
+}
 
-  if(daysLeft <= 0){
+function paintExamSlide(){
+  const wrap = document.getElementById('countdownBanner');
+  const dotsWrap = document.getElementById('countdownDots');
+
+  if(provinceExams.length === 0){
     wrap.style.display = 'none';
+    dotsWrap.innerHTML = '';
     return;
   }
-
-  // Same mechanism for everyone — the label just reflects each person's own exam type
-  let examType = '';
-  try{ examType = localStorage.getItem('hl_exam_type') || ''; }catch(e){}
-  const label = EXAM_TYPE_LABELS[examType] ? `${EXAM_TYPE_LABELS[examType]} Exam Countdown` : 'Exam Countdown';
+  wrap.style.display = 'flex';
+  if(examSlideIndex >= provinceExams.length) examSlideIndex = 0;
+  const ex = provinceExams[examSlideIndex];
 
   wrap.innerHTML = `
     <div>
-      <div class="cd-label">📅 ${label}</div>
+      <div class="cd-label">📅 ${ex.name}</div>
       <div class="cd-title">Stay consistent — every day counts!</div>
     </div>
     <div>
-      <div class="cd-days">${daysLeft}</div>
+      <div class="cd-days">${ex.daysLeft}</div>
       <div class="cd-days-label">days remaining</div>
     </div>
   `;
+
+  dotsWrap.innerHTML = provinceExams.map((_, i) =>
+    `<span class="countdown-dot ${i === examSlideIndex ? 'active' : ''}"></span>`
+  ).join('');
 }
-showExamCountdown();
-setInterval(showExamCountdown, 60 * 60 * 1000); // recheck hourly, no need for per-second updates
+
+function startExamSlideshow(){
+  if(examSlideTimer) clearInterval(examSlideTimer);
+  if(provinceExams.length <= 1) return; // nothing to rotate through
+  examSlideTimer = setInterval(() => {
+    examSlideIndex = (examSlideIndex + 1) % provinceExams.length;
+    paintExamSlide();
+  }, 4000); // same rotation pace as the feature carousel above it
+}
+
+async function loadExamDates(){
+  // Instant: paint from cache immediately, never a blank banner
+  try{
+    const cached = JSON.parse(localStorage.getItem('hl_cache_examdates') || 'null');
+    if(Array.isArray(cached)) rawExamDates = cached;
+  }catch(e){}
+  computeUpcomingExams();
+  examSlideIndex = 0;
+  paintExamSlide();
+  startExamSlideshow();
+
+  // Quietly refresh in the background from the "Exam Dates" Sheet tab
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=examDates`);
+    const fresh = await res.json();
+    if(Array.isArray(fresh)){
+      rawExamDates = fresh;
+      try{ localStorage.setItem('hl_cache_examdates', JSON.stringify(fresh)); }catch(e){}
+      computeUpcomingExams();
+      examSlideIndex = 0;
+      paintExamSlide();
+      startExamSlideshow();
+    }
+  }catch(err){ /* keep showing cached value — no error shown to user */ }
+}
+loadExamDates();
+// Recompute days-remaining hourly (covers the app staying open across midnight) without refetching the Sheet
+setInterval(() => { computeUpcomingExams(); paintExamSlide(); }, 60 * 60 * 1000);
 
 // ---------- Notifications: self-managing feed (Sheet-driven) + auto Question-of-Day entry ----------
 function getTodaysQotdEntry(){
