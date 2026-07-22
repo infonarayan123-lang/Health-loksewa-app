@@ -2793,6 +2793,7 @@ document.getElementById('navHome').addEventListener('click', () => {
 });
 document.getElementById('navStudyResources').addEventListener('click', () => {
   showScreen(studyResourcesScreen);
+  loadStudyResourcesData();
 });
 document.getElementById('navCalculator').addEventListener('click', () => {
   showScreen(calculatorScreen);
@@ -3050,24 +3051,8 @@ document.getElementById('goToHealthDaysFromHub').addEventListener('click', (e) =
   showScreen(healthDaysScreen);
   renderHealthDays('');
 });
-const HEALTH_DAYS = [
-  { date:'January 30', title:'World Leprosy Day', desc:'Raises awareness about leprosy, its prevention, and treatment.' },
-  { date:'March 8', title:'International Women\'s Day', desc:'Celebrates women\'s achievements and advocates for gender equality, including in health.' },
-  { date:'March 24', title:'World Tuberculosis (TB) Day', desc:'Marks Robert Koch\'s 1882 discovery of the TB bacterium; raises public awareness of TB\'s epidemic.' },
-  { date:'April 7', title:'World Health Day', desc:'Marks the founding of WHO in 1948; each year highlights a different global health priority.' },
-  { date:'April 25', title:'World Malaria Day', desc:'Highlights global efforts to control malaria.' },
-  { date:'May 31', title:'World No Tobacco Day', desc:'Raises awareness of tobacco\'s health risks and advocates for effective policies to reduce use.' },
-  { date:'June 5', title:'World Environment Day', desc:'Promotes awareness and action for environmental protection, closely tied to public health.' },
-  { date:'July 28', title:'World Hepatitis Day', desc:'Raises awareness of viral hepatitis and encourages prevention, testing, and treatment.' },
-  { date:'August 1-7', title:'World Breastfeeding Week', desc:'Promotes breastfeeding for optimal infant and maternal health.' },
-  { date:'September 21', title:'World Alzheimer\'s Day', desc:'Raises awareness about dementia and Alzheimer\'s disease.' },
-  { date:'September 28', title:'World Rabies Day', desc:'Raises awareness of rabies prevention, closely tied to Nepal\'s dog vaccination programs.' },
-  { date:'October 10', title:'World Mental Health Day', desc:'Raises awareness of mental health issues and mobilizes support.' },
-  { date:'October 16', title:'World Food Day', desc:'Marks the founding of the FAO; promotes awareness of food security and nutrition.' },
-  { date:'November 14', title:'World Diabetes Day', desc:'Raises awareness of diabetes as a growing global health issue.' },
-  { date:'December 1', title:'World AIDS Day', desc:'Raises awareness of HIV/AIDS and supports those living with it.' },
-  { date:'December 3', title:'International Day of Persons with Disabilities', desc:'Promotes the rights and well-being of people with disabilities.' },
-];
+// Populated from the "Health Days" Google Sheet tab — see loadStudyResourcesData() below
+let HEALTH_DAYS = [];
 function renderHealthDays(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
   const filtered = term
@@ -3094,22 +3079,8 @@ document.getElementById('goToDictionaryFromHub').addEventListener('click', (e) =
   showScreen(dictionaryScreen);
   renderDictionary('');
 });
-const DICTIONARY_TERMS = [
-  { term:'Epidemiology', def:'The study of the distribution and determinants of health-related states or events in specified populations, and the application of this study to control health problems.' },
-  { term:'Incidence', def:'The number of NEW cases of a disease occurring in a population during a specified time period.' },
-  { term:'Prevalence', def:'The total number of EXISTING cases (new + old) of a disease in a population at a given point in time.' },
-  { term:'Endemic', def:'A disease that is constantly present at a baseline level within a particular geographic area or population.' },
-  { term:'Epidemic', def:'A sudden increase in disease cases above what is normally expected in a given population/area.' },
-  { term:'Pandemic', def:'An epidemic that has spread across multiple countries or continents, affecting a large number of people.' },
-  { term:'Morbidity', def:'The state of being unhealthy or having a disease — used to describe illness rates in a population.' },
-  { term:'Mortality', def:'The state of being subject to death — used to describe death rates in a population.' },
-  { term:'Herd Immunity', def:'Indirect protection from an infectious disease that occurs when a large percentage of a population is immune, reducing the likelihood of disease spread.' },
-  { term:'Vector', def:'A living organism (usually an insect) that transmits an infectious pathogen from one host to another, e.g., mosquitoes transmitting malaria.' },
-  { term:'Zoonotic Disease', def:'A disease that can be transmitted from animals to humans (e.g., rabies).' },
-  { term:'Fomite', def:'An inanimate object (like clothing or utensils) that can carry infectious organisms and transfer disease.' },
-  { term:'Nosocomial Infection', def:'An infection acquired in a hospital or healthcare setting, not present at the time of admission.' },
-  { term:'Sentinel Surveillance', def:'A monitoring system using select healthcare sites to detect trends in disease occurrence within a broader population.' },
-];
+// Populated from the "Dictionary" Google Sheet tab — see loadStudyResourcesData() below
+let DICTIONARY_TERMS = [];
 function renderDictionary(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
   const filtered = term
@@ -3245,16 +3216,58 @@ document.getElementById('goToFaqsFromHub').addEventListener('click', (e) => {
   showScreen(faqsScreen);
   renderFaqs();
 });
-const FAQS = [
-  { q:'How does the Set-locked system work?', a:'Each subject is split into Sets of 50 questions. You must complete one Set before the next one unlocks — this helps you build knowledge step by step instead of skipping around randomly.' },
-  { q:'How is Mock Test scoring calculated?', a:'Mock Test uses the real PSC exam pattern with negative marking: correct answers earn full marks, wrong answers deduct 20% of that question\'s mark value, matching the actual exam.' },
-  { q:'Can I use the app without internet?', a:'Once you\'ve opened a Set while online, it\'s saved for offline retries. New/unseen Sets, Mock Test, AI Assistant, and live features like Quotes always need internet.' },
-  { q:'How do I upgrade to Premium?', a:'Go to Profile → Upgrade Now, and pay via eSewa directly in the app — Premium activates automatically once payment is verified.' },
-  { q:'What does Premium unlock?', a:'Unlimited AI Assistant messages (free users get 10/day), downloading Sets as PDF, and more features being added over time.' },
-  { q:'I forgot my password — what do I do?', a:'On the login screen, tap "Forgot Password?", enter your email, and you\'ll receive a reset link.' },
-  { q:'How does the Weekly Tournament work?', a:'Everyone gets the same 50 questions each week (changes every Monday). Complete it once — your score goes on that week\'s leaderboard.' },
-  { q:'Can I change which exam post I\'m preparing for?', a:'Yes — go to Profile and select your target post under "Which exam are you preparing for?" anytime.' },
-];
+// Populated from the "FAQs" Google Sheet tab — see loadStudyResourcesData() below
+let FAQS = [];
+
+// ---------- Study Resources Hub: Sheet-driven loader for all 5 sub-sections ----------
+// Add/edit/remove rows anytime in these 5 Google Sheet tabs — no code changes needed:
+//   Formulas    → Name | Formula | Note
+//   Mnemonics   → Topic | Trick | Explain
+//   Health Days → Date | Title | Description
+//   Dictionary  → Term | Definition
+//   FAQs        → Question | Answer
+let studyResourcesLoaded = false;
+
+function paintAllStudyResourceLists(){
+  renderFormulas('');
+  renderMnemonics('');
+  renderHealthDays('');
+  renderDictionary('');
+  renderFaqs();
+}
+
+function applyStudyResourcesData(data){
+  FORMULAS = (data.formulas || []).map(r => ({ name: r.Name || '', formula: r.Formula || '', note: r.Note || '' }));
+  MNEMONICS = (data.mnemonics || []).map(r => ({ topic: r.Topic || '', trick: r.Trick || '', explain: r.Explain || '' }));
+  HEALTH_DAYS = (data.healthDays || []).map(r => ({ date: r.Date || '', title: r.Title || '', desc: r.Description || '' }));
+  DICTIONARY_TERMS = (data.dictionary || []).map(r => ({ term: r.Term || '', def: r.Definition || '' }));
+  FAQS = (data.faqs || []).map(r => ({ q: r.Question || '', a: r.Answer || '' }));
+}
+
+async function loadStudyResourcesData(){
+  // Instant: paint from cache immediately if we have it, never a blank list
+  try{
+    const cached = JSON.parse(localStorage.getItem('hl_cache_studyresources') || 'null');
+    if(cached){
+      applyStudyResourcesData(cached);
+      studyResourcesLoaded = true;
+      paintAllStudyResourceLists();
+    }
+  }catch(e){}
+
+  // Quietly refresh in the background from the 5 Sheet tabs
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=studyResources`);
+    const fresh = await res.json();
+    if(fresh){
+      applyStudyResourcesData(fresh);
+      studyResourcesLoaded = true;
+      try{ localStorage.setItem('hl_cache_studyresources', JSON.stringify(fresh)); }catch(e){}
+      paintAllStudyResourceLists();
+    }
+  }catch(err){ /* keep showing cached data if any — no error shown to user */ }
+}
+
 function renderFaqs(){
   const wrap = document.getElementById('faqsListContent');
   wrap.innerHTML = FAQS.map((f, i) => `
@@ -3273,17 +3286,8 @@ function renderFaqs(){
   });
 }
 
-const MNEMONICS = [
-  { topic:'Levels of Prevention', trick:'PP-S-T: Papa PST कसरी बिर्सन्छ?', explain:'PP = Primordial (society-level, before risk factors exist), P = Primary (individual, before disease), S = Secondary (screening/early detection), T = Tertiary (rehabilitation after disease)' },
-  { topic:'Iceberg Phenomenon', trick:'Only the TIP is visible — most disease is HIDDEN below', explain:'~10% of disease is clinically apparent (visible above water); ~90% is subclinical/undetected (hidden below water) — a core epidemiology concept' },
-  { topic:'Epidemiological Triad', trick:'HAE: Host, Agent, Environment', explain:'The three factors that must interact for disease to occur — remove any one, and transmission breaks' },
-  { topic:'Types of Study Design (Observational)', trick:'CCC: Cross-sectional, Case-control, Cohort', explain:'Cross-sectional = snapshot in time; Case-control = starts with outcome, looks back; Cohort = starts with exposure, looks forward' },
-  { topic:'Screening Test Qualities', trick:'SnNout, SpPin', explain:'High Sensitivity + Negative result = rules OUT disease (SnNout); High Specificity + Positive result = rules IN disease (SpPin)' },
-  { topic:'Five A\'s of Health Promotion (WHO Ottawa Charter)', trick:'BEACH: Build, Enable, Advocate, Create, Health services Reorient', explain:'The 5 action areas: Build healthy public policy, Enable communities, Advocate, Create supportive environments, and Reorient health services' },
-  { topic:'Vitamin A Deficiency Signs', trick:'Night comes first, then the eyes go dry, then spots appear', explain:'Progression: Night blindness → Xerosis (dryness) → Bitot\'s spots → Keratomalacia (most severe)' },
-  { topic:'Immunization Cold Chain', trick:'Coldest vaccines go DEEPEST (bottom/center of fridge)', explain:'OPV and Measles (live vaccines, most heat-sensitive) go in the coldest part; DPT/TT/Hep-B go on the door shelves (less sensitive)' },
-  { topic:'Components of Primary Health Care (Alma-Ata)', trick:'EMIT-CH: Education, Maternal-child, Immunization, Treatment, Control of disease, Health promotion', explain:'The core elements declared at the Alma-Ata Declaration 1978 for achieving "Health for All"' },
-];
+// Populated from the "Mnemonics" Google Sheet tab — see loadStudyResourcesData() below
+let MNEMONICS = [];
 function renderMnemonics(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
   const filtered = term
@@ -3441,26 +3445,8 @@ document.getElementById('saveReminderBtn').addEventListener('click', async () =>
 });
 
 // ---------- Formula / Quick Reference Sheet ----------
-const FORMULAS = [
-  { name:'Infant Mortality Rate (IMR)', formula:'Infant deaths (0-1 yr) / Live births × 1000', note:'Per 1000 live births, in a given year' },
-  { name:'Maternal Mortality Ratio (MMR)', formula:'Maternal deaths / Live births × 100,000', note:'Per 100,000 live births' },
-  { name:'Crude Birth Rate (CBR)', formula:'Live births / Mid-year population × 1000', note:'Per 1000 population' },
-  { name:'Crude Death Rate (CDR)', formula:'Total deaths / Mid-year population × 1000', note:'Per 1000 population' },
-  { name:'Total Fertility Rate (TFR)', formula:'Sum of Age-Specific Fertility Rates × 5', note:'Average children per woman over reproductive lifespan' },
-  { name:'Neonatal Mortality Rate', formula:'Deaths under 28 days / Live births × 1000', note:'Per 1000 live births' },
-  { name:'Under-5 Mortality Rate (U5MR)', formula:'Deaths under 5 years / Live births × 1000', note:'Per 1000 live births' },
-  { name:'Case Fatality Rate (CFR)', formula:'Deaths from a disease / Total cases of that disease × 100', note:'Measures killing power of a disease' },
-  { name:'Incidence Rate', formula:'New cases in a period / Population at risk × 100 (or 1000)', note:'Measures rate of new disease occurrence' },
-  { name:'Prevalence Rate', formula:'Total existing cases / Total population × 100', note:'Old + new cases, at a point in time' },
-  { name:'Sensitivity', formula:'True Positives / (True Positives + False Negatives) × 100', note:'Ability of a test to correctly identify true cases' },
-  { name:'Specificity', formula:'True Negatives / (True Negatives + False Positives) × 100', note:'Ability of a test to correctly identify non-cases' },
-  { name:'Positive Predictive Value (PPV)', formula:'True Positives / (True Positives + False Positives) × 100', note:'Probability that a positive test is truly positive' },
-  { name:'Attack Rate', formula:'New cases during an outbreak / Population at risk × 100', note:'Used specifically during epidemics/outbreaks' },
-  { name:'Secondary Attack Rate', formula:'New cases among contacts / Total susceptible contacts × 100', note:'Measures communicability among close contacts' },
-  { name:'Standard Deviation (SD)', formula:'√(Σ(x - mean)² / n)', note:'Measures spread/variability of data' },
-  { name:'Body Mass Index (BMI)', formula:'Weight (kg) / Height (m)²', note:'18.5-24.9 = Normal range' },
-  { name:'Net Reproduction Rate (NRR)', formula:'Value of 1 = Replacement level fertility', note:'Each woman replaced by exactly 1 daughter on average' },
-];
+// Populated from the "Formulas" Google Sheet tab — see loadStudyResourcesData() below
+let FORMULAS = [];
 
 function renderFormulas(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
