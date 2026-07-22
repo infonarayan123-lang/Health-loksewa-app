@@ -136,7 +136,7 @@
     box-shadow:0 0 16px rgba(255,120,50,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:keyBounce 1.6s ease-in-out infinite;
   }
-  .bottom-nav-item[data-nav="revision"].active .bn-icon-wrap{
+  .bottom-nav-item[data-nav="myprogress"].active .bn-icon-wrap{
     background:radial-gradient(circle at 35% 30%, #5CE68C, #1FA85C);
     box-shadow:0 0 16px rgba(60,230,140,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:spinRefresh 3s linear infinite;
@@ -445,6 +445,10 @@
     background:linear-gradient(135deg,#C0392B,#8E2A20);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
+  }
+  .dash-card.c-studyres{
+    background:linear-gradient(135deg,#5B2C6F,#341A40);
+    grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-mnemonics{
     background:linear-gradient(135deg,#2A5B6E,#1A3D49);
@@ -1454,13 +1458,6 @@
             <div class="dc-sub">Same questions for everyone — compete this week!</div>
           </div>
         </button>
-        <button class="dash-card c-formula" id="cardFormula">
-          <div class="dc-icon">🔢</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Quick Reference</div>
-            <div class="dc-sub">Formulas &amp; key facts, searchable</div>
-          </div>
-        </button>
         <button class="dash-card c-video" id="cardVideo">
           <div class="dc-icon">🎥</div>
           <div style="text-align:left;">
@@ -1468,32 +1465,11 @@
             <div class="dc-sub">Short videos explaining key topics</div>
           </div>
         </button>
-        <button class="dash-card c-mnemonics" id="cardMnemonics">
-          <div class="dc-icon">🧩</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Mnemonics Library</div>
-            <div class="dc-sub">Memory tricks for hard-to-remember facts</div>
-          </div>
-        </button>
-        <button class="dash-card c-healthdays" id="cardHealthDays">
-          <div class="dc-icon">📅</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Health Days</div>
-            <div class="dc-sub">Important national &amp; international observance days</div>
-          </div>
-        </button>
-        <button class="dash-card c-dictionary" id="cardDictionary">
+        <button class="dash-card c-studyres" id="cardStudyResources">
           <div class="dc-icon">📚</div>
           <div style="text-align:left;">
-            <div class="dc-label">Health Dictionary</div>
-            <div class="dc-sub">Key terms &amp; definitions, searchable</div>
-          </div>
-        </button>
-        <button class="dash-card c-faqs" id="cardFaqs">
-          <div class="dc-icon">❓</div>
-          <div style="text-align:left;">
-            <div class="dc-label">FAQs</div>
-            <div class="dc-sub">Common questions about the app, answered</div>
+            <div class="dc-label">Study Resources</div>
+            <div class="dc-sub">Quick Reference, Mnemonics, Health Days, Dictionary &amp; FAQs</div>
           </div>
         </button>
       </div>
@@ -1742,7 +1718,7 @@
 
   <!-- FORMULA / QUICK REFERENCE SHEET -->
   <div class="screen" id="formulaScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
       <div class="section-title">🔢 Quick Reference</div>
       <input type="text" class="formula-search-box" id="formulaSearchBox" placeholder="Search formulas… e.g. IMR, MMR, TFR">
@@ -1761,9 +1737,37 @@
     </div>
   </div>
 
+  <!-- STUDY RESOURCES HUB -->
+  <div class="screen" id="studyResourcesScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">📚 Study Resources</div>
+      <a class="link-card" href="#" id="goToFormulaFromHub">
+        <div class="lc-text"><h4>🔢 Quick Reference</h4><p>Formulas &amp; key facts, searchable</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToMnemonicsFromHub">
+        <div class="lc-text"><h4>🧩 Mnemonics Library</h4><p>Memory tricks for hard-to-remember facts</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToHealthDaysFromHub">
+        <div class="lc-text"><h4>📅 Health Days</h4><p>Important national &amp; international observance days</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToDictionaryFromHub">
+        <div class="lc-text"><h4>📖 Health Dictionary</h4><p>Key terms &amp; definitions, searchable</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToFaqsFromHub">
+        <div class="lc-text"><h4>❓ FAQs</h4><p>Common questions about the app, answered</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
   <!-- MNEMONICS LIBRARY -->
   <div class="screen" id="mnemonicsScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
       <div class="section-title">🧩 Mnemonics Library</div>
       <input type="text" class="formula-search-box" id="mnemonicsSearchBox" placeholder="Search… e.g. prevention, iceberg">
@@ -1773,7 +1777,7 @@
 
   <!-- HEALTH DAYS -->
   <div class="screen" id="healthDaysScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
       <div class="section-title">📅 Health Days</div>
       <input type="text" class="formula-search-box" id="healthDaysSearchBox" placeholder="Search… e.g. TB, AIDS, immunization">
@@ -1783,7 +1787,7 @@
 
   <!-- HEALTH DICTIONARY -->
   <div class="screen" id="dictionaryScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
       <div class="section-title">📚 Health Dictionary</div>
       <input type="text" class="formula-search-box" id="dictionarySearchBox" placeholder="Search a term…">
@@ -1865,7 +1869,7 @@
 
   <!-- FAQs -->
   <div class="screen" id="faqsScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
       <div class="section-title">❓ Frequently Asked Questions</div>
       <div id="faqsListContent"></div>
@@ -2157,8 +2161,8 @@
   <button class="bottom-nav-item" id="navCalculator" data-nav="calculator">
     <span class="bn-icon-wrap"><span class="bn-icon">🧮</span></span><span class="bn-label">Calculator</span>
   </button>
-  <button class="bottom-nav-item" id="navRevision" data-nav="revision">
-    <span class="bn-icon-wrap"><span class="bn-icon">🔄</span></span><span class="bn-label">Revision</span>
+  <button class="bottom-nav-item" id="navProgress" data-nav="myprogress">
+    <span class="bn-icon-wrap"><span class="bn-icon">📊</span></span><span class="bn-label">Progress</span>
   </button>
 </div>
 
@@ -2687,6 +2691,7 @@ const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
 const formulaScreen = document.getElementById('formulaScreen');
 const videoScreen = document.getElementById('videoScreen');
+const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
 const dictionaryScreen = document.getElementById('dictionaryScreen');
@@ -2711,11 +2716,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -2745,13 +2750,13 @@ function updateBottomNav(activeScreen){
   const homeScreens = [window.homeScreen];
   const bookmarkScreens = [bookmarksScreen];
   const calculatorScreens = [calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const revisionScreens = [revisionScreen];
+  const myProgressScreens = [progressScreen, revisionScreen, leaderboardScreen, notesScreen, reminderScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen];
 
   let activeKey = '';
   if(homeScreens.includes(activeScreen)) activeKey = 'home';
   else if(bookmarkScreens.includes(activeScreen)) activeKey = 'bookmark';
   else if(calculatorScreens.includes(activeScreen)) activeKey = 'calculator';
-  else if(revisionScreens.includes(activeScreen)) activeKey = 'revision';
+  else if(myProgressScreens.includes(activeScreen)) activeKey = 'myprogress';
 
   document.querySelectorAll('.bottom-nav-item').forEach(item => {
     item.classList.toggle('active', item.dataset.nav === activeKey);
@@ -2775,9 +2780,9 @@ document.getElementById('navBookmark').addEventListener('click', () => {
 document.getElementById('navCalculator').addEventListener('click', () => {
   showScreen(calculatorScreen);
 });
-document.getElementById('navRevision').addEventListener('click', () => {
-  showScreen(revisionScreen);
-  renderRevisionSummary();
+document.getElementById('navProgress').addEventListener('click', () => {
+  showScreen(progressScreen);
+  renderProgressScreen();
 });
 
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
@@ -3007,7 +3012,11 @@ function startTournament(questions, weekKey){
   launchQuiz(questions, 'Weekly Tournament', 0, 0);
 }
 
-document.getElementById('cardFormula').addEventListener('click', () => {
+document.getElementById('cardStudyResources').addEventListener('click', () => {
+  showScreen(studyResourcesScreen);
+});
+document.getElementById('goToFormulaFromHub').addEventListener('click', (e) => {
+  e.preventDefault();
   showScreen(formulaScreen);
   renderFormulas('');
 });
@@ -3019,13 +3028,15 @@ document.getElementById('cardVideo').addEventListener('click', () => {
 });
 
 // ---------- Mnemonics Library ----------
-document.getElementById('cardMnemonics').addEventListener('click', () => {
+document.getElementById('goToMnemonicsFromHub').addEventListener('click', (e) => {
+  e.preventDefault();
   showScreen(mnemonicsScreen);
   renderMnemonics('');
 });
 
 // ---------- Health Days ----------
-document.getElementById('cardHealthDays').addEventListener('click', () => {
+document.getElementById('goToHealthDaysFromHub').addEventListener('click', (e) => {
+  e.preventDefault();
   showScreen(healthDaysScreen);
   renderHealthDays('');
 });
@@ -3068,7 +3079,8 @@ function renderHealthDays(searchTerm){
 document.getElementById('healthDaysSearchBox').addEventListener('input', (e) => renderHealthDays(e.target.value));
 
 // ---------- Health Dictionary ----------
-document.getElementById('cardDictionary').addEventListener('click', () => {
+document.getElementById('goToDictionaryFromHub').addEventListener('click', (e) => {
+  e.preventDefault();
   showScreen(dictionaryScreen);
   renderDictionary('');
 });
@@ -3218,7 +3230,8 @@ document.getElementById('calcMmrBtn').addEventListener('click', () => {
 });
 
 // ---------- FAQs ----------
-document.getElementById('cardFaqs').addEventListener('click', () => {
+document.getElementById('goToFaqsFromHub').addEventListener('click', (e) => {
+  e.preventDefault();
   showScreen(faqsScreen);
   renderFaqs();
 });
