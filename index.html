@@ -126,7 +126,7 @@
     box-shadow:0 0 16px rgba(255,140,50,0.65), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.4);
     animation:floatHover 2s ease-in-out infinite;
   }
-  .bottom-nav-item[data-nav="bookmark"].active .bn-icon-wrap{
+  .bottom-nav-item[data-nav="studyresources"].active .bn-icon-wrap{
     background:radial-gradient(circle at 35% 30%, #7C6FF0, #4A3FC7);
     box-shadow:0 0 16px rgba(120,100,240,0.65), inset 0 3px 6px rgba(0,0,0,0.45), inset 0 -1px 1px rgba(255,255,255,0.15);
     transform:scale(0.92) translateY(1px); /* pressed depth effect */
@@ -2155,8 +2155,8 @@
   <button class="bottom-nav-item" id="navHome" data-nav="home">
     <span class="bn-icon-wrap"><span class="bn-icon">🏠</span></span><span class="bn-label">Home</span>
   </button>
-  <button class="bottom-nav-item" id="navBookmark" data-nav="bookmark">
-    <span class="bn-icon-wrap"><span class="bn-icon">🔖</span></span><span class="bn-label">Bookmark</span>
+  <button class="bottom-nav-item" id="navStudyResources" data-nav="studyresources">
+    <span class="bn-icon-wrap"><span class="bn-icon">📚</span></span><span class="bn-label">Study</span>
   </button>
   <button class="bottom-nav-item" id="navCalculator" data-nav="calculator">
     <span class="bn-icon-wrap"><span class="bn-icon">🧮</span></span><span class="bn-label">Calculator</span>
@@ -2748,13 +2748,13 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const bookmarkScreens = [bookmarksScreen];
+  const studyResourcesScreens = [studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen];
   const calculatorScreens = [calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const myProgressScreens = [progressScreen, revisionScreen, leaderboardScreen, notesScreen, reminderScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen];
+  const myProgressScreens = [progressScreen, revisionScreen, leaderboardScreen, bookmarksScreen, notesScreen, reminderScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen];
 
   let activeKey = '';
   if(homeScreens.includes(activeScreen)) activeKey = 'home';
-  else if(bookmarkScreens.includes(activeScreen)) activeKey = 'bookmark';
+  else if(studyResourcesScreens.includes(activeScreen)) activeKey = 'studyresources';
   else if(calculatorScreens.includes(activeScreen)) activeKey = 'calculator';
   else if(myProgressScreens.includes(activeScreen)) activeKey = 'myprogress';
 
@@ -2773,9 +2773,8 @@ document.getElementById('cardQuiz').addEventListener('click', () => {
 document.getElementById('navHome').addEventListener('click', () => {
   showScreen(homeScreen);
 });
-document.getElementById('navBookmark').addEventListener('click', () => {
-  showScreen(bookmarksScreen);
-  renderBookmarks();
+document.getElementById('navStudyResources').addEventListener('click', () => {
+  showScreen(studyResourcesScreen);
 });
 document.getElementById('navCalculator').addEventListener('click', () => {
   showScreen(calculatorScreen);
