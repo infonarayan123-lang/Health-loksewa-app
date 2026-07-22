@@ -354,21 +354,49 @@
   /* ---------- Quote of the Day ---------- */
   /* ---------- 6 Best Features: compact shortcuts ---------- */
   .countdown-banner{
+    position:relative;
     display:flex; align-items:center; justify-content:space-between;
-    background:linear-gradient(135deg,#A62639,#7E1D2C);
-    border-radius:14px; padding:14px 18px; margin-bottom:8px;
+    background:
+      radial-gradient(ellipse at 18% 12%, rgba(201,150,44,0.14) 0%, transparent 45%),
+      radial-gradient(ellipse at 88% 90%, rgba(107,76,154,0.30) 0%, transparent 55%),
+      linear-gradient(135deg, #0A2A2A 0%, #13203A 45%, #1F1440 100%);
+    border-radius:18px; padding:16px 20px; margin-bottom:8px;
     color:#fff;
+    overflow:hidden;
+    border:1px solid rgba(201,150,44,0.25);
+    box-shadow:
+      0 8px 26px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      0 0 22px rgba(45,212,191,0.14),
+      0 0 36px rgba(107,76,154,0.16);
   }
-  .countdown-banner .cd-label{ font-size:12px; opacity:0.85; margin-bottom:2px; }
-  .countdown-banner .cd-title{ font-family:'Tinos',serif; font-size:14.5px; font-weight:700; }
+  .countdown-banner::after{
+    content:"⚕"; position:absolute; right:-8px; bottom:-22px;
+    font-size:90px; color:rgba(255,255,255,0.045); pointer-events:none;
+  }
+  .countdown-banner .cd-label{
+    position:relative; font-size:12px; margin-bottom:3px; letter-spacing:0.2px;
+    color:#6EEBCB; text-shadow:0 0 10px rgba(110,235,203,0.45);
+  }
+  .countdown-banner .cd-title{
+    position:relative; font-family:'Tinos',serif; font-size:13.5px; font-weight:700;
+    color:rgba(255,255,255,0.82);
+  }
   .countdown-banner .cd-days{
-    font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700;
+    position:relative;
+    font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:700;
     text-align:right;
+    background:linear-gradient(180deg, #F6DE8E 0%, #C9962C 55%, #8A6414 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 10px rgba(201,150,44,0.55)) drop-shadow(0 2px 0 rgba(0,0,0,0.35));
   }
-  .countdown-banner .cd-days-label{ font-size:10px; opacity:0.85; text-align:right; }
+  .countdown-banner .cd-days-label{ position:relative; font-size:10px; text-align:right; color:#C9B8E8; opacity:0.85; }
   .countdown-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:14px; }
   .countdown-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:all 0.25s ease; }
-  .countdown-dot.active{ background:var(--crimson); width:16px; border-radius:4px; }
+  .countdown-dot.active{
+    background:linear-gradient(90deg,#6EEBCB,#C9962C); width:16px; border-radius:4px;
+    box-shadow:0 0 8px rgba(201,150,44,0.55);
+  }
 
   .quote-banner{
     position:relative;
@@ -1448,13 +1476,6 @@
           </div>
           <div id="qotdCardContent" class="qotd-card-body">Loading today's question…</div>
         </div>
-        <button class="dash-card c-progress" id="cardProgress">
-          <div class="dc-icon">📊</div>
-          <div style="text-align:left;">
-            <div class="dc-label">My Progress</div>
-            <div class="dc-sub">Stats, streak, leaderboard &amp; bookmarks</div>
-          </div>
-        </button>
         <button class="dash-card c-tournament" id="cardTournament">
           <div class="dc-icon">🏆</div>
           <div style="text-align:left;">
@@ -1467,13 +1488,6 @@
           <div style="text-align:left;">
             <div class="dc-label">Video Lessons</div>
             <div class="dc-sub">Short videos explaining key topics</div>
-          </div>
-        </button>
-        <button class="dash-card c-studyres" id="cardStudyResources">
-          <div class="dc-icon">📚</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Study Resources</div>
-            <div class="dc-sub">Quick Reference, Mnemonics, Health Days, Dictionary &amp; FAQs</div>
           </div>
         </button>
       </div>
@@ -2809,10 +2823,6 @@ document.getElementById('cardAi').addEventListener('click', () => {
 // (see loadQuestionOfDay() call further below, which runs automatically on page load)
 
 // ---------- My Progress hub ----------
-document.getElementById('cardProgress').addEventListener('click', () => {
-  showScreen(progressScreen);
-  renderProgressScreen();
-});
 document.getElementById('goToLeaderboard').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(leaderboardScreen);
@@ -3015,9 +3025,6 @@ function startTournament(questions, weekKey){
   launchQuiz(questions, 'Weekly Tournament', 0, 0);
 }
 
-document.getElementById('cardStudyResources').addEventListener('click', () => {
-  showScreen(studyResourcesScreen);
-});
 document.getElementById('goToFormulaFromHub').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(formulaScreen);
