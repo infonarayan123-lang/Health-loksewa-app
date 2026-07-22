@@ -3969,6 +3969,12 @@ function renderExamTypePicker(){
       try{ localStorage.setItem('hl_exam_type', btn.dataset.exam); }catch(e){}
       if(window.saveExamTypePreference) window.saveExamTypePreference(btn.dataset.exam);
       renderExamTypePicker();
+      if(typeof computeUpcomingExams === 'function'){
+        computeUpcomingExams();
+        examSlideIndex = 0;
+        paintExamSlide();
+        startExamSlideshow();
+      }
     });
   });
 }
@@ -4084,11 +4090,21 @@ let examSlideTimer = null;
 
 function computeUpcomingExams(){
   const now = new Date();
-  provinceExams = (rawExamDates || [])
+  let selectedType = '';
+  try{ selectedType = localStorage.getItem('hl_exam_type') || ''; }catch(e){}
+
+  let pool = rawExamDates || [];
+  // If the user has picked a specific exam type in their Profile, show ONLY that
+  // type's countdown(s); otherwise show everything (rotating through all provinces/federal)
+  if(selectedType){
+    pool = pool.filter(e => String(e.ExamType || '').trim().toLowerCase() === selectedType);
+  }
+
+  provinceExams = pool
     .map(e => {
       const d = new Date(String(e.Date || '') + 'T00:00:00');
       const daysLeft = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
-      return { name: e.Name || 'Exam', daysLeft };
+      return { name: e.Name || 'Exam', daysLeft, link: e.Link || '' };
     })
     .filter(e => !isNaN(e.daysLeft) && e.daysLeft > 0)
     .sort((a, b) => a.daysLeft - b.daysLeft);
@@ -4110,13 +4126,15 @@ function paintExamSlide(){
   wrap.innerHTML = `
     <div>
       <div class="cd-label">📅 ${ex.name}</div>
-      <div class="cd-title">Stay consistent — every day counts!</div>
+      <div class="cd-title">${ex.link ? 'Tap to view exam routine PDF →' : 'Stay consistent — every day counts!'}</div>
     </div>
     <div>
       <div class="cd-days">${ex.daysLeft}</div>
       <div class="cd-days-label">days remaining</div>
     </div>
   `;
+  wrap.style.cursor = ex.link ? 'pointer' : 'default';
+  wrap.onclick = ex.link ? () => window.open(ex.link, '_blank') : null;
 
   dotsWrap.innerHTML = provinceExams.map((_, i) =>
     `<span class="countdown-dot ${i === examSlideIndex ? 'active' : ''}"></span>`
