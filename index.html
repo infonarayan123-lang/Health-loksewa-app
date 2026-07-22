@@ -4094,10 +4094,12 @@ function computeUpcomingExams(){
   try{ selectedType = localStorage.getItem('hl_exam_type') || ''; }catch(e){}
 
   let pool = rawExamDates || [];
-  // If the user has picked a specific exam type in their Profile, show ONLY that
-  // type's countdown(s); otherwise show everything (rotating through all provinces/federal)
+  // If the user has picked a specific exam type in their Profile, try to show ONLY that
+  // type's countdown(s). Safety net: if nothing matches (e.g. Sheet rows aren't tagged
+  // with ExamType yet), fall back to showing everything rather than hiding the banner.
   if(selectedType){
-    pool = pool.filter(e => String(e.ExamType || '').trim().toLowerCase() === selectedType);
+    const filtered = pool.filter(e => String(e.ExamType || '').trim().toLowerCase() === selectedType);
+    if(filtered.length > 0) pool = filtered;
   }
 
   provinceExams = pool
