@@ -3953,6 +3953,7 @@ function renderExamTypePicker(){
       try{ localStorage.setItem('hl_exam_type', btn.dataset.exam); }catch(e){}
       if(window.saveExamTypePreference) window.saveExamTypePreference(btn.dataset.exam);
       renderExamTypePicker();
+      if(typeof showExamCountdown === 'function') showExamCountdown();
     });
   });
 }
@@ -4059,9 +4060,15 @@ function startCarouselAutoPlay(){
 renderCarousel();
 
 // ---------- Exam Countdown Timer ----------
-// 🔧 TODO: update this date whenever the real PHO exam date is announced/changes
+// 🔧 TODO: update this date whenever the real exam date is announced/changes
 const EXAM_COUNTDOWN_DATE = new Date('2026-12-15T00:00:00');
-const EXAM_COUNTDOWN_LABEL = 'PHO Exam Countdown';
+const EXAM_TYPE_LABELS = {
+  pho: 'Public Health Officer',
+  ha: 'Health Assistant',
+  sn: 'Staff Nurse',
+  ahw: 'AHW',
+  anm: 'ANM',
+};
 
 function showExamCountdown(){
   const now = new Date();
@@ -4073,9 +4080,15 @@ function showExamCountdown(){
     wrap.style.display = 'none';
     return;
   }
+
+  // Same mechanism for everyone — the label just reflects each person's own exam type
+  let examType = '';
+  try{ examType = localStorage.getItem('hl_exam_type') || ''; }catch(e){}
+  const label = EXAM_TYPE_LABELS[examType] ? `${EXAM_TYPE_LABELS[examType]} Exam Countdown` : 'Exam Countdown';
+
   wrap.innerHTML = `
     <div>
-      <div class="cd-label">📅 ${EXAM_COUNTDOWN_LABEL}</div>
+      <div class="cd-label">📅 ${label}</div>
       <div class="cd-title">Stay consistent — every day counts!</div>
     </div>
     <div>
