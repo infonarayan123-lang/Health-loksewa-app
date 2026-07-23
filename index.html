@@ -245,6 +245,16 @@
   }
   @keyframes spin{ to{ transform:rotate(360deg); } }
 
+  .quiz-loading-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999;
+    flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  }
+  .quiz-loading-overlay.active{ display:flex; }
+  .quiz-loading-overlay .qlo-text{
+    color:#fff; font-size:14.5px; text-align:center; padding:0 34px; line-height:1.5;
+    font-family:'Tinos',serif;
+  }
+
   .login-toggle{
     text-align:center; margin-top:20px; font-size:13px; color:var(--ink-soft);
   }
@@ -4961,14 +4971,26 @@ function renderMockPosts(){
   });
 }
 
+// Small reusable loading overlay — shown while Mock Test / a Set's questions load from the
+// server, since that fetch can genuinely take a few seconds and users tapped blind before this.
+function showQuizLoading(message){
+  document.getElementById('quizLoadingText').textContent = message || 'Please wait, loading your questions… this may take a moment.';
+  document.getElementById('quizLoadingOverlay').classList.add('active');
+}
+function hideQuizLoading(){
+  document.getElementById('quizLoadingOverlay').classList.remove('active');
+}
+
 async function startMockTest(post){
   currentSetInfo = null;
+  showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
   try{
     const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}&post=${post.key}`;
     const res = await fetch(url);
     const pool = await res.json();
 
     if(pool.length === 0){
+      hideQuizLoading();
       alert('No questions available yet. Add MCQs to your Google Sheet first!');
       return;
     }
@@ -4980,10 +5002,12 @@ async function startMockTest(post){
     currentMarksPerQuestion = post.marksEach;
 
     buildOmrStrip();
+    hideQuizLoading();
     showScreen(quizScreen);
     startTimer();
     renderQuestion();
   }catch(err){
+    hideQuizLoading();
     alert('Could not load the mock test. Please check your internet connection and try again.');
   }
 }
@@ -5377,6 +5401,7 @@ function generateCertificate(subject, totalSets){
 // This is the ONE moment a network fetch is genuinely unavoidable — we need real questions.
 async function startSet(subject, setNumber, totalSets){
   const cacheKey = 'hl_set_cache_' + progressKey(subject) + '_' + setNumber;
+  showQuizLoading('Please wait, loading this Set… this may take a moment.');
 
   try{
     if(!navigator.onLine){
@@ -5387,6 +5412,7 @@ async function startSet(subject, setNumber, totalSets){
     let pool = await res.json();
 
     if(pool.length === 0){
+      hideQuizLoading();
       alert('No questions found in this set yet.');
       return;
     }
@@ -5395,12 +5421,14 @@ async function startSet(subject, setNumber, totalSets){
     try{ localStorage.setItem(cacheKey, JSON.stringify(pool)); }catch(e){}
 
     pool = shuffle([...pool]); // vary display order each attempt; same 50 questions each time
+    hideQuizLoading();
     launchQuiz(pool, subject, setNumber, totalSets);
   }catch(err){
     // Network failed or we're offline — try the cached copy from a previous successful load
     let cachedPool = null;
     try{ cachedPool = JSON.parse(localStorage.getItem(cacheKey) || 'null'); }catch(e){}
 
+    hideQuizLoading();
     if(cachedPool && cachedPool.length > 0){
       alert('📴 You appear to be offline — loading this Set from your last saved copy instead.');
       launchQuiz(shuffle([...cachedPool]), subject, setNumber, totalSets);
@@ -5904,5 +5932,10 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+  <!-- Loading overlay — shown while Mock Test / a Set's questions are being fetched -->
+  <div class="quiz-loading-overlay" id="quizLoadingOverlay">
+    <div class="app-loading-spinner"></div>
+    <div class="qlo-text" id="quizLoadingText">Please wait, loading your questions… this may take a moment.</div>
+  </div>
 </body>
 </html>
