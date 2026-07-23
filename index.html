@@ -4550,7 +4550,9 @@ async function renderResources(){
 // 5. Copy link → paste it between the quotes below, replacing the "#"
 // The app automatically converts your normal share link into an embeddable
 // in-app viewer link — you don't need to edit the link format yourself.
-const SYLLABUS_POSTS = [
+// Populated from the "Syllabus" Google Sheet tab — see loadSyllabusData() below.
+// These are the fallback values shown before the first successful fetch (or if offline).
+let SYLLABUS_POSTS = [
   {key:"pho", label:"PHO Loksewa Syllabus", url:"https://drive.google.com/file/d/1Eqjul_yNfYRam9yctw2OLAWUbAFXNw7c/view?usp=sharing"},
   {key:"ha", label:"Health Assistant Syllabus", url:"https://drive.google.com/file/d/1i62CGyazJlq01u-Zei8_s9XlKGPURulw/view?usp=sharing"},
   {key:"sn", label:"Staff Nurse Syllabus", url:"#"},
@@ -4559,6 +4561,28 @@ const SYLLABUS_POSTS = [
   {key:"ha_license", label:"HA License (NHPC) Syllabus", url:"#"},
   {key:"bph_license", label:"BPH License (NHPC) Syllabus", url:"#"},
 ];
+
+async function loadSyllabusData(){
+  // Instant: paint from cache immediately if we have it, never a blank list
+  try{
+    const cached = JSON.parse(localStorage.getItem('hl_cache_syllabus') || 'null');
+    if(cached && cached.length > 0){
+      SYLLABUS_POSTS = cached;
+      renderSyllabusPosts();
+    }
+  }catch(e){}
+
+  // Quietly refresh in the background from the "Syllabus" Sheet tab
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=syllabus`);
+    const fresh = await res.json();
+    if(Array.isArray(fresh) && fresh.length > 0){
+      SYLLABUS_POSTS = fresh.map(r => ({ key: r.Key || '', label: r.Label || '', url: r.Link || '#' }));
+      try{ localStorage.setItem('hl_cache_syllabus', JSON.stringify(SYLLABUS_POSTS)); }catch(e){}
+      renderSyllabusPosts();
+    }
+  }catch(err){ /* keep showing cached/fallback list — no error shown to user */ }
+}
 
 function driveEmbedUrl(shareUrl){
   const m = shareUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -4767,7 +4791,7 @@ async function renderCurrentAffairs(){
     // Already showing cached or fallback data — nothing more to do, no need to alarm the user
   }
 }
-renderSyllabusPosts();
+loadSyllabusData();
 renderGkCategories();
 // renderCurrentAffairs() now loads on demand when the New Update card is tapped (see click handler above)
 
