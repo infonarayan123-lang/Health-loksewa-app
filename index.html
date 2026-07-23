@@ -1923,7 +1923,7 @@
     <div class="back-link" data-back="tournamentPost">← Back</div>
     <div class="home-body">
       <div class="tournament-hero">
-        <h2>🏆 Weekly PHO Championship</h2>
+        <h2 id="tournamentHeroTitle">🏆 Weekly PHO Championship</h2>
         <p>50 questions · Same for everyone this week</p>
         <div class="tournament-prizes">
           <div>🥇 1 month Premium</div>
@@ -2700,7 +2700,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzZU6wgt1N3HGO6hPgYtNEFWsi0dPS62uVi3MCT0FGSZ3a33oaL6AQBbtSP3IbLuGj7_g/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxxX-GHQ2j6Fp7rsIln-NB061fOmrFBHa6NyC2nopDnr650L-dTgoBk-DQHD1UA5_nNCA/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -3006,6 +3006,7 @@ function renderTournamentPosts(){
     card.addEventListener('click', () => {
       const post = TOURNAMENT_POSTS.find(p => p.key === card.dataset.key);
       if(post.ready){
+        currentTournamentPost = post.key;
         showScreen(tournamentScreen);
         renderTournamentScreen();
       } else {
@@ -3018,12 +3019,15 @@ function renderTournamentPosts(){
 }
 
 async function renderTournamentScreen(){
+  const postInfo = TOURNAMENT_POSTS.find(p => p.key === currentTournamentPost);
+  document.getElementById('tournamentHeroTitle').textContent = '🏆 Weekly ' + (postInfo ? postInfo.label : 'PHO') + ' Championship';
+
   const actionArea = document.getElementById('tournamentActionArea');
   const lbArea = document.getElementById('tournamentLeaderboard');
   actionArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center;">Loading…</p>`;
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=weeklyTournamentQuestions`);
+    const res = await fetch(`${SHEET_API_URL}?action=weeklyTournamentQuestions&post=${currentTournamentPost}`);
     const data = await res.json();
     const weekKey = data.weekKey;
 
@@ -4862,6 +4866,7 @@ const KNOWN_SUBJECTS_HA = [
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
 let currentMcqPost = 'pho';
+let currentTournamentPost = 'pho';
 
 // Distinguishes "All Subjects (Mixed)" progress/cache between different posts (PHO vs HA, etc.) —
 // they'd otherwise collide since every post's "mixed" mode uses the same "__ALL__" identifier.
@@ -4916,7 +4921,7 @@ function renderMcqPosts(){
 // other posts use 50 questions worth 2 marks each — both total 100 marks either way.
 const TOURNAMENT_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
@@ -4926,7 +4931,7 @@ const TOURNAMENT_POSTS = [
 
 const MOCK_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
-  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
@@ -4959,7 +4964,7 @@ function renderMockPosts(){
 async function startMockTest(post){
   currentSetInfo = null;
   try{
-    const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}`;
+    const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}&post=${post.key}`;
     const res = await fetch(url);
     const pool = await res.json();
 
