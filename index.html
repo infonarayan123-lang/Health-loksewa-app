@@ -4589,9 +4589,14 @@ async function loadSyllabusData(){
     const res = await fetch(`${SHEET_API_URL}?action=syllabus`);
     const fresh = await res.json();
     if(Array.isArray(fresh) && fresh.length > 0){
-      SYLLABUS_POSTS = fresh.map(r => ({ key: r.Key || '', label: r.Label || '', url: r.Link || '#' }));
-      try{ localStorage.setItem('hl_cache_syllabus', JSON.stringify(SYLLABUS_POSTS)); }catch(e){}
-      renderSyllabusPosts();
+      const mapped = fresh
+        .map(r => ({ key: r.Key || '', label: r.Label || '', url: r.Link || '#' }))
+        .filter(p => p.key && p.label); // safety: ignore any wrong-shaped response (e.g. stale deployment)
+      if(mapped.length > 0){
+        SYLLABUS_POSTS = mapped;
+        try{ localStorage.setItem('hl_cache_syllabus', JSON.stringify(SYLLABUS_POSTS)); }catch(e){}
+        renderSyllabusPosts();
+      }
     }
   }catch(err){ /* keep showing cached/fallback list — no error shown to user */ }
 }
