@@ -2002,7 +2002,7 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">Syllabus</div>
-      <div id="syllabusPostGrid"></div>
+      <div class="dash-grid" id="syllabusPostGrid"></div>
     </div>
   </div>
 
@@ -2029,7 +2029,7 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">General Knowledge and Guidelines</div>
-      <div id="gkCategoryGrid"></div>
+      <div class="dash-grid" id="gkCategoryGrid"></div>
     </div>
   </div>
 
@@ -2065,7 +2065,7 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">Subject-wise MCQs — choose a post</div>
-      <div id="mcqPostGrid"></div>
+      <div class="dash-grid" id="mcqPostGrid"></div>
     </div>
   </div>
 
@@ -4550,6 +4550,18 @@ async function renderResources(){
 // 5. Copy link → paste it between the quotes below, replacing the "#"
 // The app automatically converts your normal share link into an embeddable
 // in-app viewer link — you don't need to edit the link format yourself.
+// Icon/color lookup for Syllabus grid cards — keyed by post, matches the same visual
+// identity used for this post elsewhere in the app (Mock Test, Tournament, MCQs)
+const SYLLABUS_VISUALS = {
+  pho: {icon:"🛡️👥", css:"mock-c-pho"},
+  ha: {icon:"⚕️", css:"gk-c2"},
+  sn: {icon:"💉", css:"gk-c3"},
+  ahw: {icon:"🏥", css:"gk-c4"},
+  anm: {icon:"🤰", css:"gk-c5"},
+  ha_license: {icon:"📜", css:"gk-c7"},
+  bph_license: {icon:"🎓", css:"gk-c8"},
+};
+
 // Populated from the "Syllabus" Google Sheet tab — see loadSyllabusData() below.
 // These are the fallback values shown before the first successful fetch (or if offline).
 let SYLLABUS_POSTS = [
@@ -4590,19 +4602,19 @@ function driveEmbedUrl(shareUrl){
 }
 
 function renderSyllabusPosts(){
-  document.getElementById('syllabusPostGrid').innerHTML = SYLLABUS_POSTS.map((post, i) => `
-    <a class="link-card" href="#" data-index="${i}">
-      <div class="lc-text">
-        <h4>${post.label}</h4>
-        <p>Federal + all 7 provinces · view only</p>
-      </div>
-      <div class="lc-arrow">👁</div>
-    </a>
-  `).join('');
+  document.getElementById('syllabusPostGrid').innerHTML = SYLLABUS_POSTS.map((post, i) => {
+    const visual = SYLLABUS_VISUALS[post.key] || {icon:"👁", css:"gk-c1"};
+    return `
+    <button class="dash-card ${visual.css} syllabus-post-btn" data-index="${i}" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${visual.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">Federal + all 7 provinces</div>
+    </button>
+  `;
+  }).join('');
 
-  document.querySelectorAll('#syllabusPostGrid .link-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
+  document.querySelectorAll('.syllabus-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
       const post = SYLLABUS_POSTS[parseInt(card.dataset.index, 10)];
       if(post.url === '#'){
         alert('This syllabus PDF hasn\'t been added yet — check back soon!');
@@ -4630,40 +4642,40 @@ function renderSyllabusPosts(){
 
 function renderGkCategories(){
   document.getElementById('gkCategoryGrid').innerHTML = `
-    <a class="link-card" href="#" id="gkConstitution">
-      <div class="lc-text"><h4>Constitution of Nepal</h4><p>Official document</p></div>
-      <div class="lc-arrow">→</div>
-    </a>
-    <a class="link-card" href="#" id="gkAinSangraha">
-      <div class="lc-text"><h4>Ain Sangraha (Acts Collection)</h4><p>Health &amp; other Acts/Regulations</p></div>
-      <div class="lc-arrow">→</div>
-    </a>
-    <a class="link-card" href="#" id="gkSamsamayik">
-      <div class="lc-text"><h4>Samsamayik</h4><p>MCQs &amp; documents</p></div>
-      <div class="lc-arrow">→</div>
-    </a>
-    <a class="link-card" href="#" id="gkGuidelines">
-      <div class="lc-text"><h4>Guidelines</h4><p>Official document</p></div>
-      <div class="lc-arrow">→</div>
-    </a>
+    <button class="dash-card gk-c1" id="gkConstitution" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">📜</div>
+      <div class="dc-label" style="font-size:14px;">Constitution of Nepal</div>
+      <div class="dc-sub">Official document</div>
+    </button>
+    <button class="dash-card gk-c4" id="gkAinSangraha" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">⚖️</div>
+      <div class="dc-label" style="font-size:14px;">Ain Sangraha</div>
+      <div class="dc-sub">Health &amp; other Acts/Regulations</div>
+    </button>
+    <button class="dash-card gk-c2" id="gkSamsamayik" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">🌐</div>
+      <div class="dc-label" style="font-size:14px;">Samsamayik</div>
+      <div class="dc-sub">MCQs &amp; documents</div>
+    </button>
+    <button class="dash-card gk-c3" id="gkGuidelines" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">📋</div>
+      <div class="dc-label" style="font-size:14px;">Guidelines</div>
+      <div class="dc-sub">Official document</div>
+    </button>
   `;
 
-  document.getElementById('gkConstitution').addEventListener('click', (e) => {
-    e.preventDefault();
+  document.getElementById('gkConstitution').addEventListener('click', () => {
     openDocList('Constitution of Nepal', 'Constitution Documents', gkScreen);
   });
-  document.getElementById('gkAinSangraha').addEventListener('click', (e) => {
-    e.preventDefault();
+  document.getElementById('gkAinSangraha').addEventListener('click', () => {
     showScreen(ainSangrahaScreen);
     renderAinSangraha();
   });
-  document.getElementById('gkSamsamayik').addEventListener('click', (e) => {
-    e.preventDefault();
+  document.getElementById('gkSamsamayik').addEventListener('click', () => {
     showScreen(samsamayikScreen);
     renderSamsamayik();
   });
-  document.getElementById('gkGuidelines').addEventListener('click', (e) => {
-    e.preventDefault();
+  document.getElementById('gkGuidelines').addEventListener('click', () => {
     openDocList('Guidelines', 'Guidelines', gkScreen);
   });
 }
@@ -4819,25 +4831,25 @@ let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
 
 // ---------- Subject-wise MCQs: Step 0 — pick a post (same pattern as Syllabus) ----------
 const MCQ_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true},
-  {key:"ha", label:"Health Assistant", ready:false},
-  {key:"sn", label:"Staff Nurse", ready:false},
-  {key:"ahw", label:"AHW", ready:false},
-  {key:"anm", label:"ANM", ready:false},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:false},
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8"},
 ];
 function renderMcqPosts(){
   document.getElementById('mcqPostGrid').innerHTML = MCQ_POSTS.map(post => `
-    <a class="link-card" href="#" data-key="${post.key}">
-      <div class="lc-text"><h4>${post.label}</h4></div>
-      <div class="lc-arrow">→</div>
-    </a>
+    <button class="dash-card ${post.css} mcq-post-btn" data-key="${post.key}" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">Subject-wise MCQs</div>
+    </button>
   `).join('');
 
-  document.querySelectorAll('#mcqPostGrid .link-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
+  document.querySelectorAll('.mcq-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
       const post = MCQ_POSTS.find(p => p.key === card.dataset.key);
       if(post.ready){
         showScreen(subjectPickScreen);
