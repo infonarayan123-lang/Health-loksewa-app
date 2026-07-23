@@ -165,11 +165,21 @@
     padding-top:14px;
     border-top:1px solid rgba(255,255,255,0.25);
   }
-  .login-brand-tag .lbt-line1{
+  .login-brand-tag .login-marquee-wrap{
+    overflow:hidden; white-space:nowrap;
+  }
+  .login-brand-tag .login-marquee-track{
+    display:inline-block;
+    animation:marqueeScroll 18s linear infinite;
+  }
+  .login-brand-tag .login-marquee-track span{
+    display:inline-block;
     font-family:'Tinos',serif;
     font-size:14px;
     font-weight:700;
     letter-spacing:0.3px;
+    color:#fff;
+    text-shadow:0 1px 3px rgba(0,0,0,0.3);
   }
   .login-brand-tag .lbt-line2{
     font-size:11.5px;
@@ -1339,7 +1349,12 @@
       <h1 id="loginHeading">Welcome!</h1>
       <p id="loginSubtext">Sign in to continue to Health Loksewa</p>
       <div class="login-brand-tag">
-        <div class="lbt-line1">AHW · ANM · HA · Staff Nurse · PHO · NHPC License</div>
+        <div class="login-marquee-wrap">
+          <div class="login-marquee-track">
+            <span>AHW &nbsp;·&nbsp; ANM &nbsp;·&nbsp; HA &nbsp;·&nbsp; Staff Nurse &nbsp;·&nbsp; PHO &nbsp;·&nbsp; NHPC License &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;</span>
+            <span>AHW &nbsp;·&nbsp; ANM &nbsp;·&nbsp; HA &nbsp;·&nbsp; Staff Nurse &nbsp;·&nbsp; PHO &nbsp;·&nbsp; NHPC License &nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;</span>
+          </div>
+        </div>
         <div class="lbt-line2">MCQ अभ्यास · Nepal Health Service Loksewa Preparation</div>
       </div>
     </div>
