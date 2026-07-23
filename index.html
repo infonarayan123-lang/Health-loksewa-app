@@ -2700,7 +2700,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwPPkQ_5SReFOu1UXO6H2TKZ2S5iWld1tmMefs7MiQxTzBDtNNDhEO4AS0nWtQ7xGTJ/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzZU6wgt1N3HGO6hPgYtNEFWsi0dPS62uVi3MCT0FGSZ3a33oaL6AQBbtSP3IbLuGj7_g/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -4837,12 +4837,49 @@ const KNOWN_SUBJECTS = [
   "International Health",
   "Past Questions",
 ];
+// HA's Paper I subject units — lives in its own separate Google Sheet (see POST_SHEET_IDS
+// on the Apps Script side). No "Past Questions" tab for HA yet, so it's left out here.
+const KNOWN_SUBJECTS_HA = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Public Health Programmes and Policy",
+  "Planning and Management",
+  "Organizational Structure and Functions",
+  "Community Mobilization and Local Governance",
+  "Epidemiology and Disease Control",
+  "Environmental Sanitation",
+  "Child Health",
+  "General Medicine",
+  "First Aid and Emergency Management",
+  "Skin Diseases",
+  "Elementary Surgery",
+  "Eye, Ear, Nose and Throat Diseases",
+  "Oral Health and Mental Health",
+  "Reproductive Health",
+  "Acts and Regulations",
+];
+// Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
+// post card, and read by every subject/question fetch onward so it hits the right Sheet.
+let currentMcqPost = 'pho';
+
+// Distinguishes "All Subjects (Mixed)" progress/cache between different posts (PHO vs HA, etc.) —
+// they'd otherwise collide since every post's "mixed" mode uses the same "__ALL__" identifier.
+// Real subject names never collide between posts, so this only ever touches that one shared
+// value, and only for posts other than PHO — existing PHO users' saved progress is unaffected.
+function progressKey(subject){
+  if(subject === '__ALL__' && currentMcqPost && currentMcqPost !== 'pho'){
+    return subject + '::' + currentMcqPost;
+  }
+  return subject;
+}
+
 let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
 
 // ---------- Subject-wise MCQs: Step 0 — pick a post (same pattern as Syllabus) ----------
 const MCQ_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
@@ -4862,6 +4899,7 @@ function renderMcqPosts(){
     card.addEventListener('click', () => {
       const post = MCQ_POSTS.find(p => p.key === card.dataset.key);
       if(post.ready){
+        currentMcqPost = post.key;
         showScreen(subjectPickScreen);
         renderSubjectPick();
       } else {
@@ -4967,7 +5005,8 @@ function renderPastQuestionYears(){
 
 function renderSubjectPick(){
   // Purely instant — just names, no counts, no network call, no waiting.
-  document.getElementById('subjectPickList').innerHTML = SUBJECTS_WITH_COUNTS.map(s => `
+  const subjectsForThisPost = (currentMcqPost === 'ha' ? KNOWN_SUBJECTS_HA : KNOWN_SUBJECTS).map(name => ({name}));
+  document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => `
     <a class="link-card" href="#" data-subject="${s.name}">
       <div class="lc-text"><h4>${s.name}</h4><p>Tap to begin</p></div>
       <div class="lc-arrow">→</div>
@@ -5000,19 +5039,22 @@ function saveProgress(p){
 function isSetUnlocked(subject, setNumber){
   if(setNumber === 1) return true;
   const p = loadProgress();
-  const completed = (p[subject] && p[subject].completed) || [];
+  const key = progressKey(subject);
+  const completed = (p[key] && p[key].completed) || [];
   return completed.includes(setNumber - 1);
 }
 function isSetCompleted(subject, setNumber){
   const p = loadProgress();
-  const completed = (p[subject] && p[subject].completed) || [];
+  const key = progressKey(subject);
+  const completed = (p[key] && p[key].completed) || [];
   return completed.includes(setNumber);
 }
 function markSetCompleted(subject, setNumber, correctCount, wrongCount, skippedCount){
   const p = loadProgress();
-  if(!p[subject]) p[subject] = { completed: [], scores: {} };
-  if(!p[subject].completed.includes(setNumber)) p[subject].completed.push(setNumber);
-  p[subject].scores[setNumber] = { correct: correctCount, wrong: wrongCount, skipped: skippedCount };
+  const key = progressKey(subject);
+  if(!p[key]) p[key] = { completed: [], scores: {} };
+  if(!p[key].completed.includes(setNumber)) p[key].completed.push(setNumber);
+  p[key].scores[setNumber] = { correct: correctCount, wrong: wrongCount, skipped: skippedCount };
   saveProgress(p);
   updateStudyStreak();
   if(window.syncStatsToLeaderboard){
@@ -5102,14 +5144,15 @@ function openSetSelect(subjectName){
   document.getElementById('setSelectTitle').textContent = subjectName;
 
   const p = loadProgress();
-  const completedSets = (p[selectedSubject] && p[selectedSubject].completed) || [];
+  const pKey = progressKey(selectedSubject);
+  const completedSets = (p[pKey] && p[pKey].completed) || [];
   const knownMaxSet = Math.max(1, ...completedSets.map(n => n + 1)); // show one set beyond your furthest progress
 
   renderSetList(knownMaxSet, null); // null totalSets = still checking for more, in background
   showScreen(setSelectScreen);
 
   // Background check — does NOT block the screen above, just quietly refines it if more sets exist
-  fetch(`${SHEET_API_URL}?action=subjects`).then(r => r.json()).then(fresh => {
+  fetch(`${SHEET_API_URL}?action=subjects&post=${currentMcqPost}`).then(r => r.json()).then(fresh => {
     const match = fresh.find(f => f.name === subjectName);
     const count = match ? match.count : 0;
     const totalSets = Math.max(1, Math.ceil(count / SET_SIZE));
@@ -5198,7 +5241,7 @@ async function downloadSetAsPdf(subject, setNumber){
   }
 
   try{
-    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}`;
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
     const res = await fetch(url);
     const questions = await res.json();
 
@@ -5328,13 +5371,13 @@ function generateCertificate(subject, totalSets){
 // ---------- Start a specific Set (fixed 50 questions, stable order per set) ----------
 // This is the ONE moment a network fetch is genuinely unavoidable — we need real questions.
 async function startSet(subject, setNumber, totalSets){
-  const cacheKey = 'hl_set_cache_' + subject + '_' + setNumber;
+  const cacheKey = 'hl_set_cache_' + progressKey(subject) + '_' + setNumber;
 
   try{
     if(!navigator.onLine){
       throw new Error('offline'); // skip straight to the cached-copy fallback below
     }
-    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}`;
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
     const res = await fetch(url);
     let pool = await res.json();
 
