@@ -1046,6 +1046,8 @@
   .gk-c3{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
   .gk-c4{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
   .gk-c5{ background:linear-gradient(135deg,#6B4C9A,#4A3268); }
+  .gk-c7{ background:linear-gradient(135deg,#3A6B7A,#254852); }
+  .gk-c8{ background:linear-gradient(135deg,#8A5A44,#5C3A2A); }
   .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#3A6B7A,#254852); }
 
   .set-card{
@@ -3806,7 +3808,7 @@ document.getElementById('menuContactUs').addEventListener('click', () => {
 
 document.getElementById('menuAboutUs').addEventListener('click', () => {
   openLegalInfo('About Us', `
-    <p>Health Loksewa is an independent educational app built to help students in Nepal prepare for government Loksewa health service examinations — Public Health Officer, Health Assistant, Staff Nurse, AHW, and ANM.</p>
+    <p>Health Loksewa is an independent educational app built to help students in Nepal prepare for government Loksewa health service examinations — Public Health Officer, Health Assistant, Staff Nurse, AHW, and ANM — as well as NHPC licensing exams for Health Assistants and BPH graduates.</p>
     <h3>Our Mission</h3>
     <p>To make focused, structured, and consistent Loksewa exam preparation accessible to everyone, right from their phone — with organized MCQ practice, real exam-pattern mock tests, and helpful study tools.</p>
     <h3>Developer</h3>
@@ -3948,6 +3950,8 @@ const EXAM_TYPES = [
   { key:'sn', label:'Staff Nurse' },
   { key:'ahw', label:'AHW' },
   { key:'anm', label:'ANM' },
+  { key:'ha_license', label:'HA License (NHPC)' },
+  { key:'bph_license', label:'BPH License (NHPC)' },
 ];
 function renderExamTypePicker(){
   let active = '';
@@ -4504,6 +4508,8 @@ const SYLLABUS_POSTS = [
   {key:"sn", label:"Staff Nurse Syllabus", url:"#"},
   {key:"ahw", label:"AHW Syllabus", url:"#"},
   {key:"anm", label:"ANM Syllabus", url:"#"},
+  {key:"ha_license", label:"HA License (NHPC) Syllabus", url:"#"},
+  {key:"bph_license", label:"BPH License (NHPC) Syllabus", url:"#"},
 ];
 
 function driveEmbedUrl(shareUrl){
@@ -4746,6 +4752,8 @@ const MCQ_POSTS = [
   {key:"sn", label:"Staff Nurse", ready:false},
   {key:"ahw", label:"AHW", ready:false},
   {key:"anm", label:"ANM", ready:false},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:false},
 ];
 function renderMcqPosts(){
   document.getElementById('mcqPostGrid').innerHTML = MCQ_POSTS.map(post => `
@@ -4780,6 +4788,8 @@ const MOCK_POSTS = [
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7", questionCount:50, marksEach:2},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
   document.getElementById('mockPostGrid').innerHTML = MOCK_POSTS.map(post => `
