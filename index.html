@@ -1825,6 +1825,7 @@
     <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
       <div class="section-title">📚 Health Dictionary</div>
+      <div id="dictionaryPdfLinks"></div>
       <input type="text" class="formula-search-box" id="dictionarySearchBox" placeholder="Search a term…">
       <div id="dictionaryListContent"></div>
     </div>
@@ -2701,7 +2702,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbws8Zt-cs04WfVktNrZaldjMBkgL2CVE6fzuX1I20UZUKLku-JWN38-NOfIYAn1eK26Mw/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwPPkQ_5SReFOu1UXO6H2TKZ2S5iWld1tmMefs7MiQxTzBDtNNDhEO4AS0nWtQ7xGTJ/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -3286,12 +3287,39 @@ function paintAllStudyResourceLists(){
   renderFaqs();
 }
 
+let dictionaryPdfList = [];
+
 function applyStudyResourcesData(data){
   FORMULAS = (data.formulas || []).map(r => ({ name: r.Name || '', formula: r.Formula || '', note: r.Note || '' }));
   MNEMONICS = (data.mnemonics || []).map(r => ({ topic: r.Topic || '', trick: r.Trick || '', explain: r.Explain || '' }));
   HEALTH_DAYS = (data.healthDays || []).map(r => ({ date: r.Date || '', title: r.Title || '', desc: r.Description || '' }));
   DICTIONARY_TERMS = (data.dictionary || []).map(r => ({ term: r.Term || '', def: r.Definition || '' }));
   FAQS = (data.faqs || []).map(r => ({ q: r.Question || '', a: r.Answer || '' }));
+  dictionaryPdfList = (data.dictionaryPdfs || [])
+    .map(r => ({ name: r.Name || '', link: r.Link || '' }))
+    .filter(p => p.name && p.link);
+
+  const wrap = document.getElementById('dictionaryPdfLinks');
+  if(dictionaryPdfList.length === 0){
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.innerHTML = dictionaryPdfList.map((p, i) => `
+    <a href="#" class="link-card dictionary-pdf-item" data-index="${i}" style="margin-bottom:8px;">
+      <div class="lc-text"><h4>📄 ${p.name}</h4></div>
+      <div class="lc-arrow">👁</div>
+    </a>
+  `).join('');
+  document.querySelectorAll('.dictionary-pdf-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const p = dictionaryPdfList[parseInt(item.dataset.index, 10)];
+      document.getElementById('docViewerTitle').textContent = p.name;
+      document.getElementById('docViewerFrame').src = driveEmbedUrl(p.link);
+      docViewerBackTarget = dictionaryScreen;
+      showScreen(docViewerScreen);
+    });
+  });
 }
 
 async function loadStudyResourcesData(){
