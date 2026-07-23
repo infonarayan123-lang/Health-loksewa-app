@@ -1790,7 +1790,7 @@
         <div class="lc-arrow">→</div>
       </a>
       <a class="link-card" href="#" id="goToDictionaryFromHub">
-        <div class="lc-text"><h4>📖 Health Dictionary</h4><p>Key terms &amp; definitions, searchable</p></div>
+        <div class="lc-text"><h4>📖 Health Dictionary</h4><p>Reference PDFs — WHO, Oxford, and more</p></div>
         <div class="lc-arrow">→</div>
       </a>
       <a class="link-card" href="#" id="goToFaqsFromHub">
@@ -1826,8 +1826,6 @@
     <div class="home-body">
       <div class="section-title">📚 Health Dictionary</div>
       <div id="dictionaryPdfLinks"></div>
-      <input type="text" class="formula-search-box" id="dictionarySearchBox" placeholder="Search a term…">
-      <div id="dictionaryListContent"></div>
     </div>
   </div>
 
@@ -3128,29 +3126,7 @@ document.getElementById('healthDaysSearchBox').addEventListener('input', (e) => 
 document.getElementById('goToDictionaryFromHub').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(dictionaryScreen);
-  renderDictionary('');
 });
-// Populated from the "Dictionary" Google Sheet tab — see loadStudyResourcesData() below
-let DICTIONARY_TERMS = [];
-function renderDictionary(searchTerm){
-  const term = (searchTerm || '').toLowerCase().trim();
-  const filtered = term
-    ? DICTIONARY_TERMS.filter(d => d.term.toLowerCase().includes(term) || d.def.toLowerCase().includes(term))
-    : DICTIONARY_TERMS;
-  const wrap = document.getElementById('dictionaryListContent');
-  if(filtered.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No terms match "${searchTerm}".</p>`;
-    return;
-  }
-  wrap.innerHTML = filtered.map(d => `
-    <div class="dict-item">
-      <div class="di-term">${d.term}</div>
-      <div class="di-def">${d.def}</div>
-    </div>
-  `).join('');
-}
-document.getElementById('dictionarySearchBox').addEventListener('input', (e) => renderDictionary(e.target.value));
-
 // ---------- Calculator Hub ----------
 document.getElementById('goToBasicCalc').addEventListener('click', (e) => {
   e.preventDefault();
@@ -3283,7 +3259,6 @@ function paintAllStudyResourceLists(){
   renderFormulas('');
   renderMnemonics('');
   renderHealthDays('');
-  renderDictionary('');
   renderFaqs();
 }
 
@@ -3293,7 +3268,6 @@ function applyStudyResourcesData(data){
   FORMULAS = (data.formulas || []).map(r => ({ name: r.Name || '', formula: r.Formula || '', note: r.Note || '' }));
   MNEMONICS = (data.mnemonics || []).map(r => ({ topic: r.Topic || '', trick: r.Trick || '', explain: r.Explain || '' }));
   HEALTH_DAYS = (data.healthDays || []).map(r => ({ date: r.Date || '', title: r.Title || '', desc: r.Description || '' }));
-  DICTIONARY_TERMS = (data.dictionary || []).map(r => ({ term: r.Term || '', def: r.Definition || '' }));
   FAQS = (data.faqs || []).map(r => ({ q: r.Question || '', a: r.Answer || '' }));
   dictionaryPdfList = (data.dictionaryPdfs || [])
     .map(r => ({ name: r.Name || '', link: r.Link || '' }))
