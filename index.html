@@ -1912,8 +1912,16 @@
   </div>
 
   <!-- WEEKLY TOURNAMENT -->
-  <div class="screen" id="tournamentScreen">
+  <div class="screen" id="tournamentPostScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">Weekly Tournament — choose a post</div>
+      <div class="dash-grid" id="tournamentPostGrid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="tournamentScreen">
+    <div class="back-link" data-back="tournamentPost">← Back</div>
     <div class="home-body">
       <div class="tournament-hero">
         <h2>🏆 Weekly PHO Championship</h2>
@@ -2735,6 +2743,7 @@ const basicCalcScreen = document.getElementById('basicCalcScreen');
 const bmiCalcScreen = document.getElementById('bmiCalcScreen');
 const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
 const faqsScreen = document.getElementById('faqsScreen');
+const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
 const studyGroupsScreen = document.getElementById('studyGroupsScreen');
 const groupDetailScreen = document.getElementById('groupDetailScreen');
@@ -2751,11 +2760,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -2785,7 +2794,7 @@ function updateBottomNav(activeScreen){
   const homeScreens = [window.homeScreen];
   const studyResourcesScreens = [studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen];
   const calculatorScreens = [calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const myProgressScreens = [progressScreen, revisionScreen, leaderboardScreen, bookmarksScreen, notesScreen, reminderScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen];
+  const myProgressScreens = [progressScreen, revisionScreen, leaderboardScreen, bookmarksScreen, notesScreen, reminderScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen];
 
   let activeKey = '';
   if(homeScreens.includes(activeScreen)) activeKey = 'home';
@@ -2981,9 +2990,33 @@ async function openGroupDetail(code){
 
 // ---------- Weekly Tournament ----------
 document.getElementById('cardTournament').addEventListener('click', () => {
-  showScreen(tournamentScreen);
-  renderTournamentScreen();
+  showScreen(tournamentPostScreen);
+  renderTournamentPosts();
 });
+
+function renderTournamentPosts(){
+  document.getElementById('tournamentPostGrid').innerHTML = TOURNAMENT_POSTS.map(post => `
+    <button class="dash-card ${post.css} tournament-post-btn" data-key="${post.key}" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">Weekly · Same for everyone</div>
+    </button>
+  `).join('');
+
+  document.querySelectorAll('.tournament-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
+      const post = TOURNAMENT_POSTS.find(p => p.key === card.dataset.key);
+      if(post.ready){
+        showScreen(tournamentScreen);
+        renderTournamentScreen();
+      } else {
+        document.getElementById('comingSoonTitle').textContent = post.label + ' — Weekly Tournament';
+        comingSoonBackTarget = tournamentPostScreen;
+        showScreen(comingSoonScreen);
+      }
+    });
+  });
+}
 
 async function renderTournamentScreen(){
   const actionArea = document.getElementById('tournamentActionArea');
@@ -4797,6 +4830,16 @@ function renderMcqPosts(){
 // ---------- Mock Test: Step 0 — pick a post (same pattern as Syllabus / Subject-wise MCQs) ----------
 // Exam format per post: Public Health Officer uses 100 questions worth 1 mark each;
 // other posts use 50 questions worth 2 marks each — both total 100 marks either way.
+const TOURNAMENT_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8"},
+];
+
 const MOCK_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
   {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
