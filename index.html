@@ -3295,15 +3295,16 @@ function applyStudyResourcesData(data){
 }
 
 async function loadStudyResourcesData(){
-  // Instant: paint from cache immediately if we have it, never a blank list
+  // Instant: paint immediately — either from cache if we have it, or the empty-state
+  // message — so the screen is never left blank while the background fetch is in flight.
   try{
     const cached = JSON.parse(localStorage.getItem('hl_cache_studyresources') || 'null');
     if(cached){
       applyStudyResourcesData(cached);
       studyResourcesLoaded = true;
-      paintAllStudyResourceLists();
     }
   }catch(e){}
+  paintAllStudyResourceLists();
 
   // Quietly refresh in the background from the 5 Sheet tabs
   try{
@@ -4575,14 +4576,16 @@ let SYLLABUS_POSTS = [
 ];
 
 async function loadSyllabusData(){
-  // Instant: paint from cache immediately if we have it, never a blank list
+  // Instant: paint immediately — either from cache if we have it, or the built-in
+  // fallback list — so the screen is NEVER blank, even on a brand-new device/Incognito
+  // where there's no localStorage cache yet.
   try{
     const cached = JSON.parse(localStorage.getItem('hl_cache_syllabus') || 'null');
     if(cached && cached.length > 0){
       SYLLABUS_POSTS = cached;
-      renderSyllabusPosts();
     }
   }catch(e){}
+  renderSyllabusPosts();
 
   // Quietly refresh in the background from the "Syllabus" Sheet tab
   try{
