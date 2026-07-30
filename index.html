@@ -2710,7 +2710,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyfIu3WrtGgYmtXblY77CZXdsQF9GCT9zb8ZuSjFg4SoyT4D6PHtZXGvUtP-rj5VMjFng/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyO2mrxMceko103Q-JkpqdcLwvJbRdlXbtxecz8Pe0tYzlLzJudMaD6Kcujr43jZL52RQ/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -4888,6 +4888,18 @@ const KNOWN_SUBJECTS_BPH_LICENSE = [
   "Environmental and Occupational Health",
   "Sociology and Anthropology",
 ];
+// HA License (NHPC) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (100 MCQs, 1 mark each, no negative marking, from NHPC's "Syllabus for
+// Licensing Examination of Certificate Level in General Medicine, 2021").
+const KNOWN_SUBJECTS_HA_LICENSE = [
+  "All Subjects (Mixed)",
+  "Anatomy and Physiology",
+  "Community Health",
+  "General Medicine",
+  "Pharmacology and Pharmacy",
+  "General Surgery",
+  "Clinical Pathology",
+];
 // AHW (Central Loksewa) syllabus — lives in its own separate Google Sheet.
 const KNOWN_SUBJECTS_AHW = [
   "All Subjects (Mixed)",
@@ -4912,6 +4924,7 @@ const KNOWN_SUBJECTS_BY_POST = {
   ha: KNOWN_SUBJECTS_HA,
   bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
   ahw: KNOWN_SUBJECTS_AHW,
+  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
 };
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
@@ -4938,7 +4951,7 @@ const MCQ_POSTS = [
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 function renderMcqPosts(){
@@ -4975,7 +4988,7 @@ const TOURNAMENT_POSTS = [
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
@@ -4985,7 +4998,7 @@ const MOCK_POSTS = [
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7", questionCount:50, marksEach:2},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
