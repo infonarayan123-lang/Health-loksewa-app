@@ -2710,7 +2710,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxTCHyk6xj52LaeionSvNFewda78PQRT18qpycy8O6IjRQWTdZ0bLkC-p5MU3dMBlPwWg/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbytSjJY98ui9XParFru-lgY0d90dpZmCQkdW2NhF-boVWlBVr0li_ct64aWTt02QYx7Eg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -4873,6 +4873,27 @@ const KNOWN_SUBJECTS_HA = [
   "Reproductive Health",
   "Acts and Regulations",
 ];
+// BPH License's syllabus — lives in its own separate Google Sheet (see POST_SHEET_IDS on the
+// Apps Script side). Note: this syllabus only gives percentage weights per subject, not exact
+// question counts, so Mock Test/Tournament use simple flat random mixing for this post for now.
+const KNOWN_SUBJECTS_BPH_LICENSE = [
+  "All Subjects (Mixed)",
+  "Basic Science",
+  "Basic and Applied Epidemiology",
+  "Research, Biostatistics and Population Studies",
+  "Public Health and Primary Health Care",
+  "Health Promotion, Education and Mental Health",
+  "Health System Development and Management",
+  "Family Health, Child Health and Nutrition",
+  "Environmental and Occupational Health",
+  "Sociology and Anthropology",
+];
+// Lookup used by renderSubjectPick — add a new post's array here (and above) whenever a new
+// post gets its own Sheet, instead of growing a long if/else chain.
+const KNOWN_SUBJECTS_BY_POST = {
+  ha: KNOWN_SUBJECTS_HA,
+  bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
+};
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
 let currentMcqPost = 'pho';
@@ -4899,7 +4920,7 @@ const MCQ_POSTS = [
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
   {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 function renderMcqPosts(){
   document.getElementById('mcqPostGrid').innerHTML = MCQ_POSTS.map(post => `
@@ -4936,7 +4957,7 @@ const TOURNAMENT_POSTS = [
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
   {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
 const MOCK_POSTS = [
@@ -4946,7 +4967,7 @@ const MOCK_POSTS = [
   {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
   {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7", questionCount:50, marksEach:2},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
   document.getElementById('mockPostGrid').innerHTML = MOCK_POSTS.map(post => `
@@ -5034,7 +5055,7 @@ function renderPastQuestionYears(){
 
 function renderSubjectPick(){
   // Purely instant — just names, no counts, no network call, no waiting.
-  const subjectsForThisPost = (currentMcqPost === 'ha' ? KNOWN_SUBJECTS_HA : KNOWN_SUBJECTS).map(name => ({name}));
+  const subjectsForThisPost = (KNOWN_SUBJECTS_BY_POST[currentMcqPost] || KNOWN_SUBJECTS).map(name => ({name}));
   document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => `
     <a class="link-card" href="#" data-subject="${s.name}">
       <div class="lc-text"><h4>${s.name}</h4><p>Tap to begin</p></div>
