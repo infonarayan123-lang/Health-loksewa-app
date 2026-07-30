@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Health Loksewa — API Test</title>
+<style>
+  body{font-family:sans-serif; padding:20px; background:#111; color:#eee;}
+  button{display:block; width:100%; padding:16px; margin-bottom:14px; font-size:16px; border-radius:10px; border:none; background:#1B3B6F; color:#fff;}
+  pre{background:#000; color:#0f0; padding:14px; border-radius:10px; white-space:pre-wrap; word-break:break-all; font-size:13px; max-height:400px; overflow:auto;}
+  h3{margin-top:24px;}
+</style>
+</head>
+<body>
+<h2>Health Loksewa — API Test</h2>
+<p>This tests your live Apps Script directly. No typing needed.</p>
+
+<button onclick="test('studyResources')">Test: Study Resources</button>
+<button onclick="test('examDates')">Test: Exam Dates</button>
+<button onclick="test('syllabus')">Test: Syllabus</button>
+<button onclick="test('random&count=100&post=pho')">Test: PHO Mock Test (exact call)</button>
+<button onclick="test('subjects')">Test: Subjects (should always work)</button>
+<button onclick="test('subjects&post=ha')">Test: HA Subjects (new)</button>
+<button onclick="test('subjects&post=bph_license')">Test: BPH License Subjects (new)</button>
+<button onclick="test('random&count=50&post=ha')">Test: HA Mock Test (weighted)</button>
+<button onclick="test('weeklyTournamentQuestions&post=ha')">Test: HA Tournament (weighted)</button>
+<button onclick="test('subjects&post=ha_license')">Test: HA License Subjects (new)</button>
+<button onclick="test('random&count=100&post=ha_license')">Test: HA License Mock Test (weighted)</button>
+<button onclick="test('subjects&post=sn')">Test: Staff Nurse Subjects (new)</button>
+<button onclick="test('random&count=50&post=sn')">Test: Staff Nurse Mock Test (weighted)</button>
+
+<h3 id="statusLine">Tap a button above</h3>
+<pre id="output">Result will appear here...</pre>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyqkwPo-z_RXHLFSy4uW2Pq_4D71zqHVfqp7i99AuodKA3-kD8FlodI1B-0MK2PGBoJlw/exec";
+
+async function test(action){
+  document.getElementById('statusLine').textContent = 'Testing action=' + action + ' ...';
+  document.getElementById('output').textContent = 'Loading...';
+  try{
+    const url = API_URL + '?action=' + action;
+    const res = await fetch(url);
+    const text = await res.text();
+    document.getElementById('statusLine').textContent = 'Result for action=' + action + ':';
+    document.getElementById('output').textContent = text;
+  }catch(err){
+    document.getElementById('statusLine').textContent = 'ERROR testing action=' + action;
+    document.getElementById('output').textContent = String(err);
+  }
+}
+</script>
+</body>
+</html>
