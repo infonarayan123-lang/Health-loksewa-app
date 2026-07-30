@@ -2710,7 +2710,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyqkwPo-z_RXHLFSy4uW2Pq_4D71zqHVfqp7i99AuodKA3-kD8FlodI1B-0MK2PGBoJlw/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxQIJDsM9um1DH7THaAoK38IfPg2p3dzUi5zpZG8gIwUoi-Sndg6PrFk7-wjxEmw1Vqzg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -4917,6 +4917,22 @@ const KNOWN_SUBJECTS_SN = [
   "Mental Health",
   "Leadership and Management in Nursing Planning",
 ];
+// ANM (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (50 MCQs, 2 marks each, from the Central PSC "ANM" syllabus's own
+// per-unit question-count table).
+const KNOWN_SUBJECTS_ANM = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology (Structure and Functions)",
+  "Mechanism of the Different System",
+  "Fundamentals of Nursing",
+  "Treatment of Simple Diseases and Disorders",
+  "Community Health Nursing",
+  "Midwifery: Antenatal Care",
+  "Midwifery: Intranatal Care (Labor)",
+  "Midwifery: Postnatal Care",
+];
 // AHW (Central Loksewa) syllabus — lives in its own separate Google Sheet.
 const KNOWN_SUBJECTS_AHW = [
   "All Subjects (Mixed)",
@@ -4943,6 +4959,7 @@ const KNOWN_SUBJECTS_BY_POST = {
   ahw: KNOWN_SUBJECTS_AHW,
   ha_license: KNOWN_SUBJECTS_HA_LICENSE,
   sn: KNOWN_SUBJECTS_SN,
+  anm: KNOWN_SUBJECTS_ANM,
 };
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
@@ -4968,7 +4985,7 @@ const MCQ_POSTS = [
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
   {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
@@ -5005,7 +5022,7 @@ const TOURNAMENT_POSTS = [
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
   {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
@@ -5015,7 +5032,7 @@ const MOCK_POSTS = [
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
   {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
   {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];

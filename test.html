@@ -27,12 +27,14 @@
 <button onclick="test('random&count=100&post=ha_license')">Test: HA License Mock Test (weighted)</button>
 <button onclick="test('subjects&post=sn')">Test: Staff Nurse Subjects (new)</button>
 <button onclick="test('random&count=50&post=sn')">Test: Staff Nurse Mock Test (weighted)</button>
+<button onclick="test('subjects&post=anm')">Test: ANM Subjects (new)</button>
+<button onclick="test('random&count=50&post=anm')">Test: ANM Mock Test (weighted)</button>
 
 <h3 id="statusLine">Tap a button above</h3>
 <pre id="output">Result will appear here...</pre>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyqkwPo-z_RXHLFSy4uW2Pq_4D71zqHVfqp7i99AuodKA3-kD8FlodI1B-0MK2PGBoJlw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxQIJDsM9um1DH7THaAoK38IfPg2p3dzUi5zpZG8gIwUoi-Sndg6PrFk7-wjxEmw1Vqzg/exec";
 
 async function test(action){
   document.getElementById('statusLine').textContent = 'Testing action=' + action + ' ...';
