@@ -2710,7 +2710,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbytSjJY98ui9XParFru-lgY0d90dpZmCQkdW2NhF-boVWlBVr0li_ct64aWTt02QYx7Eg/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyfIu3WrtGgYmtXblY77CZXdsQF9GCT9zb8ZuSjFg4SoyT4D6PHtZXGvUtP-rj5VMjFng/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -4888,11 +4888,30 @@ const KNOWN_SUBJECTS_BPH_LICENSE = [
   "Environmental and Occupational Health",
   "Sociology and Anthropology",
 ];
+// AHW (Central Loksewa) syllabus — lives in its own separate Google Sheet.
+const KNOWN_SUBJECTS_AHW = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology",
+  "Health Education and Community Diagnosis",
+  "Community Health",
+  "First Aid and Basic Medical Procedures",
+  "Vector Borne Diseases",
+  "Maternal and Child Health, Family Planning and Nutrition",
+  "Communicable Disease and Microbiology",
+  "Medicine",
+  "Surgery",
+  "Pharmacy and Pharmacology",
+  "Health Culture and Communication",
+  "Health Management",
+];
 // Lookup used by renderSubjectPick — add a new post's array here (and above) whenever a new
 // post gets its own Sheet, instead of growing a long if/else chain.
 const KNOWN_SUBJECTS_BY_POST = {
   ha: KNOWN_SUBJECTS_HA,
   bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
+  ahw: KNOWN_SUBJECTS_AHW,
 };
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
@@ -4917,7 +4936,7 @@ const MCQ_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
   {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
@@ -4954,7 +4973,7 @@ const TOURNAMENT_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
   {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
@@ -4964,7 +4983,7 @@ const MOCK_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
-  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
   {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7", questionCount:50, marksEach:2},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
