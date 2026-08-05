@@ -5107,9 +5107,8 @@ const PHO_PAST_QUESTIONS = [
   "PHO Loksewa Federal 2080",
 ];
 
-// True only while browsing/taking a Past Questions paper — tells openSetSelect's background
-// count-check to ask the "pastquestions" list instead of the regular subjects list.
-let pastQuestionsActive = false;
+// Past Questions papers are always PHO-only for now — no per-post flag needed anymore
+// since they're launched directly (see startPastQuestionPaper), not through openSetSelect.
 
 function renderPastQuestionsPosts(){
   document.getElementById('pastQuestionsPostGrid').innerHTML = PAST_QUESTIONS_POSTS.map(post => `
@@ -5146,11 +5145,42 @@ function renderPastQuestionsList(){
   document.querySelectorAll('#pastQuestionsYearList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
-      pastQuestionsActive = true;
-      setSelectBackTarget = pastQuestionsYearScreen;
-      openSetSelect(card.dataset.paper);
+      startPastQuestionPaper(card.dataset.paper);
     });
   });
+}
+
+// Runs a full past paper in one sitting, just like Mock Test — NOT Set-locked, since a real past
+// paper (~100 questions) is meant to be taken as one continuous exam, not split into 50-Q chunks.
+async function startPastQuestionPaper(paperName){
+  currentSetInfo = null; // no Set-locking/progress-tracking for past papers, same as Mock Test
+  showQuizLoading('Please wait, loading this paper… this may take a moment.');
+  try{
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=pho`;
+    const res = await fetch(url);
+    const pool = await res.json();
+
+    if(pool.length === 0){
+      hideQuizLoading();
+      alert('No questions found in this paper yet.');
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+    currentMarksPerQuestion = 1; // matches PHO Paper I: 1 mark per question
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    alert('Could not load this paper. Please check your internet connection and try again.');
+  }
 }
 
 function renderSubjectPick(){
@@ -5166,7 +5196,6 @@ function renderSubjectPick(){
   document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
-      pastQuestionsActive = false;
       setSelectBackTarget = subjectPickScreen;
       openSetSelect(card.dataset.subject);
     });
@@ -5298,10 +5327,7 @@ function openSetSelect(subjectName){
   showScreen(setSelectScreen);
 
   // Background check — does NOT block the screen above, just quietly refines it if more sets exist
-  const countCheckUrl = pastQuestionsActive
-    ? `${SHEET_API_URL}?action=subjects&list=pastquestions`
-    : `${SHEET_API_URL}?action=subjects&post=${currentMcqPost}`;
-  fetch(countCheckUrl).then(r => r.json()).then(fresh => {
+  fetch(`${SHEET_API_URL}?action=subjects&post=${currentMcqPost}`).then(r => r.json()).then(fresh => {
     const match = fresh.find(f => f.name === subjectName);
     const count = match ? match.count : 0;
     const totalSets = Math.max(1, Math.ceil(count / SET_SIZE));
