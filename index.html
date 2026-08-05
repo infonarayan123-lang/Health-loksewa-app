@@ -1482,6 +1482,13 @@
             <div class="dc-sub" style="color:#D8CFC2;">Simulates the real exam experience</div>
           </div>
         </button>
+        <button class="dash-card c-mock" id="cardPastQuestions">
+          <div class="dc-icon">📜</div>
+          <div style="text-align:left;">
+            <div class="dc-label" style="color:#fff;">Past Questions</div>
+            <div class="dc-sub" style="color:#D8CFC2;">Real papers from previous years</div>
+          </div>
+        </button>
         <button class="dash-card c-resources" id="cardResources">
           <div class="dc-icon">🌐</div>
           <div style="text-align:left;">
@@ -2106,10 +2113,18 @@
   </div>
 
   <!-- PAST QUESTIONS: choose a year -->
-  <div class="screen" id="pastQuestionsYearScreen">
-    <div class="back-link" data-back="subjectPick">← Back to Subjects</div>
+  <div class="screen" id="pastQuestionsPostScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">📜 Past Questions — choose a year</div>
+      <div class="section-title">📜 Past Questions — choose a post</div>
+      <div class="dash-grid" id="pastQuestionsPostGrid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="pastQuestionsYearScreen">
+    <div class="back-link" data-back="pastQuestionsPost">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📜 Past Questions — choose a paper</div>
       <div id="pastQuestionsYearList"></div>
     </div>
   </div>
@@ -2710,7 +2725,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxQIJDsM9um1DH7THaAoK38IfPg2p3dzUi5zpZG8gIwUoi-Sndg6PrFk7-wjxEmw1Vqzg/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwUrjLuo-txP2Hgs9Bou8VWwIsqN5ChrSvwfUNlzLCxZ53-cMIajWJ3oJ_epEDqlRcr5w/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -2761,6 +2776,7 @@ const reminderScreen = document.getElementById('reminderScreen');
 const revisionScreen = document.getElementById('revisionScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
+const pastQuestionsPostScreen = document.getElementById('pastQuestionsPostScreen');
 const pastQuestionsYearScreen = document.getElementById('pastQuestionsYearScreen');
 const mcqPostScreen = document.getElementById('mcqPostScreen');
 const mockPostScreen = document.getElementById('mockPostScreen');
@@ -2769,11 +2785,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -4849,10 +4865,9 @@ const KNOWN_SUBJECTS = [
   "Health Education and Promotion",
   "PHC, EHCS and MDGs",
   "International Health",
-  "Past Questions",
 ];
 // HA's Paper I subject units — lives in its own separate Google Sheet (see POST_SHEET_IDS
-// on the Apps Script side). No "Past Questions" tab for HA yet, so it's left out here.
+// on the Apps Script side).
 const KNOWN_SUBJECTS_HA = [
   "All Subjects (Mixed)",
   "General Awareness",
@@ -4888,51 +4903,6 @@ const KNOWN_SUBJECTS_BPH_LICENSE = [
   "Environmental and Occupational Health",
   "Sociology and Anthropology",
 ];
-// HA License (NHPC) syllabus — lives in its own separate Google Sheet. Verified official
-// weighted distribution (100 MCQs, 1 mark each, no negative marking, from NHPC's "Syllabus for
-// Licensing Examination of Certificate Level in General Medicine, 2021").
-const KNOWN_SUBJECTS_HA_LICENSE = [
-  "All Subjects (Mixed)",
-  "Anatomy and Physiology",
-  "Community Health",
-  "General Medicine",
-  "Pharmacology and Pharmacy",
-  "General Surgery",
-  "Clinical Pathology",
-];
-// Staff Nurse (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified
-// official weighted distribution (50 MCQs, 2 marks each, from the Central PSC "Staff Nurse"
-// syllabus's own per-unit question-count table).
-const KNOWN_SUBJECTS_SN = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Fundamentals of Nursing",
-  "Applied Science",
-  "Medical/Surgical Nursing",
-  "Community Health Nursing",
-  "Midwifery",
-  "Nursing Care of Gynaecological Problems",
-  "Pediatric Nursing",
-  "Mental Health",
-  "Leadership and Management in Nursing Planning",
-];
-// ANM (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified official
-// weighted distribution (50 MCQs, 2 marks each, from the Central PSC "ANM" syllabus's own
-// per-unit question-count table).
-const KNOWN_SUBJECTS_ANM = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Anatomy and Physiology (Structure and Functions)",
-  "Mechanism of the Different System",
-  "Fundamentals of Nursing",
-  "Treatment of Simple Diseases and Disorders",
-  "Community Health Nursing",
-  "Midwifery: Antenatal Care",
-  "Midwifery: Intranatal Care (Labor)",
-  "Midwifery: Postnatal Care",
-];
 // AHW (Central Loksewa) syllabus — lives in its own separate Google Sheet.
 const KNOWN_SUBJECTS_AHW = [
   "All Subjects (Mixed)",
@@ -4957,9 +4927,6 @@ const KNOWN_SUBJECTS_BY_POST = {
   ha: KNOWN_SUBJECTS_HA,
   bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
   ahw: KNOWN_SUBJECTS_AHW,
-  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
-  sn: KNOWN_SUBJECTS_SN,
-  anm: KNOWN_SUBJECTS_ANM,
 };
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
@@ -4983,10 +4950,10 @@ let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
 const MCQ_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 function renderMcqPosts(){
@@ -5020,20 +4987,20 @@ function renderMcqPosts(){
 const TOURNAMENT_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
 const MOCK_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
+  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1},
+  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7", questionCount:50, marksEach:2},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
@@ -5100,22 +5067,88 @@ async function startMockTest(post){
   }
 }
 
-// ---------- Past Questions: choose a year, then use the normal Set-locked system ----------
-// 🔧 Sheet tabs needed (exact names): "Past Questions 2079", "Past Questions 2080",
-// "Past Questions 2081", "Past Questions 2082" — same MCQ column format as other subjects.
-const PAST_QUESTION_YEARS = ['2079', '2080', '2081', '2082'];
-function renderPastQuestionYears(){
-  document.getElementById('pastQuestionsYearList').innerHTML = PAST_QUESTION_YEARS.map(year => `
-    <a class="link-card" href="#" data-year="${year}">
-      <div class="lc-text"><h4>${year} Questions</h4><p>Real past exam questions from ${year}</p></div>
+// ---------- Past Questions: real exam papers, own dashboard section (not part of Subject-wise MCQs) ----------
+// Post-picker, same style as Mock Test — only PHO has real papers uploaded so far.
+const PAST_QUESTIONS_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📄", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8"},
+];
+
+// Exact PHO past-paper tab names — add more here anytime a new paper is added to the Sheet.
+const PHO_PAST_QUESTIONS = [
+  "PHO Loksewa Sudurpaschim 2082",
+  "PHO Loksewa Federal 2081",
+  "PHO Loksewa Gandaki 2078",
+  "PHO Loksewa Gandaki 2080",
+  "PHO Loksewa Gandaki 2082",
+  "PHO Loksewa Gandaki 2081",
+  "HEO Loksewa Federal 2070",
+  "HEO Loksewa Federal 2072",
+  "PHO Loksewa Karnali 2082",
+  "PHO Loksewa Koshi 2081",
+  "PHO Loksewa Koshi 2082",
+  "PHO Loksewa Bagmati 2079",
+  "PHO Loksewa Bagmati 2081",
+  "PHO Loksewa Federal 2074",
+  "PHO Loksewa Federal 2071",
+  "PHO Loksewa Federal 2072",
+  "PHO Loksewa Federal 2072 (2)",
+  "PHO Loksewa Federal 2079",
+  "PHO Loksewa Koshi 2081 (1)",
+  "PHO Loksewa Koshi 2081 (2)",
+  "PHO Loksewa Madhesh 2079",
+  "PHO Loksewa Madhesh 2080",
+  "PHO Loksewa Federal 2077",
+  "PHO Loksewa Federal 2080",
+];
+
+// True only while browsing/taking a Past Questions paper — tells openSetSelect's background
+// count-check to ask the "pastquestions" list instead of the regular subjects list.
+let pastQuestionsActive = false;
+
+function renderPastQuestionsPosts(){
+  document.getElementById('pastQuestionsPostGrid').innerHTML = PAST_QUESTIONS_POSTS.map(post => `
+    <button class="dash-card ${post.css} pq-post-btn" data-key="${post.key}" style="min-height:100px;">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">Real past exam papers</div>
+    </button>
+  `).join('');
+
+  document.querySelectorAll('.pq-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
+      const post = PAST_QUESTIONS_POSTS.find(p => p.key === card.dataset.key);
+      if(post.ready){
+        currentMcqPost = post.key; // 'pho' for now — ensures startSet's fetch opens the correct Sheet
+        showScreen(pastQuestionsYearScreen);
+        renderPastQuestionsList();
+      } else {
+        document.getElementById('comingSoonTitle').textContent = post.label + ' — Past Questions';
+        comingSoonBackTarget = pastQuestionsPostScreen;
+        showScreen(comingSoonScreen);
+      }
+    });
+  });
+}
+
+function renderPastQuestionsList(){
+  document.getElementById('pastQuestionsYearList').innerHTML = PHO_PAST_QUESTIONS.map(paper => `
+    <a class="link-card" href="#" data-paper="${paper}">
+      <div class="lc-text"><h4>${paper}</h4><p>Real past exam questions</p></div>
       <div class="lc-arrow">→</div>
     </a>
   `).join('');
   document.querySelectorAll('#pastQuestionsYearList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
+      pastQuestionsActive = true;
       setSelectBackTarget = pastQuestionsYearScreen;
-      openSetSelect('Past Questions ' + card.dataset.year);
+      openSetSelect(card.dataset.paper);
     });
   });
 }
@@ -5133,11 +5166,7 @@ function renderSubjectPick(){
   document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
-      if(card.dataset.subject === 'Past Questions'){
-        showScreen(pastQuestionsYearScreen);
-        renderPastQuestionYears();
-        return;
-      }
+      pastQuestionsActive = false;
       setSelectBackTarget = subjectPickScreen;
       openSetSelect(card.dataset.subject);
     });
@@ -5269,7 +5298,10 @@ function openSetSelect(subjectName){
   showScreen(setSelectScreen);
 
   // Background check — does NOT block the screen above, just quietly refines it if more sets exist
-  fetch(`${SHEET_API_URL}?action=subjects&post=${currentMcqPost}`).then(r => r.json()).then(fresh => {
+  const countCheckUrl = pastQuestionsActive
+    ? `${SHEET_API_URL}?action=subjects&list=pastquestions`
+    : `${SHEET_API_URL}?action=subjects&post=${currentMcqPost}`;
+  fetch(countCheckUrl).then(r => r.json()).then(fresh => {
     const match = fresh.find(f => f.name === subjectName);
     const count = match ? match.count : 0;
     const totalSets = Math.max(1, Math.ceil(count / SET_SIZE));
@@ -5600,6 +5632,11 @@ function shuffle(arr){
 document.getElementById('cardMock').addEventListener('click', () => {
   showScreen(mockPostScreen);
   renderMockPosts();
+});
+
+document.getElementById('cardPastQuestions').addEventListener('click', () => {
+  showScreen(pastQuestionsPostScreen);
+  renderPastQuestionsPosts();
 });
 
 // ---------- Timer ----------
