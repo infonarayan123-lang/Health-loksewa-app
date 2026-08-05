@@ -2534,9 +2534,14 @@
   };
 
   // ---- Premium status (Path B: manually flipped "premium: true" by Narayan in Firestore) ----
+  // Accounts that always get Premium access for free, no payment needed — checked first,
+  // before the normal Firestore-based paid-premium check below.
+  const FREE_PREMIUM_EMAILS = ['infonarayan1234@gmail.com', 'narayanrimal659@gmail.com'];
+
   window.checkPremiumStatus = async function(){
     const user = auth.currentUser;
     if(!user) return false;
+    if(user.email && FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())) return true;
     try{
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
