@@ -1625,7 +1625,7 @@
       <div class="premium-hero">
         <div style="font-size:34px; margin-bottom:8px;">💎</div>
         <h2>Health Loksewa Premium</h2>
-        <p>NPR 99 / month</p>
+        <p>NPR 200 / month</p>
       </div>
 
       <div class="premium-features">
@@ -1637,7 +1637,7 @@
 
       <button class="esewa-pay-btn" id="esewaPayBtn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
-        Pay NPR 99 with eSewa
+        Pay NPR 200 with eSewa
       </button>
       <p id="esewaPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 16px;"></p>
 
@@ -1646,7 +1646,7 @@
         <div class="content-card" style="margin-top:10px;">
           <h4 style="margin-bottom:10px;">👉 Manual activation</h4>
           <ol style="padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink);">
-            <li>Send <b>NPR 99</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
+            <li>Send <b>NPR 200</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
             <li>Take a screenshot of your payment confirmation</li>
             <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
             <li>Your account will be manually activated within 24 hours</li>
@@ -2604,6 +2604,93 @@
     }
   };
 
+  // ---- Mock Test usage limit: first 2 EVER free, then 1 per calendar week free, rest Premium ----
+  function getIsoWeekKey(d){
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNum = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    return date.getUTCFullYear() + '-W' + weekNum;
+  }
+
+  window.checkAndIncrementMockTestUsage = async function(){
+    const user = auth.currentUser;
+    if(!user) return { allowed: true }; // fail open if somehow not logged in
+
+    const isPremium = await window.checkPremiumStatus();
+    if(isPremium) return { allowed: true };
+
+    try{
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {};
+      const totalCount = data.mockTestTotalCount || 0;
+
+      // First 2 attempts ever are free, no matter the week
+      if(totalCount < 2){
+        await setDoc(ref, { mockTestTotalCount: totalCount + 1 }, { merge: true });
+        return { allowed: true };
+      }
+
+      // After that: 1 free attempt per calendar week
+      const currentWeekKey = getIsoWeekKey(new Date());
+      const alreadyUsedThisWeek = data.mockTestWeekKey === currentWeekKey && data.mockTestWeekUsed === true;
+      if(alreadyUsedThisWeek){
+        return { allowed: false };
+      }
+      await setDoc(ref, {
+        mockTestTotalCount: totalCount + 1,
+        mockTestWeekKey: currentWeekKey,
+        mockTestWeekUsed: true
+      }, { merge: true });
+      return { allowed: true };
+    }catch(err){
+      return { allowed: true }; // fail open on error
+    }
+  };
+
+  // ---- Past Questions usage limit: first 2 DISTINCT papers free, rest Premium ----
+  // Re-opening a paper you've already unlocked stays free — the limit is on how many
+  // different papers you've ever started, not on repeat attempts of the same paper.
+  window.checkAndRecordPastQuestionAccess = async function(paperName){
+    const user = auth.currentUser;
+    if(!user) return { allowed: true };
+
+    const isPremium = await window.checkPremiumStatus();
+    if(isPremium) return { allowed: true };
+
+    try{
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {};
+      const opened = data.pastQuestionsOpened || [];
+
+      if(opened.includes(paperName)) return { allowed: true }; // already unlocked before
+      if(opened.length >= 2) return { allowed: false };
+
+      await setDoc(ref, { pastQuestionsOpened: [...opened, paperName] }, { merge: true });
+      return { allowed: true };
+    }catch(err){
+      return { allowed: true }; // fail open on error
+    }
+  };
+
+  // ---- Revision Mode: free for the first 7 days after account signup, then Premium ----
+  window.checkRevisionAccess = async function(){
+    const user = auth.currentUser;
+    if(!user) return { allowed: true };
+
+    const isPremium = await window.checkPremiumStatus();
+    if(isPremium) return { allowed: true };
+
+    const createdAt = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : null;
+    if(!createdAt) return { allowed: true }; // fail open if we can't determine signup date
+
+    const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    return { allowed: daysSinceSignup <= 7 };
+  };
+
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
   // ---- Toggle between Login and Register modes — shows/hides the extra fields ----
@@ -3123,9 +3210,10 @@ document.getElementById('cardVideo').addEventListener('click', () => {
 });
 
 // ---------- Mnemonics Library ----------
-document.getElementById('goToMnemonicsFromHub').addEventListener('click', (e) => {
+document.getElementById('goToMnemonicsFromHub').addEventListener('click', async (e) => {
   e.preventDefault();
   showScreen(mnemonicsScreen);
+  mnemonicsUserIsPremium = await refreshPremiumStatus();
   renderMnemonics('');
 });
 
@@ -3376,6 +3464,8 @@ function renderFaqs(){
 
 // Populated from the "Mnemonics" Google Sheet tab — see loadStudyResourcesData() below
 let MNEMONICS = [];
+// Cached once per screen-open (not per keystroke) — see goToMnemonicsFromHub click handler
+let mnemonicsUserIsPremium = false;
 function renderMnemonics(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
   const filtered = term
@@ -3387,13 +3477,34 @@ function renderMnemonics(searchTerm){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No mnemonics match "${searchTerm}".</p>`;
     return;
   }
-  wrap.innerHTML = filtered.map(m => `
-    <div class="mnemonic-item">
-      <div class="mi-topic">${m.topic}</div>
-      <div class="mi-trick">💡 ${m.trick}</div>
-      <div class="mi-explain">${m.explain}</div>
-    </div>
-  `).join('');
+  wrap.innerHTML = filtered.map((m, i) => {
+    const locked = !mnemonicsUserIsPremium && i >= 4;
+    if(locked){
+      return `
+        <div class="mnemonic-item mnemonic-locked" data-locked-mnemonic="1">
+          <div class="mi-topic">🔒 ${m.topic}</div>
+          <div class="mi-trick" style="filter:blur(4px); user-select:none;">💡 ${m.trick}</div>
+          <div class="mi-explain" style="color:var(--gold); font-weight:600;">Upgrade to Premium to unlock</div>
+        </div>`;
+    }
+    return `
+      <div class="mnemonic-item">
+        <div class="mi-topic">${m.topic}</div>
+        <div class="mi-trick">💡 ${m.trick}</div>
+        <div class="mi-explain">${m.explain}</div>
+      </div>`;
+  }).join('');
+
+  document.querySelectorAll('[data-locked-mnemonic]').forEach(item => {
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', () => {
+      if(confirm('🧩 The first 4 Mnemonics are free. Upgrade to Premium (NPR 200/month) to unlock the rest?')){
+        premiumBackTarget = mnemonicsScreen;
+        showScreen(upgradeScreen);
+        renderPremiumStatus();
+      }
+    });
+  });
 }
 document.getElementById('mnemonicsSearchBox').addEventListener('input', (e) => {
   renderMnemonics(e.target.value);
@@ -3442,8 +3553,19 @@ document.getElementById('goToReminder').addEventListener('click', (e) => {
 });
 
 // ---------- Revision Mode ----------
-document.getElementById('goToRevision').addEventListener('click', (e) => {
+document.getElementById('goToRevision').addEventListener('click', async (e) => {
   e.preventDefault();
+  if(window.checkRevisionAccess){
+    const access = await window.checkRevisionAccess();
+    if(!access.allowed){
+      if(confirm('🔄 Your 7-day free trial of Revision Mode has ended. Upgrade to Premium (NPR 200/month) to keep using it?')){
+        premiumBackTarget = progressScreen;
+        showScreen(upgradeScreen);
+        renderPremiumStatus();
+      }
+      return;
+    }
+  }
   showScreen(revisionScreen);
   renderRevisionSummary();
 });
@@ -3779,7 +3901,7 @@ document.getElementById('esewaPayBtn').addEventListener('click', async () => {
   statusEl.textContent = 'Connecting to eSewa…';
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=99`);
+    const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=200`);
     const fields = await res.json();
 
     if(!fields.payment_url){
@@ -5042,6 +5164,17 @@ function hideQuizLoading(){
 }
 
 async function startMockTest(post){
+  if(window.checkAndIncrementMockTestUsage){
+    const usage = await window.checkAndIncrementMockTestUsage();
+    if(!usage.allowed){
+      if(confirm('🏆 You\'ve used your free Mock Test for this week. Upgrade to Premium (NPR 200/month) for unlimited Mock Tests?')){
+        premiumBackTarget = mockPostScreen;
+        showScreen(upgradeScreen);
+        renderPremiumStatus();
+      }
+      return;
+    }
+  }
   currentSetInfo = null;
   showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
   try{
@@ -5158,6 +5291,17 @@ function renderPastQuestionsList(){
 // Runs a full past paper in one sitting, just like Mock Test — NOT Set-locked, since a real past
 // paper (~100 questions) is meant to be taken as one continuous exam, not split into 50-Q chunks.
 async function startPastQuestionPaper(paperName){
+  if(window.checkAndRecordPastQuestionAccess){
+    const usage = await window.checkAndRecordPastQuestionAccess(paperName);
+    if(!usage.allowed){
+      if(confirm('📜 You\'ve used your 2 free Past Question papers. Upgrade to Premium (NPR 200/month) for unlimited access?')){
+        premiumBackTarget = pastQuestionsYearScreen;
+        showScreen(upgradeScreen);
+        renderPremiumStatus();
+      }
+      return;
+    }
+  }
   currentSetInfo = null; // no Set-locking/progress-tracking for past papers, same as Mock Test
   showQuizLoading('Please wait, loading this paper… this may take a moment.');
   try{
@@ -5371,12 +5515,24 @@ function renderSetList(totalSets, exactCount){
   });
 
   document.querySelectorAll('#setSelectList .set-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', async () => {
       if(card.dataset.unlocked !== 'true'){
         alert('Complete the previous set first to unlock this one!');
         return;
       }
-      startSet(selectedSubject, parseInt(card.dataset.set, 10), totalSets);
+      const setNum = parseInt(card.dataset.set, 10);
+      if(setNum > 2){
+        const isPremium = await refreshPremiumStatus();
+        if(!isPremium){
+          if(confirm('🔒 Sets 1-2 of each subject are free. Upgrade to Premium (NPR 200/month) to unlock every Set?')){
+            premiumBackTarget = setSelectScreen;
+            showScreen(upgradeScreen);
+            renderPremiumStatus();
+          }
+          return;
+        }
+      }
+      startSet(selectedSubject, setNum, totalSets);
     });
   });
 
@@ -5407,7 +5563,7 @@ function renderSetList(totalSets, exactCount){
 async function downloadSetAsPdf(subject, setNumber){
   const isPremium = await refreshPremiumStatus();
   if(!isPremium){
-    if(confirm('📄 Downloading Sets as PDF is a Premium feature (NPR 99/month). Want to see Premium plans?')){
+    if(confirm('📄 Downloading Sets as PDF is a Premium feature (NPR 200/month). Want to see Premium plans?')){
       premiumBackTarget = setSelectScreen;
       showScreen(upgradeScreen);
       renderPremiumStatus();
