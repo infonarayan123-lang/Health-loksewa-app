@@ -2817,7 +2817,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwUrjLuo-txP2Hgs9Bou8VWwIsqN5ChrSvwfUNlzLCxZ53-cMIajWJ3oJ_epEDqlRcr5w/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzEDhg2-sNQOFJC3ZWCoKtQdZorqpjX1SQN43zcfz0_Hy1HTrDvMhhkOQjtKADY8HFkwg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -5217,33 +5217,9 @@ const PAST_QUESTIONS_POSTS = [
   {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8"},
 ];
 
-// Exact PHO past-paper tab names — add more here anytime a new paper is added to the Sheet.
-const PHO_PAST_QUESTIONS = [
-  "PHO Loksewa Sudurpaschim 2082",
-  "PHO Loksewa Federal 2081",
-  "PHO Loksewa Gandaki 2078",
-  "PHO Loksewa Gandaki 2080",
-  "PHO Loksewa Gandaki 2082",
-  "PHO Loksewa Gandaki 2081",
-  "HEO Loksewa Federal 2070",
-  "HEO Loksewa Federal 2072",
-  "PHO Loksewa Karnali 2082",
-  "PHO Loksewa Koshi 2081",
-  "PHO Loksewa Koshi 2082",
-  "PHO Loksewa Bagmati 2079",
-  "PHO Loksewa Bagmati 2081",
-  "PHO Loksewa Federal 2074",
-  "PHO Loksewa Federal 2071",
-  "PHO Loksewa Federal 2072",
-  "PHO Loksewa Federal 2072 (2)",
-  "PHO Loksewa Federal 2079",
-  "PHO Loksewa Koshi 2081 (1)",
-  "PHO Loksewa Koshi 2081 (2)",
-  "PHO Loksewa Madhesh 2079",
-  "PHO Loksewa Madhesh 2080",
-  "PHO Loksewa Federal 2077",
-  "PHO Loksewa Federal 2080",
-];
+// Populated from the "Past Questions List" tab (single column: Name) — see loadPastQuestionsList()
+// below. Add/remove a row there anytime to add/remove a paper — no code changes needed.
+let PHO_PAST_QUESTIONS = [];
 
 // Past Questions papers are always PHO-only for now — no per-post flag needed anymore
 // since they're launched directly (see startPastQuestionPaper), not through openSetSelect.
@@ -5263,7 +5239,7 @@ function renderPastQuestionsPosts(){
       if(post.ready){
         currentMcqPost = post.key; // 'pho' for now — ensures startSet's fetch opens the correct Sheet
         showScreen(pastQuestionsYearScreen);
-        renderPastQuestionsList();
+        loadPastQuestionsList();
       } else {
         document.getElementById('comingSoonTitle').textContent = post.label + ' — Past Questions';
         comingSoonBackTarget = pastQuestionsPostScreen;
@@ -5274,6 +5250,11 @@ function renderPastQuestionsPosts(){
 }
 
 function renderPastQuestionsList(){
+  if(PHO_PAST_QUESTIONS.length === 0){
+    document.getElementById('pastQuestionsYearList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13.5px;">No past papers added yet — check back soon!</p>`;
+    return;
+  }
   document.getElementById('pastQuestionsYearList').innerHTML = PHO_PAST_QUESTIONS.map(paper => `
     <a class="link-card" href="#" data-paper="${paper}">
       <div class="lc-text"><h4>${paper}</h4><p>Real past exam questions</p></div>
@@ -5286,6 +5267,29 @@ function renderPastQuestionsList(){
       startPastQuestionPaper(card.dataset.paper);
     });
   });
+}
+
+async function loadPastQuestionsList(){
+  // Instant: paint from cache immediately (or empty-state), never left waiting with nothing
+  try{
+    const cached = JSON.parse(localStorage.getItem('hl_cache_pastquestions') || 'null');
+    if(Array.isArray(cached) && cached.length > 0) PHO_PAST_QUESTIONS = cached;
+  }catch(e){}
+  renderPastQuestionsList();
+
+  // Quietly refresh in the background from the "Past Questions List" Sheet tab
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=subjects&list=pastquestions`);
+    const fresh = await res.json();
+    if(Array.isArray(fresh)){
+      const names = fresh.map(r => r.name).filter(Boolean);
+      if(names.length > 0){
+        PHO_PAST_QUESTIONS = names;
+        try{ localStorage.setItem('hl_cache_pastquestions', JSON.stringify(names)); }catch(e){}
+        renderPastQuestionsList();
+      }
+    }
+  }catch(err){ /* keep showing cached/empty-state — no error shown to user */ }
 }
 
 // Runs a full past paper in one sitting, just like Mock Test — NOT Set-locked, since a real past
