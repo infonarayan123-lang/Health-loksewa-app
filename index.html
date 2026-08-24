@@ -5209,20 +5209,17 @@ async function startMockTest(post){
 // Post-picker, same style as Mock Test — only PHO has real papers uploaded so far.
 const PAST_QUESTIONS_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:false, icon:"⚕️", css:"gk-c2"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:false, icon:"🏥", css:"gk-c4"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
   {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
   {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📄", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:false, icon:"🎓", css:"gk-c8"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
-// Populated from the "Past Questions List" tab (single column: Name) — see loadPastQuestionsList()
+// Populated per-post from each post's own "Past Questions List" tab — see loadPastQuestionsList()
 // below. Add/remove a row there anytime to add/remove a paper — no code changes needed.
-let PHO_PAST_QUESTIONS = [];
-
-// Past Questions papers are always PHO-only for now — no per-post flag needed anymore
-// since they're launched directly (see startPastQuestionPaper), not through openSetSelect.
+let PAST_QUESTIONS_BY_POST = {};
 
 function renderPastQuestionsPosts(){
   document.getElementById('pastQuestionsPostGrid').innerHTML = PAST_QUESTIONS_POSTS.map(post => `
@@ -5237,9 +5234,9 @@ function renderPastQuestionsPosts(){
     card.addEventListener('click', () => {
       const post = PAST_QUESTIONS_POSTS.find(p => p.key === card.dataset.key);
       if(post.ready){
-        currentMcqPost = post.key; // 'pho' for now — ensures startSet's fetch opens the correct Sheet
+        currentMcqPost = post.key; // ensures startSet/startPastQuestionPaper fetch the correct Sheet
         showScreen(pastQuestionsYearScreen);
-        loadPastQuestionsList();
+        loadPastQuestionsList(post.key);
       } else {
         document.getElementById('comingSoonTitle').textContent = post.label + ' — Past Questions';
         comingSoonBackTarget = pastQuestionsPostScreen;
@@ -5250,12 +5247,13 @@ function renderPastQuestionsPosts(){
 }
 
 function renderPastQuestionsList(){
-  if(PHO_PAST_QUESTIONS.length === 0){
+  const papers = PAST_QUESTIONS_BY_POST[currentMcqPost] || [];
+  if(papers.length === 0){
     document.getElementById('pastQuestionsYearList').innerHTML =
       `<p style="color:var(--ink-soft); font-size:13.5px;">No past papers added yet — check back soon!</p>`;
     return;
   }
-  document.getElementById('pastQuestionsYearList').innerHTML = PHO_PAST_QUESTIONS.map(paper => `
+  document.getElementById('pastQuestionsYearList').innerHTML = papers.map(paper => `
     <a class="link-card" href="#" data-paper="${paper}">
       <div class="lc-text"><h4>${paper}</h4><p>Real past exam questions</p></div>
       <div class="lc-arrow">→</div>
@@ -5269,23 +5267,25 @@ function renderPastQuestionsList(){
   });
 }
 
-async function loadPastQuestionsList(){
+async function loadPastQuestionsList(postKey){
+  const cacheKey = 'hl_cache_pastquestions_' + postKey;
+
   // Instant: paint from cache immediately (or empty-state), never left waiting with nothing
   try{
-    const cached = JSON.parse(localStorage.getItem('hl_cache_pastquestions') || 'null');
-    if(Array.isArray(cached) && cached.length > 0) PHO_PAST_QUESTIONS = cached;
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if(Array.isArray(cached) && cached.length > 0) PAST_QUESTIONS_BY_POST[postKey] = cached;
   }catch(e){}
   renderPastQuestionsList();
 
-  // Quietly refresh in the background from the "Past Questions List" Sheet tab
+  // Quietly refresh in the background from that post's own "Past Questions List" Sheet tab
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=subjects&list=pastquestions`);
+    const res = await fetch(`${SHEET_API_URL}?action=subjects&list=pastquestions&post=${postKey}`);
     const fresh = await res.json();
     if(Array.isArray(fresh)){
       const names = fresh.map(r => r.name).filter(Boolean);
       if(names.length > 0){
-        PHO_PAST_QUESTIONS = names;
-        try{ localStorage.setItem('hl_cache_pastquestions', JSON.stringify(names)); }catch(e){}
+        PAST_QUESTIONS_BY_POST[postKey] = names;
+        try{ localStorage.setItem(cacheKey, JSON.stringify(names)); }catch(e){}
         renderPastQuestionsList();
       }
     }
@@ -5309,7 +5309,7 @@ async function startPastQuestionPaper(paperName){
   currentSetInfo = null; // no Set-locking/progress-tracking for past papers, same as Mock Test
   showQuizLoading('Please wait, loading this paper… this may take a moment.');
   try{
-    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=pho`;
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=${currentMcqPost}`;
     const res = await fetch(url);
     const pool = await res.json();
 
