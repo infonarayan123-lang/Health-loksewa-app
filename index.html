@@ -1608,6 +1608,7 @@
       <button class="profile-menu-item" id="menuDisclaimer"><span class="pm-icon">⚠️</span> Disclaimer</button>
       <button class="profile-menu-item" id="menuRefundPolicy"><span class="pm-icon">💳</span> Refund Policy</button>
       <button class="profile-menu-item" id="menuMyDevices"><span class="pm-icon">📱</span> My Devices</button>
+      <button class="profile-menu-item" id="menuFreeVsPremium"><span class="pm-icon">💎</span> Free vs Premium</button>
       <button class="profile-menu-item" id="menuDeleteAccount"><span class="pm-icon">🗑️</span> Delete Account</button>
       <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon">🚪</span> Logout</button>
     </div>
@@ -1643,11 +1644,15 @@
       </div>
 
       <div class="premium-features">
+        <div class="pf-row">🏆 <b>Unlimited Mock Tests</b> — free tier gets 2 ever + 1/week</div>
+        <div class="pf-row">📚 <b>All Sets unlocked</b> — free tier gets Sets 1-2 per subject only</div>
+        <div class="pf-row">📜 <b>Unlimited Past Question papers</b> — free tier gets 2 papers total</div>
+        <div class="pf-row">🔄 <b>Revision Mode</b> — free only for your first 7 days</div>
+        <div class="pf-row">🧩 <b>All Mnemonics unlocked</b> — free tier gets the first 4</div>
         <div class="pf-row">🤖 <b>Unlimited AI Assistant</b> — no daily message limit</div>
         <div class="pf-row">📄 <b>Download Sets as PDF</b> — study offline, print anytime</div>
-        <div class="pf-row">📊 <b>Advanced Analytics</b> — deeper insights into your progress</div>
-        <div class="pf-row">🚫 <b>Ad-free experience</b> (once ads are added to the free version)</div>
       </div>
+      <p style="text-align:center; font-size:11.5px; color:var(--ink-soft); margin:-6px 0 14px;">See the full breakdown anytime in Profile → Free vs Premium</p>
 
       <button class="esewa-pay-btn" id="esewaPayBtn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
@@ -2788,6 +2793,39 @@
 
     const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
     return { allowed: daysSinceSignup <= 7 };
+  };
+
+  // ---- One-time feedback prompt — asked once, during the user's first ~10 days ----
+  window.maybeShowFeedbackPrompt = async function(){
+    const user = auth.currentUser;
+    if(!user) return;
+
+    const createdAt = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : null;
+    if(!createdAt) return;
+    const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    if(daysSinceSignup < 3 || daysSinceSignup > 10) return; // only ask within this window
+
+    try{
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      if(snap.exists() && snap.data().feedbackPromptShown) return; // already asked once
+
+      await setDoc(ref, { feedbackPromptShown: true }, { merge: true }); // mark shown first — even if they cancel, don't ask again
+
+      setTimeout(() => {
+        const liked = prompt('Quick question — what feature do you like most in Health Loksewa so far?');
+        const suggestion = prompt('And what would you suggest we improve?');
+        if(liked || suggestion){
+          setDoc(doc(db, 'feedback', user.uid + '_' + Date.now()), {
+            uid: user.uid,
+            email: user.email,
+            liked: liked || '',
+            suggestion: suggestion || '',
+            submittedAt: Date.now()
+          }).catch(() => {});
+        }
+      }, 600);
+    }catch(err){ /* fail silently — never block Profile from opening over this */ }
   };
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
@@ -3946,6 +3984,7 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   const isPremium = await refreshPremiumStatus();
   document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
   document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
+  maybeShowFeedbackPrompt();
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
@@ -4251,6 +4290,46 @@ document.getElementById('menuDeleteAccount').addEventListener('click', async () 
       alert('Could not delete your account right now. Please check your internet connection and try again, or email healthloksewa026@gmail.com for help.');
     }
   }
+});
+
+document.getElementById('menuFreeVsPremium').addEventListener('click', () => {
+  const row = (label, free, premium) => `
+    <tr>
+      <td style="padding:10px 8px; border-bottom:1px solid var(--line); font-size:13px;">${label}</td>
+      <td style="padding:10px 8px; border-bottom:1px solid var(--line); font-size:13px; text-align:center; color:var(--ink-soft);">${free}</td>
+      <td style="padding:10px 8px; border-bottom:1px solid var(--line); font-size:13px; text-align:center; color:var(--gold); font-weight:700;">${premium}</td>
+    </tr>`;
+
+  openLegalInfo('Free vs Premium', `
+    <p style="font-size:13px; color:var(--ink-soft); margin-bottom:14px;">Premium is NPR 200/month. Here's exactly what changes.</p>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="padding:8px; text-align:left; font-size:12px; color:var(--ink-soft); border-bottom:2px solid var(--line);">Feature</th>
+          <th style="padding:8px; text-align:center; font-size:12px; color:var(--ink-soft); border-bottom:2px solid var(--line);">Free</th>
+          <th style="padding:8px; text-align:center; font-size:12px; color:var(--gold); border-bottom:2px solid var(--line);">Premium</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${row('Mock Test', '2 ever + 1/week', 'Unlimited')}
+        ${row('Subject-wise Sets', '2 per subject', 'All Sets')}
+        ${row('Past Question papers', '2 total', 'Unlimited')}
+        ${row('Revision Mode', '7 days free', 'Always')}
+        ${row('Mnemonics', 'First 4', 'All')}
+        ${row('Weekly Tournament', 'Free', 'Free')}
+        ${row('Bookmarks', 'Free', 'Free')}
+        ${row('AI Assistant', '10 msgs/day', 'Unlimited')}
+        ${row('Download Sets as PDF', '—', '✓')}
+      </tbody>
+    </table>
+    <button id="freeVsPremiumUpgradeBtn" class="start-btn" style="width:100%; margin-top:18px;">💎 Upgrade to Premium</button>
+  `);
+
+  document.getElementById('freeVsPremiumUpgradeBtn').addEventListener('click', () => {
+    premiumBackTarget = legalInfoScreen;
+    showScreen(upgradeScreen);
+    renderPremiumStatus();
+  });
 });
 
 document.getElementById('menuMyDevices').addEventListener('click', () => {
