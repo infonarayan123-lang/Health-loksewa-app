@@ -1489,6 +1489,13 @@
             <div class="dc-sub" style="color:#D8CFC2;">Real papers from previous years</div>
           </div>
         </button>
+        <button class="dash-card c-mock" id="cardInterviewPrep">
+          <div class="dc-icon">🎤</div>
+          <div style="text-align:left;">
+            <div class="dc-label" style="color:#fff;">Interview Preparation</div>
+            <div class="dc-sub" style="color:#D8CFC2;">Objective + subjective practice</div>
+          </div>
+        </button>
         <button class="dash-card c-resources" id="cardResources">
           <div class="dc-icon">🌐</div>
           <div style="text-align:left;">
@@ -2145,6 +2152,30 @@
     <div class="home-body">
       <div class="section-title">📜 Past Questions — choose a paper</div>
       <div id="pastQuestionsYearList"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="interviewPrepScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">🎤 Interview Preparation</div>
+      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">Free for your first 3 days, then a Premium feature.</p>
+      <a class="link-card" href="#" id="goToInterviewObjective">
+        <div class="lc-text"><h4>📝 Objective Questions</h4><p>MCQ-style interview practice</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToInterviewSubjective">
+        <div class="lc-text"><h4>💬 Subjective Questions</h4><p>Tap a question to reveal a model answer</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="screen" id="interviewSubjectiveScreen">
+    <div class="back-link" data-back="interviewPrep">← Back</div>
+    <div class="home-body">
+      <div class="section-title">💬 Subjective Interview Questions</div>
+      <div id="interviewSubjectiveList"></div>
     </div>
   </div>
 
@@ -2828,6 +2859,21 @@
     }catch(err){ /* fail silently — never block Profile from opening over this */ }
   };
 
+  // ---- Interview Prep: free for the first 3 days after signup, then Premium ----
+  window.checkInterviewPrepAccess = async function(){
+    const user = auth.currentUser;
+    if(!user) return { allowed: true };
+
+    const isPremium = await window.checkPremiumStatus();
+    if(isPremium) return { allowed: true };
+
+    const createdAt = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : null;
+    if(!createdAt) return { allowed: true };
+
+    const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+    return { allowed: daysSinceSignup <= 3 };
+  };
+
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
   // ---- Toggle between Login and Register modes — shows/hides the extra fields ----
@@ -2954,7 +3000,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwgTgOYMGUQXqQGVHwryAHHf7B3STqiL3TW8tNwfESsBBaR2tBBc4kOruq_wqNdNDz53g/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxkNsqREqC0Ach0pv7fACuqQqw8CyVIPXl9fu4TK2jD8anDRiA6d1nOAIR7EBfiT2MZEg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -2982,6 +3028,8 @@ const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
 const myDevicesScreen = document.getElementById('myDevicesScreen');
+const interviewPrepScreen = document.getElementById('interviewPrepScreen');
+const interviewSubjectiveScreen = document.getElementById('interviewSubjectiveScreen');
 const upgradeScreen = document.getElementById('upgradeScreen');
 const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
@@ -3015,11 +3063,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, myDevicesScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, myDevicesScreen, interviewPrepScreen, interviewSubjectiveScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, interviewPrep: interviewPrepScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -6148,6 +6196,94 @@ document.getElementById('cardPastQuestions').addEventListener('click', () => {
   showScreen(pastQuestionsPostScreen);
   renderPastQuestionsPosts();
 });
+
+document.getElementById('cardInterviewPrep').addEventListener('click', async () => {
+  if(window.checkInterviewPrepAccess){
+    const access = await window.checkInterviewPrepAccess();
+    if(!access.allowed){
+      if(confirm('🎤 Your 3-day free trial of Interview Preparation has ended. Upgrade to Premium (NPR 200/month) to keep using it?')){
+        premiumBackTarget = homeScreen;
+        showScreen(upgradeScreen);
+        renderPremiumStatus();
+      }
+      return;
+    }
+  }
+  showScreen(interviewPrepScreen);
+});
+
+document.getElementById('goToInterviewObjective').addEventListener('click', (e) => {
+  e.preventDefault();
+  startInterviewObjective();
+});
+
+async function startInterviewObjective(){
+  currentSetInfo = null; // not Set-locked, same as Mock Test / Past Questions
+  currentMcqPost = 'pho'; // Interview content lives in the main PHO-bound Sheet
+  showQuizLoading('Please wait, loading interview questions… this may take a moment.');
+  try{
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent('Interview Objective')}&setNumber=1&setSize=200&post=pho`;
+    const res = await fetch(url);
+    const pool = await res.json();
+
+    if(pool.length === 0){
+      hideQuizLoading();
+      alert('No objective interview questions added yet.');
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = 75 * 60;
+    currentMarksPerQuestion = 1;
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    alert('Could not load interview questions. Please check your internet connection and try again.');
+  }
+}
+
+document.getElementById('goToInterviewSubjective').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(interviewSubjectiveScreen);
+  loadInterviewSubjective();
+});
+
+async function loadInterviewSubjective(){
+  const wrap = document.getElementById('interviewSubjectiveList');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=interviewSubjective`);
+    const rows = await res.json();
+
+    if(!Array.isArray(rows) || rows.length === 0){
+      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No subjective questions added yet — check back soon!</p>`;
+      return;
+    }
+
+    wrap.innerHTML = rows.map((r, i) => `
+      <div class="mnemonic-item interview-qa-item" data-index="${i}" style="cursor:pointer;">
+        <div class="mi-topic">❓ ${r.Question || ''}</div>
+        <div class="mi-explain" style="display:none;">💡 ${r.ModelAnswer || ''}</div>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.interview-qa-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const answer = item.querySelector('.mi-explain');
+        answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+  }catch(err){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load questions. Please check your connection.</p>`;
+  }
+}
 
 // ---------- Timer ----------
 function startTimer(){
