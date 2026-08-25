@@ -1607,6 +1607,7 @@
       <button class="profile-menu-item" id="menuTerms"><span class="pm-icon">📄</span> Terms and Conditions</button>
       <button class="profile-menu-item" id="menuDisclaimer"><span class="pm-icon">⚠️</span> Disclaimer</button>
       <button class="profile-menu-item" id="menuRefundPolicy"><span class="pm-icon">💳</span> Refund Policy</button>
+      <button class="profile-menu-item" id="menuMyDevices"><span class="pm-icon">📱</span> My Devices</button>
       <button class="profile-menu-item" id="menuDeleteAccount"><span class="pm-icon">🗑️</span> Delete Account</button>
       <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon">🚪</span> Logout</button>
     </div>
@@ -1618,6 +1619,16 @@
     <div class="home-body">
       <div class="section-title" id="legalInfoTitle"></div>
       <div id="legalInfoContent" class="legal-info-content"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="myDevicesScreen">
+    <div class="back-link" data-back="profile">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📱 My Devices</div>
+      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">Your account can be signed in on up to 2 devices, with only 1 active at a time. Logging in on a new device signs out the other one automatically.</p>
+      <div id="myDevicesList"></div>
+      <button id="logoutAllDevicesBtn" class="start-btn" style="width:100%; margin-top:16px; background:var(--crimson);">🚪 Logout All Devices</button>
     </div>
   </div>
 
@@ -2245,7 +2256,7 @@
     deleteUser, reauthenticateWithCredential, EmailAuthProvider
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
-    getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, orderBy, limit, getDocs, where
+    getFirestore, doc, setDoc, getDoc, deleteDoc, onSnapshot, collection, query, orderBy, limit, getDocs, where
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -2292,6 +2303,14 @@
 
   async function updateAuthUI(user){
     if(user){
+      const deviceCheck = await checkDeviceSlotAndRegister(user);
+      if(!deviceCheck.allowed){
+        alert('Account Restriction: Maximum 2 devices allowed. This is the 3rd device. Login not permitted.');
+        await signOut(auth);
+        return;
+      }
+      startDeviceSessionWatcher(user.uid);
+
       let name = user.displayName;
 
       // Safety net: if this account has no displayName saved (e.g. registered
@@ -2344,7 +2363,83 @@
     }
   });
 
+  // ---- Device limit: max 2 registered devices per account, 1 active session at a time ----
+  function getOrCreateDeviceId(){
+    let id = localStorage.getItem('hl_device_id');
+    if(!id){
+      id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+      try{ localStorage.setItem('hl_device_id', id); }catch(e){}
+    }
+    return id;
+  }
+
+  function getDeviceLabel(){
+    const ua = navigator.userAgent || '';
+    if(/android/i.test(ua)) return 'Android device';
+    if(/iphone|ipad/i.test(ua)) return 'iPhone / iPad';
+    if(/windows/i.test(ua)) return 'Windows PC';
+    if(/macintosh/i.test(ua)) return 'Mac';
+    return 'Unknown device';
+  }
+
+  // Called right after successful login. Registers this device if there's a free slot
+  // (max 2), refreshes it if already known, or blocks login if a genuinely different
+  // 3rd device tries to sign in. Fails open on any error — never locks someone out
+  // due to a network glitch.
+  async function checkDeviceSlotAndRegister(user){
+    const deviceId = getOrCreateDeviceId();
+    const ref = doc(db, 'users', user.uid);
+    try{
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {};
+      let devices = Array.isArray(data.registeredDevices) ? data.registeredDevices : [];
+
+      const existing = devices.find(d => d.id === deviceId);
+      if(existing){
+        existing.lastLoginAt = Date.now();
+        existing.label = getDeviceLabel();
+        await setDoc(ref, { registeredDevices: devices, activeDeviceId: deviceId }, { merge: true });
+        return { allowed: true };
+      }
+
+      if(devices.length < 2){
+        devices.push({ id: deviceId, label: getDeviceLabel(), lastLoginAt: Date.now() });
+        await setDoc(ref, { registeredDevices: devices, activeDeviceId: deviceId }, { merge: true });
+        return { allowed: true };
+      }
+
+      return { allowed: false }; // already 2 known devices, this is a different 3rd one
+    }catch(err){
+      return { allowed: true };
+    }
+  }
+
+  // Live-watches which device is "active." If another device logs in and takes over,
+  // this device's session ends automatically with a clear message — enforces "only
+  // 1 device active at a time" in real time, without needing to reopen the app.
+  let deviceSessionUnsub = null;
+  function startDeviceSessionWatcher(uid){
+    const deviceId = getOrCreateDeviceId();
+    const ref = doc(db, 'users', uid);
+    if(deviceSessionUnsub) deviceSessionUnsub();
+    deviceSessionUnsub = onSnapshot(ref, (snap) => {
+      if(!snap.exists()) return;
+      const activeId = snap.data().activeDeviceId;
+      if(activeId && activeId !== deviceId){
+        stopDeviceSessionWatcher();
+        alert('You\'ve been logged out because your account was used on another device.');
+        signOut(auth);
+      }
+    });
+  }
+  function stopDeviceSessionWatcher(){
+    if(deviceSessionUnsub){ deviceSessionUnsub(); deviceSessionUnsub = null; }
+  }
+  window.stopDeviceSessionWatcher = stopDeviceSessionWatcher;
+  window.getOrCreateDeviceId = getOrCreateDeviceId;
+
   window.doSignOut = async function(){
+    stopDeviceSessionWatcher();
     try{ await signOut(auth); }catch(err){}
   };
 
@@ -2848,6 +2943,7 @@ const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
+const myDevicesScreen = document.getElementById('myDevicesScreen');
 const upgradeScreen = document.getElementById('upgradeScreen');
 const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
@@ -2881,11 +2977,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, myDevicesScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -4154,6 +4250,71 @@ document.getElementById('menuDeleteAccount').addEventListener('click', async () 
     } else {
       alert('Could not delete your account right now. Please check your internet connection and try again, or email healthloksewa026@gmail.com for help.');
     }
+  }
+});
+
+document.getElementById('menuMyDevices').addEventListener('click', () => {
+  showScreen(myDevicesScreen);
+  renderMyDevices();
+});
+
+async function renderMyDevices(){
+  const user = auth.currentUser;
+  const wrap = document.getElementById('myDevicesList');
+  if(!user){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+
+  const thisDeviceId = getOrCreateDeviceId();
+  try{
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    const data = snap.exists() ? snap.data() : {};
+    const devices = Array.isArray(data.registeredDevices) ? data.registeredDevices : [];
+
+    if(devices.length === 0){
+      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No devices found.</p>`;
+      return;
+    }
+
+    wrap.innerHTML = devices.map(d => `
+      <div class="link-card" style="cursor:default;">
+        <div class="lc-text">
+          <h4>${d.label || 'Unknown device'} ${d.id === thisDeviceId ? '<span style="color:var(--correct); font-size:11px;">(this device)</span>' : ''}</h4>
+          <p>Last active: ${d.lastLoginAt ? new Date(d.lastLoginAt).toLocaleDateString() : 'Unknown'}</p>
+        </div>
+        <button class="remove-device-btn" data-device-id="${d.id}" style="background:var(--wrong-bg); color:var(--wrong); border:none; border-radius:8px; padding:7px 12px; font-size:12.5px; font-weight:600;">Remove</button>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.remove-device-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if(!confirm('Remove this device? It will need to log in again, and it will free up a device slot.')) return;
+        try{
+          const freshSnap = await getDoc(doc(db, 'users', user.uid));
+          const freshData = freshSnap.exists() ? freshSnap.data() : {};
+          const freshDevices = Array.isArray(freshData.registeredDevices) ? freshData.registeredDevices : [];
+          const updated = freshDevices.filter(d => d.id !== btn.dataset.deviceId);
+          await setDoc(doc(db, 'users', user.uid), { registeredDevices: updated }, { merge: true });
+          renderMyDevices();
+        }catch(err){
+          alert('Could not remove that device. Please check your connection and try again.');
+        }
+      });
+    });
+  }catch(err){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load your devices. Please check your connection.</p>`;
+  }
+}
+
+document.getElementById('logoutAllDevicesBtn').addEventListener('click', async () => {
+  const user = auth.currentUser;
+  if(!user) return;
+  if(!confirm('Logout all devices? Any other device using this account will be signed out immediately, and you\'ll need to log in again here too.')) return;
+  try{
+    await setDoc(doc(db, 'users', user.uid), { registeredDevices: [], activeDeviceId: null }, { merge: true });
+    stopDeviceSessionWatcher();
+    await signOut(auth);
+  }catch(err){
+    alert('Could not complete this right now. Please check your connection and try again.');
   }
 });
 
