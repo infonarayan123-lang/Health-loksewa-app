@@ -70,6 +70,7 @@
   }
   .theme-swatch.active{ border-color:var(--ink); }
 
+  html{ overscroll-behavior-y: contain; }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:var(--bg);
@@ -80,6 +81,7 @@
     justify-content:center;
     padding:0;
     -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y: contain;
   }
   #app{
     width:100%;
@@ -718,8 +720,13 @@
     padding:14px; margin-bottom:10px;
   }
   .bookmark-item .bq-subject{ font-size:11px; color:var(--gold); font-weight:700; text-transform:uppercase; margin-bottom:5px; }
-  .bookmark-item .bq-text{ font-size:13.5px; color:var(--ink); margin-bottom:8px; line-height:1.5; }
+  .bookmark-item .bq-text{ font-size:13.5px; color:var(--ink); margin-bottom:8px; line-height:1.5; cursor:pointer; }
   .bookmark-item .bq-answer{ font-size:12px; color:var(--correct); font-weight:600; margin-bottom:6px; }
+  .bq-expand-hint{ font-size:11px; color:var(--ink-soft); font-weight:400; font-style:italic; }
+  .bq-details{ margin:8px 0; padding-top:8px; border-top:1px dashed var(--line); }
+  .bq-option{ font-size:12.5px; color:var(--ink-soft); padding:4px 0; }
+  .bq-option-correct{ color:var(--correct); font-weight:700; }
+  .bq-explanation{ font-size:12px; color:var(--ink-soft); margin-top:8px; line-height:1.5; background:var(--bg); border-radius:8px; padding:8px; }
   .bookmark-remove-btn{
     font-size:11.5px; color:var(--wrong); background:none; border:none;
     font-weight:700; cursor:pointer; padding:0;
@@ -3816,17 +3823,46 @@ function renderBookmarks(){
     return;
   }
 
-  wrap.innerHTML = list.map((q, i) => `
-    <div class="bookmark-item">
-      <div class="bq-subject">${q.Subject || ''}${q.Chapter ? ' · ' + q.Chapter : ''}</div>
-      <div class="bq-text">${q.Question}</div>
-      <div class="bq-answer">✅ ${q.CorrectAnswer}: ${q['Option' + q.CorrectAnswer] || ''}</div>
+  wrap.innerHTML = list.map((q, i) => {
+    const metaBits = [];
+    if(q.Subject) metaBits.push(q.Subject);
+    if(q.Chapter) metaBits.push(q.Chapter);
+    if(q.ID) metaBits.push('Q.no ' + q.ID);
+    if(q.PastPaper) metaBits.push('📅 ' + q.PastPaper);
+    const metaLine = metaBits.join(' · ');
+
+    const optionsHtml = ['A','B','C','D'].map(letter => {
+      const isCorrect = q.CorrectAnswer === letter;
+      return `<div class="bq-option${isCorrect ? ' bq-option-correct' : ''}">${letter}. ${q['Option' + letter] || ''}${isCorrect ? ' ✅' : ''}</div>`;
+    }).join('');
+
+    return `
+    <div class="bookmark-item" data-index="${i}">
+      <div class="bq-subject">${metaLine}</div>
+      <div class="bq-text bookmark-toggle" data-index="${i}">${q.Question} <span class="bq-expand-hint">(tap to ${'{expand}'})</span></div>
+      <div class="bq-details" id="bqDetails${i}" style="display:none;">
+        ${optionsHtml}
+        ${q.Explanation ? `<div class="bq-explanation">💡 ${q.Explanation}</div>` : ''}
+      </div>
       <button class="bookmark-remove-btn" data-index="${i}">✕ Remove</button>
     </div>
-  `).join('');
+  `;
+  }).join('').replace(/\{expand\}/g, 'view');
+
+  document.querySelectorAll('.bookmark-toggle').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = el.dataset.index;
+      const details = document.getElementById('bqDetails' + idx);
+      const isOpen = details.style.display !== 'none';
+      details.style.display = isOpen ? 'none' : 'block';
+      const hint = el.querySelector('.bq-expand-hint');
+      if(hint) hint.textContent = isOpen ? '(tap to view)' : '(tap to hide)';
+    });
+  });
 
   document.querySelectorAll('.bookmark-remove-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const idx = parseInt(btn.dataset.index, 10);
       const current = getBookmarks();
       current.splice(idx, 1);
@@ -5364,7 +5400,7 @@ async function startPastQuestionPaper(paperName){
       return;
     }
 
-    quizQuestions = pool;
+    quizQuestions = pool.map(q => ({ ...q, PastPaper: paperName }));
     currentIndex = 0;
     answers = new Array(quizQuestions.length).fill(null);
     secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
@@ -5381,15 +5417,62 @@ async function startPastQuestionPaper(paperName){
   }
 }
 
+// Official marks each subject carries in the real written exam, per post — mirrors
+// POST_EXAM_DISTRIBUTION on the Apps Script side. Shown in brackets next to each subject
+// name on the Subject-wise MCQs picker, straight from each post's own verified syllabus.
+// A post/subject not listed here (PHO, BPH License, General Awareness/Public Management-less
+// posts, etc.) simply shows no bracket — nothing is guessed.
+const EXAM_MARKS_BY_POST = {
+  ha: {
+    "General Awareness": 10, "Public Management": 10,
+    "Public Health Programmes and Policy": 5, "Planning and Management": 2,
+    "Organizational Structure and Functions": 2, "Community Mobilization and Local Governance": 2,
+    "Epidemiology and Disease Control": 2, "Environmental Sanitation": 2, "Child Health": 2,
+    "General Medicine": 2, "First Aid and Emergency Management": 2, "Skin Diseases": 2,
+    "Elementary Surgery": 2, "Eye, Ear, Nose and Throat Diseases": 1,
+    "Oral Health and Mental Health": 1, "Reproductive Health": 2, "Acts and Regulations": 1
+  },
+  ahw: {
+    "General Awareness": 10, "Public Management": 10, "Anatomy and Physiology": 3,
+    "Health Education and Community Diagnosis": 2, "Community Health": 2,
+    "First Aid and Basic Medical Procedures": 2, "Vector Borne Diseases": 4,
+    "Maternal and Child Health, Family Planning and Nutrition": 2,
+    "Communicable Disease and Microbiology": 2, "Medicine": 5, "Surgery": 2,
+    "Pharmacy and Pharmacology": 2, "Health Culture and Communication": 2, "Health Management": 2
+  },
+  ha_license: {
+    "Anatomy and Physiology": 10, "Community Health": 25, "General Medicine": 25,
+    "Pharmacology and Pharmacy": 10, "General Surgery": 25, "Clinical Pathology": 5
+  },
+  sn: {
+    "General Awareness": 10, "Public Management": 10, "Fundamentals of Nursing": 4,
+    "Applied Science": 4, "Medical/Surgical Nursing": 6, "Community Health Nursing": 5,
+    "Midwifery": 3, "Nursing Care of Gynaecological Problems": 2, "Pediatric Nursing": 2,
+    "Mental Health": 2, "Leadership and Management in Nursing Planning": 2
+  },
+  anm: {
+    "General Awareness": 10, "Public Management": 10,
+    "Anatomy and Physiology (Structure and Functions)": 3, "Mechanism of the Different System": 3,
+    "Fundamentals of Nursing": 3, "Treatment of Simple Diseases and Disorders": 3,
+    "Community Health Nursing": 3, "Midwifery: Antenatal Care": 5,
+    "Midwifery: Intranatal Care (Labor)": 5, "Midwifery: Postnatal Care": 5
+  }
+};
+
 function renderSubjectPick(){
   // Purely instant — just names, no counts, no network call, no waiting.
+  const marksForThisPost = EXAM_MARKS_BY_POST[currentMcqPost] || {};
   const subjectsForThisPost = (KNOWN_SUBJECTS_BY_POST[currentMcqPost] || KNOWN_SUBJECTS).map(name => ({name}));
-  document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => `
+  document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => {
+    const marks = marksForThisPost[s.name];
+    const marksLabel = marks ? ` (${marks} marks)` : '';
+    return `
     <a class="link-card" href="#" data-subject="${s.name}">
-      <div class="lc-text"><h4>${s.name}</h4><p>Tap to begin</p></div>
+      <div class="lc-text"><h4>${s.name}${marksLabel}</h4><p>Tap to begin</p></div>
       <div class="lc-arrow">→</div>
     </a>
-  `).join('');
+  `;
+  }).join('');
 
   document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
