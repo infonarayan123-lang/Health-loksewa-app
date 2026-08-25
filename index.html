@@ -2817,7 +2817,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwgTgOYMGUQXqQGVHwryAHHf7B3STqiL3TW8tNwfESsBBaR2tBBc4kOruq_wqNdNDz53g/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxpKKywI691ebvFOv1utSJ9g5ydbRto0gdlC2wjOhJXcJYSaYE24QgfawQVEtTnqzBXiA/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -5048,12 +5048,57 @@ const KNOWN_SUBJECTS_AHW = [
   "Health Culture and Communication",
   "Health Management",
 ];
+// HA License (NHPC) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (100 MCQs, 1 mark each, from NHPC's licensing syllabus's own table).
+const KNOWN_SUBJECTS_HA_LICENSE = [
+  "All Subjects (Mixed)",
+  "Anatomy and Physiology",
+  "Community Health",
+  "General Medicine",
+  "Pharmacology and Pharmacy",
+  "General Surgery",
+  "Clinical Pathology",
+];
+// Staff Nurse (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified
+// official weighted distribution (50 MCQs, 2 marks each).
+const KNOWN_SUBJECTS_SN = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Fundamentals of Nursing",
+  "Applied Science",
+  "Medical/Surgical Nursing",
+  "Community Health Nursing",
+  "Midwifery",
+  "Nursing Care of Gynaecological Problems",
+  "Pediatric Nursing",
+  "Mental Health",
+  "Leadership and Management in Nursing Planning",
+];
+// ANM (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (50 MCQs, 2 marks each).
+const KNOWN_SUBJECTS_ANM = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology (Structure and Functions)",
+  "Mechanism of the Different System",
+  "Fundamentals of Nursing",
+  "Treatment of Simple Diseases and Disorders",
+  "Community Health Nursing",
+  "Midwifery: Antenatal Care",
+  "Midwifery: Intranatal Care (Labor)",
+  "Midwifery: Postnatal Care",
+];
 // Lookup used by renderSubjectPick — add a new post's array here (and above) whenever a new
 // post gets its own Sheet, instead of growing a long if/else chain.
 const KNOWN_SUBJECTS_BY_POST = {
   ha: KNOWN_SUBJECTS_HA,
   bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
   ahw: KNOWN_SUBJECTS_AHW,
+  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
+  sn: KNOWN_SUBJECTS_SN,
+  anm: KNOWN_SUBJECTS_ANM,
 };
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
@@ -5077,10 +5122,10 @@ let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
 const MCQ_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 function renderMcqPosts(){
@@ -5114,20 +5159,20 @@ function renderMcqPosts(){
 const TOURNAMENT_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
 const MOCK_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7", questionCount:50, marksEach:2},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
@@ -5210,10 +5255,10 @@ async function startMockTest(post){
 const PAST_QUESTIONS_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📄", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📄", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
