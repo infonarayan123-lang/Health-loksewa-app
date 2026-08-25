@@ -5519,6 +5519,22 @@ async function startPastQuestionPaper(paperName){
 // A post/subject not listed here (PHO, BPH License, General Awareness/Public Management-less
 // posts, etc.) simply shows no bracket — nothing is guessed.
 const EXAM_MARKS_BY_POST = {
+  // Verified from the Federal PSC (Nepal) "Public Health Officer" syllabus — Paper I, 100 MCQs,
+  // 1 mark each. Names match this post's existing 12 subject tabs exactly.
+  pho: {
+    "Health and Public Health": 5,
+    "Health Planning and Management": 20,
+    "General Epidemiology": 10,
+    "Health Statistics": 5,
+    "Demography": 5,
+    "Applied Epidemiology and Disease Control": 20,
+    "Food and Nutrition": 5,
+    "Environmental Health": 5,
+    "Occupational Health": 5,
+    "Health Education and Promotion": 10,
+    "PHC, EHCS and MDGs": 5,
+    "International Health": 5
+  },
   ha: {
     "General Awareness": 10, "Public Management": 10,
     "Public Health Programmes and Policy": 5, "Planning and Management": 2,
