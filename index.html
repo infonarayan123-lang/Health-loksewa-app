@@ -70,6 +70,7 @@
   }
   .theme-swatch.active{ border-color:var(--ink); }
 
+  html{ overscroll-behavior-y: contain; }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:var(--bg);
@@ -80,6 +81,7 @@
     justify-content:center;
     padding:0;
     -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y: contain;
   }
   #app{
     width:100%;
@@ -718,8 +720,13 @@
     padding:14px; margin-bottom:10px;
   }
   .bookmark-item .bq-subject{ font-size:11px; color:var(--gold); font-weight:700; text-transform:uppercase; margin-bottom:5px; }
-  .bookmark-item .bq-text{ font-size:13.5px; color:var(--ink); margin-bottom:8px; line-height:1.5; }
+  .bookmark-item .bq-text{ font-size:13.5px; color:var(--ink); margin-bottom:8px; line-height:1.5; cursor:pointer; }
   .bookmark-item .bq-answer{ font-size:12px; color:var(--correct); font-weight:600; margin-bottom:6px; }
+  .bq-expand-hint{ font-size:11px; color:var(--ink-soft); font-weight:400; font-style:italic; }
+  .bq-details{ margin:8px 0; padding-top:8px; border-top:1px dashed var(--line); }
+  .bq-option{ font-size:12.5px; color:var(--ink-soft); padding:4px 0; }
+  .bq-option-correct{ color:var(--correct); font-weight:700; }
+  .bq-explanation{ font-size:12px; color:var(--ink-soft); margin-top:8px; line-height:1.5; background:var(--bg); border-radius:8px; padding:8px; }
   .bookmark-remove-btn{
     font-size:11.5px; color:var(--wrong); background:none; border:none;
     font-weight:700; cursor:pointer; padding:0;
@@ -891,6 +898,38 @@
   }
   .profile-menu-item.logout{ color:var(--wrong); }
   .pm-icon{ font-size:17px; width:22px; text-align:center; }
+
+  .profile-accordion{ border-bottom:1px solid var(--line); margin-bottom:10px; padding-bottom:6px; }
+  .profile-accordion summary{
+    font-size:13.5px; font-weight:700; color:var(--ink); cursor:pointer;
+    padding:10px 4px; list-style:none; display:flex; align-items:center; justify-content:space-between;
+  }
+  .profile-accordion summary::-webkit-details-marker{ display:none; }
+  .profile-accordion summary::after{ content:'⌄'; font-size:16px; color:var(--ink-soft); transition:transform 0.2s; }
+  .profile-accordion[open] summary::after{ transform:rotate(180deg); }
+  .profile-accordion-body{ padding:4px 4px 8px; }
+  .profile-subrow{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px solid var(--line);
+  }
+  .profile-subrow:last-child{ border-bottom:none; }
+  .profile-subrow-block{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .psr-label{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:2px; }
+  .psr-sub{ font-size:11px; color:var(--ink-soft); }
+  .lang-btn{
+    padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--panel);
+    color:var(--ink); font-size:12.5px; font-weight:700; cursor:pointer; margin-left:6px;
+  }
+  .lang-btn.active{ background:var(--navy,#1B3B6F); color:#fff; border-color:var(--navy,#1B3B6F); }
+  .home-premium-upsell{
+    font-style:italic; font-size:12.5px; text-align:center; padding:8px 12px;
+    background:linear-gradient(90deg, var(--gold,#D4A94E), #E8C77A); color:#1B1B1B;
+    border-radius:10px; margin:10px 0; cursor:pointer;
+  }
+  .home-premium-pro{
+    font-size:12.5px; font-weight:700; text-align:center; padding:8px 12px;
+    background:var(--navy,#1B3B6F); color:#fff; border-radius:10px; margin:10px 0;
+  }
 
   .account-bar{ margin-bottom:16px; }
   .signin-btn{
@@ -1342,6 +1381,11 @@
 </head>
 <body>
 <div id="app">
+<div id="pullRefreshIndicator" style="position:fixed; top:0; left:50%; transform:translate(-50%,-40px); opacity:0; z-index:9999; background:var(--panel); color:var(--ink); font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:0 0 12px 12px; box-shadow:0 2px 8px rgba(0,0,0,0.15); transition:opacity 0.2s, transform 0.2s; pointer-events:none;">🔄 Refreshing…</div>
+<div id="installBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998; background:var(--navy,#1B3B6F); color:#fff; font-size:12.5px; padding:10px 14px; align-items:center; gap:10px; box-shadow:0 -2px 8px rgba(0,0,0,0.2);">
+  <span style="flex:1;">📲 For a full-screen view with no browser bar, add Health Loksewa to your Home Screen (menu → "Add to Home screen").</span>
+  <button id="installBannerDismiss" style="background:none; border:1px solid rgba(255,255,255,0.4); color:#fff; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700;">Got it</button>
+</div>
 
   <!-- HOME DASHBOARD -->
   <!-- LOGIN / SPLASH SCREEN (required before Home) -->
@@ -1420,6 +1464,9 @@
         </div>
       </div>
 
+      <!-- PREMIUM UPSELL / STATUS BANNER -->
+      <div id="homePremiumBanner" style="display:none;"></div>
+
       <!-- LIVE CLOCK: date, day, and ticking time (updates every second) -->
       <div class="live-clock-line" id="liveClockLine">Loading…</div>
 
@@ -1487,13 +1534,6 @@
           <div style="text-align:left;">
             <div class="dc-label" style="color:#fff;">Past Questions</div>
             <div class="dc-sub" style="color:#D8CFC2;">Real papers from previous years</div>
-          </div>
-        </button>
-        <button class="dash-card c-mock" id="cardInterviewPrep">
-          <div class="dc-icon">🎤</div>
-          <div style="text-align:left;">
-            <div class="dc-label" style="color:#fff;">Interview Preparation</div>
-            <div class="dc-sub" style="color:#D8CFC2;">Objective + subjective practice</div>
           </div>
         </button>
         <button class="dash-card c-resources" id="cardResources">
@@ -1587,54 +1627,72 @@
       <button class="upgrade-btn" id="upgradeNowBtn">Upgrade Now</button>
     </div>
     <div class="profile-menu">
-      <div style="font-size:13px; font-weight:800; color:var(--navy); margin:6px 4px 10px;">⚙️ SETTINGS</div>
-      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
-        <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🌗 App Theme</div>
-        <div class="font-size-row" id="appearanceModeRow"></div>
-      </div>
-      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
-        <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎨 Color Theme</div>
-        <div class="theme-swatches" id="themeSwatches"></div>
-      </div>
-      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
-        <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🔡 Font Size</div>
-        <div class="font-size-row" id="fontSizeRow"></div>
-      </div>
-      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div style="font-size:13px; font-weight:700; color:var(--ink);">♿ High Contrast Mode</div>
-          <div style="font-size:11px; color:var(--ink-soft);">Maximum contrast for better visibility</div>
-        </div>
-        <button class="font-size-btn" id="highContrastToggle" style="flex:none; width:52px;">OFF</button>
-      </div>
-      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div style="font-size:13px; font-weight:700; color:var(--ink);">🌐 Language</div>
-          <div style="font-size:11px; color:var(--ink-soft);">Coming soon — English only for now</div>
-        </div>
-      </div>
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
         <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎯 Which exam are you preparing for?</div>
         <div id="examTypeRow"></div>
       </div>
 
-      <div style="font-size:13px; font-weight:800; color:var(--navy); margin:14px 4px 10px;">🔐 ACCOUNT &amp; SECURITY</div>
-      <button class="profile-menu-item" id="menuMyDevices"><span class="pm-icon">📱</span> My Devices</button>
-      <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon">🔑</span> Change Password</button>
-      <button class="profile-menu-item" id="menuFreeVsPremium"><span class="pm-icon">💎</span> Free vs Premium</button>
-      <button class="profile-menu-item" id="menuDeleteAccount"><span class="pm-icon">🗑️</span> Delete Account</button>
+      <details class="profile-accordion" id="accDisplay">
+        <summary>🎨 Display &amp; Appearance</summary>
+        <div class="profile-accordion-body">
+          <div class="profile-subrow">
+            <div>
+              <div class="psr-label">🌐 Language</div>
+              <div class="psr-sub">App stays in English for now — Nepali display coming later</div>
+            </div>
+            <div id="languageRow"></div>
+          </div>
+          <div class="profile-subrow-block">
+            <div class="psr-label">🎨 App Theme</div>
+            <div class="theme-swatches" id="themeSwatches"></div>
+          </div>
+          <div class="profile-subrow">
+            <div><div class="psr-label">🌙 Dark Mode</div></div>
+            <button class="font-size-btn" id="profileDarkModeToggle" style="flex:none; width:52px;">OFF</button>
+          </div>
+          <div class="profile-subrow-block">
+            <div class="psr-label">🔡 Font Size</div>
+            <div class="font-size-row" id="fontSizeRow"></div>
+          </div>
+          <div class="profile-subrow">
+            <div>
+              <div class="psr-label">♿ High Contrast Mode</div>
+              <div class="psr-sub">Maximum contrast for better visibility</div>
+            </div>
+            <button class="font-size-btn" id="highContrastToggle" style="flex:none; width:52px;">OFF</button>
+          </div>
+        </div>
+      </details>
 
-      <div style="font-size:13px; font-weight:800; color:var(--navy); margin:14px 4px 10px;">💬 SUPPORT &amp; ABOUT</div>
-      <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon">📞</span> Help &amp; Support</button>
-      <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon">💬</span> Feedback</button>
-      <button class="profile-menu-item" id="menuRateUs"><span class="pm-icon">⭐</span> Rate Us</button>
-      <button class="profile-menu-item" id="menuShareApp"><span class="pm-icon">📤</span> Share App</button>
-      <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon">ℹ️</span> About Us</button>
-      <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon">🔒</span> Privacy Policy</button>
-      <button class="profile-menu-item" id="menuTerms"><span class="pm-icon">📄</span> Terms and Conditions</button>
-      <button class="profile-menu-item" id="menuDisclaimer"><span class="pm-icon">⚠️</span> Disclaimer</button>
-      <button class="profile-menu-item" id="menuRefundPolicy"><span class="pm-icon">💳</span> Refund Policy</button>
-      <div class="profile-menu-item" style="opacity:0.7; cursor:default;"><span class="pm-icon">🏷️</span> App Version <span style="margin-left:auto; color:var(--ink-soft); font-size:12px;">1.0.0</span></div>
+      <details class="profile-accordion" id="accSecurity">
+        <summary>🔐 Account and Security</summary>
+        <div class="profile-accordion-body">
+          <div class="profile-subrow">
+            <div>
+              <div class="psr-label">📱 My Device</div>
+              <div class="psr-sub" id="myDeviceCountLabel">Checking…</div>
+            </div>
+          </div>
+          <button class="profile-menu-item" id="menuLogoutThisDevice"><span class="pm-icon">🚪</span> Logout This Device</button>
+          <button class="profile-menu-item" id="menuLogoutOtherDevices"><span class="pm-icon">📵</span> Logout All Other Devices</button>
+          <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon">🔑</span> Change Password</button>
+          <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong);"><span class="pm-icon">⚠️</span> Delete Account</button>
+        </div>
+      </details>
+
+      <details class="profile-accordion" id="accSupport">
+        <summary>ℹ️ Support and About</summary>
+        <div class="profile-accordion-body">
+          <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon">📞</span> Contact Us</button>
+          <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon">ℹ️</span> About Us</button>
+          <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon">💬</span> Feedback</button>
+          <button class="profile-menu-item" id="menuRateUs"><span class="pm-icon">⭐</span> Rate Us</button>
+          <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon">🔒</span> Privacy Policy</button>
+          <button class="profile-menu-item" id="menuTerms"><span class="pm-icon">📄</span> Terms and Conditions</button>
+        </div>
+      </details>
+
+      <div id="appVersionLine" style="text-align:center; padding:18px 4px 6px; font-size:11.5px; color:var(--ink-soft);">Health Loksewa</div>
       <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon">🚪</span> Logout</button>
     </div>
   </div>
@@ -1648,16 +1706,6 @@
     </div>
   </div>
 
-  <div class="screen" id="myDevicesScreen">
-    <div class="back-link" data-back="profile">← Back</div>
-    <div class="home-body">
-      <div class="section-title">📱 My Devices</div>
-      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">Your account can be signed in on up to 2 devices, with only 1 active at a time. Logging in on a new device signs out the other one automatically.</p>
-      <div id="myDevicesList"></div>
-      <button id="logoutAllDevicesBtn" class="start-btn" style="width:100%; margin-top:16px; background:var(--crimson);">🚪 Logout All Devices</button>
-    </div>
-  </div>
-
   <!-- PREMIUM UPGRADE SCREEN -->
   <div class="screen" id="upgradeScreen">
     <div class="back-link" data-back="premiumBack">← Back</div>
@@ -1665,23 +1713,19 @@
       <div class="premium-hero">
         <div style="font-size:34px; margin-bottom:8px;">💎</div>
         <h2>Health Loksewa Premium</h2>
-        <p>NPR 299 / month</p>
+        <p>NPR 200 / month</p>
       </div>
 
       <div class="premium-features">
-        <div class="pf-row">🏆 <b>Unlimited Mock Tests</b> — free tier gets 2 ever + 1/week</div>
-        <div class="pf-row">📚 <b>All Sets unlocked</b> — free tier gets Sets 1-2 per subject only</div>
-        <div class="pf-row">📜 <b>Unlimited Past Question papers</b> — free tier gets 2 papers total</div>
-        <div class="pf-row">🔄 <b>Revision Mode</b> — free only for your first 7 days</div>
-        <div class="pf-row">🧩 <b>All Mnemonics unlocked</b> — free tier gets the first 4</div>
         <div class="pf-row">🤖 <b>Unlimited AI Assistant</b> — no daily message limit</div>
         <div class="pf-row">📄 <b>Download Sets as PDF</b> — study offline, print anytime</div>
+        <div class="pf-row">📊 <b>Advanced Analytics</b> — deeper insights into your progress</div>
+        <div class="pf-row">🚫 <b>Ad-free experience</b> (once ads are added to the free version)</div>
       </div>
-      <p style="text-align:center; font-size:11.5px; color:var(--ink-soft); margin:-6px 0 14px;">See the full breakdown anytime in Profile → Free vs Premium</p>
 
       <button class="esewa-pay-btn" id="esewaPayBtn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
-        Pay NPR 299 with eSewa
+        Pay NPR 200 with eSewa
       </button>
       <p id="esewaPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 16px;"></p>
 
@@ -1690,7 +1734,7 @@
         <div class="content-card" style="margin-top:10px;">
           <h4 style="margin-bottom:10px;">👉 Manual activation</h4>
           <ol style="padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink);">
-            <li>Send <b>NPR 299</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
+            <li>Send <b>NPR 200</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
             <li>Take a screenshot of your payment confirmation</li>
             <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
             <li>Your account will be manually activated within 24 hours</li>
@@ -2173,35 +2217,12 @@
     </div>
   </div>
 
-  <div class="screen" id="interviewPrepScreen">
-    <div class="back-link" data-back="home">← Back to Home</div>
-    <div class="home-body">
-      <div class="section-title">🎤 Interview Preparation</div>
-      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">Free for your first 3 days, then a Premium feature.</p>
-      <a class="link-card" href="#" id="goToInterviewObjective">
-        <div class="lc-text"><h4>📝 Objective Questions</h4><p>MCQ-style interview practice</p></div>
-        <div class="lc-arrow">→</div>
-      </a>
-      <a class="link-card" href="#" id="goToInterviewSubjective">
-        <div class="lc-text"><h4>💬 Subjective Questions</h4><p>Tap a question to reveal a model answer</p></div>
-        <div class="lc-arrow">→</div>
-      </a>
-    </div>
-  </div>
-
-  <div class="screen" id="interviewSubjectiveScreen">
-    <div class="back-link" data-back="interviewPrep">← Back</div>
-    <div class="home-body">
-      <div class="section-title">💬 Subjective Interview Questions</div>
-      <div id="interviewSubjectiveList"></div>
-    </div>
-  </div>
-
   <!-- SET SELECTION SCREEN (Subject-wise MCQs step 2) -->
   <div class="screen" id="setSelectScreen">
     <div class="back-link" data-back="setSelectBack">← Back</div>
     <div class="home-body">
       <div class="section-title" id="setSelectTitle">Sets</div>
+      <p id="setSelectMarksLine" style="font-size:12.5px; color:var(--gold); font-weight:700; margin-bottom:4px; display:none;"></p>
       <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Each set has 50 questions. Complete a set to unlock the next one.</p>
       <div id="certificateBanner"></div>
       <div id="setSelectList"></div>
@@ -2305,12 +2326,12 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
-    getAuth, signOut, onAuthStateChanged, updateProfile,
-    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
-    deleteUser, reauthenticateWithCredential, EmailAuthProvider
+    getAuth, signOut, onAuthStateChanged, updateProfile, deleteUser,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
-    getFirestore, doc, setDoc, getDoc, deleteDoc, onSnapshot, collection, query, orderBy, limit, getDocs, where
+    getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
+    deleteDoc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -2327,6 +2348,22 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   let isRegisterMode = false;
+
+  // Expose to the rest of the app (outside this module script) — used by Profile's
+  // My Device, Change Password, and Delete Account features.
+  window.hlFirestore = db;
+  window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp };
+  window.hlSignOut = () => signOut(auth);
+  window.hlSendPasswordReset = (email) => sendPasswordResetEmail(auth, email);
+  window.hlDeleteAccount = async () => {
+    const user = auth.currentUser;
+    if(!user) throw new Error('Not logged in');
+    // Best-effort cleanup of this user's own Firestore profile doc before deleting the
+    // account itself — leaderboard/tournament entries are left as historical records,
+    // matching how the rest of the app already treats them.
+    try{ await deleteDoc(doc(db, 'users', user.uid)); }catch(e){}
+    await deleteUser(user); // throws if Firebase requires a recent re-login — caller shows a friendly message
+  };
 
   function showLoginError(msg){
     const errBox = document.getElementById('loginError');
@@ -2356,15 +2393,8 @@
   }
 
   async function updateAuthUI(user){
+    window.currentUser = user || null;
     if(user){
-      const deviceCheck = await checkDeviceSlotAndRegister(user);
-      if(!deviceCheck.allowed){
-        alert('Account Restriction: Maximum 2 devices allowed. This is the 3rd device. Login not permitted.');
-        await signOut(auth);
-        return;
-      }
-      startDeviceSessionWatcher(user.uid);
-
       let name = user.displayName;
 
       // Safety net: if this account has no displayName saved (e.g. registered
@@ -2387,6 +2417,7 @@
         }));
       }catch(e){}
       window.showScreen(window.homeScreen);
+      if(window.renderHomePremiumBanner) window.renderHomePremiumBanner();
       if(window.checkForEsewaReturnAndActivate) window.checkForEsewaReturnAndActivate();
     } else {
       try{ localStorage.removeItem('hl_user'); }catch(e){}
@@ -2417,83 +2448,7 @@
     }
   });
 
-  // ---- Device limit: max 2 registered devices per account, 1 active session at a time ----
-  function getOrCreateDeviceId(){
-    let id = localStorage.getItem('hl_device_id');
-    if(!id){
-      id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
-      try{ localStorage.setItem('hl_device_id', id); }catch(e){}
-    }
-    return id;
-  }
-
-  function getDeviceLabel(){
-    const ua = navigator.userAgent || '';
-    if(/android/i.test(ua)) return 'Android device';
-    if(/iphone|ipad/i.test(ua)) return 'iPhone / iPad';
-    if(/windows/i.test(ua)) return 'Windows PC';
-    if(/macintosh/i.test(ua)) return 'Mac';
-    return 'Unknown device';
-  }
-
-  // Called right after successful login. Registers this device if there's a free slot
-  // (max 2), refreshes it if already known, or blocks login if a genuinely different
-  // 3rd device tries to sign in. Fails open on any error — never locks someone out
-  // due to a network glitch.
-  async function checkDeviceSlotAndRegister(user){
-    const deviceId = getOrCreateDeviceId();
-    const ref = doc(db, 'users', user.uid);
-    try{
-      const snap = await getDoc(ref);
-      const data = snap.exists() ? snap.data() : {};
-      let devices = Array.isArray(data.registeredDevices) ? data.registeredDevices : [];
-
-      const existing = devices.find(d => d.id === deviceId);
-      if(existing){
-        existing.lastLoginAt = Date.now();
-        existing.label = getDeviceLabel();
-        await setDoc(ref, { registeredDevices: devices, activeDeviceId: deviceId }, { merge: true });
-        return { allowed: true };
-      }
-
-      if(devices.length < 2){
-        devices.push({ id: deviceId, label: getDeviceLabel(), lastLoginAt: Date.now() });
-        await setDoc(ref, { registeredDevices: devices, activeDeviceId: deviceId }, { merge: true });
-        return { allowed: true };
-      }
-
-      return { allowed: false }; // already 2 known devices, this is a different 3rd one
-    }catch(err){
-      return { allowed: true };
-    }
-  }
-
-  // Live-watches which device is "active." If another device logs in and takes over,
-  // this device's session ends automatically with a clear message — enforces "only
-  // 1 device active at a time" in real time, without needing to reopen the app.
-  let deviceSessionUnsub = null;
-  function startDeviceSessionWatcher(uid){
-    const deviceId = getOrCreateDeviceId();
-    const ref = doc(db, 'users', uid);
-    if(deviceSessionUnsub) deviceSessionUnsub();
-    deviceSessionUnsub = onSnapshot(ref, (snap) => {
-      if(!snap.exists()) return;
-      const activeId = snap.data().activeDeviceId;
-      if(activeId && activeId !== deviceId){
-        stopDeviceSessionWatcher();
-        alert('You\'ve been logged out because your account was used on another device.');
-        signOut(auth);
-      }
-    });
-  }
-  function stopDeviceSessionWatcher(){
-    if(deviceSessionUnsub){ deviceSessionUnsub(); deviceSessionUnsub = null; }
-  }
-  window.stopDeviceSessionWatcher = stopDeviceSessionWatcher;
-  window.getOrCreateDeviceId = getOrCreateDeviceId;
-
   window.doSignOut = async function(){
-    stopDeviceSessionWatcher();
     try{ await signOut(auth); }catch(err){}
   };
 
@@ -2844,54 +2799,6 @@
     return { allowed: daysSinceSignup <= 7 };
   };
 
-  // ---- One-time feedback prompt — asked once, during the user's first ~10 days ----
-  window.maybeShowFeedbackPrompt = async function(){
-    const user = auth.currentUser;
-    if(!user) return;
-
-    const createdAt = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : null;
-    if(!createdAt) return;
-    const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-    if(daysSinceSignup < 3 || daysSinceSignup > 10) return; // only ask within this window
-
-    try{
-      const ref = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      if(snap.exists() && snap.data().feedbackPromptShown) return; // already asked once
-
-      await setDoc(ref, { feedbackPromptShown: true }, { merge: true }); // mark shown first — even if they cancel, don't ask again
-
-      setTimeout(() => {
-        const liked = prompt('Quick question — what feature do you like most in Health Loksewa so far?');
-        const suggestion = prompt('And what would you suggest we improve?');
-        if(liked || suggestion){
-          setDoc(doc(db, 'feedback', user.uid + '_' + Date.now()), {
-            uid: user.uid,
-            email: user.email,
-            liked: liked || '',
-            suggestion: suggestion || '',
-            submittedAt: Date.now()
-          }).catch(() => {});
-        }
-      }, 600);
-    }catch(err){ /* fail silently — never block Profile from opening over this */ }
-  };
-
-  // ---- Interview Prep: free for the first 3 days after signup, then Premium ----
-  window.checkInterviewPrepAccess = async function(){
-    const user = auth.currentUser;
-    if(!user) return { allowed: true };
-
-    const isPremium = await window.checkPremiumStatus();
-    if(isPremium) return { allowed: true };
-
-    const createdAt = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : null;
-    if(!createdAt) return { allowed: true };
-
-    const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-    return { allowed: daysSinceSignup <= 3 };
-  };
-
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
   // ---- Toggle between Login and Register modes — shows/hides the extra fields ----
@@ -3018,7 +2925,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxkNsqREqC0Ach0pv7fACuqQqw8CyVIPXl9fu4TK2jD8anDRiA6d1nOAIR7EBfiT2MZEg/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwo-N13zRSL2Slhf95e7tU9oNOTOQmWo6BPr1WeGVs6Pns-NuOHKMKopZh5QNAjWaUpKw/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -3045,9 +2952,6 @@ const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
-const myDevicesScreen = document.getElementById('myDevicesScreen');
-const interviewPrepScreen = document.getElementById('interviewPrepScreen');
-const interviewSubjectiveScreen = document.getElementById('interviewSubjectiveScreen');
 const upgradeScreen = document.getElementById('upgradeScreen');
 const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
@@ -3081,11 +2985,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, myDevicesScreen, interviewPrepScreen, interviewSubjectiveScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, interviewPrep: interviewPrepScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -3094,12 +2998,103 @@ let legalInfoBackTarget = profileScreen;
 let premiumBackTarget = profileScreen;
 let studyGroupsBackTarget = studyGroupsScreen;
 
+// ---------- Home Screen install nudge: the browser's own address bar (showing the
+// domain, e.g. "...github.io") can ONLY be removed by opening the app from a Home
+// Screen icon or the installed APK — no code inside this page can hide a real browser's
+// chrome. This banner nudges people toward that, instead of promising something impossible. ----------
+(function setupInstallBanner(){
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const dismissed = localStorage.getItem('hl_install_banner_dismissed') === '1';
+  const banner = document.getElementById('installBanner');
+  if(!isStandalone && !dismissed && banner){
+    banner.style.display = 'flex';
+  }
+  const dismissBtn = document.getElementById('installBannerDismiss');
+  if(dismissBtn){
+    dismissBtn.addEventListener('click', () => {
+      localStorage.setItem('hl_install_banner_dismissed', '1');
+      banner.style.display = 'none';
+    });
+  }
+})();
+
 function showScreen(el){
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
   el.classList.add('active');
   window.scrollTo(0,0);
   updateBottomNav(el);
 }
+
+// ---------- Custom pull-to-refresh: swipe down at the top of a screen refreshes THAT
+// screen's own data in place — never navigates away, never resets to Home. Screens not
+// listed here (quiz, results, login, etc.) simply do nothing on pull-down — safe no-op. ----------
+const SCREEN_REFRESH_MAP = {
+  homeScreen: () => { if(window.loadQuestionOfDay) loadQuestionOfDay(); if(window.loadExamDates) loadExamDates(); if(window.loadNotifications) loadNotifications(); if(window.renderCarousel) renderCarousel(); if(window.renderHomePremiumBanner) renderHomePremiumBanner(); },
+  currentAffairsScreen: () => renderCurrentAffairs(),
+  syllabusScreen: () => renderSyllabusPosts(),
+  gkScreen: () => renderGkCategories(),
+  progressScreen: () => renderProgressScreen(),
+  leaderboardScreen: () => renderLeaderboard(),
+  bookmarksScreen: () => renderBookmarks(),
+  notesScreen: () => renderNotes(),
+  reminderScreen: () => renderReminderSettings(),
+  revisionScreen: () => renderRevisionSummary(),
+  notificationsScreen: () => loadNotifications(),
+  studyGroupsScreen: () => renderMyGroups(),
+  tournamentPostScreen: () => renderTournamentPosts(),
+  tournamentScreen: () => renderTournamentScreen(),
+  formulaScreen: () => renderFormulas(''),
+  mnemonicsScreen: () => renderMnemonics(''),
+  healthDaysScreen: () => renderHealthDays(''),
+  faqsScreen: () => renderFaqs(),
+  videoScreen: () => renderVideoLessons(),
+  studyResourcesScreen: () => loadStudyResourcesData(),
+  mcqPostScreen: () => renderMcqPosts(),
+  mockPostScreen: () => renderMockPosts(),
+  pastQuestionsPostScreen: () => renderPastQuestionsPosts(),
+  pastQuestionsYearScreen: () => loadPastQuestionsList(currentMcqPost),
+  subjectPickScreen: () => renderSubjectPick(),
+};
+
+(function setupPullToRefresh(){
+  let startY = 0;
+  let pulling = false;
+  const indicator = document.getElementById('pullRefreshIndicator');
+
+  document.addEventListener('touchstart', (e) => {
+    if(window.scrollY > 0) { pulling = false; return; }
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if(!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if(dy > 0 && indicator){
+      const pct = Math.min(dy / 80, 1);
+      indicator.style.opacity = pct;
+      indicator.style.transform = `translateY(${Math.min(dy * 0.4, 32) - 40}px)`;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if(!pulling) return;
+    pulling = false;
+    const dy = (e.changedTouches[0].clientY - startY);
+    if(indicator){ indicator.style.opacity = 0; indicator.style.transform = 'translateY(-40px)'; }
+    if(dy > 70){
+      const activeScreen = document.querySelector('.screen.active');
+      const refreshFn = activeScreen && SCREEN_REFRESH_MAP[activeScreen.id];
+      if(refreshFn){
+        if(indicator){ indicator.textContent = '🔄 Refreshing…'; indicator.style.opacity = 1; indicator.style.transform = 'translateY(8px)'; }
+        try{ refreshFn(); }catch(e){}
+        setTimeout(() => { if(indicator){ indicator.style.opacity = 0; indicator.style.transform = 'translateY(-40px)'; indicator.textContent = '🔄 Refreshing…'; } }, 700);
+      }
+      // If this screen has no refresh mapping, we simply do nothing — never fall back to
+      // a hard reload or Home, since that's exactly the behavior this feature replaces.
+    }
+  }, { passive: true });
+})();
 
 const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, quizScreen]; // full-focus screens, no bottom nav
 function updateBottomNav(activeScreen){
@@ -3702,7 +3697,7 @@ function renderMnemonics(searchTerm){
   document.querySelectorAll('[data-locked-mnemonic]').forEach(item => {
     item.style.cursor = 'pointer';
     item.addEventListener('click', () => {
-      if(confirm('🧩 The first 4 Mnemonics are free. Upgrade to Premium (NPR 299/month) to unlock the rest?')){
+      if(confirm('🧩 The first 4 Mnemonics are free. Upgrade to Premium (NPR 200/month) to unlock the rest?')){
         premiumBackTarget = mnemonicsScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -3762,7 +3757,7 @@ document.getElementById('goToRevision').addEventListener('click', async (e) => {
   if(window.checkRevisionAccess){
     const access = await window.checkRevisionAccess();
     if(!access.allowed){
-      if(confirm('🔄 Your 7-day free trial of Revision Mode has ended. Upgrade to Premium (NPR 299/month) to keep using it?')){
+      if(confirm('🔄 Your 7-day free trial of Revision Mode has ended. Upgrade to Premium (NPR 200/month) to keep using it?')){
         premiumBackTarget = progressScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -4020,17 +4015,46 @@ function renderBookmarks(){
     return;
   }
 
-  wrap.innerHTML = list.map((q, i) => `
-    <div class="bookmark-item">
-      <div class="bq-subject">${q.Subject || ''}${q.Chapter ? ' · ' + q.Chapter : ''}</div>
-      <div class="bq-text">${q.Question}</div>
-      <div class="bq-answer">✅ ${q.CorrectAnswer}: ${q['Option' + q.CorrectAnswer] || ''}</div>
+  wrap.innerHTML = list.map((q, i) => {
+    const metaBits = [];
+    if(q.Subject) metaBits.push(q.Subject);
+    if(q.Chapter) metaBits.push(q.Chapter);
+    if(q.ID) metaBits.push('Q.no ' + q.ID);
+    if(q.PastPaper) metaBits.push('📅 ' + q.PastPaper);
+    const metaLine = metaBits.join(' · ');
+
+    const optionsHtml = ['A','B','C','D'].map(letter => {
+      const isCorrect = q.CorrectAnswer === letter;
+      return `<div class="bq-option${isCorrect ? ' bq-option-correct' : ''}">${letter}. ${q['Option' + letter] || ''}${isCorrect ? ' ✅' : ''}</div>`;
+    }).join('');
+
+    return `
+    <div class="bookmark-item" data-index="${i}">
+      <div class="bq-subject">${metaLine}</div>
+      <div class="bq-text bookmark-toggle" data-index="${i}">${q.Question} <span class="bq-expand-hint">(tap to ${'{expand}'})</span></div>
+      <div class="bq-details" id="bqDetails${i}" style="display:none;">
+        ${optionsHtml}
+        ${q.Explanation ? `<div class="bq-explanation">💡 ${q.Explanation}</div>` : ''}
+      </div>
       <button class="bookmark-remove-btn" data-index="${i}">✕ Remove</button>
     </div>
-  `).join('');
+  `;
+  }).join('').replace(/\{expand\}/g, 'view');
+
+  document.querySelectorAll('.bookmark-toggle').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = el.dataset.index;
+      const details = document.getElementById('bqDetails' + idx);
+      const isOpen = details.style.display !== 'none';
+      details.style.display = isOpen ? 'none' : 'block';
+      const hint = el.querySelector('.bq-expand-hint');
+      if(hint) hint.textContent = isOpen ? '(tap to view)' : '(tap to hide)';
+    });
+  });
 
   document.querySelectorAll('.bookmark-remove-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const idx = parseInt(btn.dataset.index, 10);
       const current = getBookmarks();
       current.splice(idx, 1);
@@ -4041,17 +4065,39 @@ function renderBookmarks(){
 }
 
 // ---------- Header bar: profile / notifications / dark mode ----------
+// ---------- Home Premium banner: italic upsell for Free users, PRO badge for Premium users ----------
+async function renderHomePremiumBanner(){
+  const banner = document.getElementById('homePremiumBanner');
+  if(!banner) return;
+  const isPremium = await refreshPremiumStatus();
+  banner.style.display = 'block';
+  if(isPremium){
+    banner.className = 'home-premium-pro';
+    banner.innerHTML = '💎 PRO — Thank you for supporting Health Loksewa!';
+    banner.onclick = null;
+  } else {
+    banner.className = 'home-premium-upsell';
+    banner.innerHTML = '✨ Unlock unlimited AI help, PDF downloads & more — tap to go Premium';
+    banner.onclick = () => {
+      premiumBackTarget = homeScreen;
+      showScreen(upgradeScreen);
+      renderPremiumStatus();
+    };
+  }
+}
+
 document.getElementById('headerProfileBtn').addEventListener('click', async () => {
   showScreen(profileScreen);
-  renderAppearanceModePicker();
   renderThemeSwatches();
   renderFontSizePicker();
   renderExamTypePicker();
   renderHighContrastToggle();
+  renderLanguagePicker();
+  renderProfileDarkModeToggle();
+  refreshMyDeviceSection();
   const isPremium = await refreshPremiumStatus();
   document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
   document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
-  maybeShowFeedbackPrompt();
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
@@ -4107,7 +4153,7 @@ document.getElementById('esewaPayBtn').addEventListener('click', async () => {
   statusEl.textContent = 'Connecting to eSewa…';
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=299`);
+    const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=200`);
     const fields = await res.json();
 
     if(!fields.payment_url){
@@ -4284,309 +4330,18 @@ document.getElementById('menuTerms').addEventListener('click', () => {
   `);
 });
 
-document.getElementById('menuDisclaimer').addEventListener('click', () => {
-  openLegalInfo('Disclaimer', `
-    <p style="color:var(--ink-soft); font-size:12px;">Last updated: August 2026</p>
-    <p>Health Loksewa is an independent educational app built to help students prepare for Nepal government Loksewa health service examinations.</p>
-    <h3>Not an Official Government App</h3>
-    <p>Health Loksewa is <b>not affiliated with, endorsed by, or officially connected to</b> the Public Service Commission (Lok Sewa Aayog), the Ministry of Health and Population, or any Government of Nepal body. Any resemblance to official exam names, syllabi, or posts is for educational reference only.</p>
-    <h3>No Guarantee of Exam Success</h3>
-    <p>Practicing with this app does not guarantee passing any real examination. Real exam questions, patterns, and syllabi may change without notice. Always verify important information against official PSC publications and notices.</p>
-    <h3>Content Accuracy</h3>
-    <p>We make reasonable efforts to keep MCQs, explanations, and reference material accurate and up to date, but errors can occur. If you spot one, please report it via Feedback so we can correct it.</p>
-    <h3>Contact</h3>
-    <p><a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>
-  `);
-});
-
-document.getElementById('menuRefundPolicy').addEventListener('click', () => {
-  openLegalInfo('Refund Policy', `
-    <p style="color:var(--ink-soft); font-size:12px;">Last updated: August 2026</p>
-    <p>This policy covers Health Loksewa Premium subscription payments made via eSewa.</p>
-    <h3>General Policy</h3>
-    <p>Premium subscription payments are generally <b>non-refundable</b> once your Premium access has been activated, since digital content is unlocked immediately upon payment.</p>
-    <h3>When a Refund May Be Considered</h3>
-    <ul>
-      <li>You were charged but Premium access was never activated on your account</li>
-      <li>You were charged twice for the same subscription period by mistake</li>
-      <li>A genuine technical error on our end prevented you from using the app you paid for</li>
-    </ul>
-    <h3>How to Request</h3>
-    <p>Email <a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a> within 3 days of the payment, including your account email and the eSewa transaction ID. We review each request individually and respond within a few days.</p>
-    <h3>Subscription Cancellation</h3>
-    <p>You can stop paying anytime — your Premium access simply continues until the end of the period you already paid for, then reverts to the Free tier. There's no automatic recurring billing to cancel, since each payment is a one-time manual eSewa transfer.</p>
-  `);
-});
-
-document.getElementById('menuDeleteAccount').addEventListener('click', () => {
-  const user = auth.currentUser;
-  if(!user){ alert('Please log in first.'); return; }
-
-  const reasons = [
-    'Too expensive',
-    'Not enough content for my exam',
-    'Found a better app',
-    'Just taking a break',
-    'Other'
-  ];
-
-  openLegalInfo('Delete Account', `
-    <p style="color:var(--wrong); font-weight:600; font-size:13.5px;">⚠️ This will permanently delete your account, progress, bookmarks, notes, and Premium status. This cannot be undone.</p>
-    <p style="font-size:13px; color:var(--ink-soft); margin:14px 0 8px;">Before you go, please tell us why you're leaving:</p>
-    <div id="deleteReasonList"></div>
-  `);
-
-  document.getElementById('deleteReasonList').innerHTML = reasons.map(r => `
-    <button class="delete-reason-btn" data-reason="${r}" style="display:block; width:100%; text-align:left; padding:12px 14px; margin-bottom:8px; background:var(--panel); border:1px solid var(--line); border-radius:10px; font-size:13.5px; color:var(--ink);">${r}</button>
-  `).join('');
-
-  document.querySelectorAll('.delete-reason-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      let reason = btn.dataset.reason;
-      if(reason === 'Other'){
-        const detail = prompt('Please tell us more (optional):');
-        if(detail) reason = 'Other: ' + detail;
-      }
-
-      try{
-        await setDoc(doc(db, 'feedback', user.uid + '_delete_' + Date.now()), {
-          uid: user.uid,
-          email: user.email,
-          type: 'account_deletion',
-          reason: reason,
-          submittedAt: Date.now()
-        });
-      }catch(e){ /* continue even if saving the reason fails — never block deletion over this */ }
-
-      proceedWithAccountDeletion(user);
-    });
-  });
-});
-
-async function proceedWithAccountDeletion(user){
-  const step1 = confirm(
-    '⚠️ Final confirmation — delete your Health Loksewa account?\n\n' +
-    'This CANNOT be undone.\n\n' +
-    'Tap OK to continue, or Cancel to keep your account.'
-  );
-  if(!step1) return;
-
-  const provider = user.providerData && user.providerData[0] ? user.providerData[0].providerId : '';
-
-  if(provider === 'google.com'){
-    alert('Your account uses Google Sign-In. For security, please email healthloksewa026@gmail.com from this account\'s email address to request deletion — we\'ll process it within a few days.');
-    return;
-  }
-
-  const password = prompt('For your security, please re-enter your password to confirm account deletion:');
-  if(!password) return;
-
-  try{
-    const credential = EmailAuthProvider.credential(user.email, password);
-    await reauthenticateWithCredential(user, credential);
-
-    try{ await deleteDoc(doc(db, 'users', user.uid)); }catch(e){ /* continue even if this fails */ }
-
-    await deleteUser(user);
-
-    alert('Your account has been permanently deleted. Thank you for using Health Loksewa.');
-    location.reload();
-  }catch(err){
-    if(err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'){
-      alert('Incorrect password. Account deletion cancelled — nothing was deleted.');
-    } else {
-      alert('Could not delete your account right now. Please check your internet connection and try again, or email healthloksewa026@gmail.com for help.');
-    }
-  }
-}
-
-
-document.getElementById('menuFreeVsPremium').addEventListener('click', () => {
-  const row = (label, free, premium) => `
-    <tr>
-      <td style="padding:10px 8px; border-bottom:1px solid var(--line); font-size:13px;">${label}</td>
-      <td style="padding:10px 8px; border-bottom:1px solid var(--line); font-size:13px; text-align:center; color:var(--ink-soft);">${free}</td>
-      <td style="padding:10px 8px; border-bottom:1px solid var(--line); font-size:13px; text-align:center; color:var(--gold); font-weight:700;">${premium}</td>
-    </tr>`;
-
-  openLegalInfo('Free vs Premium', `
-    <p style="font-size:13px; color:var(--ink-soft); margin-bottom:14px;">Premium is NPR 299/month. Here's exactly what changes.</p>
-    <table style="width:100%; border-collapse:collapse;">
-      <thead>
-        <tr>
-          <th style="padding:8px; text-align:left; font-size:12px; color:var(--ink-soft); border-bottom:2px solid var(--line);">Feature</th>
-          <th style="padding:8px; text-align:center; font-size:12px; color:var(--ink-soft); border-bottom:2px solid var(--line);">Free</th>
-          <th style="padding:8px; text-align:center; font-size:12px; color:var(--gold); border-bottom:2px solid var(--line);">Premium</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${row('Mock Test', '2 ever + 1/week', 'Unlimited')}
-        ${row('Subject-wise Sets', '2 per subject', 'All Sets')}
-        ${row('Past Question papers', '2 total', 'Unlimited')}
-        ${row('Revision Mode', '7 days free', 'Always')}
-        ${row('Mnemonics', 'First 4', 'All')}
-        ${row('Weekly Tournament', 'Free', 'Free')}
-        ${row('Bookmarks', 'Free', 'Free')}
-        ${row('AI Assistant', '10 msgs/day', 'Unlimited')}
-        ${row('Download Sets as PDF', '—', '✓')}
-      </tbody>
-    </table>
-    <button id="freeVsPremiumUpgradeBtn" class="start-btn" style="width:100%; margin-top:18px;">💎 Upgrade to Premium</button>
-  `);
-
-  document.getElementById('freeVsPremiumUpgradeBtn').addEventListener('click', () => {
-    premiumBackTarget = legalInfoScreen;
-    showScreen(upgradeScreen);
-    renderPremiumStatus();
-  });
-});
-
-document.getElementById('menuChangePassword').addEventListener('click', async () => {
-  const user = auth.currentUser;
-  if(!user || !user.email){ alert('Please log in first.'); return; }
-
-  const provider = user.providerData && user.providerData[0] ? user.providerData[0].providerId : '';
-  if(provider === 'google.com'){
-    alert('Your account uses Google Sign-In, so there\'s no separate Health Loksewa password to change — manage it through your Google Account settings instead.');
-    return;
-  }
-
-  if(!confirm('We\'ll send a password reset link to ' + user.email + '. Continue?')) return;
-
-  try{
-    await sendPasswordResetEmail(auth, user.email);
-    alert('✅ Password reset email sent to ' + user.email + '. Check your inbox (and spam folder) for the link.');
-  }catch(err){
-    alert('Could not send the reset email right now. Please check your connection and try again.');
-  }
-});
-
-document.getElementById('menuShareApp').addEventListener('click', async () => {
-  const shareData = {
-    title: 'Health Loksewa',
-    text: 'Preparing for a Nepal Health Service Loksewa exam? Check out Health Loksewa for MCQ practice, Mock Tests, and Past Questions!',
-    url: 'https://infonarayan123-lang.github.io/Health-loksewa-app/'
-  };
-  if(navigator.share){
-    try{ await navigator.share(shareData); }catch(e){ /* user cancelled the share sheet — not an error */ }
-  } else {
-    try{
-      await navigator.clipboard.writeText(shareData.text + ' ' + shareData.url);
-      alert('📋 App link copied! Paste it anywhere to share.');
-    }catch(e){
-      alert('Share this link: ' + shareData.url);
-    }
-  }
-});
-
-document.getElementById('menuMyDevices').addEventListener('click', () => {
-  showScreen(myDevicesScreen);
-  renderMyDevices();
-});
-
-async function renderMyDevices(){
-  const user = auth.currentUser;
-  const wrap = document.getElementById('myDevicesList');
-  if(!user){ wrap.innerHTML = ''; return; }
-  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
-
-  const thisDeviceId = getOrCreateDeviceId();
-  try{
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    const data = snap.exists() ? snap.data() : {};
-    const devices = Array.isArray(data.registeredDevices) ? data.registeredDevices : [];
-
-    if(devices.length === 0){
-      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No devices found.</p>`;
-      return;
-    }
-
-    wrap.innerHTML = devices.map(d => `
-      <div class="link-card" style="cursor:default;">
-        <div class="lc-text">
-          <h4>${d.label || 'Unknown device'} ${d.id === thisDeviceId ? '<span style="color:var(--correct); font-size:11px;">(this device)</span>' : ''}</h4>
-          <p>Last active: ${d.lastLoginAt ? new Date(d.lastLoginAt).toLocaleDateString() : 'Unknown'}</p>
-        </div>
-        <button class="remove-device-btn" data-device-id="${d.id}" style="background:var(--wrong-bg); color:var(--wrong); border:none; border-radius:8px; padding:7px 12px; font-size:12.5px; font-weight:600;">Remove</button>
-      </div>
-    `).join('');
-
-    document.querySelectorAll('.remove-device-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if(!confirm('Remove this device? It will need to log in again, and it will free up a device slot.')) return;
-        try{
-          const freshSnap = await getDoc(doc(db, 'users', user.uid));
-          const freshData = freshSnap.exists() ? freshSnap.data() : {};
-          const freshDevices = Array.isArray(freshData.registeredDevices) ? freshData.registeredDevices : [];
-          const updated = freshDevices.filter(d => d.id !== btn.dataset.deviceId);
-          await setDoc(doc(db, 'users', user.uid), { registeredDevices: updated }, { merge: true });
-          renderMyDevices();
-        }catch(err){
-          alert('Could not remove that device. Please check your connection and try again.');
-        }
-      });
-    });
-  }catch(err){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load your devices. Please check your connection.</p>`;
-  }
-}
-
-document.getElementById('logoutAllDevicesBtn').addEventListener('click', async () => {
-  const user = auth.currentUser;
-  if(!user) return;
-  if(!confirm('Logout all devices? Any other device using this account will be signed out immediately, and you\'ll need to log in again here too.')) return;
-  try{
-    await setDoc(doc(db, 'users', user.uid), { registeredDevices: [], activeDeviceId: null }, { merge: true });
-    stopDeviceSessionWatcher();
-    await signOut(auth);
-  }catch(err){
-    alert('Could not complete this right now. Please check your connection and try again.');
-  }
-});
-
 // ---------- Dark mode ----------
-function applyAppearanceMode(){
-  let mode = localStorage.getItem('hl_appearance_mode');
-  if(!mode){
-    // Migrate from the old binary dark-mode setting, if present
-    const oldDark = localStorage.getItem('hl_dark_mode');
-    mode = oldDark === '1' ? 'dark' : (oldDark === '0' ? 'light' : 'system');
-    try{ localStorage.setItem('hl_appearance_mode', mode); }catch(e){}
-  }
-  const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = mode === 'dark' || (mode === 'system' && systemPrefersDark);
+function applyDarkModePreference(){
+  const isDark = localStorage.getItem('hl_dark_mode') === '1';
   document.body.classList.toggle('dark-mode', isDark);
   document.getElementById('headerDarkBtn').textContent = isDark ? '☀️' : '🌙';
-  return mode;
 }
 document.getElementById('headerDarkBtn').addEventListener('click', () => {
-  // Quick header toggle just flips between light/dark directly (system mode lives in Settings)
-  const currentlyDark = document.body.classList.contains('dark-mode');
-  const newMode = currentlyDark ? 'light' : 'dark';
-  try{ localStorage.setItem('hl_appearance_mode', newMode); }catch(e){}
-  applyAppearanceMode();
-  renderAppearanceModePicker();
+  const isDark = document.body.classList.toggle('dark-mode');
+  document.getElementById('headerDarkBtn').textContent = isDark ? '☀️' : '🌙';
+  try{ localStorage.setItem('hl_dark_mode', isDark ? '1' : '0'); }catch(e){}
 });
-applyAppearanceMode();
-
-const APPEARANCE_MODES = [
-  { key:'light', label:'☀️ Light' },
-  { key:'dark', label:'🌙 Dark' },
-  { key:'system', label:'⚙️ System' },
-];
-function renderAppearanceModePicker(){
-  const active = localStorage.getItem('hl_appearance_mode') || 'system';
-  document.getElementById('appearanceModeRow').innerHTML = APPEARANCE_MODES.map(m => `
-    <button class="font-size-btn ${m.key === active ? 'active' : ''}" data-mode="${m.key}">${m.label}</button>
-  `).join('');
-  document.querySelectorAll('#appearanceModeRow .font-size-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      try{ localStorage.setItem('hl_appearance_mode', btn.dataset.mode); }catch(e){}
-      applyAppearanceMode();
-      renderAppearanceModePicker();
-    });
-  });
-}
+applyDarkModePreference();
 
 // ---------- Theme Colors: Navy (default), Forest, Purple, Sunset ----------
 const APP_THEMES = [
@@ -4698,6 +4453,157 @@ document.getElementById('highContrastToggle').addEventListener('click', () => {
   const currentlyOn = document.body.classList.contains('high-contrast');
   try{ localStorage.setItem('hl_high_contrast', currentlyOn ? '0' : '1'); }catch(e){}
   renderHighContrastToggle();
+});
+
+// ---------- Language preference (stored only — app itself stays in English for now) ----------
+const LANGUAGE_OPTIONS = [ { key: 'en', label: 'English' }, { key: 'ne', label: 'नेपाली' } ];
+function renderLanguagePicker(){
+  let active = 'en';
+  try{ active = localStorage.getItem('hl_language') || 'en'; }catch(e){}
+  document.getElementById('languageRow').innerHTML = LANGUAGE_OPTIONS.map(l => `
+    <button class="lang-btn ${l.key === active ? 'active' : ''}" data-lang="${l.key}">${l.label}</button>
+  `).join('');
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      try{ localStorage.setItem('hl_language', btn.dataset.lang); }catch(e){}
+      renderLanguagePicker();
+      if(btn.dataset.lang === 'ne'){
+        alert('नेपाली भाषा प्राथमिकता सुरक्षित गरियो। हाल एप अंग्रेजीमा नै देखिन्छ — पूर्ण नेपाली अनुवाद चाँडै आउँदैछ।\n\n(Nepali preference saved. The app still displays in English for now — full Nepali translation is coming soon.)');
+      }
+    });
+  });
+}
+renderLanguagePicker();
+
+// ---------- Dark Mode toggle, inside Profile (kept in sync with the Home header's toggle) ----------
+function renderProfileDarkModeToggle(){
+  const isDark = document.body.classList.contains('dark-mode');
+  const btn = document.getElementById('profileDarkModeToggle');
+  btn.textContent = isDark ? 'ON' : 'OFF';
+  btn.classList.toggle('active', isDark);
+}
+document.getElementById('profileDarkModeToggle').addEventListener('click', () => {
+  const isDark = document.body.classList.toggle('dark-mode');
+  try{ localStorage.setItem('hl_dark_mode', isDark ? '1' : '0'); }catch(e){}
+  const headerBtn = document.getElementById('headerDarkBtn');
+  if(headerBtn) headerBtn.textContent = isDark ? '☀️' : '🌙';
+  renderProfileDarkModeToggle();
+});
+
+// ---------- App Version ----------
+const APP_VERSION = '1.0.0';
+document.getElementById('appVersionLine').textContent = `Health Loksewa v${APP_VERSION}`;
+
+// ---------- My Device: lightweight multi-device awareness using Firestore ----------
+// Each device gets a random ID (kept in localStorage) and writes/refreshes a small doc under
+// users/{uid}/devices/{deviceId} whenever the Profile screen opens. "Logout All Other Devices"
+// deletes every OTHER device's doc; each device checks (on Profile open) whether its own doc
+// still exists, and signs itself out locally if it's been removed. This isn't instant on other
+// devices — it takes effect next time that device opens the Profile screen or reloads — but it
+// needs no separate backend server, since everything here already runs through Firebase.
+function getDeviceId(){
+  let id = null;
+  try{ id = localStorage.getItem('hl_device_id'); }catch(e){}
+  if(!id){
+    id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    try{ localStorage.setItem('hl_device_id', id); }catch(e){}
+  }
+  return id;
+}
+function getDeviceLabel(){
+  const ua = navigator.userAgent || '';
+  let os = 'Unknown device';
+  if(/Android/i.test(ua)) os = 'Android';
+  else if(/iPhone|iPad|iPod/i.test(ua)) os = 'iPhone/iPad';
+  else if(/Windows/i.test(ua)) os = 'Windows';
+  else if(/Mac/i.test(ua)) os = 'Mac';
+  else if(/Linux/i.test(ua)) os = 'Linux';
+  let browser = 'Browser';
+  if(/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome';
+  else if(/Firefox/i.test(ua)) browser = 'Firefox';
+  else if(/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+  else if(/Edg/i.test(ua)) browser = 'Edge';
+  return `${os} · ${browser}`;
+}
+async function refreshMyDeviceSection(){
+  const label = document.getElementById('myDeviceCountLabel');
+  if(!window.currentUser || !window.hlFirestore){ label.textContent = ''; return; }
+  const deviceId = getDeviceId();
+  try{
+    const { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp } = window.hlFirestoreFns;
+    const db = window.hlFirestore;
+    const uid = window.currentUser.uid;
+
+    // Register/refresh THIS device
+    await setDoc(doc(db, 'users', uid, 'devices', deviceId), {
+      label: getDeviceLabel(),
+      lastActive: serverTimestamp()
+    }, { merge: true });
+
+    // Check whether this device was remotely logged out (its doc got deleted elsewhere)
+    const selfSnap = await getDoc(doc(db, 'users', uid, 'devices', deviceId));
+    if(!selfSnap.exists()){
+      alert('You were logged out from another device.');
+      if(window.hlSignOut) window.hlSignOut();
+      return;
+    }
+
+    // Count total devices
+    const allSnap = await getDocs(collection(db, 'users', uid, 'devices'));
+    const count = allSnap.size;
+    label.textContent = `${count} device${count === 1 ? '' : 's'} currently signed in`;
+  }catch(e){
+    label.textContent = '';
+  }
+}
+document.getElementById('menuLogoutThisDevice').addEventListener('click', () => {
+  if(confirm('Log out this device now?')){
+    if(window.hlSignOut) window.hlSignOut();
+  }
+});
+document.getElementById('menuLogoutOtherDevices').addEventListener('click', async () => {
+  if(!window.currentUser || !window.hlFirestore) return;
+  if(!confirm('This will sign out every OTHER device using this account (not this one). Those devices will be logged out the next time they open the app. Continue?')) return;
+  try{
+    const { doc, collection, getDocs, deleteDoc } = window.hlFirestoreFns;
+    const db = window.hlFirestore;
+    const uid = window.currentUser.uid;
+    const deviceId = getDeviceId();
+    const allSnap = await getDocs(collection(db, 'users', uid, 'devices'));
+    const deletions = [];
+    allSnap.forEach(d => {
+      if(d.id !== deviceId) deletions.push(deleteDoc(doc(db, 'users', uid, 'devices', d.id)));
+    });
+    await Promise.all(deletions);
+    alert('Done — all other devices will be signed out next time they open the app.');
+    refreshMyDeviceSection();
+  }catch(e){
+    alert('Could not complete this action. Please check your connection and try again.');
+  }
+});
+
+// ---------- Change Password ----------
+document.getElementById('menuChangePassword').addEventListener('click', async () => {
+  if(!window.currentUser || !window.currentUser.email){ alert('Could not find your account email.'); return; }
+  if(!confirm(`Send a password reset link to ${window.currentUser.email}?`)) return;
+  try{
+    if(window.hlSendPasswordReset) await window.hlSendPasswordReset(window.currentUser.email);
+    alert('Password reset email sent — check your inbox.');
+  }catch(e){
+    alert('Could not send the reset email right now. Please try again shortly.');
+  }
+});
+
+// ---------- Delete Account ----------
+document.getElementById('menuDeleteAccount').addEventListener('click', async () => {
+  const typed = prompt('This permanently deletes your account and cannot be undone.\n\nType DELETE (in capitals) to confirm:');
+  if(typed !== 'DELETE') return;
+  try{
+    if(window.hlDeleteAccount) await window.hlDeleteAccount();
+    alert('Your account has been deleted.');
+  }catch(e){
+    alert('Could not delete your account right now — you may need to log in again first, then retry. Please try again, or contact support if this keeps happening.');
+  }
 });
 applyHighContrastPreference(); // apply immediately on app load
 
@@ -5545,12 +5451,57 @@ const KNOWN_SUBJECTS_AHW = [
   "Health Culture and Communication",
   "Health Management",
 ];
+// HA License (NHPC) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (100 MCQs, 1 mark each, from NHPC's licensing syllabus's own table).
+const KNOWN_SUBJECTS_HA_LICENSE = [
+  "All Subjects (Mixed)",
+  "Anatomy and Physiology",
+  "Community Health",
+  "General Medicine",
+  "Pharmacology and Pharmacy",
+  "General Surgery",
+  "Clinical Pathology",
+];
+// Staff Nurse (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified
+// official weighted distribution (50 MCQs, 2 marks each).
+const KNOWN_SUBJECTS_SN = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Fundamentals of Nursing",
+  "Applied Science",
+  "Medical/Surgical Nursing",
+  "Community Health Nursing",
+  "Midwifery",
+  "Nursing Care of Gynaecological Problems",
+  "Pediatric Nursing",
+  "Mental Health",
+  "Leadership and Management in Nursing Planning",
+];
+// ANM (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (50 MCQs, 2 marks each).
+const KNOWN_SUBJECTS_ANM = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology (Structure and Functions)",
+  "Mechanism of the Different System",
+  "Fundamentals of Nursing",
+  "Treatment of Simple Diseases and Disorders",
+  "Community Health Nursing",
+  "Midwifery: Antenatal Care",
+  "Midwifery: Intranatal Care (Labor)",
+  "Midwifery: Postnatal Care",
+];
 // Lookup used by renderSubjectPick — add a new post's array here (and above) whenever a new
 // post gets its own Sheet, instead of growing a long if/else chain.
 const KNOWN_SUBJECTS_BY_POST = {
   ha: KNOWN_SUBJECTS_HA,
   bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
   ahw: KNOWN_SUBJECTS_AHW,
+  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
+  sn: KNOWN_SUBJECTS_SN,
+  anm: KNOWN_SUBJECTS_ANM,
 };
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
@@ -5574,10 +5525,10 @@ let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
 const MCQ_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 function renderMcqPosts(){
@@ -5611,20 +5562,20 @@ function renderMcqPosts(){
 const TOURNAMENT_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
 const MOCK_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📜", css:"gk-c7", questionCount:50, marksEach:2},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
@@ -5664,7 +5615,7 @@ async function startMockTest(post){
   if(window.checkAndIncrementMockTestUsage){
     const usage = await window.checkAndIncrementMockTestUsage();
     if(!usage.allowed){
-      if(confirm('🏆 You\'ve used your free Mock Test for this week. Upgrade to Premium (NPR 299/month) for unlimited Mock Tests?')){
+      if(confirm('🏆 You\'ve used your free Mock Test for this week. Upgrade to Premium (NPR 200/month) for unlimited Mock Tests?')){
         premiumBackTarget = mockPostScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -5707,10 +5658,10 @@ async function startMockTest(post){
 const PAST_QUESTIONS_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:false, icon:"💉", css:"gk-c3"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
   {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:false, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:false, icon:"📄", css:"gk-c7"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📄", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 
@@ -5795,7 +5746,7 @@ async function startPastQuestionPaper(paperName){
   if(window.checkAndRecordPastQuestionAccess){
     const usage = await window.checkAndRecordPastQuestionAccess(paperName);
     if(!usage.allowed){
-      if(confirm('📜 You\'ve used your 2 free Past Question papers. Upgrade to Premium (NPR 299/month) for unlimited access?')){
+      if(confirm('📜 You\'ve used your 2 free Past Question papers. Upgrade to Premium (NPR 200/month) for unlimited access?')){
         premiumBackTarget = pastQuestionsYearScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -5816,7 +5767,7 @@ async function startPastQuestionPaper(paperName){
       return;
     }
 
-    quizQuestions = pool;
+    quizQuestions = pool.map(q => ({ ...q, PastPaper: paperName }));
     currentIndex = 0;
     answers = new Array(quizQuestions.length).fill(null);
     secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
@@ -5833,15 +5784,78 @@ async function startPastQuestionPaper(paperName){
   }
 }
 
+// Official marks each subject carries in the real written exam, per post — mirrors
+// POST_EXAM_DISTRIBUTION on the Apps Script side. Shown in brackets next to each subject
+// name on the Subject-wise MCQs picker, straight from each post's own verified syllabus.
+// A post/subject not listed here (PHO, BPH License, General Awareness/Public Management-less
+// posts, etc.) simply shows no bracket — nothing is guessed.
+const EXAM_MARKS_BY_POST = {
+  // Verified from the Federal PSC (Nepal) "Public Health Officer" syllabus — Paper I, 100 MCQs,
+  // 1 mark each. Names match this post's existing 12 subject tabs exactly.
+  pho: {
+    "Health and Public Health": 5,
+    "Health Planning and Management": 20,
+    "General Epidemiology": 10,
+    "Health Statistics": 5,
+    "Demography": 5,
+    "Applied Epidemiology and Disease Control": 20,
+    "Food and Nutrition": 5,
+    "Environmental Health": 5,
+    "Occupational Health": 5,
+    "Health Education and Promotion": 10,
+    "PHC, EHCS and MDGs": 5,
+    "International Health": 5
+  },
+  ha: {
+    "General Awareness": 10, "Public Management": 10,
+    "Public Health Programmes and Policy": 5, "Planning and Management": 2,
+    "Organizational Structure and Functions": 2, "Community Mobilization and Local Governance": 2,
+    "Epidemiology and Disease Control": 2, "Environmental Sanitation": 2, "Child Health": 2,
+    "General Medicine": 2, "First Aid and Emergency Management": 2, "Skin Diseases": 2,
+    "Elementary Surgery": 2, "Eye, Ear, Nose and Throat Diseases": 1,
+    "Oral Health and Mental Health": 1, "Reproductive Health": 2, "Acts and Regulations": 1
+  },
+  ahw: {
+    "General Awareness": 10, "Public Management": 10, "Anatomy and Physiology": 3,
+    "Health Education and Community Diagnosis": 2, "Community Health": 2,
+    "First Aid and Basic Medical Procedures": 2, "Vector Borne Diseases": 4,
+    "Maternal and Child Health, Family Planning and Nutrition": 2,
+    "Communicable Disease and Microbiology": 2, "Medicine": 5, "Surgery": 2,
+    "Pharmacy and Pharmacology": 2, "Health Culture and Communication": 2, "Health Management": 2
+  },
+  ha_license: {
+    "Anatomy and Physiology": 10, "Community Health": 25, "General Medicine": 25,
+    "Pharmacology and Pharmacy": 10, "General Surgery": 25, "Clinical Pathology": 5
+  },
+  sn: {
+    "General Awareness": 10, "Public Management": 10, "Fundamentals of Nursing": 4,
+    "Applied Science": 4, "Medical/Surgical Nursing": 6, "Community Health Nursing": 5,
+    "Midwifery": 3, "Nursing Care of Gynaecological Problems": 2, "Pediatric Nursing": 2,
+    "Mental Health": 2, "Leadership and Management in Nursing Planning": 2
+  },
+  anm: {
+    "General Awareness": 10, "Public Management": 10,
+    "Anatomy and Physiology (Structure and Functions)": 3, "Mechanism of the Different System": 3,
+    "Fundamentals of Nursing": 3, "Treatment of Simple Diseases and Disorders": 3,
+    "Community Health Nursing": 3, "Midwifery: Antenatal Care": 5,
+    "Midwifery: Intranatal Care (Labor)": 5, "Midwifery: Postnatal Care": 5
+  }
+};
+
 function renderSubjectPick(){
   // Purely instant — just names, no counts, no network call, no waiting.
+  const marksForThisPost = EXAM_MARKS_BY_POST[currentMcqPost] || {};
   const subjectsForThisPost = (KNOWN_SUBJECTS_BY_POST[currentMcqPost] || KNOWN_SUBJECTS).map(name => ({name}));
-  document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => `
+  document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => {
+    const marks = marksForThisPost[s.name];
+    const marksLabel = marks ? ` (${marks} marks)` : '';
+    return `
     <a class="link-card" href="#" data-subject="${s.name}">
-      <div class="lc-text"><h4>${s.name}</h4><p>Tap to begin</p></div>
+      <div class="lc-text"><h4>${s.name}${marksLabel}</h4><p>Tap to begin</p></div>
       <div class="lc-arrow">→</div>
     </a>
-  `).join('');
+  `;
+  }).join('');
 
   document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
     card.addEventListener('click', (e) => {
@@ -5968,6 +5982,16 @@ function openSetSelect(subjectName){
   selectedSubject = subjectName === 'All Subjects (Mixed)' ? '__ALL__' : subjectName;
   document.getElementById('setSelectTitle').textContent = subjectName;
 
+  const marksLine = document.getElementById('setSelectMarksLine');
+  const marksForThisPost = EXAM_MARKS_BY_POST[currentMcqPost] || {};
+  const marks = marksForThisPost[subjectName];
+  if(marks){
+    marksLine.textContent = `📊 Carries ${marks} marks in the final written exam`;
+    marksLine.style.display = 'block';
+  } else {
+    marksLine.style.display = 'none';
+  }
+
   const p = loadProgress();
   const pKey = progressKey(selectedSubject);
   const completedSets = (p[pKey] && p[pKey].completed) || [];
@@ -6025,7 +6049,7 @@ function renderSetList(totalSets, exactCount){
       if(setNum > 2){
         const isPremium = await refreshPremiumStatus();
         if(!isPremium){
-          if(confirm('🔒 Sets 1-2 of each subject are free. Upgrade to Premium (NPR 299/month) to unlock every Set?')){
+          if(confirm('🔒 Sets 1-2 of each subject are free. Upgrade to Premium (NPR 200/month) to unlock every Set?')){
             premiumBackTarget = setSelectScreen;
             showScreen(upgradeScreen);
             renderPremiumStatus();
@@ -6064,7 +6088,7 @@ function renderSetList(totalSets, exactCount){
 async function downloadSetAsPdf(subject, setNumber){
   const isPremium = await refreshPremiumStatus();
   if(!isPremium){
-    if(confirm('📄 Downloading Sets as PDF is a Premium feature (NPR 299/month). Want to see Premium plans?')){
+    if(confirm('📄 Downloading Sets as PDF is a Premium feature (NPR 200/month). Want to see Premium plans?')){
       premiumBackTarget = setSelectScreen;
       showScreen(upgradeScreen);
       renderPremiumStatus();
@@ -6209,28 +6233,50 @@ function generateCertificate(subject, totalSets){
 // This is the ONE moment a network fetch is genuinely unavoidable — we need real questions.
 async function startSet(subject, setNumber, totalSets){
   const cacheKey = 'hl_set_cache_' + progressKey(subject) + '_' + setNumber;
-  showQuizLoading('Please wait, loading this Set… this may take a moment.');
+  showQuizLoading('Loading Question 1…');
+  const FIRST_BATCH = 5;
 
   try{
     if(!navigator.onLine){
       throw new Error('offline'); // skip straight to the cached-copy fallback below
     }
-    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
-    const res = await fetch(url);
-    let pool = await res.json();
+    const baseUrl = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
 
-    if(pool.length === 0){
+    // Phase 1: fetch just the first few questions — small payload, shows up fast
+    const firstRes = await fetch(`${baseUrl}&offset=0&limit=${FIRST_BATCH}`);
+    let firstBatch = await firstRes.json();
+
+    if(firstBatch.length === 0){
       hideQuizLoading();
       alert('No questions found in this set yet.');
       return;
     }
 
-    // Save a copy for offline retries later, before shuffling display order
-    try{ localStorage.setItem(cacheKey, JSON.stringify(pool)); }catch(e){}
-
-    pool = shuffle([...pool]); // vary display order each attempt; same 50 questions each time
     hideQuizLoading();
-    launchQuiz(pool, subject, setNumber, totalSets);
+    firstBatch = shuffle([...firstBatch]); // vary display order each attempt, within this batch
+    launchQuiz(firstBatch, subject, setNumber, totalSets);
+
+    // Phase 2: quietly fetch the rest in the background and append — the user is usually
+    // still on Question 1 or 2 by the time this finishes, so it feels seamless.
+    if(firstBatch.length === SET_SIZE){
+      // This Set only had FIRST_BATCH questions total anyway — nothing more to fetch
+      try{ localStorage.setItem(cacheKey, JSON.stringify(firstBatch)); }catch(e){}
+    } else {
+      fetch(`${baseUrl}&offset=${FIRST_BATCH}`).then(r => r.json()).then(restBatch => {
+        if(restBatch && restBatch.length > 0){
+          restBatch = shuffle([...restBatch]); // vary display order each attempt, within this batch
+          quizQuestions = quizQuestions.concat(restBatch);
+          answers = answers.concat(new Array(restBatch.length).fill(null));
+          secondsLeft += restBatch.length * 45; // extend the timer to match the full set
+          buildOmrStrip();
+          refreshOmrStrip();
+        }
+        try{ localStorage.setItem(cacheKey, JSON.stringify(quizQuestions)); }catch(e){}
+      }).catch(() => {
+        // Background fetch failed — the user keeps going with whatever loaded in Phase 1;
+        // not fatal, just means this Set has fewer questions than it should this one time.
+      });
+    }
   }catch(err){
     // Network failed or we're offline — try the cached copy from a previous successful load
     let cachedPool = null;
@@ -6326,94 +6372,6 @@ document.getElementById('cardPastQuestions').addEventListener('click', () => {
   showScreen(pastQuestionsPostScreen);
   renderPastQuestionsPosts();
 });
-
-document.getElementById('cardInterviewPrep').addEventListener('click', async () => {
-  if(window.checkInterviewPrepAccess){
-    const access = await window.checkInterviewPrepAccess();
-    if(!access.allowed){
-      if(confirm('🎤 Your 3-day free trial of Interview Preparation has ended. Upgrade to Premium (NPR 299/month) to keep using it?')){
-        premiumBackTarget = homeScreen;
-        showScreen(upgradeScreen);
-        renderPremiumStatus();
-      }
-      return;
-    }
-  }
-  showScreen(interviewPrepScreen);
-});
-
-document.getElementById('goToInterviewObjective').addEventListener('click', (e) => {
-  e.preventDefault();
-  startInterviewObjective();
-});
-
-async function startInterviewObjective(){
-  currentSetInfo = null; // not Set-locked, same as Mock Test / Past Questions
-  currentMcqPost = 'pho'; // Interview content lives in the main PHO-bound Sheet
-  showQuizLoading('Please wait, loading interview questions… this may take a moment.');
-  try{
-    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent('Interview Objective')}&setNumber=1&setSize=200&post=pho`;
-    const res = await fetch(url);
-    const pool = await res.json();
-
-    if(pool.length === 0){
-      hideQuizLoading();
-      alert('No objective interview questions added yet.');
-      return;
-    }
-
-    quizQuestions = pool;
-    currentIndex = 0;
-    answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = 75 * 60;
-    currentMarksPerQuestion = 1;
-
-    buildOmrStrip();
-    hideQuizLoading();
-    showScreen(quizScreen);
-    startTimer();
-    renderQuestion();
-  }catch(err){
-    hideQuizLoading();
-    alert('Could not load interview questions. Please check your internet connection and try again.');
-  }
-}
-
-document.getElementById('goToInterviewSubjective').addEventListener('click', (e) => {
-  e.preventDefault();
-  showScreen(interviewSubjectiveScreen);
-  loadInterviewSubjective();
-});
-
-async function loadInterviewSubjective(){
-  const wrap = document.getElementById('interviewSubjectiveList');
-  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
-  try{
-    const res = await fetch(`${SHEET_API_URL}?action=interviewSubjective`);
-    const rows = await res.json();
-
-    if(!Array.isArray(rows) || rows.length === 0){
-      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No subjective questions added yet — check back soon!</p>`;
-      return;
-    }
-
-    wrap.innerHTML = rows.map((r, i) => `
-      <div class="mnemonic-item interview-qa-item" data-index="${i}" style="cursor:pointer;">
-        <div class="mi-topic">❓ ${r.Question || ''}</div>
-        <div class="mi-explain" style="display:none;">💡 ${r.ModelAnswer || ''}</div>
-      </div>
-    `).join('');
-
-    document.querySelectorAll('.interview-qa-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const answer = item.querySelector('.mi-explain');
-        answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
-      });
-    });
-  }catch(err){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load questions. Please check your connection.</p>`;
-  }
-}
 
 // ---------- Timer ----------
 function startTimer(){
