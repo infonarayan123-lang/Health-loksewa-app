@@ -854,6 +854,27 @@
     border-radius:12px; font-weight:700; font-size:15px; cursor:pointer;
   }
   .esewa-pay-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+  .pay-screen-title{
+    font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink);
+    text-align:center; margin:10px 0 18px;
+  }
+  .pay-method-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin-bottom:16px;
+  }
+  .pay-method-title{
+    font-size:15px; font-weight:700; color:var(--ink); margin-bottom:12px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;
+  }
+  .pay-method-price{ font-size:12px; font-weight:700; color:var(--gold,#B8860B); }
+  .pay-manual-details{ margin-top:10px; }
+  .pay-manual-details summary{
+    font-size:12.5px; color:var(--ink-soft); cursor:pointer; list-style:none;
+  }
+  .pay-manual-details summary::-webkit-details-marker{ display:none; }
+  .pay-manual-steps{
+    padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink); margin-top:10px;
+  }
   .profile-menu{ padding:14px 20px 30px; }
 
   /* ---------- Font Size Control (accessibility) — uses zoom so it scales everything, not just relative-unit text ---------- */
@@ -947,7 +968,7 @@
     letter-spacing:0.04em; margin:18px 0 8px; padding-top:14px; border-top:1px solid var(--line);
   }
   .pf-section-title:first-child{ border-top:none; padding-top:0; margin-top:14px; }
-  .pf-table{ width:calc(100% + 16px); margin:10px -8px 16px; border-collapse:collapse; font-size:12.5px; table-layout:fixed; }
+  .pf-table{ width:100%; margin:10px 0 16px; border-collapse:collapse; font-size:11.5px; table-layout:fixed; box-sizing:border-box; }
   .premium-active-inline{
     font-size:12.5px; color:var(--correct); background:rgba(47,125,93,0.1);
     border:1px solid rgba(47,125,93,0.3); border-radius:10px; padding:10px 12px;
@@ -958,10 +979,11 @@
     font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
     border-bottom:1.5px solid var(--line);
   }
-  .pf-table th.pf-col-feature, .pf-table td.pf-col-feature{ text-align:left; width:42%; }
+  .pf-table th.pf-col-feature, .pf-table td.pf-col-feature{ text-align:left; width:36%; }
   .pf-table th.pf-col-premium{ color:var(--gold,#B8860B); }
-  .pf-table td{ padding:9px 4px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:middle; text-align:center; }
-  .pf-table td.pf-col-feature{ font-weight:600; }
+  .pf-table td{ padding:9px 3px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:middle; text-align:center; word-break:break-word; overflow-wrap:break-word; }
+  .pf-table td.pf-col-feature{ font-weight:600; word-break:break-word; overflow-wrap:break-word; }
+  .pf-table th{ word-break:break-word; overflow-wrap:break-word; padding:8px 3px; }
   .pf-table tr:last-child td{ border-bottom:none; }
 
   .account-bar{ margin-bottom:16px; }
@@ -1749,46 +1771,45 @@
     </div>
   </div>
 
-  <!-- PREMIUM UPGRADE SCREEN -->
+  <!-- PREMIUM UPGRADE SCREEN — payment methods only, no feature list/table here (see Profile > Account Status for that) -->
   <div class="screen" id="upgradeScreen">
     <div class="back-link" data-back="premiumBack">← Back</div>
     <div class="home-body">
-      <div class="premium-hero">
-        <div style="font-size:34px; margin-bottom:8px;">💎</div>
-        <h2>Health Loksewa Premium</h2>
-        <p>NPR 200 / month</p>
-      </div>
+      <div class="pay-screen-title">💳 Choose Payment Method</div>
 
-      <div class="premium-features">
-        <div class="pf-row">🤖 <b>Unlimited AI Assistant</b> — no daily message limit</div>
-        <div class="pf-row">📄 <b>Download Sets as PDF</b> — study offline, print anytime</div>
-        <div class="pf-row">📊 <b>Advanced Analytics</b> — deeper insights into your progress</div>
-        <div class="pf-row">🚫 <b>Ad-free experience</b> (once ads are added to the free version)</div>
-      </div>
+      <div id="premiumStatusBadge"></div>
 
-      <div id="upgradeFeaturesTable"></div>
+      <!-- eSewa: automatic + manual -->
+      <div class="pay-method-card">
+        <div class="pay-method-title">🟢 eSewa <span class="pay-method-price">NPR 200/month</span></div>
 
-      <button class="esewa-pay-btn" id="esewaPayBtn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
-        Pay NPR 200 with eSewa
-      </button>
-      <p id="esewaPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 16px;"></p>
+        <button class="esewa-pay-btn" id="esewaPayBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
+          Pay Automatically with eSewa
+        </button>
+        <p id="esewaPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 0;"></p>
 
-      <details style="margin-bottom:16px;">
-        <summary style="font-size:12.5px; color:var(--ink-soft); cursor:pointer;">Or activate manually instead</summary>
-        <div class="content-card" style="margin-top:10px;">
-          <h4 style="margin-bottom:10px;">👉 Manual activation</h4>
-          <ol style="padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink);">
-            <li>Send <b>NPR 200</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">98XXXXXXXX (update this)</b></li>
+        <details class="pay-manual-details">
+          <summary>Or pay manually instead</summary>
+          <ol class="pay-manual-steps">
+            <li>Send <b>NPR 200</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">9848551259</b></li>
             <li>Take a screenshot of your payment confirmation</li>
             <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
             <li>Your account will be manually activated within 24 hours</li>
           </ol>
-        </div>
-      </details>
+        </details>
+      </div>
 
-      <p style="text-align:center; font-size:12px; color:var(--ink-soft); margin-top:14px;">Already paid and waiting for activation? Just check back here — this page will show "✅ Premium Active" once it's done.</p>
-      <div id="premiumStatusBadge"></div>
+      <!-- Khalti: manual only for now (automatic checkout pending Khalti API keys) -->
+      <div class="pay-method-card">
+        <div class="pay-method-title">🟣 Khalti <span class="pay-method-price">NPR 200/month</span></div>
+        <ol class="pay-manual-steps">
+          <li>Send <b>NPR 200</b> via <b>Khalti</b> to: <b id="khaltiIdDisplay">9848551259</b></li>
+          <li>Take a screenshot of your payment confirmation</li>
+          <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
+          <li>Your account will be manually activated within 24 hours</li>
+        </ol>
+      </div>
     </div>
   </div>
 
@@ -4139,7 +4160,7 @@ async function renderHomePremiumBanner(){
   if(!banner) return;
   if(!window.getAccessStatus){ banner.textContent = ''; return; }
   const status = await window.getAccessStatus();
-  banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); loadPremiumFeaturesTable('upgradeFeaturesTable'); };
+  banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
 
   if(status.source === 'paid'){
     banner.textContent = 'You are in Pro version';
@@ -4181,6 +4202,7 @@ async function loadPremiumFeaturesTable(targetId = 'premiumFeaturesTable'){
   }
 }
 
+let profileIsPaid = false;
 document.getElementById('headerProfileBtn').addEventListener('click', async () => {
   showScreen(profileScreen);
   renderThemeSwatches();
@@ -4192,6 +4214,7 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   refreshMyDeviceSection();
   const status = window.getAccessStatus ? await window.getAccessStatus() : { isPremium: false, source: 'none', trialHoursLeft: null };
   const isPaid = status.source === 'paid';
+  profileIsPaid = isPaid;
 
   if(isPaid){
     document.getElementById('accountStatusValue').textContent = '💎 Premium';
@@ -4203,6 +4226,7 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
 
   document.getElementById('upgradeNowBtn').style.display = isPaid ? 'none' : 'flex';
   document.getElementById('upgradePlanTitle').style.display = isPaid ? 'none' : 'block';
+  document.getElementById('premiumFeaturesTable').style.display = isPaid ? 'none' : 'block';
   document.getElementById('premiumActiveBanner').style.display = isPaid ? 'block' : 'none';
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
@@ -4217,7 +4241,7 @@ document.getElementById('accountStatusClickTarget').addEventListener('click', ()
   const panel = document.getElementById('accountStatusExpanded');
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
-  if(!isOpen && !accountStatusTableLoaded){
+  if(!isOpen && !accountStatusTableLoaded && !profileIsPaid){
     loadPremiumFeaturesTable('premiumFeaturesTable');
     accountStatusTableLoaded = true;
   }
@@ -4226,7 +4250,6 @@ document.getElementById('upgradeNowBtn').addEventListener('click', () => {
   premiumBackTarget = profileScreen;
   showScreen(upgradeScreen);
   renderPremiumStatus();
-  loadPremiumFeaturesTable('upgradeFeaturesTable');
 });
 
 // ---------- Premium status checking (Path B: manual activation via eSewa) ----------
