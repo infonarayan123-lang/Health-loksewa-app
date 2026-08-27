@@ -4308,9 +4308,14 @@ async function refreshPremiumStatus(){
 async function renderPremiumStatus(){
   const badge = document.getElementById('premiumStatusBadge');
   badge.innerHTML = '';
-  const isPremium = await refreshPremiumStatus();
+  // Keep the general premium cache updated (used elsewhere for feature-gating, where trial
+  // users correctly count as premium too) — but the "already paid" badge below must only
+  // fire for a real paid subscription, never for someone still in their free trial.
+  await refreshPremiumStatus();
+  const status = window.getAccessStatus ? await window.getAccessStatus() : { source: 'none' };
+  const isPaid = status.source === 'paid';
   const buyControls = ['pricingOfferBadge', 'pricingPlansWrap', 'esewaMethodCard', 'khaltiMethodCard'];
-  if(isPremium){
+  if(isPaid){
     badge.innerHTML = `<div class="premium-active-badge">✅ Premium Active — thank you for joining Health Loksewa!</div>`;
     buyControls.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
   } else {
