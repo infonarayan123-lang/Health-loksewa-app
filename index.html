@@ -947,19 +947,20 @@
     letter-spacing:0.04em; margin:18px 0 8px; padding-top:14px; border-top:1px solid var(--line);
   }
   .pf-section-title:first-child{ border-top:none; padding-top:0; margin-top:14px; }
-  .pf-table{ width:calc(100% + 16px); margin:10px -8px 16px; border-collapse:collapse; font-size:12.5px; }
+  .pf-table{ width:calc(100% + 16px); margin:10px -8px 16px; border-collapse:collapse; font-size:12.5px; table-layout:fixed; }
   .premium-active-inline{
     font-size:12.5px; color:var(--correct); background:rgba(47,125,93,0.1);
     border:1px solid rgba(47,125,93,0.3); border-radius:10px; padding:10px 12px;
     margin-bottom:4px; line-height:1.5;
   }
   .pf-table th{
-    text-align:left; padding:8px 6px; background:var(--panel); color:var(--ink-soft);
+    text-align:center; padding:8px 4px; background:var(--panel); color:var(--ink-soft);
     font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
     border-bottom:1.5px solid var(--line);
   }
+  .pf-table th.pf-col-feature, .pf-table td.pf-col-feature{ text-align:left; width:42%; }
   .pf-table th.pf-col-premium{ color:var(--gold,#B8860B); }
-  .pf-table td{ padding:9px 6px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:top; }
+  .pf-table td{ padding:9px 4px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:middle; text-align:center; }
   .pf-table td.pf-col-feature{ font-weight:600; }
   .pf-table tr:last-child td{ border-bottom:none; }
 
@@ -4167,7 +4168,7 @@ async function loadPremiumFeaturesTable(targetId = 'premiumFeaturesTable'){
     if(!Array.isArray(rows) || rows.length === 0){ wrap.innerHTML = ''; return; }
     wrap.innerHTML = `
       <table class="pf-table">
-        <thead><tr><th>Feature</th><th>Free</th><th class="pf-col-premium">Premium</th></tr></thead>
+        <thead><tr><th class="pf-col-feature">Feature</th><th>Free</th><th class="pf-col-premium">Premium</th></tr></thead>
         <tbody>
           ${rows.map(r => `
             <tr>
@@ -4193,12 +4194,21 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   renderLanguagePicker();
   renderProfileDarkModeToggle();
   refreshMyDeviceSection();
-  const isPremium = await refreshPremiumStatus();
-  document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
-  document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'flex';
-  document.getElementById('upgradePlanTitle').style.display = isPremium ? 'none' : 'block';
-  document.getElementById('upgradePlanDetails').style.display = isPremium ? 'none' : 'block';
-  document.getElementById('premiumActiveBanner').style.display = isPremium ? 'block' : 'none';
+  const status = window.getAccessStatus ? await window.getAccessStatus() : { isPremium: false, source: 'none', trialHoursLeft: null };
+  const isPaid = status.source === 'paid';
+
+  if(isPaid){
+    document.getElementById('accountStatusValue').textContent = '💎 Premium';
+  } else if(status.source === 'trial'){
+    document.getElementById('accountStatusValue').textContent = `Free (Trial — ${status.trialHoursLeft}h left)`;
+  } else {
+    document.getElementById('accountStatusValue').textContent = 'Free';
+  }
+
+  document.getElementById('upgradeNowBtn').style.display = isPaid ? 'none' : 'flex';
+  document.getElementById('upgradePlanTitle').style.display = isPaid ? 'none' : 'block';
+  document.getElementById('upgradePlanDetails').style.display = isPaid ? 'none' : 'block';
+  document.getElementById('premiumActiveBanner').style.display = isPaid ? 'block' : 'none';
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
