@@ -351,14 +351,23 @@
   .carousel-track::-webkit-scrollbar{ display:none; } /* Chrome/Safari: hide scrollbar */
   .carousel-slide{
     flex:0 0 auto;
-    width:100%; /* one card fills the row, swipe brings in the next */
+    width:calc(50% - 5px); /* two cards visible at once, swipe brings in more */
     scroll-snap-align:start;
     padding:12px 16px;
     display:flex; flex-direction:row; align-items:center; gap:12px;
     color:#fff; border-radius:14px;
     box-shadow:0 4px 12px rgba(0,0,0,0.15);
     min-height:0;
+    background-size:cover; background-position:center;
   }
+  .carousel-slide.cs-image-slide{
+    position:relative; min-height:78px; align-items:flex-end;
+  }
+  .carousel-slide.cs-image-slide::before{
+    content:''; position:absolute; inset:0; border-radius:14px;
+    background:linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0));
+  }
+  .carousel-slide.cs-image-slide > div{ position:relative; z-index:1; }
   .carousel-slide .cs-icon{
     font-size:18px; width:34px; height:34px; flex-shrink:0;
     background:rgba(255,255,255,0.2); border-radius:50%;
@@ -921,15 +930,21 @@
     color:var(--ink); font-size:12.5px; font-weight:700; cursor:pointer; margin-left:6px;
   }
   .lang-btn.active{ background:var(--navy,#1B3B6F); color:#fff; border-color:var(--navy,#1B3B6F); }
-  .home-premium-upsell{
-    font-style:italic; font-size:12.5px; text-align:center; padding:8px 12px;
-    background:linear-gradient(90deg, var(--gold,#D4A94E), #E8C77A); color:#1B1B1B;
-    border-radius:10px; margin:10px 0; cursor:pointer;
+  .home-status-line{
+    font-size:12.5px; text-align:center; padding:9px 14px;
+    color:var(--ink); background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; margin:10px 0; cursor:pointer; line-height:1.4;
   }
-  .home-premium-pro{
-    font-size:12.5px; font-weight:700; text-align:center; padding:8px 12px;
-    background:var(--navy,#1B3B6F); color:#fff; border-radius:10px; margin:10px 0;
+  .pf-table{ width:100%; border-collapse:collapse; margin:12px 0 18px; font-size:12.5px; }
+  .pf-table th{
+    text-align:left; padding:8px 6px; background:var(--panel); color:var(--ink-soft);
+    font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
+    border-bottom:1.5px solid var(--line);
   }
+  .pf-table th.pf-col-premium{ color:var(--gold,#B8860B); }
+  .pf-table td{ padding:9px 6px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:top; }
+  .pf-table td.pf-col-feature{ font-weight:600; }
+  .pf-table tr:last-child td{ border-bottom:none; }
 
   .account-bar{ margin-bottom:16px; }
   .signin-btn{
@@ -1626,6 +1641,7 @@
       </div>
       <button class="upgrade-btn" id="upgradeNowBtn">Upgrade Now</button>
     </div>
+    <div id="premiumFeaturesTable"></div>
     <div class="profile-menu">
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
         <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎯 Which exam are you preparing for?</div>
@@ -2646,25 +2662,47 @@
   // before the normal Firestore-based paid-premium check below.
   const FREE_PREMIUM_EMAILS = ['infonarayan1234@gmail.com', 'narayanrimal659@gmail.com'];
 
-  window.checkPremiumStatus = async function(){
+  window.getAccessStatus = async function(){
     const user = auth.currentUser;
-    if(!user) return false;
-    if(user.email && FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())) return true;
+    if(!user) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
+    if(user.email && FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())){
+      return { isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false };
+    }
     try{
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
-      if(!snap.exists() || snap.data().premium !== true) return false;
+      if(!snap.exists()) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
 
-      const expiresAt = snap.data().premiumExpiresAt;
-      if(expiresAt && new Date(expiresAt) < new Date()){
-        // Expired — automatically revert to free, no manual action needed
+      const data = snap.data();
+
+      if(data.premium === true){
+        const expiresAt = data.premiumExpiresAt;
+        if(!expiresAt || new Date(expiresAt) >= new Date()){
+          return { isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false };
+        }
+        // Expired paid subscription — automatically revert to free, no manual action needed
         try{ await setDoc(ref, { premium: false }, { merge: true }); }catch(e){}
-        return false;
       }
-      return true;
+
+      // Not (or no longer) a paying Premium user — check their real 48-hour free trial window
+      if(data.trialStartedAt){
+        const startedMs = new Date(data.trialStartedAt).getTime();
+        const hoursElapsed = (Date.now() - startedMs) / 3600000;
+        if(hoursElapsed < 48){
+          return { isPremium: true, source: 'trial', trialHoursLeft: Math.max(1, Math.ceil(48 - hoursElapsed)), trialEnded: false };
+        }
+        return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: true };
+      }
+
+      return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
     }catch(err){
-      return false;
+      return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
     }
+  };
+
+  window.checkPremiumStatus = async function(){
+    const status = await window.getAccessStatus();
+    return status.isPremium;
   };
 
   // ---- AI Chat daily message limit (10/day free, unlimited for premium) ----
@@ -2897,7 +2935,8 @@
             fullName: fullName,
             email: email,
             phone: phone,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            trialStartedAt: new Date().toISOString()
           });
         }catch(fireErr){
           // Account was created successfully even if this extra save fails — don't block the user
@@ -3029,7 +3068,7 @@ function showScreen(el){
 // screen's own data in place — never navigates away, never resets to Home. Screens not
 // listed here (quiz, results, login, etc.) simply do nothing on pull-down — safe no-op. ----------
 const SCREEN_REFRESH_MAP = {
-  homeScreen: () => { if(window.loadQuestionOfDay) loadQuestionOfDay(); if(window.loadExamDates) loadExamDates(); if(window.loadNotifications) loadNotifications(); if(window.renderCarousel) renderCarousel(); if(window.renderHomePremiumBanner) renderHomePremiumBanner(); },
+  homeScreen: () => { if(window.loadQuestionOfDay) loadQuestionOfDay(); if(window.loadExamDates) loadExamDates(); if(window.loadNotifications) loadNotifications(); if(window.loadCarouselSlides) loadCarouselSlides(); if(window.renderHomePremiumBanner) renderHomePremiumBanner(); },
   currentAffairsScreen: () => renderCurrentAffairs(),
   syllabusScreen: () => renderSyllabusPosts(),
   gkScreen: () => renderGkCategories(),
@@ -4065,24 +4104,55 @@ function renderBookmarks(){
 }
 
 // ---------- Header bar: profile / notifications / dark mode ----------
-// ---------- Home Premium banner: italic upsell for Free users, PRO badge for Premium users ----------
+// ---------- Home Premium banner: plain, professional status line reflecting real trial state ----------
 async function renderHomePremiumBanner(){
   const banner = document.getElementById('homePremiumBanner');
   if(!banner) return;
-  const isPremium = await refreshPremiumStatus();
+  if(!window.getAccessStatus){ banner.style.display = 'none'; return; }
+  const status = await window.getAccessStatus();
   banner.style.display = 'block';
-  if(isPremium){
-    banner.className = 'home-premium-pro';
-    banner.innerHTML = '💎 PRO — Thank you for supporting Health Loksewa!';
+  banner.className = 'home-status-line';
+
+  if(status.source === 'paid'){
+    banner.innerHTML = '💎 You have full Premium access. Thank you for supporting Health Loksewa.';
     banner.onclick = null;
+  } else if(status.source === 'trial'){
+    banner.innerHTML = `You have ${status.trialHoursLeft} hour${status.trialHoursLeft === 1 ? '' : 's'} left in your free Premium trial. Unlock Premium to keep full access after it ends.`;
+    banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
+  } else if(status.trialEnded){
+    banner.innerHTML = 'Your free trial has ended. Unlock Premium to continue enjoying unlimited AI help, PDF downloads, and more.';
+    banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
   } else {
-    banner.className = 'home-premium-upsell';
-    banner.innerHTML = '✨ Unlock unlimited AI help, PDF downloads & more — tap to go Premium';
-    banner.onclick = () => {
-      premiumBackTarget = homeScreen;
-      showScreen(upgradeScreen);
-      renderPremiumStatus();
-    };
+    banner.innerHTML = 'Unlock Premium to enjoy unlimited AI help, PDF downloads, and more.';
+    banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
+  }
+}
+
+// ---------- Free vs Premium comparison table (Sheet-driven — edit the "Premium Features"
+// tab anytime and it updates here automatically, no code changes needed) ----------
+async function loadPremiumFeaturesTable(){
+  const wrap = document.getElementById('premiumFeaturesTable');
+  if(!wrap) return;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=premiumFeatures`);
+    const rows = await res.json();
+    if(!Array.isArray(rows) || rows.length === 0){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = `
+      <table class="pf-table">
+        <thead><tr><th>Feature</th><th>Free</th><th class="pf-col-premium">Premium</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td class="pf-col-feature">${r.Feature || ''}</td>
+              <td>${r.Free || ''}</td>
+              <td>${r.Premium || ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }catch(e){
+    wrap.innerHTML = ''; // quietly skip — Profile screen still works fine without this table
   }
 }
 
@@ -4095,6 +4165,7 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   renderLanguagePicker();
   renderProfileDarkModeToggle();
   refreshMyDeviceSection();
+  loadPremiumFeaturesTable();
   const isPremium = await refreshPremiumStatus();
   document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
   document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
@@ -4608,7 +4679,7 @@ document.getElementById('menuDeleteAccount').addEventListener('click', async () 
 applyHighContrastPreference(); // apply immediately on app load
 
 // ---------- Auto-sliding carousel ----------
-const CAROUSEL_SLIDES = [
+const DEFAULT_CAROUSEL_SLIDES = [
   { bg:'linear-gradient(135deg,#1B3B6F,#0F274D)', icon:'📝', title:'Subject-wise MCQs', sub:'1000+ questions, Set-locked progression', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
   { bg:'linear-gradient(135deg,#A62639,#7E1D2C)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
   { bg:'linear-gradient(135deg,#2F7D5D,#1F5A41)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
@@ -4616,8 +4687,28 @@ const CAROUSEL_SLIDES = [
   { bg:'linear-gradient(135deg,#B8860B,#7A5A0A)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { document.getElementById('cardQotd').scrollIntoView({behavior:'smooth', block:'center'}); } },
   { bg:'linear-gradient(135deg,#2A5B6E,#1A3D49)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
 ];
-let carouselIndex = 0;
-let carouselTimer = null;
+let CAROUSEL_SLIDES = DEFAULT_CAROUSEL_SLIDES;
+async function loadCarouselSlides(){
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=homeCarousel`);
+    const rows = await res.json();
+    if(Array.isArray(rows) && rows.length > 0){
+      CAROUSEL_SLIDES = rows.map(r => ({
+        bg: r.BgColor || 'linear-gradient(135deg,#1B3B6F,#0F274D)',
+        image: r.ImageURL || '',
+        icon: r.Icon || '📢',
+        title: r.Title || '',
+        sub: r.Subtitle || '',
+        action: r.LinkURL ? () => window.open(r.LinkURL, '_blank') : () => {}
+      }));
+    } else {
+      CAROUSEL_SLIDES = DEFAULT_CAROUSEL_SLIDES;
+    }
+  }catch(e){
+    CAROUSEL_SLIDES = DEFAULT_CAROUSEL_SLIDES; // any fetch problem — just keep showing the built-in slides
+  }
+  renderCarousel();
+}
 function getCarouselStep(){
   // Actual on-screen width of one card, including its gap — measured live.
   const firstSlide = document.querySelector('.carousel-slide');
@@ -4641,12 +4732,21 @@ function updateCarouselDots(){
 
 function renderCarousel(){
   const track = document.getElementById('carouselTrack');
-  track.innerHTML = CAROUSEL_SLIDES.map((s, i) => `
-    <div class="carousel-slide" style="background:${s.bg}; cursor:pointer;" data-index="${i}">
-      <div class="cs-icon">${s.icon}</div>
-      <div><h4>${s.title}</h4><p>${s.sub}</p></div>
-    </div>
-  `).join('');
+  track.innerHTML = CAROUSEL_SLIDES.map((s, i) => {
+    if(s.image){
+      return `
+        <div class="carousel-slide cs-image-slide" style="background-image:url('${s.image}'); cursor:pointer;" data-index="${i}">
+          <div><h4>${s.title}</h4><p>${s.sub}</p></div>
+        </div>
+      `;
+    }
+    return `
+      <div class="carousel-slide" style="background:${s.bg}; cursor:pointer;" data-index="${i}">
+        <div class="cs-icon">${s.icon}</div>
+        <div><h4>${s.title}</h4><p>${s.sub}</p></div>
+      </div>
+    `;
+  }).join('');
   document.getElementById('carouselDots').innerHTML = CAROUSEL_SLIDES.map((_, i) =>
     `<div class="carousel-dot ${i===0?'active':''}"></div>`
   ).join('');
@@ -4686,7 +4786,7 @@ function startCarouselAutoPlay(){
     goToCarouselSlide(nextIndex);
   }, 4000);
 }
-renderCarousel();
+loadCarouselSlides();
 
 // ---------- Provincial & Federal Exam Countdown Slideshow ----------
 // Fully Sheet-driven: add/edit/remove rows anytime in the "Exam Dates" tab (Name | Date columns) —
