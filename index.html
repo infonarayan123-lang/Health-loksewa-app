@@ -1516,6 +1516,23 @@
     </div>
   </div>
 
+  <!-- POST-GATE SCREEN — shown every time right after login/auth resolves, before Home.
+       Lets the user pick 1–2 posts (exams) they're preparing for; Subject-wise MCQs, Mock Test,
+       Weekly Tournament, and Past Questions post-picker grids then only show those post(s).
+       Shares the same underlying preference as the "Which exam are you preparing for?" picker
+       in Profile (kept in sync — editing it there updates this screen next time too). -->
+  <div class="screen" id="postGateScreen">
+    <div class="home-body" style="padding-top:40px;">
+      <div style="text-align:center; margin-bottom:22px;">
+        <div style="font-size:34px; margin-bottom:8px;">🎯</div>
+        <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink);">Which exam are you preparing for?</div>
+        <div style="font-size:12.5px; color:var(--ink-soft); margin-top:6px;">Pick 1 or 2 — you can change this later in Profile</div>
+      </div>
+      <div id="postGateRow"></div>
+      <button class="start-btn" id="postGateContinueBtn" style="margin-top:22px;">Continue to Dashboard</button>
+    </div>
+  </div>
+
   <div class="screen" id="homeScreen">
     <div class="home-body" style="padding-top:0;">
 
@@ -2506,7 +2523,8 @@
           uid: user.uid, name: name, email: user.email
         }));
       }catch(e){}
-      window.showScreen(window.homeScreen);
+      window.showScreen(window.postGateScreen);
+      if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
       if(window.renderHomePremiumBanner) window.renderHomePremiumBanner();
       if(window.checkForEsewaReturnAndActivate) window.checkForEsewaReturnAndActivate();
     } else {
@@ -2721,11 +2739,11 @@
   };
 
   // ---- Exam Type Profile: which post the user is preparing for ----
-  window.saveExamTypePreference = async function(examType){
+  window.saveExamTypePreference = async function(selectedPosts){
     const user = auth.currentUser;
     if(!user) return;
     try{
-      await setDoc(doc(db, 'users', user.uid), { examType: examType }, { merge: true });
+      await setDoc(doc(db, 'users', user.uid), { selectedPosts: selectedPosts }, { merge: true });
     }catch(err){
       // Non-critical — the local preference is still saved either way
     }
@@ -3059,6 +3077,7 @@ let currentTournamentWeekKey = null; // set only while taking a Weekly Tournamen
 
 const appLoadingScreen = document.getElementById('appLoadingScreen');
 const loginScreen = document.getElementById('loginScreen');
+const postGateScreen = document.getElementById('postGateScreen');
 const homeScreen = document.getElementById('homeScreen');
 const syllabusScreen = document.getElementById('syllabusScreen');
 const currentAffairsScreen = document.getElementById('currentAffairsScreen');
@@ -3104,9 +3123,10 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
+window.postGateScreen = postGateScreen;
 window.homeScreen = homeScreen;
 const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen };
 let docViewerBackTarget = homeScreen;
@@ -3215,7 +3235,7 @@ const SCREEN_REFRESH_MAP = {
   }, { passive: true });
 })();
 
-const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, quizScreen]; // full-focus screens, no bottom nav
+const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, quizScreen]; // full-focus screens, no bottom nav
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
@@ -3430,7 +3450,9 @@ document.getElementById('cardTournament').addEventListener('click', () => {
 });
 
 function renderTournamentPosts(){
-  document.getElementById('tournamentPostGrid').innerHTML = TOURNAMENT_POSTS.map(post => `
+  const selected = getSelectedPosts();
+  const posts = selected.length > 0 ? TOURNAMENT_POSTS.filter(p => selected.includes(p.key)) : TOURNAMENT_POSTS;
+  document.getElementById('tournamentPostGrid').innerHTML = posts.map(post => `
     <button class="dash-card ${post.css} tournament-post-btn" data-key="${post.key}" style="min-height:100px;">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
       <div class="dc-label" style="font-size:14px;">${post.label}</div>
@@ -4691,19 +4713,51 @@ const EXAM_TYPES = [
   { key:'ha_license', label:'HA License (NHPC)' },
   { key:'bph_license', label:'BPH License (NHPC)' },
 ];
-function renderExamTypePicker(){
-  let active = '';
-  try{ active = localStorage.getItem('hl_exam_type') || ''; }catch(e){}
-  document.getElementById('examTypeRow').innerHTML = EXAM_TYPES.map(t => `
-    <button class="exam-type-btn ${t.key === active ? 'active' : ''}" data-exam="${t.key}">
+// ---------- Shared "which post(s) are you preparing for" preference — powers both the
+// Profile picker (examTypeRow) and the post-login gate screen (postGateRow). Up to 2 posts.
+// Selecting/deselecting in either place updates both immediately, so they never drift apart. ----------
+function getSelectedPosts(){
+  try{
+    const raw = localStorage.getItem('hl_selected_posts');
+    if(raw){
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    }
+    // Migrate the old single-select preference, if present, so existing users don't lose it
+    const legacy = localStorage.getItem('hl_exam_type');
+    return legacy ? [legacy] : [];
+  }catch(e){ return []; }
+}
+function setSelectedPosts(arr){
+  try{ localStorage.setItem('hl_selected_posts', JSON.stringify(arr)); }catch(e){}
+}
+function renderPostPickerInto(containerId){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const selected = getSelectedPosts();
+  container.innerHTML = EXAM_TYPES.map(t => `
+    <button class="exam-type-btn ${selected.includes(t.key) ? 'active' : ''}" data-exam="${t.key}">
       <span class="radio-dot"></span> ${t.label}
     </button>
   `).join('');
-  document.querySelectorAll('.exam-type-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      try{ localStorage.setItem('hl_exam_type', btn.dataset.exam); }catch(e){}
-      if(window.saveExamTypePreference) window.saveExamTypePreference(btn.dataset.exam);
-      renderExamTypePicker();
+  container.querySelectorAll('.exam-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      let current = getSelectedPosts();
+      const key = btn.dataset.exam;
+      if(current.includes(key)){
+        current = current.filter(k => k !== key);
+      } else {
+        if(current.length >= 2){
+          alert('You can only pick 2 — remove one first.');
+          return;
+        }
+        current.push(key);
+      }
+      setSelectedPosts(current);
+      if(window.saveExamTypePreference) window.saveExamTypePreference(current);
+      // Re-render everywhere this picker appears so Profile and the Gate screen stay in sync
+      renderPostPickerInto('examTypeRow');
+      renderPostPickerInto('postGateRow');
       if(typeof computeUpcomingExams === 'function'){
         computeUpcomingExams();
         examSlideIndex = 0;
@@ -4713,6 +4767,20 @@ function renderExamTypePicker(){
     });
   });
 }
+window.renderPostPickerInto = renderPostPickerInto;
+
+function renderExamTypePicker(){
+  renderPostPickerInto('examTypeRow');
+}
+
+document.getElementById('postGateContinueBtn').addEventListener('click', () => {
+  const selected = getSelectedPosts();
+  if(selected.length === 0){
+    alert('Please select at least 1 exam to continue.');
+    return;
+  }
+  showScreen(homeScreen);
+});
 
 // ---------- High Contrast Mode (accessibility) ----------
 function applyHighContrastPreference(){
@@ -5005,15 +5073,14 @@ let examSlideTimer = null;
 
 function computeUpcomingExams(){
   const now = new Date();
-  let selectedType = '';
-  try{ selectedType = localStorage.getItem('hl_exam_type') || ''; }catch(e){}
+  const selectedTypes = getSelectedPosts();
 
   let pool = rawExamDates || [];
-  // If the user has picked a specific exam type in their Profile, try to show ONLY that
-  // type's countdown(s). Safety net: if nothing matches (e.g. Sheet rows aren't tagged
-  // with ExamType yet), fall back to showing everything rather than hiding the banner.
-  if(selectedType){
-    const filtered = pool.filter(e => String(e.ExamType || '').trim().toLowerCase() === selectedType);
+  // If the user has picked specific exam type(s), try to show ONLY those type(s)' countdown(s).
+  // Safety net: if nothing matches (e.g. Sheet rows aren't tagged with ExamType yet), fall back
+  // to showing everything rather than hiding the banner.
+  if(selectedTypes.length > 0){
+    const filtered = pool.filter(e => selectedTypes.includes(String(e.ExamType || '').trim().toLowerCase()));
     if(filtered.length > 0) pool = filtered;
   }
 
@@ -5839,7 +5906,9 @@ const MCQ_POSTS = [
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
 function renderMcqPosts(){
-  document.getElementById('mcqPostGrid').innerHTML = MCQ_POSTS.map(post => `
+  const selected = getSelectedPosts();
+  const posts = selected.length > 0 ? MCQ_POSTS.filter(p => selected.includes(p.key)) : MCQ_POSTS;
+  document.getElementById('mcqPostGrid').innerHTML = posts.map(post => `
     <button class="dash-card ${post.css} mcq-post-btn" data-key="${post.key}" style="min-height:100px;">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
       <div class="dc-label" style="font-size:14px;">${post.label}</div>
@@ -5886,7 +5955,9 @@ const MOCK_POSTS = [
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
 ];
 function renderMockPosts(){
-  document.getElementById('mockPostGrid').innerHTML = MOCK_POSTS.map(post => `
+  const selected = getSelectedPosts();
+  const posts = selected.length > 0 ? MOCK_POSTS.filter(p => selected.includes(p.key)) : MOCK_POSTS;
+  document.getElementById('mockPostGrid').innerHTML = posts.map(post => `
     <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}" style="min-height:100px;">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
       <div class="dc-label" style="font-size:14px;">${post.label}</div>
@@ -5977,7 +6048,9 @@ const PAST_QUESTIONS_POSTS = [
 let PAST_QUESTIONS_BY_POST = {};
 
 function renderPastQuestionsPosts(){
-  document.getElementById('pastQuestionsPostGrid').innerHTML = PAST_QUESTIONS_POSTS.map(post => `
+  const selected = getSelectedPosts();
+  const posts = selected.length > 0 ? PAST_QUESTIONS_POSTS.filter(p => selected.includes(p.key)) : PAST_QUESTIONS_POSTS;
+  document.getElementById('pastQuestionsPostGrid').innerHTML = posts.map(post => `
     <button class="dash-card ${post.css} pq-post-btn" data-key="${post.key}" style="min-height:100px;">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
       <div class="dc-label" style="font-size:14px;">${post.label}</div>
