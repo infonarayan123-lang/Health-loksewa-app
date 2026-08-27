@@ -947,7 +947,12 @@
     letter-spacing:0.04em; margin:18px 0 8px; padding-top:14px; border-top:1px solid var(--line);
   }
   .pf-section-title:first-child{ border-top:none; padding-top:0; margin-top:14px; }
-  .pf-table{ width:100%; border-collapse:collapse; margin:10px 0 16px; font-size:12.5px; }
+  .pf-table{ width:calc(100% + 16px); margin:10px -8px 16px; border-collapse:collapse; font-size:12.5px; }
+  .premium-active-inline{
+    font-size:12.5px; color:var(--correct); background:rgba(47,125,93,0.1);
+    border:1px solid rgba(47,125,93,0.3); border-radius:10px; padding:10px 12px;
+    margin-bottom:4px; line-height:1.5;
+  }
   .pf-table th{
     text-align:left; padding:8px 6px; background:var(--panel); color:var(--ink-soft);
     font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
@@ -1480,10 +1485,10 @@
       <div class="app-header-bar">
         <div class="header-profile-block">
           <button class="header-profile-btn" id="headerProfileBtn">
+            <span class="header-dots">⋮</span>
             <span class="header-avatar" id="headerAvatar">?</span>
             <span class="header-username-row">
               <span class="header-username" id="headerUsername">Loading…</span>
-              <span class="header-dots">⋮</span>
             </span>
           </button>
           <div class="header-status-line" id="headerStatusLine"></div>
@@ -1656,9 +1661,15 @@
       </div>
     </div>
     <div id="accountStatusExpanded" style="display:none;">
-      <div class="pf-section-title">Free vs Premium</div>
+      <div id="premiumActiveBanner" class="premium-active-inline" style="display:none;">
+        ✅ <b>Premium is active on your account.</b> Thank you for supporting Health Loksewa — enjoy full access to everything below.
+      </div>
+      <div class="pf-section-title" style="margin-top:0; border-top:none; padding-top:0;">Free vs Premium</div>
       <div id="premiumFeaturesTable"></div>
-      <div class="pf-section-title">Upgrade Plan</div>
+      <div id="upgradePlanTitle" class="pf-section-title">Upgrade Plan</div>
+      <div id="upgradePlanDetails" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px; line-height:1.5;">
+        NPR 200 for 30 days of full Premium access, via eSewa. Renews only if you pay again — no auto-billing.
+      </div>
       <button class="upgrade-btn" id="upgradeNowBtn" style="width:100%; justify-content:center;">💳 Proceed to Payment</button>
     </div>
     <div class="profile-menu">
@@ -4183,8 +4194,11 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   renderProfileDarkModeToggle();
   refreshMyDeviceSection();
   const isPremium = await refreshPremiumStatus();
-  document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free version';
+  document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
   document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'flex';
+  document.getElementById('upgradePlanTitle').style.display = isPremium ? 'none' : 'block';
+  document.getElementById('upgradePlanDetails').style.display = isPremium ? 'none' : 'block';
+  document.getElementById('premiumActiveBanner').style.display = isPremium ? 'block' : 'none';
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
