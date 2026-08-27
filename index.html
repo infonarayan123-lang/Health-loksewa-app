@@ -921,6 +921,19 @@
   .exam-type-btn.active .radio-dot::after{
     content:''; width:8px; height:8px; border-radius:50%; background:var(--navy);
   }
+  .password-field-wrap{ position:relative; }
+  .password-field-wrap input{
+    width:100%; padding:13px 44px 13px 14px;
+    border:1.5px solid var(--line); border-radius:10px;
+    font-family:'Inter',sans-serif; font-size:14.5px;
+    background:var(--panel); color:var(--ink);
+  }
+  .password-field-wrap input:focus{ outline:none; border-color:var(--navy); }
+  .password-toggle-btn{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; font-size:17px; padding:6px;
+    color:var(--ink-soft); line-height:1;
+  }
   .legal-info-content{
     font-size:13.5px; line-height:1.7; color:var(--ink);
     padding-bottom:30px;
@@ -1497,14 +1510,20 @@
       </div>
       <div class="field">
         <label id="passwordLabel">Password</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        <div class="password-field-wrap">
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="password-toggle-btn" data-target="loginPassword">👁️</button>
+        </div>
       </div>
       <p id="forgotPasswordWrap" style="text-align:right; margin-top:-8px; margin-bottom:14px;">
         <a href="#" id="forgotPasswordLink" style="color:var(--navy); font-size:12.5px; font-weight:600; text-decoration:none;">Forgot Password?</a>
       </p>
       <div class="field" id="fieldConfirmPassword" style="display:none;">
         <label>Confirm Password</label>
-        <input type="password" id="loginConfirmPassword" placeholder="••••••••" autocomplete="new-password">
+        <div class="password-field-wrap">
+          <input type="password" id="loginConfirmPassword" placeholder="••••••••" autocomplete="new-password">
+          <button type="button" class="password-toggle-btn" data-target="loginConfirmPassword">👁️</button>
+        </div>
       </div>
       <div id="loginError" class="login-error" style="display:none;"></div>
       <button class="start-btn" id="loginSubmitBtn">Login</button>
@@ -1773,7 +1792,6 @@
               <div class="psr-sub" id="myDeviceCountLabel">Checking…</div>
             </div>
           </div>
-          <button class="profile-menu-item" id="menuLogoutThisDevice"><span class="pm-icon">🚪</span> Logout This Device</button>
           <button class="profile-menu-item" id="menuLogoutOtherDevices"><span class="pm-icon">📵</span> Logout All Other Devices</button>
           <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon">🔑</span> Change Password</button>
           <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong);"><span class="pm-icon">⚠️</span> Delete Account</button>
@@ -1798,6 +1816,47 @@
   </div>
 
   <!-- LEGAL / INFO SCREEN — reused for Contact Us, About Us, Feedback, Privacy Policy, Terms -->
+  <!-- CHANGE PASSWORD SCREEN — current + new + confirm, with a "forgot current password"
+       fallback that sends the usual reset-link email as before. -->
+  <div class="screen" id="changePasswordScreen">
+    <div class="back-link" data-back="profile">← Back</div>
+    <div class="home-body" style="padding-top:20px;">
+      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); margin-bottom:20px;">🔑 Change Password</div>
+
+      <div class="field">
+        <label>Current Password</label>
+        <div class="password-field-wrap">
+          <input type="password" id="cpCurrentPassword" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="password-toggle-btn" data-target="cpCurrentPassword">👁️</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>New Password</label>
+        <div class="password-field-wrap">
+          <input type="password" id="cpNewPassword" placeholder="At least 8 characters" autocomplete="new-password">
+          <button type="button" class="password-toggle-btn" data-target="cpNewPassword">👁️</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Confirm New Password</label>
+        <div class="password-field-wrap">
+          <input type="password" id="cpConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password">
+          <button type="button" class="password-toggle-btn" data-target="cpConfirmPassword">👁️</button>
+        </div>
+      </div>
+
+      <div id="cpError" class="login-error" style="display:none;"></div>
+
+      <button class="start-btn" id="cpSubmitBtn">Update Password</button>
+
+      <p style="text-align:center; margin-top:16px;">
+        <a href="#" id="cpForgotLink" style="color:var(--navy); font-size:12.5px; font-weight:600; text-decoration:none;">Forgot your current password?</a>
+      </p>
+    </div>
+  </div>
+
   <div class="screen" id="legalInfoScreen">
     <div class="back-link" data-back="legalInfoBack">← Back</div>
     <div class="home-body">
@@ -2434,7 +2493,8 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
     getAuth, signOut, onAuthStateChanged, updateProfile, deleteUser,
-    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
+    EmailAuthProvider, reauthenticateWithCredential, updatePassword
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
@@ -2462,6 +2522,25 @@
   window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp };
   window.hlSignOut = () => signOut(auth);
   window.hlSendPasswordReset = (email) => sendPasswordResetEmail(auth, email);
+  // Change Password (in-app, with the current password required first) — used by the
+  // dedicated Change Password screen. Throws with a short reason string the screen can show:
+  // 'wrong-current-password' | 'weak-password' | 'generic'
+  window.hlChangePassword = async (currentPassword, newPassword) => {
+    const user = auth.currentUser;
+    if(!user || !user.email) throw new Error('generic');
+    try{
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+    }catch(e){
+      throw new Error('wrong-current-password');
+    }
+    try{
+      await updatePassword(user, newPassword);
+    }catch(e){
+      if(e && e.code === 'auth/weak-password') throw new Error('weak-password');
+      throw new Error('generic');
+    }
+  };
   window.hlDeleteAccount = async () => {
     const user = auth.currentUser;
     if(!user) throw new Error('Not logged in');
@@ -3089,6 +3168,7 @@ const docListScreen = document.getElementById('docListScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
+const changePasswordScreen = document.getElementById('changePasswordScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
 const upgradeScreen = document.getElementById('upgradeScreen');
 const progressScreen = document.getElementById('progressScreen');
@@ -3123,12 +3203,12 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -3193,6 +3273,7 @@ const SCREEN_REFRESH_MAP = {
   pastQuestionsPostScreen: () => renderPastQuestionsPosts(),
   pastQuestionsYearScreen: () => loadPastQuestionsList(currentMcqPost),
   subjectPickScreen: () => renderSubjectPick(),
+  profileScreen: () => refreshProfileData(),
 };
 
 (function setupPullToRefresh(){
@@ -4255,8 +4336,7 @@ async function loadPremiumFeaturesTable(targetId = 'premiumFeaturesTable'){
 }
 
 let profileIsPaid = false;
-document.getElementById('headerProfileBtn').addEventListener('click', async () => {
-  showScreen(profileScreen);
+async function refreshProfileData(){
   renderThemeSwatches();
   renderFontSizePicker();
   renderExamTypePicker();
@@ -4289,6 +4369,10 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   document.getElementById('upgradePlanTitle').style.display = isPaid ? 'none' : 'block';
   document.getElementById('premiumFeaturesTable').style.display = isPaid ? 'none' : 'block';
   document.getElementById('premiumActiveBanner').style.display = isPaid ? 'block' : 'none';
+}
+document.getElementById('headerProfileBtn').addEventListener('click', () => {
+  showScreen(profileScreen);
+  refreshProfileData();
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
@@ -4902,11 +4986,6 @@ async function refreshMyDeviceSection(){
     label.textContent = '';
   }
 }
-document.getElementById('menuLogoutThisDevice').addEventListener('click', () => {
-  if(confirm('Log out this device now?')){
-    if(window.hlSignOut) window.hlSignOut();
-  }
-});
 document.getElementById('menuLogoutOtherDevices').addEventListener('click', async () => {
   if(!window.currentUser || !window.hlFirestore) return;
   if(!confirm('This will sign out every OTHER device using this account (not this one). Those devices will be logged out the next time they open the app. Continue?')) return;
@@ -4929,7 +5008,55 @@ document.getElementById('menuLogoutOtherDevices').addEventListener('click', asyn
 });
 
 // ---------- Change Password ----------
-document.getElementById('menuChangePassword').addEventListener('click', async () => {
+document.getElementById('menuChangePassword').addEventListener('click', () => {
+  document.getElementById('cpCurrentPassword').value = '';
+  document.getElementById('cpNewPassword').value = '';
+  document.getElementById('cpConfirmPassword').value = '';
+  document.getElementById('cpError').style.display = 'none';
+  showScreen(changePasswordScreen);
+});
+
+document.getElementById('cpSubmitBtn').addEventListener('click', async () => {
+  const errorEl = document.getElementById('cpError');
+  errorEl.style.display = 'none';
+
+  const current = document.getElementById('cpCurrentPassword').value;
+  const next = document.getElementById('cpNewPassword').value;
+  const confirmNext = document.getElementById('cpConfirmPassword').value;
+
+  const showError = (msg) => { errorEl.textContent = msg; errorEl.style.display = 'block'; };
+
+  if(!current || !next || !confirmNext){
+    showError('Please fill in all three fields.');
+    return;
+  }
+  if(next.length < 8){
+    showError('New password must be at least 8 characters.');
+    return;
+  }
+  if(next !== confirmNext){
+    showError('New password and confirm password do not match.');
+    return;
+  }
+
+  try{
+    if(window.hlChangePassword) await window.hlChangePassword(current, next);
+    alert('✅ Password updated successfully!');
+    showScreen(profileScreen);
+  }catch(err){
+    const reason = err && err.message;
+    if(reason === 'wrong-current-password'){
+      showError('Current password is incorrect.');
+    } else if(reason === 'weak-password'){
+      showError('New password is too weak — please use at least 8 characters.');
+    } else {
+      showError('Could not update your password right now. Please try again.');
+    }
+  }
+});
+
+document.getElementById('cpForgotLink').addEventListener('click', async (e) => {
+  e.preventDefault();
   if(!window.currentUser || !window.currentUser.email){ alert('Could not find your account email.'); return; }
   if(!confirm(`Send a password reset link to ${window.currentUser.email}?`)) return;
   try{
@@ -4938,6 +5065,17 @@ document.getElementById('menuChangePassword').addEventListener('click', async ()
   }catch(e){
     alert('Could not send the reset email right now. Please try again shortly.');
   }
+});
+
+// ---------- Show/hide password — small eye icon on every password field in the app ----------
+document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    if(!input) return;
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁️' : '🙈';
+  });
 });
 
 // ---------- Delete Account ----------
