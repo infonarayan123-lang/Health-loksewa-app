@@ -1793,7 +1793,7 @@
   <div class="screen" id="upgradeScreen">
     <div class="back-link" data-back="premiumBack">← Back</div>
     <div class="home-body">
-      <div class="pay-screen-title">💳 Choose Payment Method</div>
+      <div class="pay-screen-title">💳 Choose Payment Plan</div>
 
       <div id="premiumStatusBadge"></div>
 
@@ -4308,6 +4308,13 @@ async function refreshPremiumStatus(){
 async function renderPremiumStatus(){
   const badge = document.getElementById('premiumStatusBadge');
   badge.innerHTML = '';
+  // Always reset the eSewa button/status when this screen opens (or re-opens) — if someone
+  // left mid-payment (e.g. pressed Back on eSewa's page instead of finishing), it must not
+  // stay stuck showing "Connecting to eSewa…" forever.
+  const esewaBtn = document.getElementById('esewaPayBtn');
+  const esewaStatus = document.getElementById('esewaPayStatus');
+  if(esewaBtn) esewaBtn.disabled = false;
+  if(esewaStatus) esewaStatus.textContent = '';
   // Keep the general premium cache updated (used elsewhere for feature-gating, where trial
   // users correctly count as premium too) — but the "already paid" badge below must only
   // fire for a real paid subscription, never for someone still in their free trial.
@@ -4477,6 +4484,19 @@ async function checkForEsewaReturnAndActivate(){
   }
 }
 window.checkForEsewaReturnAndActivate = checkForEsewaReturnAndActivate;
+
+// If someone leaves for eSewa's checkout page and then presses the browser's own Back button
+// (instead of finishing payment or eSewa redirecting them back), some browsers restore this
+// page instantly from cache without re-running any of our navigation code. Catch that case too,
+// so the eSewa button never stays stuck showing "Connecting to eSewa…".
+window.addEventListener('pageshow', (event) => {
+  if(event.persisted){
+    const esewaBtn = document.getElementById('esewaPayBtn');
+    const esewaStatus = document.getElementById('esewaPayStatus');
+    if(esewaBtn) esewaBtn.disabled = false;
+    if(esewaStatus) esewaStatus.textContent = '';
+  }
+});
 
 // ---------- Profile menu: Contact Us, About Us, Feedback, Rate Us, Privacy Policy, Terms ----------
 function openLegalInfo(title, htmlContent){
