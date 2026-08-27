@@ -275,6 +275,7 @@
     margin-bottom:10px;
   }
   .live-clock-line .clock-seconds{ color:var(--crimson); }
+  .header-profile-block{ display:flex; flex-direction:column; align-items:flex-start; }
   .header-profile-btn{
     display:flex; align-items:center; gap:9px;
     background:none; border:none; cursor:pointer; padding:2px;
@@ -286,7 +287,13 @@
     font-weight:700; font-size:14px; font-family:'Tinos',serif;
     flex-shrink:0;
   }
+  .header-username-row{ display:flex; align-items:center; gap:6px; }
   .header-username{ font-size:13.5px; font-weight:700; color:var(--ink); }
+  .header-dots{ font-size:13px; color:var(--ink-soft); letter-spacing:1px; line-height:1; }
+  .header-status-line{
+    font-size:11.5px; color:var(--ink-soft); cursor:pointer;
+    margin-top:8px; padding-left:2px; line-height:1.35; max-width:220px;
+  }
   .header-icons{ display:flex; gap:6px; }
   .header-icon-btn{
     width:36px; height:36px; border-radius:50%;
@@ -1466,10 +1473,16 @@
 
       <!-- TOP HEADER BAR -->
       <div class="app-header-bar">
-        <button class="header-profile-btn" id="headerProfileBtn">
-          <span class="header-avatar" id="headerAvatar">?</span>
-          <span class="header-username" id="headerUsername">Loading…</span>
-        </button>
+        <div class="header-profile-block">
+          <button class="header-profile-btn" id="headerProfileBtn">
+            <span class="header-avatar" id="headerAvatar">?</span>
+            <span class="header-username-row">
+              <span class="header-username" id="headerUsername">Loading…</span>
+              <span class="header-dots">⋯</span>
+            </span>
+          </button>
+          <div class="header-status-line" id="headerStatusLine"></div>
+        </div>
         <div class="header-icons">
           <button class="header-icon-btn notif-btn-wrap" id="headerNotifBtn" aria-label="Notifications">
             🔔
@@ -1478,9 +1491,6 @@
           <button class="header-icon-btn" id="headerDarkBtn" aria-label="Toggle dark mode">🌙</button>
         </div>
       </div>
-
-      <!-- PREMIUM UPSELL / STATUS BANNER -->
-      <div id="homePremiumBanner" style="display:none;"></div>
 
       <!-- LIVE CLOCK: date, day, and ticking time (updates every second) -->
       <div class="live-clock-line" id="liveClockLine">Loading…</div>
@@ -1635,8 +1645,8 @@
       <a href="#" id="editNameLink" style="display:inline-block; margin-top:8px; color:#fff; font-size:12px; text-decoration:underline; opacity:0.9;">✏️ Edit Name</a>
     </div>
     <div class="profile-status-row">
-      <div>
-        <div class="status-label">Account Status</div>
+      <div id="accountStatusClickTarget" style="cursor:pointer;">
+        <div class="status-label">Account Status <span style="font-size:10px;">▾</span></div>
         <div class="status-value" id="accountStatusValue">Free</div>
       </div>
       <button class="upgrade-btn" id="upgradeNowBtn">Upgrade Now</button>
@@ -1738,6 +1748,8 @@
         <div class="pf-row">📊 <b>Advanced Analytics</b> — deeper insights into your progress</div>
         <div class="pf-row">🚫 <b>Ad-free experience</b> (once ads are added to the free version)</div>
       </div>
+
+      <div id="upgradeFeaturesTable"></div>
 
       <button class="esewa-pay-btn" id="esewaPayBtn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
@@ -4106,32 +4118,28 @@ function renderBookmarks(){
 // ---------- Header bar: profile / notifications / dark mode ----------
 // ---------- Home Premium banner: plain, professional status line reflecting real trial state ----------
 async function renderHomePremiumBanner(){
-  const banner = document.getElementById('homePremiumBanner');
+  const banner = document.getElementById('headerStatusLine');
   if(!banner) return;
-  if(!window.getAccessStatus){ banner.style.display = 'none'; return; }
+  if(!window.getAccessStatus){ banner.textContent = ''; return; }
   const status = await window.getAccessStatus();
-  banner.style.display = 'block';
-  banner.className = 'home-status-line';
+  banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); loadPremiumFeaturesTable('upgradeFeaturesTable'); };
 
   if(status.source === 'paid'){
-    banner.innerHTML = '💎 You have full Premium access. Thank you for supporting Health Loksewa.';
-    banner.onclick = null;
+    banner.textContent = 'You are in Pro version';
+    banner.onclick = null; // already Premium — nothing to tap through to
   } else if(status.source === 'trial'){
-    banner.innerHTML = `You have ${status.trialHoursLeft} hour${status.trialHoursLeft === 1 ? '' : 's'} left in your free Premium trial. Unlock Premium to keep full access after it ends.`;
-    banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
+    banner.textContent = `You are in ${status.trialHoursLeft}-hour trial period — unlock Premium to access all features`;
   } else if(status.trialEnded){
-    banner.innerHTML = 'Your free trial has ended. Unlock Premium to continue enjoying unlimited AI help, PDF downloads, and more.';
-    banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
+    banner.textContent = 'Your free trial has ended — unlock Premium to access all features';
   } else {
-    banner.innerHTML = 'Unlock Premium to enjoy unlimited AI help, PDF downloads, and more.';
-    banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
+    banner.textContent = 'Unlock Premium to access all features';
   }
 }
 
 // ---------- Free vs Premium comparison table (Sheet-driven — edit the "Premium Features"
 // tab anytime and it updates here automatically, no code changes needed) ----------
-async function loadPremiumFeaturesTable(){
-  const wrap = document.getElementById('premiumFeaturesTable');
+async function loadPremiumFeaturesTable(targetId = 'premiumFeaturesTable'){
+  const wrap = document.getElementById(targetId);
   if(!wrap) return;
   try{
     const res = await fetch(`${SHEET_API_URL}?action=premiumFeatures`);
@@ -4152,7 +4160,7 @@ async function loadPremiumFeaturesTable(){
       </table>
     `;
   }catch(e){
-    wrap.innerHTML = ''; // quietly skip — Profile screen still works fine without this table
+    wrap.innerHTML = ''; // quietly skip — the screen still works fine without this table
   }
 }
 
@@ -4165,7 +4173,6 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   renderLanguagePicker();
   renderProfileDarkModeToggle();
   refreshMyDeviceSection();
-  loadPremiumFeaturesTable();
   const isPremium = await refreshPremiumStatus();
   document.getElementById('accountStatusValue').textContent = isPremium ? '💎 Premium' : 'Free';
   document.getElementById('upgradeNowBtn').style.display = isPremium ? 'none' : 'block';
@@ -4177,10 +4184,14 @@ document.getElementById('headerNotifBtn').addEventListener('click', () => {
 document.getElementById('profileLogoutBtn').addEventListener('click', () => {
   window.doSignOut();
 });
+document.getElementById('accountStatusClickTarget').addEventListener('click', () => {
+  loadPremiumFeaturesTable('premiumFeaturesTable');
+});
 document.getElementById('upgradeNowBtn').addEventListener('click', () => {
   premiumBackTarget = profileScreen;
   showScreen(upgradeScreen);
   renderPremiumStatus();
+  loadPremiumFeaturesTable('upgradeFeaturesTable');
 });
 
 // ---------- Premium status checking (Path B: manual activation via eSewa) ----------
