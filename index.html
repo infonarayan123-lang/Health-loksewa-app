@@ -876,6 +876,20 @@
   .pay-manual-steps{
     padding-left:18px; font-size:13px; line-height:1.9; color:var(--ink); margin-top:10px;
   }
+  .pricing-offer-badge{
+    background:linear-gradient(90deg, #B8860B, #E0A526); color:#fff; text-align:center;
+    font-size:12.5px; font-weight:700; border-radius:10px; padding:9px 12px; margin-bottom:12px;
+  }
+  .pricing-plans-wrap{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+  .pricing-plan-tile{
+    background:var(--panel); border:1.5px solid var(--line); border-radius:12px;
+    padding:12px 10px; text-align:center; cursor:pointer;
+  }
+  .pricing-plan-tile.active{ border-color:var(--gold,#B8860B); background:rgba(184,134,11,0.08); }
+  .pricing-plan-tile .ppt-label{ font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .pricing-plan-tile .ppt-base{ font-size:11px; color:var(--ink-soft); text-decoration:line-through; }
+  .pricing-plan-tile .ppt-final{ font-size:16px; font-weight:700; color:var(--ink); }
+  .pricing-plan-tile .ppt-discount{ font-size:10.5px; font-weight:700; color:var(--correct,#2F7D5D); }
   .profile-menu{ padding:14px 20px 30px; }
 
   /* ---------- Font Size Control (accessibility) — uses zoom so it scales everything, not just relative-unit text ---------- */
@@ -1683,13 +1697,14 @@
         <div>
           <div class="status-label">Account Status <span style="font-size:10px;">▾</span></div>
           <div class="status-value" id="accountStatusValue">Free version</div>
+          <div class="status-sub" id="premiumDatesLine" style="display:none; font-size:11px; color:var(--ink-soft); margin-top:2px;"></div>
         </div>
         <div id="upgradePlanTitle" class="upgrade-btn" style="flex:none; white-space:nowrap;">Upgrade Plan</div>
       </div>
     </div>
     <div id="accountStatusExpanded" class="account-status-expanded" style="display:none;">
       <div id="premiumActiveBanner" class="premium-active-inline" style="display:none;">
-        ✅ <b>Premium is active on your account.</b> Thank you for supporting Health Loksewa — enjoy full access to everything below.
+        ✅ <b>Premium Active</b> — thank you for joining Health Loksewa!
       </div>
       <div id="premiumFeaturesTable"></div>
       <button class="upgrade-btn" id="upgradeNowBtn" style="width:100%; justify-content:center;">💳 Proceed to Payment</button>
@@ -1782,20 +1797,26 @@
 
       <div id="premiumStatusBadge"></div>
 
+      <!-- Pricing tiers — Sheet-driven (edit the "Pricing" tab anytime: PlanKey | Label | Months |
+           BasePrice | DiscountPercent — no code changes needed). Picking a tile sets the amount/
+           duration used by both eSewa and Khalti below. -->
+      <div id="pricingOfferBadge" style="display:none;"></div>
+      <div id="pricingPlansWrap" class="pricing-plans-wrap"></div>
+
       <!-- eSewa: automatic + manual -->
-      <div class="pay-method-card">
-        <div class="pay-method-title">🟢 eSewa <span class="pay-method-price">NPR 200/month</span></div>
+      <div class="pay-method-card" id="esewaMethodCard">
+        <div class="pay-method-title">🟢 eSewa <span class="pay-method-price" id="esewaMethodPrice">NPR 299/month</span></div>
 
         <button class="esewa-pay-btn" id="esewaPayBtn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
-          Pay Automatically with eSewa
+          <span id="esewaPayBtnLabel">Pay Automatically with eSewa</span>
         </button>
         <p id="esewaPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 0;"></p>
 
         <details class="pay-manual-details">
           <summary>Or pay manually instead</summary>
           <ol class="pay-manual-steps">
-            <li>Send <b>NPR 200</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">9848551259</b></li>
+            <li>Send <b id="esewaManualAmount">NPR 299</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">9848551259</b></li>
             <li>Take a screenshot of your payment confirmation</li>
             <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
             <li>Your account will be manually activated within 24 hours</li>
@@ -1804,10 +1825,10 @@
       </div>
 
       <!-- Khalti: manual only for now (automatic checkout pending Khalti API keys) -->
-      <div class="pay-method-card">
-        <div class="pay-method-title">🟣 Khalti <span class="pay-method-price">NPR 200/month</span></div>
+      <div class="pay-method-card" id="khaltiMethodCard">
+        <div class="pay-method-title">🟣 Khalti <span class="pay-method-price" id="khaltiMethodPrice">NPR 299/month</span></div>
         <ol class="pay-manual-steps">
-          <li>Send <b>NPR 200</b> via <b>Khalti</b> to: <b id="khaltiIdDisplay">9848551259</b></li>
+          <li>Send <b id="khaltiManualAmount">NPR 299</b> via <b>Khalti</b> to: <b id="khaltiIdDisplay">9848551259</b></li>
           <li>Take a screenshot of your payment confirmation</li>
           <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
           <li>Your account will be manually activated within 24 hours</li>
@@ -2717,21 +2738,25 @@
 
   window.getAccessStatus = async function(){
     const user = auth.currentUser;
-    if(!user) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
+    if(!user) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
     if(user.email && FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())){
-      return { isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false };
+      return { isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
     }
     try{
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
-      if(!snap.exists()) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
+      if(!snap.exists()) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
 
       const data = snap.data();
 
       if(data.premium === true){
         const expiresAt = data.premiumExpiresAt;
         if(!expiresAt || new Date(expiresAt) >= new Date()){
-          return { isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false };
+          return {
+            isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false,
+            premiumStartDate: data.premiumActivatedAt || null,
+            premiumEndDate: expiresAt || null
+          };
         }
         // Expired paid subscription — automatically revert to free, no manual action needed
         try{ await setDoc(ref, { premium: false }, { merge: true }); }catch(e){}
@@ -2742,14 +2767,14 @@
         const startedMs = new Date(data.trialStartedAt).getTime();
         const hoursElapsed = (Date.now() - startedMs) / 3600000;
         if(hoursElapsed < 48){
-          return { isPremium: true, source: 'trial', trialHoursLeft: Math.max(1, Math.ceil(48 - hoursElapsed)), trialEnded: false };
+          return { isPremium: true, source: 'trial', trialHoursLeft: Math.max(1, Math.ceil(48 - hoursElapsed)), trialEnded: false, premiumStartDate: null, premiumEndDate: null };
         }
-        return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: true };
+        return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: true, premiumStartDate: null, premiumEndDate: null };
       }
 
-      return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
+      return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
     }catch(err){
-      return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false };
+      return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
     }
   };
 
@@ -2759,12 +2784,14 @@
   };
 
   // ---- AI Chat daily message limit (10/day free, unlimited for premium) ----
-  // ---- Activate Premium after a verified eSewa payment (30 days from now) ----
-  window.activatePremiumAfterPayment = async function(){
+  // ---- Activate Premium after a verified eSewa payment (defaults to 30 days = 1 month;
+  // pass months for longer tiers, e.g. 3/6/12) ----
+  window.activatePremiumAfterPayment = async function(months){
     const user = auth.currentUser;
     if(!user) return;
+    const planMonths = Number(months) > 0 ? Number(months) : 1;
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setDate(expiresAt.getDate() + (planMonths * 30));
     try{
       await setDoc(doc(db, 'users', user.uid), {
         premium: true,
@@ -4215,9 +4242,18 @@ document.getElementById('headerProfileBtn').addEventListener('click', async () =
   renderLanguagePicker();
   renderProfileDarkModeToggle();
   refreshMyDeviceSection();
-  const status = window.getAccessStatus ? await window.getAccessStatus() : { isPremium: false, source: 'none', trialHoursLeft: null };
+  const status = window.getAccessStatus ? await window.getAccessStatus() : { isPremium: false, source: 'none', trialHoursLeft: null, premiumStartDate: null, premiumEndDate: null };
   const isPaid = status.source === 'paid';
   profileIsPaid = isPaid;
+
+  const datesLine = document.getElementById('premiumDatesLine');
+  if(isPaid && status.premiumStartDate && status.premiumEndDate){
+    const fmt = (d) => new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    datesLine.textContent = `Started ${fmt(status.premiumStartDate)} · Renews ${fmt(status.premiumEndDate)}`;
+    datesLine.style.display = 'block';
+  } else {
+    datesLine.style.display = 'none';
+  }
 
   if(isPaid){
     document.getElementById('accountStatusValue').textContent = '💎 Premium';
@@ -4273,12 +4309,78 @@ async function renderPremiumStatus(){
   const badge = document.getElementById('premiumStatusBadge');
   badge.innerHTML = '';
   const isPremium = await refreshPremiumStatus();
+  const buyControls = ['pricingOfferBadge', 'pricingPlansWrap', 'esewaMethodCard', 'khaltiMethodCard'];
   if(isPremium){
-    badge.innerHTML = `<div class="premium-active-badge">✅ Premium Active — thank you for supporting Health Loksewa!</div>`;
-    document.getElementById('esewaPayBtn').style.display = 'none';
+    badge.innerHTML = `<div class="premium-active-badge">✅ Premium Active — thank you for joining Health Loksewa!</div>`;
+    buyControls.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
   } else {
-    document.getElementById('esewaPayBtn').style.display = 'flex';
+    buyControls.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = ''; });
+    loadPricingPlans();
   }
+}
+
+// ---------- Pricing tiers — Sheet-driven ("Pricing" tab: PlanKey | Label | Months | BasePrice |
+// DiscountPercent). Picking a tile sets the amount/duration used by eSewa (automatic + manual)
+// and Khalti (manual). Falls back to a single NPR 299/month plan if the tab is empty/missing. ----------
+let pricingPlansList = [];
+let selectedPricingPlan = null;
+const FALLBACK_PRICING_PLAN = { planKey: 'monthly', label: 'Monthly', months: 1, basePrice: 299, discountPercent: 0, finalPrice: 299 };
+
+async function loadPricingPlans(){
+  const wrap = document.getElementById('pricingPlansWrap');
+  const offerBadge = document.getElementById('pricingOfferBadge');
+  if(!wrap) return;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=pricingPlans`);
+    const rows = await res.json();
+    pricingPlansList = (Array.isArray(rows) && rows.length > 0) ? rows : [FALLBACK_PRICING_PLAN];
+  }catch(e){
+    pricingPlansList = [FALLBACK_PRICING_PLAN];
+  }
+
+  const maxDiscount = Math.max(0, ...pricingPlansList.map(p => Number(p.discountPercent) || 0));
+  if(maxDiscount > 0){
+    offerBadge.textContent = `🔥 Limited Offer — up to ${maxDiscount}% OFF Premium!`;
+    offerBadge.style.display = 'block';
+  } else {
+    offerBadge.style.display = 'none';
+  }
+
+  wrap.innerHTML = pricingPlansList.map((p, i) => `
+    <div class="pricing-plan-tile" data-plan-index="${i}">
+      <div class="ppt-label">${p.label || ''}</div>
+      ${p.discountPercent > 0 ? `<div class="ppt-base">NPR ${p.basePrice}</div>` : ''}
+      <div class="ppt-final">NPR ${p.finalPrice}</div>
+      ${p.discountPercent > 0 ? `<div class="ppt-discount">${p.discountPercent}% OFF</div>` : ''}
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.pricing-plan-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      selectPricingPlan(Number(tile.dataset.planIndex));
+    });
+  });
+
+  // Default selection: the Monthly plan if present, else the first plan
+  const defaultIndex = pricingPlansList.findIndex(p => Number(p.months) === 1);
+  selectPricingPlan(defaultIndex >= 0 ? defaultIndex : 0);
+}
+
+function selectPricingPlan(index){
+  selectedPricingPlan = pricingPlansList[index];
+  if(!selectedPricingPlan) return;
+
+  document.querySelectorAll('#pricingPlansWrap .pricing-plan-tile').forEach((tile, i) => {
+    tile.classList.toggle('active', i === index);
+  });
+
+  const priceLabel = `NPR ${selectedPricingPlan.finalPrice} / ${selectedPricingPlan.label}`;
+  const amountLabel = `NPR ${selectedPricingPlan.finalPrice}`;
+  document.getElementById('esewaMethodPrice').textContent = priceLabel;
+  document.getElementById('khaltiMethodPrice').textContent = priceLabel;
+  document.getElementById('esewaManualAmount').textContent = amountLabel;
+  document.getElementById('khaltiManualAmount').textContent = amountLabel;
+  document.getElementById('esewaPayBtnLabel').textContent = `Pay Automatically with eSewa — ${amountLabel}`;
 }
 
 // ---------- eSewa Payment: fully automatic (currently on test/sandbox credentials) ----------
@@ -4296,7 +4398,12 @@ document.getElementById('esewaPayBtn').addEventListener('click', async () => {
   statusEl.textContent = 'Connecting to eSewa…';
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=200`);
+    const planForPayment = selectedPricingPlan || FALLBACK_PRICING_PLAN;
+    // Stash the chosen plan's duration so activation (after eSewa redirects back) knows how
+    // many months of Premium to grant — eSewa's own redirect data doesn't carry this for us.
+    try{ localStorage.setItem('hl_pending_plan_months', String(planForPayment.months)); }catch(e){}
+
+    const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=${encodeURIComponent(planForPayment.finalPrice)}`);
     const fields = await res.json();
 
     if(!fields.payment_url){
@@ -4353,8 +4460,11 @@ async function checkForEsewaReturnAndActivate(){
     }
 
     if(window.activatePremiumAfterPayment){
-      await window.activatePremiumAfterPayment();
-      alert('🎉 Payment successful! Your Premium is now active — thank you for supporting Health Loksewa!');
+      let planMonths = 1;
+      try{ planMonths = Number(localStorage.getItem('hl_pending_plan_months')) || 1; }catch(e){}
+      await window.activatePremiumAfterPayment(planMonths);
+      try{ localStorage.removeItem('hl_pending_plan_months'); }catch(e){}
+      alert('🎉 Payment successful! ✅ Premium Active — thank you for joining Health Loksewa!');
       try{ localStorage.setItem('hl_premium_status', 'true'); }catch(e){}
     }
   }catch(err){
