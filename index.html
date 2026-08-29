@@ -1162,6 +1162,23 @@
     font-family:'Inter',sans-serif; cursor:pointer;
   }
   .chat-quick-btn:active{ background:var(--crimson); color:#fff; }
+
+  /* ---------- Flashcards ---------- */
+  .flashcard{
+    background:var(--panel); border:1.5px solid var(--line); border-radius:16px;
+    padding:28px 20px; min-height:180px; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; text-align:center; cursor:pointer;
+  }
+  .flashcard-front p, .flashcard-back p{ font-size:15px; color:var(--ink); line-height:1.6; }
+  .flashcard-rate-row{ display:flex; gap:8px; margin-top:16px; }
+  .flashcard-rate-btn{
+    flex:1; padding:12px; border-radius:10px; border:none;
+    font-weight:700; font-size:13px; cursor:pointer; color:#fff;
+    font-family:'Inter',sans-serif;
+  }
+  .flashcard-rate-btn.forgot{ background:var(--wrong); }
+  .flashcard-rate-btn.difficult{ background:var(--gold); }
+  .flashcard-rate-btn.easy{ background:var(--correct); }
   .chat-input-row{
     display:flex; gap:8px; padding:12px 16px 16px;
     border-top:1px solid var(--line); background:var(--panel);
@@ -2170,6 +2187,20 @@
         <div class="lc-text"><h4>⏱️ Speed Challenge</h4><p>60 seconds — answer as many as you can</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToFlashcardsFromPractice">
+        <div class="lc-text"><h4>🧩 Flashcards</h4><p>Flip-card active recall practice</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="screen" id="flashcardsScreen">
+    <div class="back-link" data-back="practice">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🧩 Flashcards</div>
+      <div id="flashcardsWrap">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
     </div>
   </div>
 
@@ -3311,6 +3342,7 @@ const videoScreen = document.getElementById('videoScreen');
 const learnScreen = document.getElementById('learnScreen');
 const practiceScreen = document.getElementById('practiceScreen');
 const mistakeBookScreen = document.getElementById('mistakeBookScreen');
+const flashcardsScreen = document.getElementById('flashcardsScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
@@ -3338,7 +3370,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -3394,6 +3426,7 @@ const SCREEN_REFRESH_MAP = {
   reminderScreen: () => renderReminderSettings(),
   revisionScreen: () => renderRevisionSummary(),
   mistakeBookScreen: () => renderMistakeBook(),
+  flashcardsScreen: () => startFlashcards(),
   notificationsScreen: () => loadNotifications(),
   studyGroupsScreen: () => renderMyGroups(),
   tournamentPostScreen: () => renderTournamentPosts(),
@@ -3465,7 +3498,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -3537,6 +3570,10 @@ document.getElementById('goToMistakeBookFromPractice').addEventListener('click',
 document.getElementById('goToSpeedChallengeFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
   startSpeedChallenge();
+});
+document.getElementById('goToFlashcardsFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  startFlashcards();
 });
 
 // ---------- Dashboard navigation ----------
@@ -7252,6 +7289,93 @@ async function startSpeedChallenge(){
     hideQuizLoading();
     alert('Could not load Speed Challenge questions. Check your connection and try again.');
   }
+}
+
+// ---------- Flashcards: flip-card active recall, built entirely from existing MCQ data —
+// front = the question, back = the correct answer + explanation. No new content needed. ----------
+let flashcardsPool = [];
+let flashcardsIndex = 0;
+let flashcardsRevealed = false;
+
+async function startFlashcards(){
+  showScreen(flashcardsScreen);
+  document.getElementById('flashcardsWrap').innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=random&count=20&post=${currentMcqPost}`);
+    const pool = await res.json();
+    if(!pool || pool.length === 0){
+      document.getElementById('flashcardsWrap').innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No questions available yet.</p>`;
+      return;
+    }
+    flashcardsPool = pool;
+    flashcardsIndex = 0;
+    flashcardsRevealed = false;
+    renderFlashcard();
+  }catch(err){
+    document.getElementById('flashcardsWrap').innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load flashcards. Check your connection and try again.</p>`;
+  }
+}
+
+function renderFlashcard(){
+  const wrap = document.getElementById('flashcardsWrap');
+  if(flashcardsIndex >= flashcardsPool.length){
+    wrap.innerHTML = `
+      <div class="content-card" style="text-align:center;">
+        <h4 style="margin-bottom:8px;">🎉 Done!</h4>
+        <p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:14px;">You went through ${flashcardsPool.length} flashcard${flashcardsPool.length !== 1 ? 's' : ''}.</p>
+        <button class="start-btn" id="flashcardsRestartBtn" style="margin-top:0;">Start Another Batch</button>
+      </div>
+    `;
+    document.getElementById('flashcardsRestartBtn').addEventListener('click', startFlashcards);
+    return;
+  }
+
+  const q = flashcardsPool[flashcardsIndex];
+  const correctLetter = (q.CorrectAnswer || '').trim().toUpperCase();
+  const correctText = q['Option' + correctLetter] || '';
+
+  wrap.innerHTML = `
+    <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-bottom:10px;">${flashcardsIndex + 1} of ${flashcardsPool.length}</p>
+    <div class="flashcard" id="flashcardEl">
+      <div class="flashcard-front">
+        <p>${q.Question}</p>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-top:14px;">Tap to reveal answer</p>
+      </div>
+      <div class="flashcard-back" style="display:none;">
+        <p style="font-weight:700; color:var(--correct); margin-bottom:8px;">✅ ${correctText}</p>
+        ${q.Explanation ? `<p style="font-size:12.5px; color:var(--ink-soft);">${q.Explanation}</p>` : ''}
+      </div>
+    </div>
+    <div class="flashcard-rate-row" id="flashcardRatingRow" style="display:none;">
+      <button class="flashcard-rate-btn forgot" id="fcForgot">❌ Forgot</button>
+      <button class="flashcard-rate-btn difficult" id="fcDifficult">😐 Difficult</button>
+      <button class="flashcard-rate-btn easy" id="fcEasy">✅ Easy</button>
+    </div>
+  `;
+
+  document.getElementById('flashcardEl').addEventListener('click', () => {
+    if(flashcardsRevealed) return;
+    flashcardsRevealed = true;
+    document.querySelector('#flashcardEl .flashcard-front').style.display = 'none';
+    document.querySelector('#flashcardEl .flashcard-back').style.display = 'block';
+    document.getElementById('flashcardRatingRow').style.display = 'flex';
+  });
+  document.getElementById('fcForgot').addEventListener('click', () => {
+    addToWrongQuestions(q); // feeds Revision Mode / Mistake Book, same as a wrong MCQ answer
+    nextFlashcard();
+  });
+  document.getElementById('fcDifficult').addEventListener('click', () => {
+    nextFlashcard(); // self-assessment only, no schedule change
+  });
+  document.getElementById('fcEasy').addEventListener('click', () => {
+    removeFromWrongQuestions(q); // if it was previously a mistake, mark it resolved
+    nextFlashcard();
+  });
+}
+function nextFlashcard(){
+  flashcardsIndex++;
+  flashcardsRevealed = false;
+  renderFlashcard();
 }
 
 // Subject counts now load on demand (see cardQuiz click handler above) — not at app startup,
