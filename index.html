@@ -2073,6 +2073,18 @@
     </div>
   </div>
 
+  <div class="screen" id="mistakeBookScreen">
+    <div class="back-link" data-back="practice">← Back</div>
+    <div class="home-body">
+      <div class="section-title">❌ My Mistakes</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Every question you get wrong is saved here automatically, on a spaced schedule (1 → 3 → 7 → 15 → 30 days). Practicing here counts toward that schedule, same as Revision Mode.</p>
+      <button class="start-btn" id="practiceMistakesBtn" style="margin-bottom:18px;">Practice All Mistakes →</button>
+      <div id="mistakeBookContent">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
+    </div>
+  </div>
+
   <!-- FORMULA / QUICK REFERENCE SHEET -->
   <div class="screen" id="formulaScreen">
     <div class="back-link" data-back="studyResources">← Back</div>
@@ -2148,6 +2160,10 @@
       </a>
       <a class="link-card" href="#" id="goToBookmarksFromPractice">
         <div class="lc-text"><h4>🔖 Bookmarks</h4><p>Questions you saved for later</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToMistakeBookFromPractice">
+        <div class="lc-text"><h4>❌ My Mistakes</h4><p>Every wrong answer, tracked automatically</p></div>
         <div class="lc-arrow">→</div>
       </a>
     </div>
@@ -3290,6 +3306,7 @@ const formulaScreen = document.getElementById('formulaScreen');
 const videoScreen = document.getElementById('videoScreen');
 const learnScreen = document.getElementById('learnScreen');
 const practiceScreen = document.getElementById('practiceScreen');
+const mistakeBookScreen = document.getElementById('mistakeBookScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
@@ -3317,12 +3334,12 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -3372,6 +3389,7 @@ const SCREEN_REFRESH_MAP = {
   notesScreen: () => renderNotes(),
   reminderScreen: () => renderReminderSettings(),
   revisionScreen: () => renderRevisionSummary(),
+  mistakeBookScreen: () => renderMistakeBook(),
   notificationsScreen: () => loadNotifications(),
   studyGroupsScreen: () => renderMyGroups(),
   tournamentPostScreen: () => renderTournamentPosts(),
@@ -3443,7 +3461,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -3506,6 +3524,11 @@ document.getElementById('goToRevisionFromPractice').addEventListener('click', (e
 document.getElementById('goToBookmarksFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
   document.getElementById('goToBookmarks').click();
+});
+document.getElementById('goToMistakeBookFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(mistakeBookScreen);
+  renderMistakeBook();
 });
 
 // ---------- Dashboard navigation ----------
@@ -4255,6 +4278,67 @@ document.getElementById('startRevisionBtn').addEventListener('click', () => {
   if(pool.length === 0) return;
   currentSetInfo = null; // revision quizzes don't lock into the normal Set progression
   launchQuiz(shuffle([...pool]), 'Revision', 0, 0);
+});
+
+// ---------- Mistake Book: every wrong answer, automatically tracked, grouped by subject ----------
+function renderMistakeBook(){
+  const wrap = document.getElementById('mistakeBookContent');
+  const practiceBtn = document.getElementById('practiceMistakesBtn');
+  const list = getWrongQuestions();
+
+  if(list.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No mistakes tracked yet — questions you get wrong during practice will show up here automatically.</p>`;
+    practiceBtn.style.display = 'none';
+    return;
+  }
+  practiceBtn.style.display = 'block';
+
+  const today = todayISO();
+  const groups = {};
+  list.forEach(q => {
+    const subj = q.Subject || 'Other';
+    if(!groups[subj]) groups[subj] = [];
+    groups[subj].push(q);
+  });
+
+  wrap.innerHTML = Object.keys(groups).map(subj => {
+    const itemsHtml = groups[subj].map(q => {
+      let statusText;
+      if(!q.nextRevisionDate || q.nextRevisionDate <= today){
+        statusText = '🔴 Due now';
+      } else {
+        const days = Math.ceil((new Date(q.nextRevisionDate) - new Date(today)) / 86400000);
+        statusText = `🟡 Due in ${days} day${days !== 1 ? 's' : ''}`;
+      }
+      return `
+        <div class="bookmark-item">
+          <div class="bq-subject">${statusText}</div>
+          <div class="bq-text">${q.Question}</div>
+          <button class="bookmark-remove-btn" data-key="${encodeURIComponent(questionKey(q))}">✕ Remove</button>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="content-card" style="margin-bottom:14px;">
+        <h4 style="margin-bottom:10px;">${subj} <span style="color:var(--ink-soft); font-weight:400; font-size:12px;">(${groups[subj].length})</span></h4>
+        ${itemsHtml}
+      </div>
+    `;
+  }).join('');
+
+  document.querySelectorAll('#mistakeBookContent .bookmark-remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = decodeURIComponent(btn.dataset.key);
+      saveWrongQuestions(getWrongQuestions().filter(w => questionKey(w) !== key));
+      renderMistakeBook();
+    });
+  });
+}
+document.getElementById('practiceMistakesBtn').addEventListener('click', () => {
+  const list = getWrongQuestions();
+  if(list.length === 0) return;
+  currentSetInfo = null;
+  launchQuiz(shuffle([...list]), 'Revision', 0, 0);
 });
 
 function renderReminderSettings(){
