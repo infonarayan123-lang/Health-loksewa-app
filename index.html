@@ -1150,6 +1150,18 @@
     border:1px solid var(--line); border-bottom-left-radius:4px;
   }
   .chat-bubble.ai.thinking{ color:var(--ink-soft); font-style:italic; }
+  .chat-quick-actions{
+    display:flex; gap:8px; overflow-x:auto; padding:0 16px 10px;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  }
+  .chat-quick-actions::-webkit-scrollbar{ display:none; }
+  .chat-quick-btn{
+    flex:none; white-space:nowrap; background:var(--panel);
+    border:1.5px solid var(--crimson); color:var(--ink);
+    padding:8px 14px; border-radius:20px; font-size:12.5px; font-weight:600;
+    font-family:'Inter',sans-serif; cursor:pointer;
+  }
+  .chat-quick-btn:active{ background:var(--crimson); color:#fff; }
   .chat-input-row{
     display:flex; gap:8px; padding:12px 16px 16px;
     border-top:1px solid var(--line); background:var(--panel);
@@ -1722,6 +1734,12 @@
     </div>
     <div class="chat-screen-wrap">
       <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-quick-actions" id="chatQuickActions">
+        <button class="chat-quick-btn" data-template="Explain this topic simply: ">📖 Explain Topic</button>
+        <button class="chat-quick-btn" data-template="Generate 5 MCQs about: ">📝 Generate MCQs</button>
+        <button class="chat-quick-btn" data-template="Make a mnemonic to remember: ">🧠 Make Mnemonic</button>
+        <button class="chat-quick-btn" data-template="Check my answer — Question: [paste question] My answer: [paste your answer]">✍️ Check Answer</button>
+      </div>
       <div class="chat-input-row">
         <input type="text" id="chatInput" placeholder="Ask about subjects, syllabus, study tips…">
         <button class="chat-send-btn" id="chatSendBtn">➤</button>
@@ -7456,6 +7474,16 @@ function initChat(){
   document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
   document.getElementById('chatInput').addEventListener('keydown', (e) => {
     if(e.key === 'Enter') sendChatMessage();
+  });
+
+  // ---- Quick action chips: pre-fill a template into the input, same send flow as always ----
+  document.querySelectorAll('.chat-quick-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById('chatInput');
+      input.value = btn.dataset.template;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
   });
 
   // ---- 3-dot menu: toggle open/closed ----
