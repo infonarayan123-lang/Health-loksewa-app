@@ -122,26 +122,31 @@
   }
   .bottom-nav-item .bn-label{ font-size:9.5px; font-weight:700; letter-spacing:0.2px; }
 
-  /* Per-icon accent glow colors, applied when active */
+  /* Per-icon accent glow colors, applied when active — unified to the brand teal family */
   .bottom-nav-item[data-nav="home"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #FFA05C, #E8641A);
-    box-shadow:0 0 16px rgba(255,140,50,0.65), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.4);
+    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:floatHover 2s ease-in-out infinite;
   }
-  .bottom-nav-item[data-nav="studyresources"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #7C6FF0, #4A3FC7);
-    box-shadow:0 0 16px rgba(120,100,240,0.65), inset 0 3px 6px rgba(0,0,0,0.45), inset 0 -1px 1px rgba(255,255,255,0.15);
+  .bottom-nav-item[data-nav="learn"].active .bn-icon-wrap{
+    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 3px 6px rgba(0,0,0,0.45), inset 0 -1px 1px rgba(255,255,255,0.15);
     transform:scale(0.92) translateY(1px); /* pressed depth effect */
   }
-  .bottom-nav-item[data-nav="calculator"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #FF8A5C, #D9530A);
-    box-shadow:0 0 16px rgba(255,120,50,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
+  .bottom-nav-item[data-nav="practice"].active .bn-icon-wrap{
+    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:keyBounce 1.6s ease-in-out infinite;
   }
   .bottom-nav-item[data-nav="myprogress"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #5CE68C, #1FA85C);
-    box-shadow:0 0 16px rgba(60,230,140,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
+    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:spinRefresh 3s linear infinite;
+  }
+  .bottom-nav-item[data-nav="profile"].active .bn-icon-wrap{
+    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
+    animation:floatHover 2s ease-in-out infinite;
   }
   .bottom-nav-item.active{ color:#fff; }
   .bottom-nav-item.active .bn-label{ text-shadow:0 0 8px rgba(255,255,255,0.4); }
@@ -2062,6 +2067,64 @@
   </div>
 
   <!-- STUDY RESOURCES HUB -->
+  <div class="screen" id="learnScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">📚 Learn</div>
+      <a class="link-card" href="#" id="goToSyllabusFromLearn">
+        <div class="lc-text"><h4>📖 Syllabus</h4><p>Complete Loksewa syllabus, by post</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToGkFromLearn">
+        <div class="lc-text"><h4>🧠 General Knowledge</h4><p>Constitution, Acts, Samsamayik &amp; guidelines</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToVideoFromLearn">
+        <div class="lc-text"><h4>🎥 Video Lessons</h4><p>Topic-based video learning</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToStudyResourcesFromLearn">
+        <div class="lc-text"><h4>📚 Study Resources</h4><p>Quick Reference, Mnemonics, Health Days, Dictionary, FAQs</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToSmartToolsFromLearn">
+        <div class="lc-text"><h4>🧮 Smart Tools</h4><p>Calculators — BMI, Health Indicators &amp; more</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="screen" id="practiceScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">📝 Practice</div>
+      <a class="link-card" href="#" id="goToMcqFromPractice">
+        <div class="lc-text"><h4>📝 Subject-wise MCQs</h4><p>1000+ questions, Set-locked progression</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToMockFromPractice">
+        <div class="lc-text"><h4>🏆 Mock Test</h4><p>Real Loksewa exam pattern, timed practice</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToPastQuestionsFromPractice">
+        <div class="lc-text"><h4>📜 Past Questions</h4><p>Real previous Loksewa exam papers</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToTournamentFromPractice">
+        <div class="lc-text"><h4>🏅 Weekly Tournament</h4><p>Same questions for everyone, weekly leaderboard</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToRevisionFromPractice">
+        <div class="lc-text"><h4>🔄 Revision Mode</h4><p>Re-practice wrong &amp; bookmarked questions</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+      <a class="link-card" href="#" id="goToBookmarksFromPractice">
+        <div class="lc-text"><h4>🔖 Bookmarks</h4><p>Questions you saved for later</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
   <div class="screen" id="studyResourcesScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
@@ -2495,14 +2558,17 @@
   <button class="bottom-nav-item" id="navHome" data-nav="home">
     <span class="bn-icon-wrap"><span class="bn-icon">🏠</span></span><span class="bn-label">Home</span>
   </button>
-  <button class="bottom-nav-item" id="navStudyResources" data-nav="studyresources">
-    <span class="bn-icon-wrap"><span class="bn-icon">📚</span></span><span class="bn-label">Study</span>
+  <button class="bottom-nav-item" id="navLearn" data-nav="learn">
+    <span class="bn-icon-wrap"><span class="bn-icon">📚</span></span><span class="bn-label">Learn</span>
   </button>
-  <button class="bottom-nav-item" id="navCalculator" data-nav="calculator">
-    <span class="bn-icon-wrap"><span class="bn-icon">🧮</span></span><span class="bn-label">Calculator</span>
+  <button class="bottom-nav-item" id="navPractice" data-nav="practice">
+    <span class="bn-icon-wrap"><span class="bn-icon">📝</span></span><span class="bn-label">Practice</span>
   </button>
   <button class="bottom-nav-item" id="navProgress" data-nav="myprogress">
     <span class="bn-icon-wrap"><span class="bn-icon">📊</span></span><span class="bn-label">Progress</span>
+  </button>
+  <button class="bottom-nav-item" id="navProfile" data-nav="profile">
+    <span class="bn-icon-wrap"><span class="bn-icon">👤</span></span><span class="bn-label">Profile</span>
   </button>
 </div>
 
@@ -3194,6 +3260,8 @@ const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
 const formulaScreen = document.getElementById('formulaScreen');
 const videoScreen = document.getElementById('videoScreen');
+const learnScreen = document.getElementById('learnScreen');
+const practiceScreen = document.getElementById('practiceScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
@@ -3221,7 +3289,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -3346,20 +3414,71 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const studyResourcesScreens = [studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen];
-  const calculatorScreens = [calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const myProgressScreens = [progressScreen, revisionScreen, leaderboardScreen, bookmarksScreen, notesScreen, reminderScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen];
+  const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
+  const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
   let activeKey = '';
   if(homeScreens.includes(activeScreen)) activeKey = 'home';
-  else if(studyResourcesScreens.includes(activeScreen)) activeKey = 'studyresources';
-  else if(calculatorScreens.includes(activeScreen)) activeKey = 'calculator';
+  else if(learnScreens.includes(activeScreen)) activeKey = 'learn';
+  else if(practiceScreens.includes(activeScreen)) activeKey = 'practice';
   else if(myProgressScreens.includes(activeScreen)) activeKey = 'myprogress';
+  else if(profileScreens.includes(activeScreen)) activeKey = 'profile';
 
   document.querySelectorAll('.bottom-nav-item').forEach(item => {
     item.classList.toggle('active', item.dataset.nav === activeKey);
   });
 }
+
+// ---------- Learn hub — each link delegates to the exact existing trigger, so behavior
+// (including any gating logic) is identical to opening it from Home ----------
+document.getElementById('goToSyllabusFromLearn').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardSyllabus').click();
+});
+document.getElementById('goToGkFromLearn').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardGK').click();
+});
+document.getElementById('goToVideoFromLearn').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardVideo').click();
+});
+document.getElementById('goToStudyResourcesFromLearn').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(studyResourcesScreen);
+});
+document.getElementById('goToSmartToolsFromLearn').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(calculatorScreen);
+});
+
+// ---------- Practice hub — same delegation pattern ----------
+document.getElementById('goToMcqFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardQuiz').click();
+});
+document.getElementById('goToMockFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardMock').click();
+});
+document.getElementById('goToPastQuestionsFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardPastQuestions').click();
+});
+document.getElementById('goToTournamentFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardTournament').click();
+});
+document.getElementById('goToRevisionFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('goToRevision').click();
+});
+document.getElementById('goToBookmarksFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('goToBookmarks').click();
+});
 
 // ---------- Dashboard navigation ----------
 document.getElementById('cardQuiz').addEventListener('click', () => {
@@ -3371,16 +3490,18 @@ document.getElementById('cardQuiz').addEventListener('click', () => {
 document.getElementById('navHome').addEventListener('click', () => {
   showScreen(homeScreen);
 });
-document.getElementById('navStudyResources').addEventListener('click', () => {
-  showScreen(studyResourcesScreen);
-  loadStudyResourcesData();
+document.getElementById('navLearn').addEventListener('click', () => {
+  showScreen(learnScreen);
 });
-document.getElementById('navCalculator').addEventListener('click', () => {
-  showScreen(calculatorScreen);
+document.getElementById('navPractice').addEventListener('click', () => {
+  showScreen(practiceScreen);
 });
 document.getElementById('navProgress').addEventListener('click', () => {
   showScreen(progressScreen);
   renderProgressScreen();
+});
+document.getElementById('navProfile').addEventListener('click', () => {
+  document.getElementById('headerProfileBtn').click();
 });
 
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
