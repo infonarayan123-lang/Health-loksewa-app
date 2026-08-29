@@ -5,45 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Health Loksewa — MCQ Practice</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1B3B6F">
+<meta name="theme-color" content="#0B1E33">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    --bg:#0B1E33;
+    --panel:#112A45;
+    --ink:#FFFFFF;
+    --ink-soft:#A9BCCB;
+    --crimson:#35C6C9;
+    --crimson-deep:#1E9E8E;
+    --navy:#0FA3A8;
+    --gold:#C9A227;
+    --correct:#34D399;
+    --correct-bg:rgba(52,211,153,0.15);
+    --wrong:#F87171;
+    --wrong-bg:rgba(248,113,113,0.15);
+    --line:rgba(255,255,255,0.10);
+    --radius:14px;
+  }
+  body.light-mode{
     --bg:#FAF6F0;
     --panel:#FFFFFF;
     --ink:#2A2420;
     --ink-soft:#6B6055;
-    --crimson:#A62639;
-    --crimson-deep:#7E1D2C;
-    --navy:#1B3B6F;
-    --gold:#C9962C;
-    --correct:#2F7D5D;
     --correct-bg:#E8F3EE;
-    --wrong:#C0392B;
     --wrong-bg:#FBEAE8;
     --line:#E4DDD1;
-    --radius:14px;
   }
-  body.dark-mode{
-    --bg:#15130F;
-    --panel:#211E19;
-    --ink:#F0EBE2;
-    --ink-soft:#A69B8C;
-    --line:#3A342B;
-    --correct-bg:#1B2E24;
-    --wrong-bg:#301F1C;
-  }
-  body.dark-mode .content-card,
-  body.dark-mode .link-card,
-  body.dark-mode .set-card{ background:var(--panel); }
-
-  /* ---------- Theme Colors: swap accent colors, independent of light/dark mode ---------- */
-  body.theme-forest{ --navy:#1F5A41; --crimson:#2F7D5D; }
-  body.theme-purple{ --navy:#4A3268; --crimson:#6B4C9A; }
-  body.theme-sunset{ --navy:#B8560A; --crimson:#D9731C; }
+  body.light-mode .content-card,
+  body.light-mode .link-card,
+  body.light-mode .set-card{ background:var(--panel); }
 
   /* ---------- High Contrast Mode (accessibility) ---------- */
   body.high-contrast{
@@ -51,7 +46,7 @@
     --line:#000000; --navy:#0000CC; --crimson:#CC0000; --gold:#8B6000;
     --correct:#006600; --correct-bg:#FFFFFF; --wrong:#CC0000; --wrong-bg:#FFFFFF;
   }
-  body.high-contrast.dark-mode{
+  body.high-contrast:not(.light-mode){
     --bg:#000000; --panel:#000000; --ink:#FFFFFF; --ink-soft:#FFFFFF;
     --line:#FFFFFF; --navy:#66B2FF; --crimson:#FF6666; --gold:#FFD966;
     --correct:#66FF66; --correct-bg:#000000; --wrong:#FF6666; --wrong-bg:#000000;
@@ -193,7 +188,7 @@
   .home-body{ padding:20px 20px 24px; flex:1; }
   /* ---------- Login / Splash Screen ---------- */
   .login-hero{
-    background:linear-gradient(160deg, #1B3B6F 0%, #4A3268 60%, #6B4C9A 100%);
+    background:linear-gradient(160deg, #0B1E33 0%, #146B8C 60%, #14A3A8 100%);
     padding:52px 24px 34px;
     text-align:center;
     color:#fff;
@@ -315,7 +310,7 @@
   /* ---------- Line 1: Continuous Marquee Ticker ---------- */
   .marquee-wrap{
     overflow:hidden; white-space:nowrap;
-    background:linear-gradient(90deg, #A62639, #C9962C, #2F7D5D, #1B3B6F, #6B4C9A, #A62639);
+    background:linear-gradient(90deg, #0FA3A8, #14A3A8, #35C6C9, #146B8C, #0FA3A8);
     background-size:300% 100%;
     animation:rainbowShift 8s ease infinite;
     border-radius:10px;
@@ -424,16 +419,16 @@
     position:relative;
     font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:700;
     text-align:right;
-    background:linear-gradient(180deg, #F6DE8E 0%, #C9962C 55%, #8A6414 100%);
+    background:linear-gradient(180deg, #6EEBCB 0%, #14A3A8 55%, #0B4A63 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    filter:drop-shadow(0 0 10px rgba(201,150,44,0.55)) drop-shadow(0 2px 0 rgba(0,0,0,0.35));
+    filter:drop-shadow(0 0 10px rgba(15,163,168,0.55)) drop-shadow(0 2px 0 rgba(0,0,0,0.35));
   }
-  .countdown-banner .cd-days-label{ position:relative; font-size:10px; text-align:right; color:#C9B8E8; opacity:0.85; }
+  .countdown-banner .cd-days-label{ position:relative; font-size:10px; text-align:right; color:#A9D8DC; opacity:0.85; }
   .countdown-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:14px; }
   .countdown-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:all 0.25s ease; }
   .countdown-dot.active{
-    background:linear-gradient(90deg,#6EEBCB,#C9962C); width:16px; border-radius:4px;
-    box-shadow:0 0 8px rgba(201,150,44,0.55);
+    background:linear-gradient(90deg,#6EEBCB,#14A3A8); width:16px; border-radius:4px;
+    box-shadow:0 0 8px rgba(15,163,168,0.55);
   }
 
   .quote-banner{
@@ -482,18 +477,18 @@
 
   /* ---------- Question of the Day card + screen ---------- */
   .dash-card.c-progress{
-    background:linear-gradient(135deg,#3A6B7A,#254852);
+    background:linear-gradient(135deg,#146B8C,#0B4A63);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-tournament{
-    background:linear-gradient(135deg,#B8860B,#7A5A0A);
+    background:linear-gradient(135deg,#14A3A8,#0D7377);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .tournament-hero{
     text-align:center; padding:24px 20px;
-    background:linear-gradient(160deg, #B8860B 0%, #7A5A0A 100%);
+    background:linear-gradient(160deg, #14A3A8 0%, #0D7377 100%);
     color:#fff; border-radius:16px; margin-bottom:16px;
   }
   .tournament-hero h2{ font-family:'Tinos',serif; font-size:19px; margin-bottom:4px; }
@@ -506,38 +501,38 @@
   .group-card .gc-name{ font-family:'Tinos',serif; font-weight:700; font-size:14px; margin-bottom:3px; }
   .group-card .gc-meta{ font-size:11.5px; color:var(--ink-soft); }
   .dash-card.c-formula{
-    background:linear-gradient(135deg,#6B4C9A,#4A3268);
+    background:linear-gradient(135deg,#146B8C,#0B4A63);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-video{
-    background:linear-gradient(135deg,#C0392B,#8E2A20);
+    background:linear-gradient(135deg,#14A3A8,#0D7377);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-studyres{
-    background:linear-gradient(135deg,#5B2C6F,#341A40);
+    background:linear-gradient(135deg,#1B3B6F,#0F2648);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-mnemonics{
-    background:linear-gradient(135deg,#2A5B6E,#1A3D49);
+    background:linear-gradient(135deg,#146B8C,#0B4A63);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-healthdays{
-    background:linear-gradient(135deg,#8E44AD,#5B2C6F);
+    background:linear-gradient(135deg,#1B3B6F,#0F2648);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-dictionary{
-    background:linear-gradient(135deg,#16697A,#0D3B45);
+    background:linear-gradient(135deg,#14A3A8,#0D7377);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-calculator{
-    background:linear-gradient(135deg,#D35400,#973D00);
+    background:linear-gradient(135deg,#146B8C,#0B4A63);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-faqs{
-    background:linear-gradient(135deg,#455A64,#263238);
+    background:linear-gradient(135deg,#1B3B6F,#0F2648);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
 
@@ -808,7 +803,7 @@
   /* ---------- Profile Screen ---------- */
   .profile-hero{
     text-align:center; padding:36px 20px 26px;
-    background:linear-gradient(160deg, #1B3B6F 0%, #6B4C9A 100%);
+    background:linear-gradient(160deg, #0B1E33 0%, #146B8C 100%);
     color:#fff; border-radius:0 0 24px 24px;
   }
   .profile-avatar-big{
@@ -985,7 +980,7 @@
     padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:var(--panel);
     color:var(--ink); font-size:12.5px; font-weight:700; cursor:pointer; margin-left:6px;
   }
-  .lang-btn.active{ background:var(--navy,#1B3B6F); color:#fff; border-color:var(--navy,#1B3B6F); }
+  .lang-btn.active{ background:var(--navy,#0FA3A8); color:#fff; border-color:var(--navy,#0FA3A8); }
   .home-status-line{
     font-size:12.5px; text-align:center; padding:9px 14px;
     color:var(--ink); background:var(--panel); border:1px solid var(--line);
@@ -1046,10 +1041,10 @@
   .dash-card .dc-icon{ font-size:26px; }
   .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
   .dash-card .dc-sub{ font-size:11px; opacity:0.85; }
-  .dash-card.c-quiz{ background:linear-gradient(135deg,#A62639,#7E1D2C); }
-  .dash-card.c-syllabus{ background:linear-gradient(135deg,#C9962C,#9C7420); }
-  .dash-card.c-current{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
-  .dash-card.c-gk{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
+  .dash-card.c-quiz{ background:linear-gradient(135deg,#14A3A8,#0D7377); }
+  .dash-card.c-syllabus{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
+  .dash-card.c-current{ background:linear-gradient(135deg,#146B8C,#0B4A63); }
+  .dash-card.c-gk{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
   .section-title{ font-family:'Tinos',serif; font-size:17px; margin:8px 0 12px; }
   .back-link{
     display:inline-flex; align-items:center; gap:6px;
@@ -1091,12 +1086,12 @@
   }
 
   .dash-card.c-resources{
-    background:linear-gradient(135deg,#6B4C9A,#4A3268);
+    background:linear-gradient(135deg,#146B8C,#0B4A63);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-ai{
-    background:linear-gradient(135deg,#2F7D5D,#1F5A41);
+    background:linear-gradient(135deg,#14A3A8,#0D7377);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
@@ -1182,15 +1177,15 @@
   }
   .link-group-label:first-child{ margin-top:0; }
 
-  .gk-c1{ background:linear-gradient(135deg,#A62639,#7E1D2C); }
+  .gk-c1{ background:linear-gradient(135deg,#14A3A8,#0D7377); }
   .mock-c-pho{ background:linear-gradient(135deg,#1B5FA8,#0F3B6E); }
-  .gk-c2{ background:linear-gradient(135deg,#C9962C,#9C7420); }
-  .gk-c3{ background:linear-gradient(135deg,#2F7D5D,#1F5A41); }
-  .gk-c4{ background:linear-gradient(135deg,#1B3B6F,#12294F); }
-  .gk-c5{ background:linear-gradient(135deg,#6B4C9A,#4A3268); }
-  .gk-c7{ background:linear-gradient(135deg,#3A6B7A,#254852); }
-  .gk-c8{ background:linear-gradient(135deg,#8A5A44,#5C3A2A); }
-  .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#3A6B7A,#254852); }
+  .gk-c2{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
+  .gk-c3{ background:linear-gradient(135deg,#146B8C,#0B4A63); }
+  .gk-c4{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
+  .gk-c5{ background:linear-gradient(135deg,#146B8C,#0B4A63); }
+  .gk-c7{ background:linear-gradient(135deg,#14A3A8,#0D7377); }
+  .gk-c8{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
+  .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#146B8C,#0B4A63); }
 
   .set-card{
     display:flex; align-items:center; gap:14px;
@@ -1407,10 +1402,10 @@
     display:none;
   }
   .feedback.show{ display:block; }
-  .feedback.correct-fb{ background:var(--correct-bg); color:#204F3E; }
-  .feedback.wrong-fb{ background:var(--wrong-bg); color:#7A2018; }
-  body.dark-mode .feedback.correct-fb{ color:#8FD9A8; }
-  body.dark-mode .feedback.wrong-fb{ color:#F0A99C; }
+  .feedback.correct-fb{ background:var(--correct-bg); color:#8FD9A8; }
+  .feedback.wrong-fb{ background:var(--wrong-bg); color:#F0A99C; }
+  body.light-mode .feedback.correct-fb{ color:#204F3E; }
+  body.light-mode .feedback.wrong-fb{ color:#7A2018; }
   .feedback b{ display:block; margin-bottom:4px; font-family:'Tinos',serif; font-size:14.5px; }
 
   .quiz-nav{
@@ -1465,7 +1460,7 @@
 <body>
 <div id="app">
 <div id="pullRefreshIndicator" style="position:fixed; top:0; left:50%; transform:translate(-50%,-40px); opacity:0; z-index:9999; background:var(--panel); color:var(--ink); font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:0 0 12px 12px; box-shadow:0 2px 8px rgba(0,0,0,0.15); transition:opacity 0.2s, transform 0.2s; pointer-events:none;">🔄 Refreshing…</div>
-<div id="installBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998; background:var(--navy,#1B3B6F); color:#fff; font-size:12.5px; padding:10px 14px; align-items:center; gap:10px; box-shadow:0 -2px 8px rgba(0,0,0,0.2);">
+<div id="installBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998; background:var(--navy,#0FA3A8); color:#fff; font-size:12.5px; padding:10px 14px; align-items:center; gap:10px; box-shadow:0 -2px 8px rgba(0,0,0,0.2);">
   <span style="flex:1;">📲 For a full-screen view with no browser bar, add Health Loksewa to your Home Screen (menu → "Add to Home screen").</span>
   <button id="installBannerDismiss" style="background:none; border:1px solid rgba(255,255,255,0.4); color:#fff; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700;">Got it</button>
 </div>
@@ -4714,32 +4709,25 @@ document.getElementById('menuTerms').addEventListener('click', () => {
   `);
 });
 
-// ---------- Dark mode ----------
+// ---------- Dark mode is now the default brand look. The toggle switches to Light mode instead. ----------
 function applyDarkModePreference(){
-  const isDark = localStorage.getItem('hl_dark_mode') === '1';
-  document.body.classList.toggle('dark-mode', isDark);
-  document.getElementById('headerDarkBtn').textContent = isDark ? '☀️' : '🌙';
+  const isLight = localStorage.getItem('hl_dark_mode') === '0';
+  document.body.classList.toggle('light-mode', isLight);
+  document.getElementById('headerDarkBtn').textContent = isLight ? '🌙' : '☀️';
 }
 document.getElementById('headerDarkBtn').addEventListener('click', () => {
-  const isDark = document.body.classList.toggle('dark-mode');
-  document.getElementById('headerDarkBtn').textContent = isDark ? '☀️' : '🌙';
-  try{ localStorage.setItem('hl_dark_mode', isDark ? '1' : '0'); }catch(e){}
+  const isLight = document.body.classList.toggle('light-mode');
+  document.getElementById('headerDarkBtn').textContent = isLight ? '🌙' : '☀️';
+  try{ localStorage.setItem('hl_dark_mode', isLight ? '0' : '1'); }catch(e){}
 });
 applyDarkModePreference();
 
-// ---------- Theme Colors: Navy (default), Forest, Purple, Sunset ----------
+// ---------- App Theme: one unified Health Loksewa brand (navy + teal, matching the logo) ----------
 const APP_THEMES = [
-  { key:'navy', label:'Navy Blue', swatch:'linear-gradient(135deg,#1B3B6F,#A62639)' },
-  { key:'forest', label:'Forest Green', swatch:'linear-gradient(135deg,#1F5A41,#2F7D5D)' },
-  { key:'purple', label:'Deep Purple', swatch:'linear-gradient(135deg,#4A3268,#6B4C9A)' },
-  { key:'sunset', label:'Sunset Orange', swatch:'linear-gradient(135deg,#B8560A,#D9731C)' },
+  { key:'teal', label:'Health Loksewa', swatch:'linear-gradient(135deg,#0FA3A8,#0B1E33)' },
 ];
 function applyThemePreference(){
-  let theme = 'navy';
-  try{ theme = localStorage.getItem('hl_theme') || 'navy'; }catch(e){}
-  APP_THEMES.forEach(t => document.body.classList.remove('theme-' + t.key));
-  if(theme !== 'navy') document.body.classList.add('theme-' + theme);
-  return theme;
+  return 'teal';
 }
 function renderThemeSwatches(){
   const active = applyThemePreference();
@@ -4907,16 +4895,16 @@ renderLanguagePicker();
 
 // ---------- Dark Mode toggle, inside Profile (kept in sync with the Home header's toggle) ----------
 function renderProfileDarkModeToggle(){
-  const isDark = document.body.classList.contains('dark-mode');
+  const isDark = !document.body.classList.contains('light-mode');
   const btn = document.getElementById('profileDarkModeToggle');
   btn.textContent = isDark ? 'ON' : 'OFF';
   btn.classList.toggle('active', isDark);
 }
 document.getElementById('profileDarkModeToggle').addEventListener('click', () => {
-  const isDark = document.body.classList.toggle('dark-mode');
-  try{ localStorage.setItem('hl_dark_mode', isDark ? '1' : '0'); }catch(e){}
+  const isLight = document.body.classList.toggle('light-mode');
+  try{ localStorage.setItem('hl_dark_mode', isLight ? '0' : '1'); }catch(e){}
   const headerBtn = document.getElementById('headerDarkBtn');
-  if(headerBtn) headerBtn.textContent = isDark ? '☀️' : '🌙';
+  if(headerBtn) headerBtn.textContent = isLight ? '🌙' : '☀️';
   renderProfileDarkModeToggle();
 });
 
@@ -5093,12 +5081,12 @@ applyHighContrastPreference(); // apply immediately on app load
 
 // ---------- Auto-sliding carousel ----------
 const DEFAULT_CAROUSEL_SLIDES = [
-  { bg:'linear-gradient(135deg,#1B3B6F,#0F274D)', icon:'📝', title:'Subject-wise MCQs', sub:'1000+ questions, Set-locked progression', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
-  { bg:'linear-gradient(135deg,#A62639,#7E1D2C)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
-  { bg:'linear-gradient(135deg,#2F7D5D,#1F5A41)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
-  { bg:'linear-gradient(135deg,#6B4C9A,#4A3268)', icon:'🧠', title:'General Knowledge and Guidelines', sub:'Constitution, Acts, Samsamayik &amp; more', action:() => { showScreen(gkScreen); renderGkCategories(); } },
-  { bg:'linear-gradient(135deg,#B8860B,#7A5A0A)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { document.getElementById('cardQotd').scrollIntoView({behavior:'smooth', block:'center'}); } },
-  { bg:'linear-gradient(135deg,#2A5B6E,#1A3D49)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
+  { bg:'linear-gradient(135deg,#14A3A8,#0D7377)', icon:'📝', title:'Subject-wise MCQs', sub:'1000+ questions, Set-locked progression', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
+  { bg:'linear-gradient(135deg,#1B3B6F,#0F2648)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
+  { bg:'linear-gradient(135deg,#146B8C,#0B4A63)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
+  { bg:'linear-gradient(135deg,#1B3B6F,#0F2648)', icon:'🧠', title:'General Knowledge and Guidelines', sub:'Constitution, Acts, Samsamayik &amp; more', action:() => { showScreen(gkScreen); renderGkCategories(); } },
+  { bg:'linear-gradient(135deg,#14A3A8,#0D7377)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { document.getElementById('cardQotd').scrollIntoView({behavior:'smooth', block:'center'}); } },
+  { bg:'linear-gradient(135deg,#146B8C,#0B4A63)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
 ];
 let CAROUSEL_SLIDES = DEFAULT_CAROUSEL_SLIDES;
 async function loadCarouselSlides(){
@@ -5107,7 +5095,7 @@ async function loadCarouselSlides(){
     const rows = await res.json();
     if(Array.isArray(rows) && rows.length > 0){
       CAROUSEL_SLIDES = rows.map(r => ({
-        bg: r.BgColor || 'linear-gradient(135deg,#1B3B6F,#0F274D)',
+        bg: r.BgColor || 'linear-gradient(135deg,#146B8C,#0B4A63)',
         image: r.ImageURL || '',
         icon: r.Icon || '📢',
         title: r.Title || '',
@@ -6695,8 +6683,8 @@ function generateCertificate(subject, totalSets){
 
   // Background gradient
   const grad = ctx.createLinearGradient(0, 0, 1000, 700);
-  grad.addColorStop(0, '#1B3B6F');
-  grad.addColorStop(1, '#6B4C9A');
+  grad.addColorStop(0, '#0B1E33');
+  grad.addColorStop(1, '#146B8C');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1000, 700);
 
