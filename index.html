@@ -1971,6 +1971,13 @@
         </div>
       </div>
 
+      <div class="content-card" id="weakAreaCard" style="display:none; border:1.5px solid var(--crimson); box-shadow:0 0 16px rgba(20,163,168,0.2);">
+        <div style="font-size:12px; font-weight:700; color:var(--crimson); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:6px;">🎯 Your Focus Today</div>
+        <h4 id="weakAreaSubject" style="margin-bottom:4px;">—</h4>
+        <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:12px;">Accuracy: <span id="weakAreaPct">—</span>%</p>
+        <button class="start-btn" id="weakAreaPracticeBtn" style="margin-top:0;">Practice Now →</button>
+      </div>
+
       <div class="stats-grid" id="progressStatsGrid"></div>
 
       <div class="progress-detail-row">
@@ -4416,7 +4423,31 @@ function renderProgressScreen(){
 
   document.getElementById('strongestSubject').textContent = stats.strongest ? `${stats.strongest.subject} (${stats.strongest.pct}%)` : 'Complete a Set to see this';
   document.getElementById('weakestSubject').textContent = stats.weakest ? `${stats.weakest.subject} (${stats.weakest.pct}%)` : 'Complete a Set to see this';
+
+  const weakCard = document.getElementById('weakAreaCard');
+  if(stats.weakest){
+    document.getElementById('weakAreaSubject').textContent = stats.weakest.subject;
+    document.getElementById('weakAreaPct').textContent = stats.weakest.pct;
+    weakCard.style.display = 'block';
+  } else {
+    weakCard.style.display = 'none';
+  }
 }
+// Bound once (not inside renderProgressScreen, which runs on every visit) — reads the
+// current weakest subject fresh at click-time so it always reflects the latest stats.
+document.getElementById('weakAreaPracticeBtn').addEventListener('click', () => {
+  const stats = computeProgressStats();
+  if(!stats.weakest) return;
+  const subjectName = stats.weakest.subject;
+  const post = findPostForSubject(subjectName);
+  if(post){
+    currentMcqPost = post;
+    openSetSelect(subjectName);
+  } else {
+    showScreen(mcqPostScreen);
+    renderMcqPosts();
+  }
+});
 
 async function renderLeaderboard(){
   const wrap = document.getElementById('leaderboardContent');
@@ -6293,6 +6324,16 @@ let currentTournamentPost = 'pho';
 // they'd otherwise collide since every post's "mixed" mode uses the same "__ALL__" identifier.
 // Real subject names never collide between posts, so this only ever touches that one shared
 // value, and only for posts other than PHO — existing PHO users' saved progress is unaffected.
+// Resolves which post's subject list a given weak/strong subject name belongs to, so the
+// Progress screen's "Practice Now" button can route straight into the right post's quiz —
+// PHO's list has no post prefix (it's the default), every other post is in KNOWN_SUBJECTS_BY_POST.
+function findPostForSubject(subjectName){
+  if(KNOWN_SUBJECTS.includes(subjectName)) return 'pho';
+  for(const post in KNOWN_SUBJECTS_BY_POST){
+    if(KNOWN_SUBJECTS_BY_POST[post].includes(subjectName)) return post;
+  }
+  return null;
+}
 function progressKey(subject){
   if(subject === '__ALL__' && currentMcqPost && currentMcqPost !== 'pho'){
     return subject + '::' + currentMcqPost;
