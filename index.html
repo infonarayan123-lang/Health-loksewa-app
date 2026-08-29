@@ -4132,22 +4132,84 @@ document.getElementById('goToRevision').addEventListener('click', async (e) => {
   showScreen(revisionScreen);
   renderRevisionSummary();
 });
+// ---------- Revision Mode spaced-repetition schedule: 1 → 3 → 7 → 15 → 30 days ----------
+const REVISION_INTERVALS_DAYS = [1, 3, 7, 15, 30];
+function todayISO(){
+  return new Date().toISOString().slice(0, 10);
+}
+function addDaysISO(days){
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+function getWrongQuestions(){
+  try{ return JSON.parse(localStorage.getItem('hl_wrong_questions') || '[]'); }
+  catch(e){ return []; }
+}
+function saveWrongQuestions(list){
+  try{ localStorage.setItem('hl_wrong_questions', JSON.stringify(list.slice(0, 200))); }catch(e){} // cap to avoid unbounded growth
+}
+// Wrong answer (any session) — (re)starts the question at day-1 of the schedule
+function addToWrongQuestions(q){
+  const key = questionKey(q);
+  let list = getWrongQuestions();
+  const idx = list.findIndex(w => questionKey(w) === key);
+  const scheduled = { ...q, intervalIndex: 0, nextRevisionDate: addDaysISO(REVISION_INTERVALS_DAYS[0]) };
+  if(idx === -1){
+    list.unshift(scheduled);
+  } else {
+    list[idx] = scheduled; // reset — got it wrong again
+  }
+  saveWrongQuestions(list);
+}
+function removeFromWrongQuestions(q){
+  const key = questionKey(q);
+  const list = getWrongQuestions().filter(w => questionKey(w) !== key);
+  saveWrongQuestions(list);
+}
+// Correct answer during an actual Revision Mode session — advances to the next spaced
+// interval, or graduates the question out of the list entirely once it survives the full
+// 1/3/7/15/30-day schedule. Regular (non-Revision) practice keeps the simpler old behavior
+// via removeFromWrongQuestions — a lucky guess in ordinary practice shouldn't count as mastery.
+function advanceRevisionSchedule(q){
+  const key = questionKey(q);
+  let list = getWrongQuestions();
+  const idx = list.findIndex(w => questionKey(w) === key);
+  if(idx === -1) return;
+  const current = list[idx];
+  const nextIntervalIndex = (current.intervalIndex === undefined ? 0 : current.intervalIndex) + 1;
+  if(nextIntervalIndex >= REVISION_INTERVALS_DAYS.length){
+    list.splice(idx, 1); // survived the full schedule — mastered
+  } else {
+    list[idx] = { ...current, intervalIndex: nextIntervalIndex, nextRevisionDate: addDaysISO(REVISION_INTERVALS_DAYS[nextIntervalIndex]) };
+  }
+  saveWrongQuestions(list);
+}
+
 function getRevisionPool(){
-  const wrongList = getWrongQuestions();
+  const today = todayISO();
+  // Only questions actually due today (or with no schedule yet, e.g. from before this
+  // update) count toward the active pool — not-yet-due questions stay hidden until their day.
+  const dueWrongList = getWrongQuestions().filter(w => !w.nextRevisionDate || w.nextRevisionDate <= today);
   const bookmarkList = getBookmarks();
-  const combined = [...wrongList];
+  const combined = [...dueWrongList];
   bookmarkList.forEach(b => {
     if(!combined.some(w => questionKey(w) === questionKey(b))) combined.push(b);
   });
   return combined;
 }
 function renderRevisionSummary(){
+  const allWrong = getWrongQuestions();
+  const today = todayISO();
   const pool = getRevisionPool();
+  const weakCount = allWrong.filter(w => (w.intervalIndex === undefined ? 0 : w.intervalIndex) <= 1).length;
+  const dueCount = allWrong.filter(w => !w.nextRevisionDate || w.nextRevisionDate <= today).length;
+  const strongCount = allWrong.filter(w => (w.intervalIndex || 0) >= 3).length;
   const startBtn = document.getElementById('startRevisionBtn');
   if(pool.length === 0){
     document.getElementById('revisionSummary').innerHTML = `
       <div class="content-card">
-        <p style="color:var(--ink-soft); font-size:13.5px;">Nothing to revise yet — questions you get wrong or bookmark during practice will show up here automatically.</p>
+        <p style="color:var(--ink-soft); font-size:13.5px;">Nothing due for revision right now — questions you get wrong come back on a spaced schedule (1 → 3 → 7 → 15 → 30 days), and anything you bookmark is always here.</p>
       </div>
     `;
     startBtn.style.display = 'none';
@@ -4155,10 +4217,11 @@ function renderRevisionSummary(){
   }
   document.getElementById('revisionSummary').innerHTML = `
     <div class="stats-grid">
-      <div class="stat-tile"><div class="st-num">${getWrongQuestions().length}</div><div class="st-label">Wrong Questions</div></div>
-      <div class="stat-tile"><div class="st-num">${getBookmarks().length}</div><div class="st-label">Bookmarked</div></div>
+      <div class="stat-tile"><div class="st-num">🔴 ${weakCount}</div><div class="st-label">Weak</div></div>
+      <div class="stat-tile"><div class="st-num">🟡 ${dueCount}</div><div class="st-label">Due Today</div></div>
+      <div class="stat-tile"><div class="st-num">🟢 ${strongCount}</div><div class="st-label">Strong</div></div>
     </div>
-    <p style="color:var(--ink-soft); font-size:12.5px; margin-top:6px;">${pool.length} question${pool.length !== 1 ? 's' : ''} ready for revision (duplicates removed).</p>
+    <p style="color:var(--ink-soft); font-size:12.5px; margin-top:6px;">${pool.length} question${pool.length !== 1 ? 's' : ''} ready for revision now (includes ${getBookmarks().length} bookmarked).</p>
   `;
   startBtn.style.display = 'block';
 }
@@ -7178,27 +7241,8 @@ function toggleBookmark(q){
   saveBookmarks(list);
 }
 
-// ---------- Revision Mode: tracks wrong-answered questions for smart re-practice ----------
-function getWrongQuestions(){
-  try{ return JSON.parse(localStorage.getItem('hl_wrong_questions') || '[]'); }
-  catch(e){ return []; }
-}
-function saveWrongQuestions(list){
-  try{ localStorage.setItem('hl_wrong_questions', JSON.stringify(list.slice(0, 200))); }catch(e){} // cap to avoid unbounded growth
-}
-function addToWrongQuestions(q){
-  const key = questionKey(q);
-  let list = getWrongQuestions();
-  if(!list.some(w => questionKey(w) === key)){
-    list.unshift(q);
-    saveWrongQuestions(list);
-  }
-}
-function removeFromWrongQuestions(q){
-  const key = questionKey(q);
-  const list = getWrongQuestions().filter(w => questionKey(w) !== key);
-  saveWrongQuestions(list);
-}
+// ---------- Revision Mode: wrong-question tracking lives earlier in the file now
+// (spaced-repetition version — see getWrongQuestions/addToWrongQuestions near renderRevisionSummary) ----------
 
 function handleAnswer(letter){
   if(answers[currentIndex] !== null) return; // already answered
@@ -7259,7 +7303,11 @@ function finishQuiz(){
     } else if(a.correct){
       correct++; score += marks;
       reviewHtml.push(reviewRow(q, i, 'Correct', a.chosen));
-      removeFromWrongQuestions(q); // got it right this time — no longer needs revision
+      if(currentSetInfo && currentSetInfo.subject === 'Revision'){
+        advanceRevisionSchedule(q); // spaced repetition — advance to the next interval, or graduate
+      } else {
+        removeFromWrongQuestions(q); // regular practice — got it right, no longer needs revision
+      }
     } else {
       wrong++; score -= (marks * 0.2);
       reviewHtml.push(reviewRow(q, i, 'Wrong', a.chosen));
