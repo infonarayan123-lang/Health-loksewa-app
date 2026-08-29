@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Health Loksewa — MCQ Practice</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0B1E33">
+<meta name="theme-color" content="#0B1C3D">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0B1E33;
+    --bg:#0B1C3D;
     --panel:#112A45;
     --ink:#FFFFFF;
     --ink-soft:#A9BCCB;
-    --crimson:#35C6C9;
-    --crimson-deep:#1E9E8E;
-    --navy:#0FA3A8;
+    --crimson:#14A3A8;
+    --crimson-deep:#0D7377;
+    --navy:#0D7377;
     --gold:#C9A227;
     --correct:#34D399;
     --correct-bg:rgba(52,211,153,0.15);
@@ -28,7 +28,7 @@
     --radius:14px;
   }
   body.light-mode{
-    --bg:#FAF6F0;
+    --bg:#E8F4F4;
     --panel:#FFFFFF;
     --ink:#2A2420;
     --ink-soft:#6B6055;
@@ -39,6 +39,11 @@
   body.light-mode .content-card,
   body.light-mode .link-card,
   body.light-mode .set-card{ background:var(--panel); }
+
+  /* ---------- Accent color options — background/panel NEVER change, only these two ---------- */
+  body.accent-blue{ --navy:#1565C0; --crimson:#42A5F5; }
+  body.accent-emerald{ --navy:#0F9D58; --crimson:#34D399; }
+  body.accent-violet{ --navy:#6D28D9; --crimson:#A78BFA; }
 
   /* ---------- High Contrast Mode (accessibility) ---------- */
   body.high-contrast{
@@ -188,7 +193,7 @@
   .home-body{ padding:20px 20px 24px; flex:1; }
   /* ---------- Login / Splash Screen ---------- */
   .login-hero{
-    background:linear-gradient(160deg, #0B1E33 0%, #146B8C 60%, #14A3A8 100%);
+    background:linear-gradient(160deg, #0B1C3D 0%, #146B8C 60%, #14A3A8 100%);
     padding:52px 24px 34px;
     text-align:center;
     color:#fff;
@@ -803,7 +808,7 @@
   /* ---------- Profile Screen ---------- */
   .profile-hero{
     text-align:center; padding:36px 20px 26px;
-    background:linear-gradient(160deg, #0B1E33 0%, #146B8C 100%);
+    background:linear-gradient(160deg, #0B1C3D 0%, #146B8C 100%);
     color:#fff; border-radius:0 0 24px 24px;
   }
   .profile-avatar-big{
@@ -1469,6 +1474,8 @@
   <!-- LOGIN / SPLASH SCREEN (required before Home) -->
   <!-- APP LOADING SCREEN — shown briefly while we check if you're already logged in,
        so refreshing never flashes the Login screen for logged-in users -->
+  <div id="eyeComfortOverlay" style="display:none; position:fixed; inset:0; z-index:9997; background:rgba(255,147,41,0.12); mix-blend-mode:multiply; pointer-events:none;"></div>
+
   <div class="screen active" id="appLoadingScreen">
     <div class="app-loading-wrap">
       <div class="app-loading-spinner"></div>
@@ -1757,12 +1764,28 @@
             <div id="languageRow"></div>
           </div>
           <div class="profile-subrow-block">
-            <div class="psr-label">🎨 App Theme</div>
+            <div class="psr-label">🎨 Accent Color</div>
+            <div class="psr-sub">Background always stays Health Loksewa navy — this only changes your buttons, links and highlights</div>
             <div class="theme-swatches" id="themeSwatches"></div>
           </div>
           <div class="profile-subrow">
             <div><div class="psr-label">🌙 Dark Mode</div></div>
             <button class="font-size-btn" id="profileDarkModeToggle" style="flex:none; width:52px;">OFF</button>
+          </div>
+          <div class="profile-subrow">
+            <div>
+              <div class="psr-label">👁️ Eye Comfort Shield</div>
+              <div class="psr-sub">Warm filter to reduce eye strain during long study sessions</div>
+            </div>
+            <button class="font-size-btn" id="profileEyeComfortToggle" style="flex:none; width:52px;">OFF</button>
+          </div>
+          <div class="profile-subrow-block">
+            <div class="psr-label">🔆 Screen Brightness</div>
+            <div class="psr-sub">Dims the app's own content — does not change your phone's actual screen brightness</div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+              <input type="range" id="brightnessSlider" min="50" max="100" step="5" value="100" style="flex:1;">
+              <span id="brightnessValueLabel" style="font-size:12px; font-weight:700; color:var(--ink-soft); width:40px; text-align:right;">100%</span>
+            </div>
           </div>
           <div class="profile-subrow-block">
             <div class="psr-label">🔡 Font Size</div>
@@ -4338,6 +4361,8 @@ async function refreshProfileData(){
   renderHighContrastToggle();
   renderLanguagePicker();
   renderProfileDarkModeToggle();
+  renderEyeComfortToggle();
+  renderBrightnessSlider();
   refreshMyDeviceSection();
   const status = window.getAccessStatus ? await window.getAccessStatus() : { isPremium: false, source: 'none', trialHoursLeft: null, premiumStartDate: null, premiumEndDate: null };
   const isPaid = status.source === 'paid';
@@ -4722,12 +4747,19 @@ document.getElementById('headerDarkBtn').addEventListener('click', () => {
 });
 applyDarkModePreference();
 
-// ---------- App Theme: one unified Health Loksewa brand (navy + teal, matching the logo) ----------
+// ---------- Accent Color: one navy background for everyone, pick your own accent tint ----------
 const APP_THEMES = [
-  { key:'teal', label:'Health Loksewa', swatch:'linear-gradient(135deg,#0FA3A8,#0B1E33)' },
+  { key:'teal', label:'Teal', swatch:'#14A3A8' },
+  { key:'blue', label:'Ocean Blue', swatch:'#42A5F5' },
+  { key:'emerald', label:'Emerald', swatch:'#34D399' },
+  { key:'violet', label:'Violet', swatch:'#A78BFA' },
 ];
 function applyThemePreference(){
-  return 'teal';
+  let theme = 'teal';
+  try{ theme = localStorage.getItem('hl_theme') || 'teal'; }catch(e){}
+  APP_THEMES.forEach(t => document.body.classList.remove('accent-' + t.key));
+  if(theme !== 'teal') document.body.classList.add('accent-' + theme);
+  return theme;
 }
 function renderThemeSwatches(){
   const active = applyThemePreference();
@@ -4907,6 +4939,50 @@ document.getElementById('profileDarkModeToggle').addEventListener('click', () =>
   if(headerBtn) headerBtn.textContent = isLight ? '🌙' : '☀️';
   renderProfileDarkModeToggle();
 });
+
+// ---------- Eye Comfort Shield: warm overlay to reduce blue light during long study sessions ----------
+function applyEyeComfortPreference(){
+  const isOn = localStorage.getItem('hl_eye_comfort') === '1';
+  const overlay = document.getElementById('eyeComfortOverlay');
+  if(overlay) overlay.style.display = isOn ? 'block' : 'none';
+  return isOn;
+}
+function renderEyeComfortToggle(){
+  const isOn = applyEyeComfortPreference();
+  const btn = document.getElementById('profileEyeComfortToggle');
+  if(!btn) return;
+  btn.textContent = isOn ? 'ON' : 'OFF';
+  btn.classList.toggle('active', isOn);
+}
+document.getElementById('profileEyeComfortToggle').addEventListener('click', () => {
+  const isOn = localStorage.getItem('hl_eye_comfort') === '1';
+  try{ localStorage.setItem('hl_eye_comfort', isOn ? '0' : '1'); }catch(e){}
+  renderEyeComfortToggle();
+});
+applyEyeComfortPreference(); // apply immediately on app load
+
+// ---------- Screen Brightness: dims the app's own content only (real adaptive brightness via the
+// room's light sensor isn't something a web app can access — this is the closest real equivalent) ----------
+function applyBrightnessPreference(){
+  let val = 100;
+  try{ val = parseInt(localStorage.getItem('hl_brightness') || '100', 10); }catch(e){}
+  document.body.style.filter = val < 100 ? `brightness(${val}%)` : '';
+  return val;
+}
+function renderBrightnessSlider(){
+  const val = applyBrightnessPreference();
+  const slider = document.getElementById('brightnessSlider');
+  const label = document.getElementById('brightnessValueLabel');
+  if(slider) slider.value = val;
+  if(label) label.textContent = val + '%';
+}
+document.getElementById('brightnessSlider').addEventListener('input', (e) => {
+  const val = parseInt(e.target.value, 10);
+  document.getElementById('brightnessValueLabel').textContent = val + '%';
+  document.body.style.filter = val < 100 ? `brightness(${val}%)` : '';
+  try{ localStorage.setItem('hl_brightness', String(val)); }catch(e){}
+});
+applyBrightnessPreference(); // apply immediately on app load
 
 // ---------- App Version ----------
 const APP_VERSION = '1.0.0';
@@ -6683,7 +6759,7 @@ function generateCertificate(subject, totalSets){
 
   // Background gradient
   const grad = ctx.createLinearGradient(0, 0, 1000, 700);
-  grad.addColorStop(0, '#0B1E33');
+  grad.addColorStop(0, '#0B1C3D');
   grad.addColorStop(1, '#146B8C');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1000, 700);
