@@ -2166,6 +2166,10 @@
         <div class="lc-text"><h4>❌ My Mistakes</h4><p>Every wrong answer, tracked automatically</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToSpeedChallengeFromPractice">
+        <div class="lc-text"><h4>⏱️ Speed Challenge</h4><p>60 seconds — answer as many as you can</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
     </div>
   </div>
 
@@ -3529,6 +3533,10 @@ document.getElementById('goToMistakeBookFromPractice').addEventListener('click',
   e.preventDefault();
   showScreen(mistakeBookScreen);
   renderMistakeBook();
+});
+document.getElementById('goToSpeedChallengeFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  startSpeedChallenge();
 });
 
 // ---------- Dashboard navigation ----------
@@ -7215,6 +7223,35 @@ function launchQuiz(pool, subject, setNumber, totalSets){
   showScreen(quizScreen);
   startTimer();
   renderQuestion();
+}
+
+// ---------- Speed Challenge: 60 seconds, answer as many mixed random questions as you can ----------
+async function startSpeedChallenge(){
+  showQuizLoading('Loading Speed Challenge…');
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=random&count=50&post=${currentMcqPost}`);
+    const pool = await res.json();
+    if(!pool || pool.length === 0){
+      hideQuizLoading();
+      alert('No questions available yet. Add MCQs to your Google Sheet first!');
+      return;
+    }
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = 60; // fixed — the whole point of Speed Challenge
+    currentMarksPerQuestion = 1;
+    currentSetInfo = { subject: 'Speed Challenge', setNumber: 0, totalSets: 0 };
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    alert('Could not load Speed Challenge questions. Check your connection and try again.');
+  }
 }
 
 // Subject counts now load on demand (see cardQuiz click handler above) — not at app startup,
