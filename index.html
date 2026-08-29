@@ -206,7 +206,7 @@
   }
   .login-logo{
     width:76px; height:76px; border-radius:20px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    box-shadow:0 8px 24px rgba(0,0,0,0.25), 0 0 32px rgba(20,163,168,0.55), 0 0 60px rgba(20,163,168,0.3);
     margin-bottom:16px;
   }
   .login-hero h1{ font-family:'Tinos',serif; font-size:26px; margin-bottom:6px; }
@@ -837,6 +837,7 @@
     background:var(--gold); color:#fff; border:none;
     padding:8px 14px; border-radius:20px; font-size:12px; font-weight:700;
     cursor:pointer;
+    box-shadow:0 3px 10px rgba(201,162,39,0.35);
   }
   .premium-hero{
     text-align:center; padding:30px 20px;
@@ -1075,10 +1076,11 @@
   .ca-date{ font-size:11px; color:var(--gold); font-weight:700; margin-bottom:3px; letter-spacing:0.03em; }
 
   .dash-card.c-mock{
-    background:linear-gradient(135deg,#2A2420,#171310);
+    background:linear-gradient(135deg,#0B1C3D,#071021);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
     border:1.5px solid var(--gold);
+    box-shadow:0 0 20px rgba(20,163,168,0.25);
     position:relative;
     overflow:hidden;
   }
@@ -1315,8 +1317,9 @@
     font-family:'Inter',sans-serif;
     cursor:pointer;
     margin-top:8px;
+    box-shadow:0 4px 14px rgba(20,163,168,0.35);
   }
-  .start-btn:disabled{ background:#D8CFC2; cursor:not-allowed; }
+  .start-btn:disabled{ background:#D8CFC2; cursor:not-allowed; box-shadow:none; }
   .loading{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:14px; }
 
   /* ---------- Quiz Screen ---------- */
