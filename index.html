@@ -2219,6 +2219,26 @@
         <div class="lc-text"><h4>✍️ Check My Answer</h4><p>Write a written answer, get AI feedback</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToBattleFromPractice">
+        <div class="lc-text"><h4>⚔️ Battle Challenge</h4><p>Challenge a friend — same questions, compare scores</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="screen" id="battleScreen">
+    <div class="back-link" data-back="practice">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚔️ Battle Challenge</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:18px;">Take a 10-question quiz, get a share code, and challenge a friend to beat your score on the exact same questions.</p>
+
+      <button class="start-btn" id="createBattleBtn" style="margin-bottom:14px;">⚔️ Create a Challenge</button>
+
+      <div class="content-card">
+        <h4 style="margin-bottom:10px;">Have a code?</h4>
+        <input type="text" id="joinBattleCodeInput" placeholder="Enter Battle code" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink); text-transform:uppercase; margin-bottom:12px;">
+        <button class="start-btn" id="joinBattleBtn" style="margin-top:0;">Join Challenge</button>
+      </div>
     </div>
   </div>
 
@@ -2662,6 +2682,7 @@
   <!-- RESULTS SCREEN -->
   <div class="screen" id="resultsScreen">
     <div class="results">
+      <div id="battleResultBox" style="display:none; margin-bottom:16px;"></div>
       <div class="score-card">
         <div class="score-big" id="finalScore">0.0</div>
         <div class="score-label">Final Score (with negative marking)</div>
@@ -3393,6 +3414,7 @@ const practiceScreen = document.getElementById('practiceScreen');
 const mistakeBookScreen = document.getElementById('mistakeBookScreen');
 const flashcardsScreen = document.getElementById('flashcardsScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
+const battleScreen = document.getElementById('battleScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
@@ -3420,7 +3442,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -3548,7 +3570,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -3628,6 +3650,10 @@ document.getElementById('goToFlashcardsFromPractice').addEventListener('click', 
 document.getElementById('goToAnswerCheckerFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(answerCheckerScreen);
+});
+document.getElementById('goToBattleFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(battleScreen);
 });
 
 // ---------- Dashboard navigation ----------
@@ -7365,7 +7391,7 @@ async function startSpeedChallenge(){
     answers = new Array(quizQuestions.length).fill(null);
     secondsLeft = 60; // fixed — the whole point of Speed Challenge
     currentMarksPerQuestion = 1;
-    currentSetInfo = { subject: 'Speed Challenge', setNumber: 0, totalSets: 0 };
+    currentSetInfo = null; // Speed Challenge isn't a real exam subject — keep it out of Set-progress/strongest-weakest stats
 
     buildOmrStrip();
     hideQuizLoading();
@@ -7463,6 +7489,135 @@ function nextFlashcard(){
   flashcardsIndex++;
   flashcardsRevealed = false;
   renderFlashcard();
+}
+
+// ---------- Battle Challenge: asynchronous — not truly live/simultaneous, but same
+// competitive spirit. One person creates a challenge (10 random questions), gets a share
+// code; a friend enters the code and takes the EXACT same questions, then sees who won.
+// currentSetInfo stays null for both, matching Speed Challenge/Revision — these modes
+// must never pollute the Set-based progress/strongest-weakest subject stats. ----------
+let currentBattleMode = null; // 'create' | 'join' | null
+let currentBattleJoinData = null;
+
+async function createBattle(){
+  showQuizLoading('Preparing your Battle Challenge…');
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=random&count=10&post=${currentMcqPost}`);
+    const pool = await res.json();
+    if(!pool || pool.length === 0){
+      hideQuizLoading();
+      alert('No questions available yet. Add MCQs to your Google Sheet first!');
+      return;
+    }
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = quizQuestions.length * 45;
+    currentMarksPerQuestion = 1;
+    currentSetInfo = null;
+    currentBattleMode = 'create';
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    alert('Could not start the Battle. Check your connection and try again.');
+  }
+}
+document.getElementById('createBattleBtn').addEventListener('click', createBattle);
+
+async function joinBattle(){
+  const codeInput = document.getElementById('joinBattleCodeInput');
+  const code = codeInput.value.trim().toUpperCase();
+  if(!code) return;
+  if(!window.hlFirestore || !window.hlFirestoreFns){
+    alert('Please log in to join a Battle Challenge.');
+    return;
+  }
+  showQuizLoading('Loading Battle Challenge…');
+  try{
+    const { doc, getDoc } = window.hlFirestoreFns;
+    const ref = doc(window.hlFirestore, 'battles', code);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      hideQuizLoading();
+      alert('Battle code not found. Double-check the code and try again.');
+      return;
+    }
+    const battle = snap.data();
+    quizQuestions = battle.questions;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = quizQuestions.length * 45;
+    currentMarksPerQuestion = 1;
+    currentSetInfo = null;
+    currentBattleMode = 'join';
+    currentBattleJoinData = {
+      creatorName: battle.creatorName || 'A student',
+      creatorScore: battle.creatorCorrect || 0,
+      totalQuestions: battle.totalQuestions || quizQuestions.length
+    };
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    alert('Could not load that Battle. Check your connection and try again.');
+  }
+}
+document.getElementById('joinBattleBtn').addEventListener('click', joinBattle);
+
+async function saveBattleChallenge(correct, total){
+  const box = document.getElementById('battleResultBox');
+  box.style.display = 'block';
+  if(!window.hlFirestore || !window.hlFirestoreFns || !window.currentUser){
+    box.innerHTML = `<p style="color:var(--wrong); font-size:13px;">Could not create a shareable Battle code — please make sure you're logged in.</p>`;
+    return;
+  }
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  try{
+    const { doc, setDoc, serverTimestamp } = window.hlFirestoreFns;
+    await setDoc(doc(window.hlFirestore, 'battles', code), {
+      questions: quizQuestions,
+      creatorUid: window.currentUser.uid,
+      creatorName: window.currentUser.displayName || 'A student',
+      creatorCorrect: correct,
+      totalQuestions: total,
+      createdAt: serverTimestamp()
+    });
+    box.innerHTML = `
+      <div class="content-card" style="border:1.5px solid var(--gold); text-align:center;">
+        <h4 style="margin-bottom:8px;">⚔️ Battle Challenge Created!</h4>
+        <p style="font-size:13px; color:var(--ink-soft); margin-bottom:10px;">You scored ${correct}/${total}. Share this code with a friend — can they beat you?</p>
+        <div style="font-size:26px; font-weight:800; letter-spacing:0.1em; color:var(--crimson);">${code}</div>
+      </div>
+    `;
+  }catch(err){
+    box.innerHTML = `<p style="color:var(--wrong); font-size:13px;">Could not save your Battle Challenge. Please try again.</p>`;
+  }
+}
+function showBattleJoinResult(correct){
+  const box = document.getElementById('battleResultBox');
+  box.style.display = 'block';
+  const data = currentBattleJoinData;
+  if(!data) return;
+  let verdict;
+  if(correct > data.creatorScore) verdict = `🎉 You won! ${correct}/${data.totalQuestions} vs ${data.creatorName}'s ${data.creatorScore}/${data.totalQuestions}`;
+  else if(correct < data.creatorScore) verdict = `😅 ${data.creatorName} won this one — ${data.creatorScore}/${data.totalQuestions} vs your ${correct}/${data.totalQuestions}`;
+  else verdict = `🤝 It's a tie! Both scored ${correct}/${data.totalQuestions}`;
+  box.innerHTML = `
+    <div class="content-card" style="border:1.5px solid var(--gold); text-align:center;">
+      <h4 style="margin-bottom:8px;">⚔️ Battle Result</h4>
+      <p style="font-size:14px; color:var(--ink); font-weight:600;">${verdict}</p>
+    </div>
+  `;
+  currentBattleJoinData = null;
 }
 
 // ---------- Global Search: searches across content already fully loaded for Study Resources
@@ -7725,6 +7880,7 @@ document.getElementById('quizExitBtn').addEventListener('click', () => {
 // ---------- Results ----------
 function finishQuiz(){
   showScreen(resultsScreen);
+  document.getElementById('battleResultBox').style.display = 'none'; // reset — only Battle quizzes populate this
 
   let correct = 0, wrong = 0, skipped = 0, score = 0;
   const reviewHtml = [];
@@ -7798,6 +7954,14 @@ function finishQuiz(){
     msgBox.innerHTML = '';
     nextBtn.style.display = 'none';
   }
+
+  // ---- Battle Challenge: save (Create) or compare (Join) ----
+  if(currentBattleMode === 'create'){
+    saveBattleChallenge(correct, quizQuestions.length);
+  } else if(currentBattleMode === 'join'){
+    showBattleJoinResult(correct);
+  }
+  currentBattleMode = null;
 }
 
 function renderSubjectBreakdown(){
