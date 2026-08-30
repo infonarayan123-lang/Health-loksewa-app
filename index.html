@@ -243,9 +243,39 @@
   }
   .login-divider span{ padding:0 12px; }
   .app-loading-wrap{
-    display:flex; align-items:center; justify-content:center;
-    height:100vh; width:100%;
-    background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:100%; width:100%;
+    background:linear-gradient(180deg, #0B1C3D 0%, #08101F 100%);
+  }
+  .splash-logo{
+    width:96px; height:96px; border-radius:22px;
+    box-shadow:0 0 34px rgba(20,163,168,0.6), 0 0 64px rgba(20,163,168,0.3), 0 10px 26px rgba(0,0,0,0.35);
+    animation:splashFadeIn 0.9s ease-out;
+    margin-bottom:18px;
+  }
+  .splash-title{
+    color:#fff; font-family:'Tinos',serif; font-size:22px; font-weight:700;
+    letter-spacing:0.04em; animation:splashFadeIn 1.1s ease-out;
+  }
+  .splash-tagline{
+    color:var(--ink-soft); font-size:12.5px; margin-top:6px;
+    animation:splashFadeIn 1.3s ease-out;
+  }
+  @keyframes splashFadeIn{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .splash-dots{ display:flex; gap:7px; margin-top:38px; }
+  .splash-dots span{
+    width:8px; height:8px; border-radius:50%;
+    background:#14A3A8; box-shadow:0 0 8px rgba(20,163,168,0.7);
+    animation:splashDotPulse 1.2s ease-in-out infinite;
+  }
+  .splash-dots span:nth-child(2){ animation-delay:0.2s; }
+  .splash-dots span:nth-child(3){ animation-delay:0.4s; }
+  @keyframes splashDotPulse{
+    0%, 100%{ opacity:0.3; transform:scale(0.85); }
+    50%{ opacity:1; transform:scale(1.15); }
   }
   .app-loading-spinner{
     width:34px; height:34px;
@@ -1586,7 +1616,10 @@
 
   <div class="screen active" id="appLoadingScreen">
     <div class="app-loading-wrap">
-      <div class="app-loading-spinner"></div>
+      <img src="icon-192.png" alt="Health Loksewa" class="splash-logo">
+      <div class="splash-title">HEALTH LOKSEWA</div>
+      <div class="splash-tagline">Prepare Smart. Serve Better.</div>
+      <div class="splash-dots"><span></span><span></span><span></span></div>
     </div>
   </div>
 
@@ -2197,32 +2230,32 @@
       <a class="dash-card hub-tile t1" href="#" id="goToLeaderboard">
         <div class="dc-icon">🏆</div>
         <div class="dc-label">Leaderboard</div>
-        <div class="dc-sub">See how you rank against other students</div>
+        <div class="dc-sub">Your rank</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToBookmarks">
         <div class="dc-icon">⭐</div>
         <div class="dc-label">My Bookmarks</div>
-        <div class="dc-sub">Review questions you've saved</div>
+        <div class="dc-sub">Saved questions</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToStudyGroups">
         <div class="dc-icon">👥</div>
         <div class="dc-label">Study Groups</div>
-        <div class="dc-sub">Create or join a group, compare scores with friends</div>
+        <div class="dc-sub">With friends</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToNotes">
         <div class="dc-icon">📝</div>
         <div class="dc-label">My Notes</div>
-        <div class="dc-sub">Your own study notes, saved on this device</div>
+        <div class="dc-sub">Saved on device</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToReminder">
         <div class="dc-icon">🔔</div>
-        <div class="dc-label">Daily Study Reminder</div>
-        <div class="dc-sub">Get reminded to practice every day</div>
+        <div class="dc-label">Daily Reminder</div>
+        <div class="dc-sub">Practice reminder</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToRevision">
         <div class="dc-icon">🔄</div>
         <div class="dc-label">Revision Mode</div>
-        <div class="dc-sub">Re-practice questions you got wrong or bookmarked</div>
+        <div class="dc-sub">Wrong &amp; bookmarked</div>
       </a>
       </div>
     </div>
@@ -2327,32 +2360,32 @@
       <a class="dash-card hub-tile t1" href="#" id="goToSyllabusFromLearn">
         <div class="dc-icon">📖</div>
         <div class="dc-label">Syllabus</div>
-        <div class="dc-sub">Complete Loksewa syllabus, by post</div>
+        <div class="dc-sub">By post</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToGkFromLearn">
         <div class="dc-icon">🧠</div>
         <div class="dc-label">General Knowledge</div>
-        <div class="dc-sub">Constitution, Acts, Samsamayik &amp; guidelines</div>
+        <div class="dc-sub">Constitution &amp; Acts</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToVideoFromLearn">
         <div class="dc-icon">🎥</div>
         <div class="dc-label">Video Lessons</div>
-        <div class="dc-sub">Topic-based video learning</div>
+        <div class="dc-sub">Topic videos</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToStudyResourcesFromLearn">
         <div class="dc-icon">📚</div>
         <div class="dc-label">Study Resources</div>
-        <div class="dc-sub">Quick Reference, Mnemonics, Health Days, Dictionary, FAQs</div>
+        <div class="dc-sub">Notes &amp; references</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToSmartToolsFromLearn">
         <div class="dc-icon">🧮</div>
         <div class="dc-label">Smart Tools</div>
-        <div class="dc-sub">Calculators — BMI, Health Indicators &amp; more</div>
+        <div class="dc-sub">Calculators</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToHealthGuideFromLearn">
         <div class="dc-icon">🩺</div>
         <div class="dc-label">Health Guide</div>
-        <div class="dc-sub">Basic health education articles</div>
+        <div class="dc-sub">Health education</div>
       </a>
       </div>
     </div>
@@ -2366,62 +2399,62 @@
       <a class="dash-card hub-tile t1" href="#" id="goToMcqFromPractice">
         <div class="dc-icon">📝</div>
         <div class="dc-label">Subject-wise MCQs</div>
-        <div class="dc-sub">1000+ questions, Set-locked progression</div>
+        <div class="dc-sub">1000+ questions</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToMockFromPractice">
         <div class="dc-icon">🏆</div>
         <div class="dc-label">Mock Test</div>
-        <div class="dc-sub">Real Loksewa exam pattern, timed practice</div>
+        <div class="dc-sub">Real exam pattern</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToPastQuestionsFromPractice">
         <div class="dc-icon">📜</div>
         <div class="dc-label">Past Questions</div>
-        <div class="dc-sub">Real previous Loksewa exam papers</div>
+        <div class="dc-sub">Previous exam papers</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToTournamentFromPractice">
         <div class="dc-icon">🏅</div>
         <div class="dc-label">Weekly Tournament</div>
-        <div class="dc-sub">Same questions for everyone, weekly leaderboard</div>
+        <div class="dc-sub">Weekly leaderboard</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToRevisionFromPractice">
         <div class="dc-icon">🔄</div>
         <div class="dc-label">Revision Mode</div>
-        <div class="dc-sub">Re-practice wrong &amp; bookmarked questions</div>
+        <div class="dc-sub">Wrong &amp; bookmarked</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToBookmarksFromPractice">
         <div class="dc-icon">🔖</div>
         <div class="dc-label">Bookmarks</div>
-        <div class="dc-sub">Questions you saved for later</div>
+        <div class="dc-sub">Saved for later</div>
       </a>
       <a class="dash-card hub-tile t1" href="#" id="goToMistakeBookFromPractice">
         <div class="dc-icon">❌</div>
         <div class="dc-label">My Mistakes</div>
-        <div class="dc-sub">Every wrong answer, tracked automatically</div>
+        <div class="dc-sub">Tracked automatically</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToSpeedChallengeFromPractice">
         <div class="dc-icon">⏱️</div>
         <div class="dc-label">Speed Challenge</div>
-        <div class="dc-sub">60 seconds — answer as many as you can</div>
+        <div class="dc-sub">60-second sprint</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToFlashcardsFromPractice">
         <div class="dc-icon">🧩</div>
         <div class="dc-label">Flashcards</div>
-        <div class="dc-sub">Flip-card active recall practice</div>
+        <div class="dc-sub">Active recall</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToAnswerCheckerFromPractice">
         <div class="dc-icon">✍️</div>
         <div class="dc-label">Check My Answer</div>
-        <div class="dc-sub">Write a written answer, get AI feedback</div>
+        <div class="dc-sub">Written, AI-graded</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToBattleFromPractice">
         <div class="dc-icon">⚔️</div>
         <div class="dc-label">Battle Challenge</div>
-        <div class="dc-sub">Challenge a friend — same questions, compare scores</div>
+        <div class="dc-sub">Challenge a friend</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToRapidFireFromPractice">
         <div class="dc-icon">⚡</div>
         <div class="dc-label">Rapid Fire</div>
-        <div class="dc-sub">Pick your time — get a paced mini-test, 9 ways</div>
+        <div class="dc-sub">Paced mini-test</div>
       </a>
       </div>
     </div>
@@ -2432,7 +2465,7 @@
     <div class="home-body">
       <div class="section-title">⚡ Rapid Fire</div>
       <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">Choose your time. Get your questions. Test yourself.</p>
-      <div id="rapidFireModeGrid"></div>
+      <div id="rapidFireModeGrid" class="dash-grid"></div>
     </div>
   </div>
 
@@ -2525,26 +2558,33 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">📚 Study Resources</div>
-      <a class="link-card" href="#" id="goToFormulaFromHub">
-        <div class="lc-text"><h4>🔢 Quick Reference</h4><p>Formulas &amp; key facts, searchable</p></div>
-        <div class="lc-arrow">→</div>
+      <div class="dash-grid">
+      <a class="dash-card hub-tile t1" href="#" id="goToFormulaFromHub">
+        <div class="dc-icon">🔢</div>
+        <div class="dc-label">Quick Reference</div>
+        <div class="dc-sub">Formulas &amp; key facts</div>
       </a>
-      <a class="link-card" href="#" id="goToMnemonicsFromHub">
-        <div class="lc-text"><h4>🧩 Mnemonics Library</h4><p>Memory tricks for hard-to-remember facts</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t2" href="#" id="goToMnemonicsFromHub">
+        <div class="dc-icon">🧩</div>
+        <div class="dc-label">Mnemonics Library</div>
+        <div class="dc-sub">Memory tricks</div>
       </a>
-      <a class="link-card" href="#" id="goToHealthDaysFromHub">
-        <div class="lc-text"><h4>📅 Health Days</h4><p>Important national &amp; international observance days</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t3" href="#" id="goToHealthDaysFromHub">
+        <div class="dc-icon">📅</div>
+        <div class="dc-label">Health Days</div>
+        <div class="dc-sub">Observance days</div>
       </a>
-      <a class="link-card" href="#" id="goToDictionaryFromHub">
-        <div class="lc-text"><h4>📖 Health Dictionary</h4><p>Reference PDFs — WHO, Oxford, and more</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t4" href="#" id="goToDictionaryFromHub">
+        <div class="dc-icon">📖</div>
+        <div class="dc-label">Health Dictionary</div>
+        <div class="dc-sub">Reference PDFs</div>
       </a>
-      <a class="link-card" href="#" id="goToFaqsFromHub">
-        <div class="lc-text"><h4>❓ FAQs</h4><p>Common questions about the app, answered</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t5" href="#" id="goToFaqsFromHub">
+        <div class="dc-icon">❓</div>
+        <div class="dc-label">FAQs</div>
+        <div class="dc-sub">Common questions</div>
       </a>
+      </div>
     </div>
   </div>
 
@@ -2586,22 +2626,22 @@
       <a class="dash-card hub-tile t1" href="#" id="goToBasicCalc">
         <div class="dc-icon">🔢</div>
         <div class="dc-label">Calculator</div>
-        <div class="dc-sub">Normal calculator for quick arithmetic</div>
+        <div class="dc-sub">Quick arithmetic</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToBmiCalc">
         <div class="dc-icon">⚖️</div>
         <div class="dc-label">BMI Calculator</div>
-        <div class="dc-sub">Body Mass Index from weight &amp; height</div>
+        <div class="dc-sub">Weight &amp; height</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToIndicatorCalc">
         <div class="dc-icon">📊</div>
         <div class="dc-label">Indicator Calculator</div>
-        <div class="dc-sub">Major public health indicators (IMR, MMR &amp; more)</div>
+        <div class="dc-sub">IMR, MMR &amp; more</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToEpiCalc">
         <div class="dc-icon">📈</div>
         <div class="dc-label">Epidemiology Calculator</div>
-        <div class="dc-sub">Sensitivity, Specificity, Incidence, Prevalence &amp; more</div>
+        <div class="dc-sub">Sensitivity, prevalence</div>
       </a>
       </div>
     </div>
@@ -8583,15 +8623,15 @@ function showBattleJoinResult(correct){
 const RAPID_FIRE_PACE_SEC = { pho: 45, ha: 54, ahw: 54, anm: 54, sn: 54, bph_license: 36, ha_license: 36 };
 const RAPID_FIRE_TIME_PRESETS = [1, 2, 5, 10, 15, 20, 30, 45, 60];
 const RAPID_FIRE_MODES = [
-  { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam' },
-  { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject' },
-  { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths' },
-  { key:'revision', icon:'🔄', label:'Revision Fire', desc:'Questions due for revision today' },
-  { key:'random', icon:'🎲', label:'Random Fire', desc:'Mixed across all your selected posts' },
-  { key:'concept', icon:'🧠', label:'Concept Fire', desc:'Understand key concepts in a topic' },
-  { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject' },
-  { key:'daily', icon:'🏆', label:'Daily Fire', desc:"Today's fixed mini-test — build a streak" },
-  { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend' },
+  { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
+  { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject', shortDesc:'Your weak subject' },
+  { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths', shortDesc:'Past mistakes' },
+  { key:'revision', icon:'🔄', label:'Revision Fire', desc:'Questions due for revision today', shortDesc:'Due for revision' },
+  { key:'random', icon:'🎲', label:'Random Fire', desc:'Mixed across all your selected posts', shortDesc:'Mixed posts' },
+  { key:'concept', icon:'🧠', label:'Concept Fire', desc:'Understand key concepts in a topic', shortDesc:'Pick a topic' },
+  { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject', shortDesc:'Pick a subject' },
+  { key:'daily', icon:'🏆', label:'Daily Fire', desc:"Today's fixed mini-test — build a streak", shortDesc:'Daily streak' },
+  { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend', shortDesc:'Challenge a friend' },
 ];
 let rapidFireSelectedMode = null;
 let rapidFireSelectedMinutes = 10;
@@ -8599,16 +8639,15 @@ let currentRapidFireMode = null;
 let currentRapidFirePace = 45;
 
 function renderRapidFireModes(){
-  document.getElementById('rapidFireModeGrid').innerHTML = RAPID_FIRE_MODES.map(m => `
-    <div class="rf-mode-card" data-mode="${m.key}">
-      <div class="rf-icon">${m.icon}</div>
-      <div>
-        <div class="rf-label">${m.label}</div>
-        <div class="rf-desc">${m.desc}</div>
-      </div>
+  const shades = ['t1','t2','t3','t4','t5','t6'];
+  document.getElementById('rapidFireModeGrid').innerHTML = RAPID_FIRE_MODES.map((m, i) => `
+    <div class="dash-card hub-tile ${shades[i % shades.length]}" data-mode="${m.key}">
+      <div class="dc-icon">${m.icon}</div>
+      <div class="dc-label">${m.label}</div>
+      <div class="dc-sub">${m.shortDesc}</div>
     </div>
   `).join('');
-  document.querySelectorAll('.rf-mode-card').forEach(card => {
+  document.querySelectorAll('#rapidFireModeGrid .dash-card').forEach(card => {
     card.addEventListener('click', () => openRapidFireSetup(card.dataset.mode));
   });
 }
