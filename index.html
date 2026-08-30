@@ -1062,6 +1062,20 @@
   .dash-card.c-syllabus{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
   .dash-card.c-current{ background:linear-gradient(135deg,#146B8C,#0B4A63); }
   .dash-card.c-gk{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
+  /* Sub-hub grids (Learn/Practice/Smart Tools/Progress) — same exact shape as Home's cards,
+     but a deliberately different, quieter treatment: neutral dark grey/charcoal family
+     instead of navy/teal, plus a soft ambient glow Home's regular tiles don't have. This
+     keeps Home visually "in charge" while every hub underneath still feels consistent. */
+  .hub-tile{
+    box-shadow:0 0 14px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.07);
+  }
+  .hub-tile.t1{ background:linear-gradient(135deg,#26262B,#1A1A1D); }
+  .hub-tile.t2{ background:linear-gradient(135deg,#202023,#141416); }
+  .hub-tile.t3{ background:linear-gradient(135deg,#2B2723,#1D1A17); }
+  .hub-tile.t4{ background:linear-gradient(135deg,#24282C,#18191C); }
+  .hub-tile.t5{ background:linear-gradient(135deg,#2A2A2E,#1C1C1F); }
+  .hub-tile.t6{ background:linear-gradient(135deg,#282420,#1A1714); }
   .section-title{ font-family:'Tinos',serif; font-size:17px; margin:8px 0 12px; }
   .back-link{
     display:inline-flex; align-items:center; gap:6px;
@@ -2138,30 +2152,38 @@
       <div class="section-title" style="font-size:15px; margin-top:20px; margin-bottom:12px;">🏆 Achievements</div>
       <div class="badges-grid" id="badgesGrid"></div>
 
-      <a class="link-card" href="#" id="goToLeaderboard">
-        <div class="lc-text"><h4>🏆 Leaderboard</h4><p>See how you rank against other students</p></div>
-        <div class="lc-arrow">→</div>
+      <div class="dash-grid">
+      <a class="dash-card hub-tile t1" href="#" id="goToLeaderboard">
+        <div class="dc-icon">🏆</div>
+        <div class="dc-label">Leaderboard</div>
+        <div class="dc-sub">See how you rank against other students</div>
       </a>
-      <a class="link-card" href="#" id="goToBookmarks">
-        <div class="lc-text"><h4>⭐ My Bookmarks</h4><p>Review questions you've saved</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t2" href="#" id="goToBookmarks">
+        <div class="dc-icon">⭐</div>
+        <div class="dc-label">My Bookmarks</div>
+        <div class="dc-sub">Review questions you've saved</div>
       </a>
-      <a class="link-card" href="#" id="goToStudyGroups">
-        <div class="lc-text"><h4>👥 Study Groups</h4><p>Create or join a group, compare scores with friends</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t3" href="#" id="goToStudyGroups">
+        <div class="dc-icon">👥</div>
+        <div class="dc-label">Study Groups</div>
+        <div class="dc-sub">Create or join a group, compare scores with friends</div>
       </a>
-      <a class="link-card" href="#" id="goToNotes">
-        <div class="lc-text"><h4>📝 My Notes</h4><p>Your own study notes, saved on this device</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t4" href="#" id="goToNotes">
+        <div class="dc-icon">📝</div>
+        <div class="dc-label">My Notes</div>
+        <div class="dc-sub">Your own study notes, saved on this device</div>
       </a>
-      <a class="link-card" href="#" id="goToReminder">
-        <div class="lc-text"><h4>🔔 Daily Study Reminder</h4><p>Get reminded to practice every day</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t5" href="#" id="goToReminder">
+        <div class="dc-icon">🔔</div>
+        <div class="dc-label">Daily Study Reminder</div>
+        <div class="dc-sub">Get reminded to practice every day</div>
       </a>
-      <a class="link-card" href="#" id="goToRevision">
-        <div class="lc-text"><h4>🔄 Revision Mode</h4><p>Re-practice questions you got wrong or bookmarked</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t6" href="#" id="goToRevision">
+        <div class="dc-icon">🔄</div>
+        <div class="dc-label">Revision Mode</div>
+        <div class="dc-sub">Re-practice questions you got wrong or bookmarked</div>
       </a>
+      </div>
     </div>
   </div>
 
@@ -2260,30 +2282,36 @@
       <div class="section-title">📚 Learn</div>
       <input type="text" id="globalSearchInput" placeholder="🔍 Search formulas, mnemonics, health days, FAQs…" style="width:100%; padding:13px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14.5px; background:var(--panel); color:var(--ink); margin-bottom:16px;">
       <div id="globalSearchResults" style="display:none; margin-bottom:20px;"></div>
-      <div id="learnLinkCardsWrap">
-      <a class="link-card" href="#" id="goToSyllabusFromLearn">
-        <div class="lc-text"><h4>📖 Syllabus</h4><p>Complete Loksewa syllabus, by post</p></div>
-        <div class="lc-arrow">→</div>
+      <div id="learnLinkCardsWrap" class="dash-grid">
+      <a class="dash-card hub-tile t1" href="#" id="goToSyllabusFromLearn">
+        <div class="dc-icon">📖</div>
+        <div class="dc-label">Syllabus</div>
+        <div class="dc-sub">Complete Loksewa syllabus, by post</div>
       </a>
-      <a class="link-card" href="#" id="goToGkFromLearn">
-        <div class="lc-text"><h4>🧠 General Knowledge</h4><p>Constitution, Acts, Samsamayik &amp; guidelines</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t2" href="#" id="goToGkFromLearn">
+        <div class="dc-icon">🧠</div>
+        <div class="dc-label">General Knowledge</div>
+        <div class="dc-sub">Constitution, Acts, Samsamayik &amp; guidelines</div>
       </a>
-      <a class="link-card" href="#" id="goToVideoFromLearn">
-        <div class="lc-text"><h4>🎥 Video Lessons</h4><p>Topic-based video learning</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t3" href="#" id="goToVideoFromLearn">
+        <div class="dc-icon">🎥</div>
+        <div class="dc-label">Video Lessons</div>
+        <div class="dc-sub">Topic-based video learning</div>
       </a>
-      <a class="link-card" href="#" id="goToStudyResourcesFromLearn">
-        <div class="lc-text"><h4>📚 Study Resources</h4><p>Quick Reference, Mnemonics, Health Days, Dictionary, FAQs</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t4" href="#" id="goToStudyResourcesFromLearn">
+        <div class="dc-icon">📚</div>
+        <div class="dc-label">Study Resources</div>
+        <div class="dc-sub">Quick Reference, Mnemonics, Health Days, Dictionary, FAQs</div>
       </a>
-      <a class="link-card" href="#" id="goToSmartToolsFromLearn">
-        <div class="lc-text"><h4>🧮 Smart Tools</h4><p>Calculators — BMI, Health Indicators &amp; more</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t5" href="#" id="goToSmartToolsFromLearn">
+        <div class="dc-icon">🧮</div>
+        <div class="dc-label">Smart Tools</div>
+        <div class="dc-sub">Calculators — BMI, Health Indicators &amp; more</div>
       </a>
-      <a class="link-card" href="#" id="goToHealthGuideFromLearn">
-        <div class="lc-text"><h4>🩺 Health Guide</h4><p>Basic health education articles</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t6" href="#" id="goToHealthGuideFromLearn">
+        <div class="dc-icon">🩺</div>
+        <div class="dc-label">Health Guide</div>
+        <div class="dc-sub">Basic health education articles</div>
       </a>
       </div>
     </div>
@@ -2293,54 +2321,68 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">📝 Practice</div>
-      <a class="link-card" href="#" id="goToMcqFromPractice">
-        <div class="lc-text"><h4>📝 Subject-wise MCQs</h4><p>1000+ questions, Set-locked progression</p></div>
-        <div class="lc-arrow">→</div>
+      <div class="dash-grid">
+      <a class="dash-card hub-tile t1" href="#" id="goToMcqFromPractice">
+        <div class="dc-icon">📝</div>
+        <div class="dc-label">Subject-wise MCQs</div>
+        <div class="dc-sub">1000+ questions, Set-locked progression</div>
       </a>
-      <a class="link-card" href="#" id="goToMockFromPractice">
-        <div class="lc-text"><h4>🏆 Mock Test</h4><p>Real Loksewa exam pattern, timed practice</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t2" href="#" id="goToMockFromPractice">
+        <div class="dc-icon">🏆</div>
+        <div class="dc-label">Mock Test</div>
+        <div class="dc-sub">Real Loksewa exam pattern, timed practice</div>
       </a>
-      <a class="link-card" href="#" id="goToPastQuestionsFromPractice">
-        <div class="lc-text"><h4>📜 Past Questions</h4><p>Real previous Loksewa exam papers</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t3" href="#" id="goToPastQuestionsFromPractice">
+        <div class="dc-icon">📜</div>
+        <div class="dc-label">Past Questions</div>
+        <div class="dc-sub">Real previous Loksewa exam papers</div>
       </a>
-      <a class="link-card" href="#" id="goToTournamentFromPractice">
-        <div class="lc-text"><h4>🏅 Weekly Tournament</h4><p>Same questions for everyone, weekly leaderboard</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t4" href="#" id="goToTournamentFromPractice">
+        <div class="dc-icon">🏅</div>
+        <div class="dc-label">Weekly Tournament</div>
+        <div class="dc-sub">Same questions for everyone, weekly leaderboard</div>
       </a>
-      <a class="link-card" href="#" id="goToRevisionFromPractice">
-        <div class="lc-text"><h4>🔄 Revision Mode</h4><p>Re-practice wrong &amp; bookmarked questions</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t5" href="#" id="goToRevisionFromPractice">
+        <div class="dc-icon">🔄</div>
+        <div class="dc-label">Revision Mode</div>
+        <div class="dc-sub">Re-practice wrong &amp; bookmarked questions</div>
       </a>
-      <a class="link-card" href="#" id="goToBookmarksFromPractice">
-        <div class="lc-text"><h4>🔖 Bookmarks</h4><p>Questions you saved for later</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t6" href="#" id="goToBookmarksFromPractice">
+        <div class="dc-icon">🔖</div>
+        <div class="dc-label">Bookmarks</div>
+        <div class="dc-sub">Questions you saved for later</div>
       </a>
-      <a class="link-card" href="#" id="goToMistakeBookFromPractice">
-        <div class="lc-text"><h4>❌ My Mistakes</h4><p>Every wrong answer, tracked automatically</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t1" href="#" id="goToMistakeBookFromPractice">
+        <div class="dc-icon">❌</div>
+        <div class="dc-label">My Mistakes</div>
+        <div class="dc-sub">Every wrong answer, tracked automatically</div>
       </a>
-      <a class="link-card" href="#" id="goToSpeedChallengeFromPractice">
-        <div class="lc-text"><h4>⏱️ Speed Challenge</h4><p>60 seconds — answer as many as you can</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t2" href="#" id="goToSpeedChallengeFromPractice">
+        <div class="dc-icon">⏱️</div>
+        <div class="dc-label">Speed Challenge</div>
+        <div class="dc-sub">60 seconds — answer as many as you can</div>
       </a>
-      <a class="link-card" href="#" id="goToFlashcardsFromPractice">
-        <div class="lc-text"><h4>🧩 Flashcards</h4><p>Flip-card active recall practice</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t3" href="#" id="goToFlashcardsFromPractice">
+        <div class="dc-icon">🧩</div>
+        <div class="dc-label">Flashcards</div>
+        <div class="dc-sub">Flip-card active recall practice</div>
       </a>
-      <a class="link-card" href="#" id="goToAnswerCheckerFromPractice">
-        <div class="lc-text"><h4>✍️ Check My Answer</h4><p>Write a written answer, get AI feedback</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t4" href="#" id="goToAnswerCheckerFromPractice">
+        <div class="dc-icon">✍️</div>
+        <div class="dc-label">Check My Answer</div>
+        <div class="dc-sub">Write a written answer, get AI feedback</div>
       </a>
-      <a class="link-card" href="#" id="goToBattleFromPractice">
-        <div class="lc-text"><h4>⚔️ Battle Challenge</h4><p>Challenge a friend — same questions, compare scores</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t5" href="#" id="goToBattleFromPractice">
+        <div class="dc-icon">⚔️</div>
+        <div class="dc-label">Battle Challenge</div>
+        <div class="dc-sub">Challenge a friend — same questions, compare scores</div>
       </a>
-      <a class="link-card" href="#" id="goToRapidFireFromPractice">
-        <div class="lc-text"><h4>⚡ Rapid Fire</h4><p>Pick your time — get a paced mini-test, 9 ways</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t6" href="#" id="goToRapidFireFromPractice">
+        <div class="dc-icon">⚡</div>
+        <div class="dc-label">Rapid Fire</div>
+        <div class="dc-sub">Pick your time — get a paced mini-test, 9 ways</div>
       </a>
+      </div>
     </div>
   </div>
 
@@ -2499,22 +2541,28 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">🧮 Calculator Hub</div>
-      <a class="link-card" href="#" id="goToBasicCalc">
-        <div class="lc-text"><h4>🔢 Calculator</h4><p>Normal calculator for quick arithmetic</p></div>
-        <div class="lc-arrow">→</div>
+      <div class="dash-grid">
+      <a class="dash-card hub-tile t1" href="#" id="goToBasicCalc">
+        <div class="dc-icon">🔢</div>
+        <div class="dc-label">Calculator</div>
+        <div class="dc-sub">Normal calculator for quick arithmetic</div>
       </a>
-      <a class="link-card" href="#" id="goToBmiCalc">
-        <div class="lc-text"><h4>⚖️ BMI Calculator</h4><p>Body Mass Index from weight &amp; height</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t2" href="#" id="goToBmiCalc">
+        <div class="dc-icon">⚖️</div>
+        <div class="dc-label">BMI Calculator</div>
+        <div class="dc-sub">Body Mass Index from weight &amp; height</div>
       </a>
-      <a class="link-card" href="#" id="goToIndicatorCalc">
-        <div class="lc-text"><h4>📊 Indicator Calculator</h4><p>Major public health indicators (IMR, MMR &amp; more)</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t3" href="#" id="goToIndicatorCalc">
+        <div class="dc-icon">📊</div>
+        <div class="dc-label">Indicator Calculator</div>
+        <div class="dc-sub">Major public health indicators (IMR, MMR &amp; more)</div>
       </a>
-      <a class="link-card" href="#" id="goToEpiCalc">
-        <div class="lc-text"><h4>📈 Epidemiology Calculator</h4><p>Sensitivity, Specificity, Incidence, Prevalence &amp; more</p></div>
-        <div class="lc-arrow">→</div>
+      <a class="dash-card hub-tile t4" href="#" id="goToEpiCalc">
+        <div class="dc-icon">📈</div>
+        <div class="dc-label">Epidemiology Calculator</div>
+        <div class="dc-sub">Sensitivity, Specificity, Incidence, Prevalence &amp; more</div>
       </a>
+      </div>
     </div>
   </div>
 
@@ -8483,7 +8531,7 @@ function resetGlobalSearch(){
   const linkCards = document.getElementById('learnLinkCardsWrap');
   if(input) input.value = '';
   if(results){ results.style.display = 'none'; results.innerHTML = ''; }
-  if(linkCards) linkCards.style.display = 'block';
+  if(linkCards) linkCards.style.display = 'grid';
 }
 function runGlobalSearch(query){
   const resultsWrap = document.getElementById('globalSearchResults');
@@ -8493,7 +8541,7 @@ function runGlobalSearch(query){
   if(q.length < 2){
     resultsWrap.style.display = 'none';
     resultsWrap.innerHTML = '';
-    linkCardsWrap.style.display = 'block';
+    linkCardsWrap.style.display = 'grid';
     return;
   }
   linkCardsWrap.style.display = 'none';
