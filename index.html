@@ -1086,24 +1086,6 @@
 
   .dash-card.c-mock{
     background:linear-gradient(135deg,#0B1C3D,#071021);
-    grid-column:1 / -1;
-    flex-direction:row; align-items:center; gap:16px;
-    border:1.5px solid var(--gold);
-    box-shadow:0 0 20px rgba(20,163,168,0.25);
-    position:relative;
-    overflow:hidden;
-  }
-  .dash-card.c-mock.is-busy{ animation:pulseBusy 1.4s ease-in-out infinite; }
-  @keyframes pulseBusy{
-    0%, 100% { opacity:1; }
-    50% { opacity:0.72; }
-  }
-  .dash-card.c-mock::after{
-    content:"REAL EXAM PATTERN";
-    position:absolute; top:8px; right:-30px;
-    background:var(--gold); color:#2A2420;
-    font-size:9px; font-weight:800; letter-spacing:0.04em;
-    padding:2px 32px; transform:rotate(35deg);
   }
 
   .dash-card.c-resources{
@@ -1113,8 +1095,6 @@
   }
   .dash-card.c-ai{
     background:linear-gradient(135deg,#14A3A8,#0D7377);
-    grid-column:1 / -1;
-    flex-direction:row; align-items:center; gap:16px;
   }
 
   /* ---------- AI Chat Screen ---------- */
@@ -1779,17 +1759,13 @@
         </button>
         <button class="dash-card c-mock" id="cardMock">
           <div class="dc-icon">🏆</div>
-          <div style="text-align:left;">
-            <div class="dc-label" style="color:#fff;">Mock Test — Loksewa Pattern</div>
-            <div class="dc-sub" style="color:#D8CFC2;">Simulates the real exam experience</div>
-          </div>
+          <div class="dc-label">Mock Test</div>
+          <div class="dc-sub">Simulates the real exam experience</div>
         </button>
         <button class="dash-card c-mock" id="cardPastQuestions">
           <div class="dc-icon">📜</div>
-          <div style="text-align:left;">
-            <div class="dc-label" style="color:#fff;">Past Questions</div>
-            <div class="dc-sub" style="color:#D8CFC2;">Real papers from previous years</div>
-          </div>
+          <div class="dc-label">Past Questions</div>
+          <div class="dc-sub">Real papers from previous years</div>
         </button>
         <button class="dash-card c-syllabus" id="cardSyllabus">
           <div class="dc-icon">📚</div>
@@ -1805,10 +1781,8 @@
         </button>
         <button class="dash-card c-ai" id="cardAi">
           <div class="dc-icon">🤖</div>
-          <div style="text-align:left;">
-            <div class="dc-label">AI Assistant</div>
-            <div class="dc-sub">Ask about syllabus, subjects, study tips &amp; more</div>
-          </div>
+          <div class="dc-label">AI Assistant</div>
+          <div class="dc-sub">Ask about syllabus, subjects, study tips &amp; more</div>
         </button>
         <button class="dash-card c-current" id="cardHealthGuide">
           <div class="dc-icon">🩺</div>
