@@ -1238,6 +1238,27 @@
     border-radius:14px; transition:background 0.15s;
   }
   .mood-checkin-btn.picked{ background:rgba(20,163,168,0.2); }
+  .mood-level-row{
+    display:flex; align-items:center; gap:14px; padding:14px 4px;
+    border-bottom:1px solid var(--line); cursor:pointer;
+  }
+  .mood-level-row:last-child{ border-bottom:none; }
+  .mood-level-row .mlr-icon{ font-size:26px; }
+  .mood-level-row .mlr-label{ flex:1; font-size:14.5px; color:var(--ink); font-weight:600; }
+  .mood-level-row .mlr-radio{
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--line); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .mood-level-row.active .mlr-radio{ border-color:var(--crimson); }
+  .mood-level-row.active .mlr-radio::after{
+    content:''; width:10px; height:10px; border-radius:50%; background:var(--crimson);
+  }
+  .mood-chip{
+    background:var(--bg); border:1.5px solid var(--line); border-radius:20px;
+    padding:9px 16px; font-size:13px; color:var(--ink); cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .mood-chip.active{ border-color:var(--crimson); background:rgba(20,163,168,0.15); color:var(--crimson); font-weight:700; }
   .promo-banner{
     background:var(--panel); border:1px dashed var(--line); border-radius:14px;
     padding:16px; text-align:center; cursor:pointer;
@@ -1696,25 +1717,39 @@
   </div>
 
   <!-- MOOD CHECK-IN — shown once per calendar day, before the app reaches Home -->
+  <!-- MOOD CHECK-IN — Step 1: mood level -->
   <div class="screen" id="moodCheckinScreen">
-    <div class="home-body" style="padding-top:60px; text-align:center;">
-      <div style="font-size:34px; margin-bottom:10px;">👋</div>
-      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); margin-bottom:6px;">How was your mood today?</div>
-      <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:26px;">This helps Health Loksewa notice your best study days.</div>
-      <div style="display:flex; justify-content:space-between; padding:0 8px; margin-bottom:8px;" id="moodOptionsRow">
-        <button class="mood-checkin-btn" data-mood="bad">😫</button>
-        <button class="mood-checkin-btn" data-mood="low">😕</button>
-        <button class="mood-checkin-btn" data-mood="ok">😐</button>
-        <button class="mood-checkin-btn" data-mood="good">🙂</button>
-        <button class="mood-checkin-btn" data-mood="great">🤩</button>
-      </div>
-      <div style="display:flex; justify-content:space-between; padding:0 8px; color:var(--ink-soft); font-size:10px; margin-bottom:30px;">
-        <span>Low</span><span>Great</span>
-      </div>
-      <button class="start-btn" id="moodContinueBtn" disabled>Continue to Health Loksewa</button>
-      <div id="moodSkipLink" style="color:var(--ink-soft); font-size:11.5px; margin-top:14px; text-decoration:underline; cursor:pointer;">Skip for today</div>
+    <div class="home-body" style="padding-top:50px;">
+      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); margin-bottom:6px;">How are you feeling?</div>
+      <div style="font-size:12px; color:var(--ink-soft); margin-bottom:20px;">This helps Health Loksewa notice your best study days.</div>
+      <div class="content-card" style="padding:6px 16px;" id="moodLevelList"></div>
+      <button class="start-btn" id="moodLevelNextBtn" style="margin-top:20px;" disabled>Next</button>
+      <div id="moodSkipLink" style="text-align:center; color:var(--ink-soft); font-size:11.5px; margin-top:14px; text-decoration:underline; cursor:pointer;">Skip for today</div>
     </div>
   </div>
+
+  <!-- MOOD CHECK-IN — Step 2: specific emotions -->
+  <div class="screen" id="moodEmotionsScreen">
+    <div class="home-body" style="padding-top:50px;">
+      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); margin-bottom:16px;">Which emotions best describe how you feel?</div>
+      <div class="content-card" id="moodEmotionsWrap" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+      <button class="start-btn" id="moodEmotionsNextBtn" style="margin-top:20px;">Next</button>
+      <div id="moodEmotionsSkipLink" style="text-align:center; color:var(--ink-soft); font-size:11.5px; margin-top:14px; text-decoration:underline; cursor:pointer;">Skip for today</div>
+    </div>
+  </div>
+
+  <!-- MOOD CHECK-IN — Step 3: causes + optional note -->
+  <div class="screen" id="moodCausesScreen">
+    <div class="home-body" style="padding-top:50px;">
+      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); margin-bottom:16px;">What's making you feel this way?</div>
+      <div class="content-card" id="moodCausesWrap" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;"></div>
+      <label style="font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:8px;">Anything else to add?</label>
+      <textarea id="moodNoteInput" rows="3" placeholder="Add a note to help you remember this feeling or moment" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:13.5px; background:var(--panel); color:var(--ink); resize:vertical;"></textarea>
+      <button class="start-btn" id="moodSaveBtn" style="margin-top:20px;">Save</button>
+      <div id="moodCausesSkipLink" style="text-align:center; color:var(--ink-soft); font-size:11.5px; margin-top:14px; text-decoration:underline; cursor:pointer;">Skip for today</div>
+    </div>
+  </div>
+
 
   <!-- PERSONALIZED STUDY PLAN ONBOARDING — one-time only (not shown again once completed).
        Question 1 (which exam) is skipped entirely here since the post-gate screen already
@@ -1833,8 +1868,14 @@
           </div>
         </div>
         <div id="homeMoodPanel" style="display:none; padding:18px 20px 4px; text-align:center;">
-          <div style="color:#fff; font-size:12.5px; margin-bottom:14px;">😊 Your study mood this week</div>
-          <div id="homeMoodRow" style="display:flex; justify-content:space-around; font-size:22px; margin-bottom:8px;"></div>
+          <div id="homeMoodToday">
+            <div style="font-size:38px;" id="homeMoodTodayIcon">·</div>
+            <div style="color:#fff; font-size:15px; font-weight:700; margin-top:4px;" id="homeMoodTodayLabel">No check-in yet</div>
+            <div style="color:var(--ink-soft); font-size:11px; margin-top:2px;" id="homeMoodTodayCount"></div>
+          </div>
+          <button class="font-size-btn" id="homeMoodCheckInBtn" style="width:auto; padding:8px 18px; margin:12px auto 4px; background:var(--crimson); color:#fff; display:block;">+ Check In</button>
+          <div style="color:#fff; font-size:11.5px; margin:16px 0 8px;">This week</div>
+          <div id="homeMoodWeekRow" style="display:flex; justify-content:space-around; font-size:11px;"></div>
         </div>
         <div style="display:flex; justify-content:center; gap:6px; padding-bottom:10px;" id="homeSwipeDots">
           <span class="on" data-panel="0"></span>
@@ -3758,6 +3799,8 @@ const appLoadingScreen = document.getElementById('appLoadingScreen');
 const loginScreen = document.getElementById('loginScreen');
 const postGateScreen = document.getElementById('postGateScreen');
 const moodCheckinScreen = document.getElementById('moodCheckinScreen');
+const moodEmotionsScreen = document.getElementById('moodEmotionsScreen');
+const moodCausesScreen = document.getElementById('moodCausesScreen');
 const onboardingWizardScreen = document.getElementById('onboardingWizardScreen');
 const onboardingSummaryScreen = document.getElementById('onboardingSummaryScreen');
 const homeScreen = document.getElementById('homeScreen');
@@ -3816,7 +3859,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -3962,7 +4005,7 @@ const SCREEN_REFRESH_MAP = {
   }, { passive: true });
 })();
 
-const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
+const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
@@ -4874,50 +4917,144 @@ function addDaysISO(days){
   return d.toISOString().slice(0, 10);
 }
 
-// ---------- Mood check-in: shown once per calendar day, before the app reaches Home ----------
+// ---------- Mood check-in: full multi-step flow (level → emotions → causes/note → save).
+// Shown once per calendar day before the app reaches Home (gated), and also reachable anytime
+// via the "+ Check In" button on Home's mood panel (multiple check-ins per day are fine,
+// only the once-per-day GATE is what's actually limited). ----------
+const MOOD_LEVELS = [
+  { value:'great', icon:'🤩', label:'Awesome!' },
+  { value:'good', icon:'🙂', label:'Good' },
+  { value:'ok', icon:'😐', label:'Fine' },
+  { value:'low', icon:'😕', label:'Bad' },
+  { value:'bad', icon:'😫', label:'Terrible' },
+];
+const MOOD_LEVEL_MAP = Object.fromEntries(MOOD_LEVELS.map(m => [m.value, m]));
+const MOOD_EMOTIONS = ['Joyful','Hopeful','Amazed','Relieved','Confident','Content','Satisfied','Happy','Passionate','Enthusiastic','Excited','Brave','Proud','Calm','Curious','Grateful','Peaceful'];
+const MOOD_CAUSES = ['Health','Sleep','Exercise','Food','Hobby','Money','Identity','Partner','Friends','Pet','Family','Coworkers','Dating','Work','Home','School','Outdoors','Travel','Weather'];
+
+function getMoodEntries(){
+  try{ return JSON.parse(localStorage.getItem('hl_mood_entries') || '[]'); }catch(e){ return []; }
+}
+function saveMoodEntry(entry){
+  const entries = getMoodEntries();
+  entries.push(entry);
+  try{ localStorage.setItem('hl_mood_entries', JSON.stringify(entries.slice(-200))); }catch(e){} // cap — avoid unbounded growth
+}
+
+let moodDraft = { level:null, emotions:[], causes:[], note:'' };
+let moodFlowFromHome = false; // true when triggered from Home's "+ Check In", not the daily gate
+
 function initMoodCheckin(){
   const today = todayISO();
   let lastShown = null;
   try{ lastShown = localStorage.getItem('hl_mood_last_shown'); }catch(e){}
   if(lastShown === today){
-    // Already handled today — skip straight to the post-gate screen, no flash of the mood prompt
+    // Already handled today's gate — skip straight to the post-gate screen, no flash of the mood prompt
     showScreen(postGateScreen);
     if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
     return;
   }
-  document.querySelectorAll('.mood-checkin-btn').forEach(b => b.classList.remove('picked'));
-  const continueBtn = document.getElementById('moodContinueBtn');
-  continueBtn.disabled = true;
-  continueBtn.dataset.mood = '';
+  moodFlowFromHome = false;
+  moodDraft = { level:null, emotions:[], causes:[], note:'' };
+  renderMoodLevelStep();
 }
 window.initMoodCheckin = initMoodCheckin;
-function saveTodaysMood(mood){
-  try{
-    const log = JSON.parse(localStorage.getItem('hl_mood_log') || '{}');
-    log[todayISO()] = mood;
-    localStorage.setItem('hl_mood_log', JSON.stringify(log));
-  }catch(e){}
+
+function startMoodCheckinFromHome(){
+  moodFlowFromHome = true;
+  moodDraft = { level:null, emotions:[], causes:[], note:'' };
+  showScreen(moodCheckinScreen);
+  renderMoodLevelStep();
 }
-function finishMoodCheckin(){
-  try{ localStorage.setItem('hl_mood_last_shown', todayISO()); }catch(e){}
-  showScreen(postGateScreen);
-  if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
-}
-document.querySelectorAll('.mood-checkin-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.mood-checkin-btn').forEach(b => b.classList.remove('picked'));
-    btn.classList.add('picked');
-    const continueBtn = document.getElementById('moodContinueBtn');
-    continueBtn.disabled = false;
-    continueBtn.dataset.mood = btn.dataset.mood;
+document.getElementById('homeMoodCheckInBtn').addEventListener('click', startMoodCheckinFromHome);
+
+function renderMoodLevelStep(){
+  document.getElementById('moodLevelList').innerHTML = MOOD_LEVELS.map(m => `
+    <div class="mood-level-row" data-value="${m.value}">
+      <div class="mlr-icon">${m.icon}</div>
+      <div class="mlr-label">${m.label}</div>
+      <div class="mlr-radio"></div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.mood-level-row').forEach(row => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.mood-level-row').forEach(r => r.classList.remove('active'));
+      row.classList.add('active');
+      moodDraft.level = row.dataset.value;
+      document.getElementById('moodLevelNextBtn').disabled = false;
+    });
   });
+  document.getElementById('moodLevelNextBtn').disabled = true;
+}
+document.getElementById('moodLevelNextBtn').addEventListener('click', () => {
+  if(!moodDraft.level) return;
+  showScreen(moodEmotionsScreen);
+  renderMoodEmotionsStep();
 });
-document.getElementById('moodContinueBtn').addEventListener('click', () => {
-  const mood = document.getElementById('moodContinueBtn').dataset.mood;
-  if(mood) saveTodaysMood(mood);
+
+function renderMoodEmotionsStep(){
+  document.getElementById('moodEmotionsWrap').innerHTML = MOOD_EMOTIONS.map(e => `
+    <button class="mood-chip ${moodDraft.emotions.includes(e) ? 'active' : ''}" data-value="${e}">${e}</button>
+  `).join('');
+  document.querySelectorAll('#moodEmotionsWrap .mood-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const v = chip.dataset.value;
+      if(moodDraft.emotions.includes(v)) moodDraft.emotions = moodDraft.emotions.filter(x => x !== v);
+      else moodDraft.emotions.push(v);
+      chip.classList.toggle('active');
+    });
+  });
+}
+document.getElementById('moodEmotionsNextBtn').addEventListener('click', () => {
+  showScreen(moodCausesScreen);
+  renderMoodCausesStep();
+});
+
+function renderMoodCausesStep(){
+  document.getElementById('moodCausesWrap').innerHTML = MOOD_CAUSES.map(c => `
+    <button class="mood-chip ${moodDraft.causes.includes(c) ? 'active' : ''}" data-value="${c}">${c}</button>
+  `).join('');
+  document.querySelectorAll('#moodCausesWrap .mood-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const v = chip.dataset.value;
+      if(moodDraft.causes.includes(v)) moodDraft.causes = moodDraft.causes.filter(x => x !== v);
+      else moodDraft.causes.push(v);
+      chip.classList.toggle('active');
+    });
+  });
+  document.getElementById('moodNoteInput').value = moodDraft.note || '';
+}
+document.getElementById('moodNoteInput').addEventListener('input', (e) => {
+  moodDraft.note = e.target.value;
+});
+document.getElementById('moodSaveBtn').addEventListener('click', () => {
+  const now = new Date();
+  saveMoodEntry({
+    date: todayISO(),
+    time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }),
+    level: moodDraft.level,
+    emotions: moodDraft.emotions.slice(),
+    causes: moodDraft.causes.slice(),
+    note: moodDraft.note || ''
+  });
   finishMoodCheckin();
 });
+
+// Skip abandons the whole check-in for today (not just the current step) — matches the
+// original single-tap mood feature's meaning, so it stays a genuinely quick opt-out.
+function finishMoodCheckin(){
+  try{ localStorage.setItem('hl_mood_last_shown', todayISO()); }catch(e){}
+  if(moodFlowFromHome){
+    showScreen(homeScreen);
+    renderHomeMoodRow();
+  } else {
+    showScreen(postGateScreen);
+    if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
+  }
+}
 document.getElementById('moodSkipLink').addEventListener('click', finishMoodCheckin);
+document.getElementById('moodEmotionsSkipLink').addEventListener('click', finishMoodCheckin);
+document.getElementById('moodCausesSkipLink').addEventListener('click', finishMoodCheckin);
 
 // ---------- Personalized Study Plan onboarding — one-time only, right after the first-ever
 // post-gate completion. Question 1 (which exam) is deliberately skipped here since the
@@ -5183,17 +5320,38 @@ function renderHomeChart(mode){
   document.getElementById('homeChartAcc').textContent = (totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0) + '%';
 }
 function renderHomeMoodRow(){
-  let log = {};
-  try{ log = JSON.parse(localStorage.getItem('hl_mood_log') || '{}'); }catch(e){}
-  const emojiMap = { great:'🤩', good:'🙂', ok:'😐', low:'😕', bad:'😫' };
+  const entries = getMoodEntries();
+  const today = todayISO();
+  const todaysEntries = entries.filter(e => e.date === today);
+
+  if(todaysEntries.length === 0){
+    document.getElementById('homeMoodTodayIcon').textContent = '·';
+    document.getElementById('homeMoodTodayLabel').textContent = 'No check-in yet';
+    document.getElementById('homeMoodTodayCount').textContent = '';
+  } else {
+    const latest = todaysEntries[todaysEntries.length - 1];
+    const levelInfo = MOOD_LEVEL_MAP[latest.level] || { icon:'·', label:'—' };
+    document.getElementById('homeMoodTodayIcon').textContent = levelInfo.icon;
+    document.getElementById('homeMoodTodayLabel').textContent = levelInfo.label;
+    document.getElementById('homeMoodTodayCount').textContent = `${todaysEntries.length} check-in${todaysEntries.length !== 1 ? 's' : ''} today`;
+  }
+
   const now = new Date();
-  let html = '';
+  const dayLabels = ['S','M','T','W','T','F','S'];
+  let weekHtml = '';
   for(let i = 6; i >= 0; i--){
     const d = new Date(now); d.setDate(d.getDate() - i);
-    const mood = log[d.toISOString().slice(0, 10)];
-    html += `<span style="opacity:${mood ? 1 : 0.3}">${mood ? emojiMap[mood] : '·'}</span>`;
+    const key = d.toISOString().slice(0, 10);
+    const dayEntries = entries.filter(e => e.date === key);
+    const icon = dayEntries.length > 0 ? (MOOD_LEVEL_MAP[dayEntries[dayEntries.length - 1].level] || {}).icon : null;
+    weekHtml += `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <span style="color:${d.getDay() === now.getDay() ? 'var(--crimson)' : 'var(--ink-soft)'};">${dayLabels[d.getDay()]}</span>
+        <span style="font-size:16px; opacity:${icon ? 1 : 0.3};">${icon || '·'}</span>
+      </div>
+    `;
   }
-  document.getElementById('homeMoodRow').innerHTML = html;
+  document.getElementById('homeMoodWeekRow').innerHTML = weekHtml;
 }
 // ---------- Home Promotions banner: Sheet-driven, single card, shown once loaded. Empty
 // "Promotions" tab = the whole section just stays hidden — never shows a broken placeholder. ----------
