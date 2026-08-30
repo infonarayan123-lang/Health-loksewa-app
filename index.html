@@ -1226,6 +1226,21 @@
   .promo-banner .pb-label{ color:var(--ink-soft); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
   .promo-banner .pb-title{ color:#fff; font-size:13px; font-weight:700; }
   .promo-banner .pb-sub{ color:var(--ink-soft); font-size:11.5px; margin-top:4px; }
+  .focus-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel); border-radius:12px; padding:11px 14px; border:1px solid var(--line);
+  }
+  .focus-row .focus-label{ color:var(--ink-soft); font-size:11px; }
+  .focus-row .focus-value{ color:#fff; font-size:13px; font-weight:700; margin-top:2px; }
+  .focus-row .focus-change{ color:var(--crimson); font-size:11.5px; font-weight:700; cursor:pointer; }
+  .resource-row{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+  .resource-row::-webkit-scrollbar{ display:none; }
+  .resource-row .rcard{
+    flex:none; width:88px; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:12px 8px; text-align:center; cursor:pointer;
+  }
+  .resource-row .ri{ font-size:18px; margin-bottom:6px; }
+  .resource-row .rl{ color:var(--ink); font-size:10.5px; font-weight:700; }
   .chat-input-row{
     display:flex; gap:8px; padding:12px 16px 16px;
     border-top:1px solid var(--line); background:var(--panel);
@@ -1721,6 +1736,14 @@
       <div class="home-greeting" id="homeGreeting">नमस्ते! 👋</div>
       <div class="home-title">What do you want to study today?</div>
 
+      <div class="focus-row" id="homeFocusRow" style="display:none; margin:0 16px 14px;">
+        <div>
+          <div class="focus-label">🎯 Today's Focus</div>
+          <div class="focus-value" id="homeFocusValue">—</div>
+        </div>
+        <div class="focus-change" id="homeFocusChange">Practice →</div>
+      </div>
+
       <div class="swipe-card" id="homeSwipeCard" style="margin:0 16px 16px;">
         <div id="homeProgressPanel">
           <div class="swipe-tabs" style="display:flex; gap:6px; padding:14px 14px 0;">
@@ -1834,7 +1857,16 @@
         </button>
       </div>
 
-      <div id="homePromoBanner" style="display:none; margin:6px 16px 16px;"></div>
+      <div class="section-title" style="padding:0 16px; margin:4px 0 10px; color:#fff; font-size:14px; font-weight:700;">📚 Resources</div>
+      <div class="resource-row" id="homeResourceRow" style="padding:0 16px;">
+        <div class="rcard" id="homeResGuidelines"><div class="ri">📑</div><div class="rl">Guidelines</div></div>
+        <div class="rcard" id="homeResHealthDays"><div class="ri">📅</div><div class="rl">Health Days</div></div>
+        <div class="rcard" id="homeResFormula"><div class="ri">🔢</div><div class="rl">Quick Ref</div></div>
+        <div class="rcard" id="homeResDictionary"><div class="ri">📖</div><div class="rl">Dictionary</div></div>
+        <div class="rcard" id="homeResFaqs"><div class="ri">❓</div><div class="rl">FAQs</div></div>
+      </div>
+
+      <div id="homePromoBanner" style="display:none; margin:16px 16px 16px;"></div>
 
       <div class="app-footer">
         <div class="footer-brand">Health Loksewa</div>
@@ -3691,6 +3723,7 @@ function showScreen(el){
     const activeTab = document.querySelector('.home-chart-tab.active');
     renderHomeChart(activeTab ? activeTab.dataset.mode : 'daily');
     loadHomePromo();
+    renderHomeFocusRow();
   }
 }
 // Use this instead of showScreen() specifically for BACK actions — it stops the screen
@@ -4842,6 +4875,50 @@ async function loadHomePromo(){
     // Silent — a missing/failed promo shouldn't show an error on Home
   }
 }
+
+// ---------- Today's Focus row: reuses the exact same weakest-subject logic as Progress's
+// "Your Focus Today" card, just shown compactly on Home too. No separate data source. ----------
+function renderHomeFocusRow(){
+  const row = document.getElementById('homeFocusRow');
+  const stats = computeProgressStats();
+  if(!stats.weakest){
+    row.style.display = 'none';
+    return;
+  }
+  document.getElementById('homeFocusValue').textContent = `${stats.weakest.subject} (${stats.weakest.pct}%)`;
+  row.style.display = 'flex';
+}
+document.getElementById('homeFocusRow').addEventListener('click', () => {
+  const stats = computeProgressStats();
+  if(!stats.weakest) return;
+  const post = findPostForSubject(stats.weakest.subject);
+  if(post){
+    currentMcqPost = post;
+    openSetSelect(stats.weakest.subject);
+  } else {
+    showScreen(mcqPostScreen);
+    renderMcqPosts();
+  }
+});
+
+// ---------- Home Resources row: delegates to the exact same existing screens/handlers as
+// Study Resources hub — no duplicated logic, just a faster shortcut from Home. ----------
+document.getElementById('homeResGuidelines').addEventListener('click', () => {
+  openDocList('Guidelines', 'Guidelines', gkScreen); // calling directly, not via .click() delegation — gkGuidelines is rendered dynamically and may not exist in the DOM yet if GK was never opened
+});
+document.getElementById('homeResHealthDays').addEventListener('click', () => {
+  document.getElementById('goToHealthDaysFromHub').click();
+});
+document.getElementById('homeResFormula').addEventListener('click', () => {
+  document.getElementById('goToFormulaFromHub').click();
+});
+document.getElementById('homeResDictionary').addEventListener('click', () => {
+  document.getElementById('goToDictionaryFromHub').click();
+});
+document.getElementById('homeResFaqs').addEventListener('click', () => {
+  document.getElementById('goToFaqsFromHub').click();
+});
+
 function showHomeSwipePanel(i){
   document.querySelectorAll('#homeSwipeDots span').forEach((d, idx) => d.classList.toggle('on', idx === i));
   document.getElementById('homeProgressPanel').style.display = i === 0 ? 'block' : 'none';
