@@ -70,13 +70,17 @@
   }
   .theme-swatch.active{ border-color:var(--ink); }
 
-  html{ overscroll-behavior-y: contain; }
+  html{ overscroll-behavior-y: contain; height:100%; overflow:hidden; }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:var(--bg);
     color:var(--ink);
     font-family:'Inter',sans-serif;
-    min-height:100vh;
+    height:100%;
+    overflow:hidden; /* page itself never scrolls — #app scrolls internally instead. This is the
+      standard fix for the Android WebView bug where position:fixed elements drift during
+      page-level scroll: since the bottom nav is a sibling of the ONLY scrolling container
+      (not a descendant of it), it's structurally unaffected by that scroll happening at all */
     display:flex;
     justify-content:center;
     padding:0;
@@ -86,7 +90,9 @@
   #app{
     width:100%;
     max-width:480px;
-    min-height:100vh;
+    height:100%;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch; /* momentum scrolling on iOS/older Android WebViews */
     background:var(--panel);
     display:flex;
     flex-direction:column;
@@ -3572,7 +3578,9 @@ function showScreen(el){
   suppressHistoryPush = false;
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
   el.classList.add('active');
-  window.scrollTo(0,0);
+  window.scrollTo(0,0); // legacy no-op now that #app owns scrolling, harmless to leave
+  const appEl = document.getElementById('app');
+  if(appEl) appEl.scrollTop = 0;
   updateBottomNav(el);
   if(el === learnScreen) resetGlobalSearch();
 }
@@ -3624,7 +3632,8 @@ const SCREEN_REFRESH_MAP = {
   const indicator = document.getElementById('pullRefreshIndicator');
 
   document.addEventListener('touchstart', (e) => {
-    if(window.scrollY > 0) { pulling = false; return; }
+    const appEl = document.getElementById('app');
+    if(appEl && appEl.scrollTop > 0) { pulling = false; return; }
     startY = e.touches[0].clientY;
     pulling = true;
   }, { passive: true });
