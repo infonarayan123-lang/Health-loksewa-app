@@ -2351,6 +2351,10 @@
         <div class="lc-text"><h4>📊 Indicator Calculator</h4><p>Major public health indicators (IMR, MMR &amp; more)</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToEpiCalc">
+        <div class="lc-text"><h4>📈 Epidemiology Calculator</h4><p>Sensitivity, Specificity, Incidence, Prevalence &amp; more</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
     </div>
   </div>
 
@@ -2401,7 +2405,74 @@
           <button class="calc-btn" id="calcMmrBtn">Calculate MMR</button>
           <div id="mmrResult"></div>
         </div>
+
+        <div class="calc-card">
+          <h4>Case Fatality Rate (CFR)</h4>
+          <div class="calc-field"><label>Deaths from the disease</label><input type="number" id="cfrDeaths" placeholder="e.g. 20"></div>
+          <div class="calc-field"><label>Total cases of the disease</label><input type="number" id="cfrCases" placeholder="e.g. 400"></div>
+          <button class="calc-btn" id="calcCfrBtn">Calculate CFR</button>
+          <div id="cfrResult"></div>
+        </div>
+
+        <div class="calc-card">
+          <h4>Attack Rate</h4>
+          <div class="calc-field"><label>New cases during outbreak</label><input type="number" id="attackCases" placeholder="e.g. 40"></div>
+          <div class="calc-field"><label>Population at risk</label><input type="number" id="attackPopulation" placeholder="e.g. 500"></div>
+          <button class="calc-btn" id="calcAttackBtn">Calculate Attack Rate</button>
+          <div id="attackResult"></div>
+        </div>
+
+        <div class="calc-card">
+          <h4>Crude Birth Rate (CBR)</h4>
+          <div class="calc-field"><label>Live births in a year</label><input type="number" id="cbrBirths" placeholder="e.g. 250"></div>
+          <div class="calc-field"><label>Mid-year population</label><input type="number" id="cbrPopulation" placeholder="e.g. 10000"></div>
+          <button class="calc-btn" id="calcCbrBtn">Calculate CBR</button>
+          <div id="cbrResult"></div>
+        </div>
+
+        <div class="calc-card">
+          <h4>Crude Death Rate (CDR)</h4>
+          <div class="calc-field"><label>Total deaths in a year</label><input type="number" id="cdrDeaths" placeholder="e.g. 80"></div>
+          <div class="calc-field"><label>Mid-year population</label><input type="number" id="cdrPopulation" placeholder="e.g. 10000"></div>
+          <button class="calc-btn" id="calcCdrBtn">Calculate CDR</button>
+          <div id="cdrResult"></div>
+        </div>
         <!-- 🔧 More indicator calculators will be added here once Narayan shares the full list -->
+      </div>
+    </div>
+  </div>
+
+  <!-- EPIDEMIOLOGY CALCULATOR -->
+  <div class="screen" id="epiCalcScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📈 Epidemiology Calculator</div>
+
+      <div class="calc-card">
+        <h4>Screening Test Accuracy</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Enter your 2×2 table to get Sensitivity, Specificity, PPV and NPV all at once.</p>
+        <div class="calc-field"><label>True Positives (TP)</label><input type="number" id="epiTP" placeholder="e.g. 80"></div>
+        <div class="calc-field"><label>False Positives (FP)</label><input type="number" id="epiFP" placeholder="e.g. 20"></div>
+        <div class="calc-field"><label>False Negatives (FN)</label><input type="number" id="epiFN" placeholder="e.g. 10"></div>
+        <div class="calc-field"><label>True Negatives (TN)</label><input type="number" id="epiTN" placeholder="e.g. 90"></div>
+        <button class="calc-btn" id="calcScreeningBtn">Calculate</button>
+        <div id="screeningResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Incidence Rate</h4>
+        <div class="calc-field"><label>New cases in the period</label><input type="number" id="incidenceNewCases" placeholder="e.g. 50"></div>
+        <div class="calc-field"><label>Population at risk</label><input type="number" id="incidencePopulation" placeholder="e.g. 5000"></div>
+        <button class="calc-btn" id="calcIncidenceBtn">Calculate Incidence</button>
+        <div id="incidenceResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Prevalence</h4>
+        <div class="calc-field"><label>Total existing cases</label><input type="number" id="prevalenceCases" placeholder="e.g. 300"></div>
+        <div class="calc-field"><label>Total population</label><input type="number" id="prevalencePopulation" placeholder="e.g. 5000"></div>
+        <button class="calc-btn" id="calcPrevalenceBtn">Calculate Prevalence</button>
+        <div id="prevalenceResult"></div>
       </div>
     </div>
   </div>
@@ -3428,6 +3499,7 @@ const calculatorScreen = document.getElementById('calculatorScreen');
 const basicCalcScreen = document.getElementById('basicCalcScreen');
 const bmiCalcScreen = document.getElementById('bmiCalcScreen');
 const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
+const epiCalcScreen = document.getElementById('epiCalcScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
@@ -3447,7 +3519,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -3574,7 +3646,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -4006,6 +4078,10 @@ document.getElementById('goToIndicatorCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(indicatorCalcScreen);
 });
+document.getElementById('goToEpiCalc').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(epiCalcScreen);
+});
 
 // ---------- Basic Calculator (normal arithmetic calculator) ----------
 let basicCalcExpression = '';
@@ -4100,6 +4176,95 @@ document.getElementById('calcMmrBtn').addEventListener('click', () => {
   }
   const mmr = (deaths / births) * 100000;
   resultEl.innerHTML = `<div class="calc-result">MMR: ${mmr.toFixed(1)} per 100,000 live births</div>`;
+});
+document.getElementById('calcCfrBtn').addEventListener('click', () => {
+  const deaths = parseFloat(document.getElementById('cfrDeaths').value);
+  const cases = parseFloat(document.getElementById('cfrCases').value);
+  const resultEl = document.getElementById('cfrResult');
+  if(!cases || cases <= 0 || deaths < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const cfr = (deaths / cases) * 100;
+  resultEl.innerHTML = `<div class="calc-result">CFR: ${cfr.toFixed(2)}%</div>`;
+});
+document.getElementById('calcAttackBtn').addEventListener('click', () => {
+  const cases = parseFloat(document.getElementById('attackCases').value);
+  const population = parseFloat(document.getElementById('attackPopulation').value);
+  const resultEl = document.getElementById('attackResult');
+  if(!population || population <= 0 || cases < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const attackRate = (cases / population) * 100;
+  resultEl.innerHTML = `<div class="calc-result">Attack Rate: ${attackRate.toFixed(2)}%</div>`;
+});
+document.getElementById('calcCbrBtn').addEventListener('click', () => {
+  const births = parseFloat(document.getElementById('cbrBirths').value);
+  const population = parseFloat(document.getElementById('cbrPopulation').value);
+  const resultEl = document.getElementById('cbrResult');
+  if(!population || population <= 0 || births < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const cbr = (births / population) * 1000;
+  resultEl.innerHTML = `<div class="calc-result">CBR: ${cbr.toFixed(2)} per 1000 population</div>`;
+});
+document.getElementById('calcCdrBtn').addEventListener('click', () => {
+  const deaths = parseFloat(document.getElementById('cdrDeaths').value);
+  const population = parseFloat(document.getElementById('cdrPopulation').value);
+  const resultEl = document.getElementById('cdrResult');
+  if(!population || population <= 0 || deaths < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const cdr = (deaths / population) * 1000;
+  resultEl.innerHTML = `<div class="calc-result">CDR: ${cdr.toFixed(2)} per 1000 population</div>`;
+});
+
+// ---------- Epidemiology Calculator ----------
+document.getElementById('calcScreeningBtn').addEventListener('click', () => {
+  const tp = parseFloat(document.getElementById('epiTP').value);
+  const fp = parseFloat(document.getElementById('epiFP').value);
+  const fn = parseFloat(document.getElementById('epiFN').value);
+  const tn = parseFloat(document.getElementById('epiTN').value);
+  const resultEl = document.getElementById('screeningResult');
+  if([tp, fp, fn, tn].some(v => isNaN(v) || v < 0) || (tp + fn) <= 0 || (tn + fp) <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers for all four boxes.</p>`;
+    return;
+  }
+  const sensitivity = (tp / (tp + fn)) * 100;
+  const specificity = (tn / (tn + fp)) * 100;
+  const ppv = (tp + fp) > 0 ? (tp / (tp + fp)) * 100 : 0;
+  const npv = (tn + fn) > 0 ? (tn / (tn + fn)) * 100 : 0;
+  resultEl.innerHTML = `
+    <div class="calc-result">Sensitivity: ${sensitivity.toFixed(2)}%</div>
+    <div class="calc-result">Specificity: ${specificity.toFixed(2)}%</div>
+    <div class="calc-result">PPV: ${ppv.toFixed(2)}%</div>
+    <div class="calc-result">NPV: ${npv.toFixed(2)}%</div>
+  `;
+});
+document.getElementById('calcIncidenceBtn').addEventListener('click', () => {
+  const newCases = parseFloat(document.getElementById('incidenceNewCases').value);
+  const population = parseFloat(document.getElementById('incidencePopulation').value);
+  const resultEl = document.getElementById('incidenceResult');
+  if(!population || population <= 0 || newCases < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const incidence = (newCases / population) * 1000;
+  resultEl.innerHTML = `<div class="calc-result">Incidence Rate: ${incidence.toFixed(2)} per 1000 population at risk</div>`;
+});
+document.getElementById('calcPrevalenceBtn').addEventListener('click', () => {
+  const cases = parseFloat(document.getElementById('prevalenceCases').value);
+  const population = parseFloat(document.getElementById('prevalencePopulation').value);
+  const resultEl = document.getElementById('prevalenceResult');
+  if(!population || population <= 0 || cases < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const prevalence = (cases / population) * 100;
+  resultEl.innerHTML = `<div class="calc-result">Prevalence: ${prevalence.toFixed(2)}%</div>`;
 });
 
 // ---------- FAQs ----------
