@@ -1211,6 +1211,10 @@
     flex-shrink:0;
   }
   .chat-send-btn:disabled{ background:#D8CFC2; }
+  .chat-speak-btn{
+    display:inline-block; margin-left:8px; background:none; border:none;
+    color:var(--crimson); font-size:14px; cursor:pointer; vertical-align:middle; padding:0;
+  }
 
   .link-card.is-loading{ opacity:0.55; cursor:default; }
   .link-card.is-loading .lc-arrow{ opacity:0.3; }
@@ -1775,6 +1779,7 @@
         <button class="chat-quick-btn" id="chatQuickCheckAnswerBtn">✍️ Check Answer</button>
       </div>
       <div class="chat-input-row">
+        <button class="chat-send-btn" id="chatMicBtn" style="display:none; background:var(--panel); border:1.5px solid var(--crimson); color:var(--crimson);">🎤</button>
         <input type="text" id="chatInput" placeholder="Ask about subjects, syllabus, study tips…">
         <button class="chat-send-btn" id="chatSendBtn">➤</button>
       </div>
@@ -8057,6 +8062,32 @@ function initChat(){
     if(e.key === 'Enter') sendChatMessage();
   });
 
+  // ---- Voice input: browser's own built-in speech recognition, no backend/AI model needed —
+  // transcribes speech into the chat input, same send flow as typing. Hidden entirely on
+  // browsers that don't support it (feature-detected, never assumed). ----
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(SpeechRecognitionAPI){
+    const micBtn = document.getElementById('chatMicBtn');
+    micBtn.style.display = '';
+    const recognizer = new SpeechRecognitionAPI();
+    recognizer.lang = 'en-US';
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+
+    micBtn.addEventListener('click', () => {
+      micBtn.textContent = '🔴';
+      try{ recognizer.start(); }catch(e){ /* already listening — ignore */ }
+    });
+    recognizer.addEventListener('result', (event) => {
+      const transcript = event.results[0][0].transcript;
+      const input = document.getElementById('chatInput');
+      input.value = transcript;
+      input.focus();
+    });
+    recognizer.addEventListener('end', () => { micBtn.textContent = '🎤'; });
+    recognizer.addEventListener('error', () => { micBtn.textContent = '🎤'; });
+  }
+
   // ---- Quick action chips: pre-fill a template into the input, same send flow as always ----
   document.querySelectorAll('.chat-quick-btn[data-template]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -8105,6 +8136,31 @@ function appendBubble(role, text){
   return bubble;
 }
 
+// ---- Voice output: browser's own built-in text-to-speech, no backend/AI model needed.
+// Call this AFTER a bubble's real text is already set (never before) — it appends a button
+// as a sibling node, so it survives even though the bubble's .textContent gets reassigned
+// once when the "Thinking…" placeholder becomes the real reply. Silently does nothing on
+// browsers without speech synthesis support. ----
+function addSpeakButtonToBubble(bubble, text){
+  if(!window.speechSynthesis) return;
+  const speakBtn = document.createElement('button');
+  speakBtn.className = 'chat-speak-btn';
+  speakBtn.type = 'button';
+  speakBtn.textContent = '🔊';
+  speakBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    speakText(text);
+  });
+  bubble.appendChild(speakBtn);
+}
+function speakText(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel(); // stop anything already playing first
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.95;
+  window.speechSynthesis.speak(utterance);
+}
+
 async function sendChatMessage(){
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
@@ -8141,6 +8197,7 @@ async function sendChatMessage(){
     const reply = data.reply || "Sorry, I couldn't answer that. Please try again.";
     thinkingBubble.textContent = reply;
     thinkingBubble.classList.remove('thinking');
+    addSpeakButtonToBubble(thinkingBubble, reply);
     chatHistory.push({role:'assistant', content:reply});
     const trimmedHistory = chatHistory.slice(-20);
     try{ localStorage.setItem('hl_chat_history', JSON.stringify(trimmedHistory)); }catch(e){}
