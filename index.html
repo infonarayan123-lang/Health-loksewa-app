@@ -36,6 +36,7 @@
     --wrong-bg:#FBEAE8;
     --line:#E4DDD1;
   }
+  body.light-mode #app{ background:var(--panel); }
   body.light-mode .content-card,
   body.light-mode .link-card,
   body.light-mode .set-card{ background:var(--panel); }
@@ -93,7 +94,7 @@
     height:100%;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch; /* momentum scrolling on iOS/older Android WebViews */
-    background:var(--panel);
+    background:linear-gradient(180deg, #0B1C3D 0%, #14141A 55%, #1A140F 100%);
     display:flex;
     flex-direction:column;
     box-shadow:0 0 40px rgba(0,0,0,0.06);
@@ -502,8 +503,6 @@
   }
   .dash-card.c-tournament{
     background:linear-gradient(135deg,#14A3A8,#0D7377);
-    grid-column:1 / -1;
-    flex-direction:row; align-items:center; gap:16px;
   }
   .tournament-hero{
     text-align:center; padding:24px 20px;
@@ -526,8 +525,6 @@
   }
   .dash-card.c-video{
     background:linear-gradient(135deg,#14A3A8,#0D7377);
-    grid-column:1 / -1;
-    flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-studyres{
     background:linear-gradient(135deg,#1B3B6F,#0F2648);
@@ -1090,8 +1087,6 @@
 
   .dash-card.c-resources{
     background:linear-gradient(135deg,#146B8C,#0B4A63);
-    grid-column:1 / -1;
-    flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-ai{
     background:linear-gradient(135deg,#14A3A8,#0D7377);
@@ -1816,10 +1811,8 @@
         </div>
         <button class="dash-card c-tournament" id="cardTournament">
           <div class="dc-icon">🏆</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Weekly Tournament</div>
-            <div class="dc-sub">Same questions for everyone — compete this week!</div>
-          </div>
+          <div class="dc-label">Weekly Tournament</div>
+          <div class="dc-sub">Same questions for everyone — compete this week!</div>
         </button>
         <button class="dash-card c-gk" id="cardGK">
           <div class="dc-icon">🧠</div>
@@ -1833,17 +1826,13 @@
         </button>
         <button class="dash-card c-resources" id="cardResources">
           <div class="dc-icon">🌐</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Resources &amp; News</div>
-            <div class="dc-sub">Official notices, e-papers &amp; documents</div>
-          </div>
+          <div class="dc-label">Resources &amp; News</div>
+          <div class="dc-sub">Official notices, e-papers &amp; documents</div>
         </button>
         <button class="dash-card c-video" id="cardVideo">
           <div class="dc-icon">🎥</div>
-          <div style="text-align:left;">
-            <div class="dc-label">Video Lessons</div>
-            <div class="dc-sub">Short videos explaining key topics</div>
-          </div>
+          <div class="dc-label">Video Lessons</div>
+          <div class="dc-sub">Short videos explaining key topics</div>
         </button>
       </div>
 
