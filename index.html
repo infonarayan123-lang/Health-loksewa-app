@@ -1084,6 +1084,9 @@
     cursor:pointer; border:none; text-align:left;
     color:#fff; min-height:104px;
     font-family:'Inter',sans-serif;
+    text-decoration:none; /* dash-card is reused on <a> tags across Learn/Practice/Smart
+      Tools/Progress/Study Resources/Rapid Fire — without this, anchor elements show their
+      browser-default underline on the label/sub text, which buttons never had */
   }
   .dash-card .dc-icon{ font-size:26px; }
   .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
