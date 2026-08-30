@@ -95,7 +95,10 @@
   }
   .bottom-nav{
     display:none; /* JS shows this once the correct screen is active — prevents flashing during initial load */
-    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    position:fixed; bottom:0; left:50%;
+    transform:translateX(-50%) translateZ(0); /* translateZ(0) forces GPU compositing — fixes a known Android WebView bug where fixed elements can drift/scroll with page content */
+    -webkit-transform:translateX(-50%) translateZ(0);
+    will-change:transform;
     width:100%; max-width:480px;
     justify-content:space-around; align-items:center;
     background:linear-gradient(180deg, #1a1a1f 0%, #0a0a0d 100%);
@@ -3553,11 +3556,32 @@ let studyGroupsBackTarget = studyGroupsScreen;
   }
 })();
 
+// ---------- Navigation history: lets every "← Back" properly go one step back to wherever
+// the user actually came from, instead of jumping straight to Home. Screens that already
+// track their own specific back-target (docViewer, setSelect, etc.) keep working exactly as
+// before — this only fixes the generic case that used to hard-code "home". ----------
+let navHistoryStack = [];
+let suppressHistoryPush = false;
+
 function showScreen(el){
+  const currentActive = document.querySelector('.screen.active');
+  if(currentActive && currentActive !== el && !suppressHistoryPush){
+    navHistoryStack.push(currentActive);
+    if(navHistoryStack.length > 30) navHistoryStack.shift(); // cap — avoid unbounded growth over a long session
+  }
+  suppressHistoryPush = false;
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
   el.classList.add('active');
   window.scrollTo(0,0);
   updateBottomNav(el);
+  if(el === learnScreen) resetGlobalSearch();
+}
+// Use this instead of showScreen() specifically for BACK actions — it stops the screen
+// you're leaving from being pushed onto history again (which would otherwise let you get
+// stuck in a Back/Forward loop between the same two screens).
+function navigateBack(target){
+  suppressHistoryPush = true;
+  showScreen(target);
 }
 
 // ---------- Custom pull-to-refresh: swipe down at the top of a screen refreshes THAT
@@ -6242,22 +6266,30 @@ loadQuestionOfDay();
 document.querySelectorAll('.back-link').forEach(b => {
   b.addEventListener('click', () => {
     const key = b.dataset.back || 'home';
+
+    // Payment flow: confirm before leaving, since a checkout might be mid-flight
+    if(key === 'premiumBack'){
+      if(!confirm('Are you sure you want to go back? This will cancel the payment process.')) return;
+      navigateBack(premiumBackTarget);
+      return;
+    }
+
     if(key === 'dynamic'){
-      showScreen(docViewerBackTarget);
+      navigateBack(docViewerBackTarget);
     } else if(key === 'setSelectBack'){
-      showScreen(setSelectBackTarget);
+      navigateBack(setSelectBackTarget);
     } else if(key === 'docListBack'){
-      showScreen(docListBackTarget);
+      navigateBack(docListBackTarget);
     } else if(key === 'comingSoonBack'){
-      showScreen(comingSoonBackTarget);
+      navigateBack(comingSoonBackTarget);
     } else if(key === 'legalInfoBack'){
-      showScreen(legalInfoBackTarget);
-    } else if(key === 'premiumBack'){
-      showScreen(premiumBackTarget);
+      navigateBack(legalInfoBackTarget);
     } else if(key === 'studyGroupsBack'){
-      showScreen(studyGroupsBackTarget);
+      navigateBack(studyGroupsBackTarget);
+    } else if(navHistoryStack.length > 0){
+      navigateBack(navHistoryStack.pop());
     } else {
-      showScreen(SCREEN_BY_KEY[key] || homeScreen);
+      navigateBack(SCREEN_BY_KEY[key] || homeScreen);
     }
   });
 });
@@ -7792,6 +7824,17 @@ function showBattleJoinResult(correct){
 
 // ---------- Global Search: searches across content already fully loaded for Study Resources
 // (Formulas, Mnemonics, Health Days, FAQs) — results shown inline, no navigation needed ----------
+// Called every time the Learn screen becomes active (navigating to it, or navigating back to
+// it) — clears any leftover search text/results so Learn always looks the same as before you
+// searched, exactly like it did the very first time you opened it.
+function resetGlobalSearch(){
+  const input = document.getElementById('globalSearchInput');
+  const results = document.getElementById('globalSearchResults');
+  const linkCards = document.getElementById('learnLinkCardsWrap');
+  if(input) input.value = '';
+  if(results){ results.style.display = 'none'; results.innerHTML = ''; }
+  if(linkCards) linkCards.style.display = 'block';
+}
 function runGlobalSearch(query){
   const resultsWrap = document.getElementById('globalSearchResults');
   const linkCardsWrap = document.getElementById('learnLinkCardsWrap');
@@ -8042,7 +8085,8 @@ document.getElementById('quizExitBtn').addEventListener('click', () => {
   if(confirmed){
     clearInterval(timerInterval);
     currentSetInfo = null;
-    showScreen(homeScreen);
+    const target = navHistoryStack.length > 0 ? navHistoryStack.pop() : homeScreen;
+    navigateBack(target);
   }
   // If cancelled, do nothing — stay right where they are in the quiz
 });
