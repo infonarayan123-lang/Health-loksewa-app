@@ -2685,7 +2685,17 @@
       <a class="dash-card hub-tile t4" href="#" id="goToEpiCalc">
         <div class="dc-icon">📈</div>
         <div class="dc-label">Epidemiology Calculator</div>
-        <div class="dc-sub">Sensitivity, prevalence</div>
+        <div class="dc-sub">Sensitivity, RR, OR</div>
+      </a>
+      <a class="dash-card hub-tile t5" href="#" id="goToStatsCalc">
+        <div class="dc-icon">📊</div>
+        <div class="dc-label">Statistics &amp; Research</div>
+        <div class="dc-sub">Mean, SD, sample size</div>
+      </a>
+      <a class="dash-card hub-tile t6" href="#" id="goToStudyToolsCalc">
+        <div class="dc-icon">📝</div>
+        <div class="dc-label">Study &amp; Exam Tools</div>
+        <div class="dc-sub">Negative marking</div>
       </a>
       </div>
     </div>
@@ -2806,6 +2816,85 @@
         <div class="calc-field"><label>Total population</label><input type="number" id="prevalencePopulation" placeholder="e.g. 5000"></div>
         <button class="calc-btn" id="calcPrevalenceBtn">Calculate Prevalence</button>
         <div id="prevalenceResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Risk &amp; Odds (Cohort / Case-Control)</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Enter your exposure 2×2 table to get Relative Risk, Odds Ratio, Attributable Risk and NNT together.</p>
+        <div class="calc-field"><label>Exposed, Disease+ (A)</label><input type="number" id="roA" placeholder="e.g. 40"></div>
+        <div class="calc-field"><label>Exposed, Disease− (B)</label><input type="number" id="roB" placeholder="e.g. 60"></div>
+        <div class="calc-field"><label>Unexposed, Disease+ (C)</label><input type="number" id="roC" placeholder="e.g. 20"></div>
+        <div class="calc-field"><label>Unexposed, Disease− (D)</label><input type="number" id="roD" placeholder="e.g. 80"></div>
+        <button class="calc-btn" id="calcRiskOddsBtn">Calculate</button>
+        <div id="riskOddsResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Case Fatality Rate</h4>
+        <div class="calc-field"><label>Deaths from the disease</label><input type="number" id="epiCfrDeaths" placeholder="e.g. 15"></div>
+        <div class="calc-field"><label>Total cases of the disease</label><input type="number" id="epiCfrCases" placeholder="e.g. 300"></div>
+        <button class="calc-btn" id="calcEpiCfrBtn">Calculate CFR</button>
+        <div id="epiCfrResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATISTICS & RESEARCH -->
+  <div class="screen" id="statsCalcScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📊 Statistics &amp; Research</div>
+
+      <div class="calc-card">
+        <h4>Descriptive Statistics</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Enter numbers separated by commas — get Mean, Median, Mode and Standard Deviation together.</p>
+        <div class="calc-field"><label>Data set</label><input type="text" id="statsInput" placeholder="e.g. 12, 15, 18, 20, 25"></div>
+        <button class="calc-btn" id="calcStatsBtn">Calculate</button>
+        <div id="statsResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Z-score</h4>
+        <div class="calc-field"><label>Value</label><input type="number" id="zValue" placeholder="e.g. 85"></div>
+        <div class="calc-field"><label>Mean</label><input type="number" id="zMean" placeholder="e.g. 70"></div>
+        <div class="calc-field"><label>Standard Deviation</label><input type="number" id="zSD" placeholder="e.g. 10"></div>
+        <button class="calc-btn" id="calcZScoreBtn">Calculate Z-score</button>
+        <div id="zScoreResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Sample Size (Single Proportion)</h4>
+        <div class="calc-field"><label>Population size (leave blank if unknown)</label><input type="number" id="ssPopulation" placeholder="e.g. 10000"></div>
+        <div class="calc-field"><label>Expected proportion (%)</label><input type="number" id="ssProportion" placeholder="e.g. 50" value="50"></div>
+        <div class="calc-field"><label>Margin of error (%)</label><input type="number" id="ssMargin" placeholder="e.g. 5" value="5"></div>
+        <div class="calc-field"><label>Confidence level (%)</label>
+          <select id="ssConfidence" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="90">90%</option>
+            <option value="95" selected>95%</option>
+            <option value="99">99%</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="calcSampleSizeBtn">Calculate Sample Size</button>
+        <div id="sampleSizeResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDY & EXAM TOOLS -->
+  <div class="screen" id="studyToolsCalcScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📝 Study &amp; Exam Tools</div>
+
+      <div class="calc-card">
+        <h4>Negative Marking Calculator</h4>
+        <div class="calc-field"><label>Total questions</label><input type="number" id="nmTotal" placeholder="e.g. 100"></div>
+        <div class="calc-field"><label>Correct answers</label><input type="number" id="nmCorrect" placeholder="e.g. 78"></div>
+        <div class="calc-field"><label>Wrong answers</label><input type="number" id="nmWrong" placeholder="e.g. 15"></div>
+        <div class="calc-field"><label>Marks per question</label><input type="number" id="nmMarksEach" placeholder="e.g. 1" value="1"></div>
+        <div class="calc-field"><label>Negative marking (%)</label><input type="number" id="nmNegative" placeholder="e.g. 25" value="25"></div>
+        <button class="calc-btn" id="calcNegativeMarkingBtn">Calculate Score</button>
+        <div id="negativeMarkingResult"></div>
       </div>
     </div>
   </div>
@@ -3843,6 +3932,8 @@ const basicCalcScreen = document.getElementById('basicCalcScreen');
 const bmiCalcScreen = document.getElementById('bmiCalcScreen');
 const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
 const epiCalcScreen = document.getElementById('epiCalcScreen');
+const statsCalcScreen = document.getElementById('statsCalcScreen');
+const studyToolsCalcScreen = document.getElementById('studyToolsCalcScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
@@ -3862,7 +3953,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -4020,7 +4111,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -4472,6 +4563,14 @@ document.getElementById('goToEpiCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(epiCalcScreen);
 });
+document.getElementById('goToStatsCalc').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(statsCalcScreen);
+});
+document.getElementById('goToStudyToolsCalc').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(studyToolsCalcScreen);
+});
 
 // ---------- Basic Calculator (normal arithmetic calculator) ----------
 let basicCalcExpression = '';
@@ -4655,6 +4754,132 @@ document.getElementById('calcPrevalenceBtn').addEventListener('click', () => {
   }
   const prevalence = (cases / population) * 100;
   resultEl.innerHTML = `<div class="calc-result">Prevalence: ${prevalence.toFixed(2)}%</div>`;
+});
+
+// ---------- Risk & Odds (Cohort / Case-Control) ----------
+document.getElementById('calcRiskOddsBtn').addEventListener('click', () => {
+  const A = parseFloat(document.getElementById('roA').value);
+  const B = parseFloat(document.getElementById('roB').value);
+  const C = parseFloat(document.getElementById('roC').value);
+  const D = parseFloat(document.getElementById('roD').value);
+  const resultEl = document.getElementById('riskOddsResult');
+  if([A, B, C, D].some(v => isNaN(v) || v < 0) || (A + B) <= 0 || (C + D) <= 0 || B <= 0 || C <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers for all four boxes (B and C must be greater than 0).</p>`;
+    return;
+  }
+  const riskExposed = A / (A + B);
+  const riskUnexposed = C / (C + D);
+  const rr = riskUnexposed > 0 ? riskExposed / riskUnexposed : 0;
+  const or = (A * D) / (B * C);
+  const riskDiff = riskExposed - riskUnexposed;
+  const nnt = riskDiff !== 0 ? Math.abs(1 / riskDiff) : Infinity;
+  resultEl.innerHTML = `
+    <div class="calc-result">Relative Risk (RR): ${rr.toFixed(2)}</div>
+    <div class="calc-result">Odds Ratio (OR): ${or.toFixed(2)}</div>
+    <div class="calc-result">Attributable Risk: ${(riskDiff * 100).toFixed(2)}%</div>
+    <div class="calc-result">NNT: ${isFinite(nnt) ? Math.ceil(nnt) : '—'}</div>
+  `;
+});
+document.getElementById('calcEpiCfrBtn').addEventListener('click', () => {
+  const deaths = parseFloat(document.getElementById('epiCfrDeaths').value);
+  const cases = parseFloat(document.getElementById('epiCfrCases').value);
+  const resultEl = document.getElementById('epiCfrResult');
+  if(!cases || cases <= 0 || deaths < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const cfr = (deaths / cases) * 100;
+  resultEl.innerHTML = `<div class="calc-result">CFR: ${cfr.toFixed(2)}%</div>`;
+});
+
+// ---------- Statistics & Research ----------
+document.getElementById('calcStatsBtn').addEventListener('click', () => {
+  const raw = document.getElementById('statsInput').value;
+  const resultEl = document.getElementById('statsResult');
+  const nums = raw.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+  if(nums.length === 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter numbers separated by commas.</p>`;
+    return;
+  }
+  const sorted = [...nums].sort((a, b) => a - b);
+  const mean = nums.reduce((s, n) => s + n, 0) / nums.length;
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  const freq = {};
+  nums.forEach(n => { freq[n] = (freq[n] || 0) + 1; });
+  const maxFreq = Math.max(...Object.values(freq));
+  const modes = Object.keys(freq).filter(k => freq[k] === maxFreq);
+  const modeText = maxFreq === 1 ? 'No unique mode' : modes.join(', ');
+  const variance = nums.length > 1 ? nums.reduce((s, n) => s + Math.pow(n - mean, 2), 0) / (nums.length - 1) : 0;
+  const sd = Math.sqrt(variance);
+  resultEl.innerHTML = `
+    <div class="calc-result">Mean: ${mean.toFixed(2)}</div>
+    <div class="calc-result">Median: ${median.toFixed(2)}</div>
+    <div class="calc-result">Mode: ${modeText}</div>
+    <div class="calc-result">Standard Deviation: ${sd.toFixed(2)}</div>
+  `;
+});
+document.getElementById('calcZScoreBtn').addEventListener('click', () => {
+  const value = parseFloat(document.getElementById('zValue').value);
+  const mean = parseFloat(document.getElementById('zMean').value);
+  const sd = parseFloat(document.getElementById('zSD').value);
+  const resultEl = document.getElementById('zScoreResult');
+  if(isNaN(value) || isNaN(mean) || !sd || sd <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers (SD must be greater than 0).</p>`;
+    return;
+  }
+  const z = (value - mean) / sd;
+  resultEl.innerHTML = `<div class="calc-result">Z-score: ${z.toFixed(2)}</div><div class="calc-result" style="font-size:11.5px; opacity:0.85;">${Math.abs(z).toFixed(2)} SD ${z >= 0 ? 'above' : 'below'} the mean</div>`;
+});
+document.getElementById('calcSampleSizeBtn').addEventListener('click', () => {
+  const population = parseFloat(document.getElementById('ssPopulation').value);
+  const pPct = parseFloat(document.getElementById('ssProportion').value) || 50;
+  const marginPct = parseFloat(document.getElementById('ssMargin').value) || 5;
+  const confidence = document.getElementById('ssConfidence').value;
+  const resultEl = document.getElementById('sampleSizeResult');
+  if(marginPct <= 0 || pPct < 0 || pPct > 100){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const zTable = { '90': 1.645, '95': 1.96, '99': 2.576 };
+  const z = zTable[confidence];
+  const p = pPct / 100;
+  const e = marginPct / 100;
+  let n = (z * z * p * (1 - p)) / (e * e);
+  if(population && population > 0){
+    n = n / (1 + ((n - 1) / population)); // finite population correction
+  }
+  const finalN = Math.ceil(n);
+  resultEl.innerHTML = `
+    <div class="calc-result">Required Sample Size: ${finalN}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">At ${confidence}% confidence, ±${marginPct}% margin of error${population ? ', finite population corrected' : ''}</div>
+  `;
+});
+
+// ---------- Study & Exam Tools ----------
+document.getElementById('calcNegativeMarkingBtn').addEventListener('click', () => {
+  const total = parseFloat(document.getElementById('nmTotal').value);
+  const correct = parseFloat(document.getElementById('nmCorrect').value);
+  const wrong = parseFloat(document.getElementById('nmWrong').value);
+  const marksEach = parseFloat(document.getElementById('nmMarksEach').value) || 1;
+  const negativePct = parseFloat(document.getElementById('nmNegative').value) || 0;
+  const resultEl = document.getElementById('negativeMarkingResult');
+  if(!total || total <= 0 || isNaN(correct) || isNaN(wrong) || correct < 0 || wrong < 0 || (correct + wrong) > total){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers — correct + wrong can't exceed total questions.</p>`;
+    return;
+  }
+  const correctMarks = correct * marksEach;
+  const negativeMarksEach = marksEach * (negativePct / 100);
+  const lostMarks = wrong * negativeMarksEach;
+  const finalScore = correctMarks - lostMarks;
+  const attempted = correct + wrong;
+  const accuracy = attempted > 0 ? (correct / attempted) * 100 : 0;
+  resultEl.innerHTML = `
+    <div class="calc-result">Correct Marks: ${correctMarks.toFixed(2)}</div>
+    <div class="calc-result">Negative Marks Lost: ${lostMarks.toFixed(2)}</div>
+    <div class="calc-result">Final Score: ${finalScore.toFixed(2)}</div>
+    <div class="calc-result">Accuracy: ${accuracy.toFixed(1)}%</div>
+  `;
 });
 
 // ---------- FAQs ----------
