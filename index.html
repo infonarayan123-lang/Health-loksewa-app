@@ -1685,21 +1685,6 @@
           <div class="dc-label">Subject-wise MCQs</div>
           <div class="dc-sub">Timed MCQs · negative marking</div>
         </button>
-        <button class="dash-card c-syllabus" id="cardSyllabus">
-          <div class="dc-icon">📚</div>
-          <div class="dc-label">Syllabus</div>
-          <div class="dc-sub">Units &amp; downloadable PDFs</div>
-        </button>
-        <button class="dash-card c-current" id="cardCurrent">
-          <div class="dc-icon">🔄</div>
-          <div class="dc-label">New Update</div>
-          <div class="dc-sub">Official reports · view in-app</div>
-        </button>
-        <button class="dash-card c-gk" id="cardGK">
-          <div class="dc-icon">🧠</div>
-          <div class="dc-label">General Knowledge and Guidelines</div>
-          <div class="dc-sub">Constitution · Acts · Samsamayik · Guidelines</div>
-        </button>
         <button class="dash-card c-mock" id="cardMock">
           <div class="dc-icon">🏆</div>
           <div style="text-align:left;">
@@ -1714,11 +1699,16 @@
             <div class="dc-sub" style="color:#D8CFC2;">Real papers from previous years</div>
           </div>
         </button>
-        <button class="dash-card c-resources" id="cardResources">
-          <div class="dc-icon">🌐</div>
+        <button class="dash-card c-syllabus" id="cardSyllabus">
+          <div class="dc-icon">📚</div>
+          <div class="dc-label">Syllabus</div>
+          <div class="dc-sub">Units &amp; downloadable PDFs</div>
+        </button>
+        <button class="dash-card c-current" id="cardSmartToolsHome">
+          <div class="dc-icon">🧰</div>
           <div style="text-align:left;">
-            <div class="dc-label">Resources &amp; News</div>
-            <div class="dc-sub">Official notices, e-papers &amp; documents</div>
+            <div class="dc-label">Smart Tools</div>
+            <div class="dc-sub">BMI, health indicators &amp; epidemiology calculators</div>
           </div>
         </button>
         <button class="dash-card c-ai" id="cardAi">
@@ -1740,6 +1730,23 @@
           <div style="text-align:left;">
             <div class="dc-label">Weekly Tournament</div>
             <div class="dc-sub">Same questions for everyone — compete this week!</div>
+          </div>
+        </button>
+        <button class="dash-card c-gk" id="cardGK">
+          <div class="dc-icon">🧠</div>
+          <div class="dc-label">General Knowledge and Guidelines</div>
+          <div class="dc-sub">Constitution · Acts · Samsamayik · Guidelines</div>
+        </button>
+        <button class="dash-card c-current" id="cardCurrent">
+          <div class="dc-icon">🔄</div>
+          <div class="dc-label">New Update</div>
+          <div class="dc-sub">Official reports · view in-app</div>
+        </button>
+        <button class="dash-card c-resources" id="cardResources">
+          <div class="dc-icon">🌐</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Resources &amp; News</div>
+            <div class="dc-sub">Official notices, e-papers &amp; documents</div>
           </div>
         </button>
         <button class="dash-card c-video" id="cardVideo">
@@ -3807,6 +3814,9 @@ document.getElementById('cardResources').addEventListener('click', () => {
 document.getElementById('cardAi').addEventListener('click', () => {
   showScreen(aiChatScreen);
   initChat();
+});
+document.getElementById('cardSmartToolsHome').addEventListener('click', () => {
+  showScreen(calculatorScreen);
 });
 // Question of the Day is now inline on the dashboard card itself — no tap-to-navigate needed
 // (see loadQuestionOfDay() call further below, which runs automatically on page load)
