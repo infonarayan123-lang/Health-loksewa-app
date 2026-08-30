@@ -1683,6 +1683,40 @@
     </div>
   </div>
 
+  <!-- PERSONALIZED STUDY PLAN ONBOARDING — one-time only (not shown again once completed).
+       Question 1 (which exam) is skipped entirely here since the post-gate screen already
+       collects that. This wizard covers questions 2–6 from the plan, then a summary. -->
+  <div class="screen" id="onboardingWizardScreen">
+    <div class="home-body" style="padding-top:40px;">
+      <div style="text-align:center; margin-bottom:8px;">
+        <div style="font-family:'Tinos',serif; font-size:18px; font-weight:700; color:var(--ink);">Personalize Your Preparation</div>
+        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">Takes less than 1 minute</div>
+      </div>
+      <div id="onboardingProgressDots" style="display:flex; justify-content:center; gap:6px; margin:16px 0 24px;"></div>
+
+      <div id="onboardingQuestionTitle" style="font-family:'Tinos',serif; font-size:16.5px; font-weight:700; color:var(--ink); margin-bottom:4px;"></div>
+      <div id="onboardingQuestionSub" style="font-size:12px; color:var(--ink-soft); margin-bottom:16px;"></div>
+      <div id="onboardingOptionsWrap"></div>
+      <div id="onboardingWhyBox" style="display:none; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-top:6px; margin-bottom:18px;">
+        <div style="font-size:11px; color:var(--ink-soft);"><b style="color:var(--crimson);">Why this matters:</b> <span id="onboardingWhyText"></span></div>
+      </div>
+
+      <button class="start-btn" id="onboardingNextBtn" style="margin-top:16px;">Next</button>
+      <div id="onboardingSkipLink" style="text-align:center; color:var(--ink-soft); font-size:11.5px; margin-top:14px; text-decoration:underline; cursor:pointer;">Skip for now</div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING SUMMARY — shown once, right after the wizard finishes -->
+  <div class="screen" id="onboardingSummaryScreen">
+    <div class="home-body" style="padding-top:60px; text-align:center;">
+      <div style="font-size:36px; margin-bottom:10px;">🎯</div>
+      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); margin-bottom:6px;">You're All Set!</div>
+      <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:22px;">We've personalized your Health Loksewa experience.</div>
+      <div class="content-card" style="text-align:left; margin-bottom:20px;" id="onboardingSummaryCard"></div>
+      <button class="start-btn" id="onboardingStartBtn">Start My Preparation →</button>
+    </div>
+  </div>
+
   <div class="screen" id="homeScreen">
     <div class="home-body" style="padding-top:0;">
 
@@ -1970,6 +2004,13 @@
               <input type="range" id="brightnessSlider" min="50" max="100" step="5" value="100" style="flex:1;">
               <span id="brightnessValueLabel" style="font-size:12px; font-weight:700; color:var(--ink-soft); width:40px; text-align:right;">100%</span>
             </div>
+          </div>
+          <div class="profile-subrow">
+            <div>
+              <div class="psr-label">🎯 Study Preferences</div>
+              <div class="psr-sub">Update your daily goal, focus areas &amp; study style</div>
+            </div>
+            <button class="font-size-btn" id="editPreferencesBtn" style="flex:none; width:auto; padding:0 14px; background:var(--crimson); color:#fff;">Edit</button>
           </div>
           <div class="profile-subrow-block">
             <div class="psr-label">🔡 Font Size</div>
@@ -3677,6 +3718,8 @@ const appLoadingScreen = document.getElementById('appLoadingScreen');
 const loginScreen = document.getElementById('loginScreen');
 const postGateScreen = document.getElementById('postGateScreen');
 const moodCheckinScreen = document.getElementById('moodCheckinScreen');
+const onboardingWizardScreen = document.getElementById('onboardingWizardScreen');
+const onboardingSummaryScreen = document.getElementById('onboardingSummaryScreen');
 const homeScreen = document.getElementById('homeScreen');
 const syllabusScreen = document.getElementById('syllabusScreen');
 const currentAffairsScreen = document.getElementById('currentAffairsScreen');
@@ -3733,7 +3776,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -3879,7 +3922,7 @@ const SCREEN_REFRESH_MAP = {
   }, { passive: true });
 })();
 
-const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, quizScreen]; // full-focus screens, no bottom nav
+const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
@@ -4835,6 +4878,197 @@ document.getElementById('moodContinueBtn').addEventListener('click', () => {
   finishMoodCheckin();
 });
 document.getElementById('moodSkipLink').addEventListener('click', finishMoodCheckin);
+
+// ---------- Personalized Study Plan onboarding — one-time only, right after the first-ever
+// post-gate completion. Question 1 (which exam) is deliberately skipped here since the
+// post-gate screen already collects that — this covers questions 2 through 6 from the plan. ----------
+const ONBOARDING_QUESTIONS = [
+  {
+    key: 'dailyTime', title: 'How much time can you realistically study each day?',
+    why: 'Sets a realistic daily goal. Consistent short sessions work better than irregular long ones.',
+    multi: false,
+    options: [
+      { value:'30min', icon:'⚡', label:'30 minutes' },
+      { value:'1hr', icon:'🕐', label:'1 hour' },
+      { value:'2hr', icon:'🔥', label:'2 hours' },
+      { value:'3hr+', icon:'🚀', label:'3+ hours' },
+    ]
+  },
+  {
+    key: 'stage', title: 'Where are you right now in your preparation?',
+    why: 'Changes what the Home screen prioritizes — more notes for beginners, more mocks & revision for final stage.',
+    multi: false,
+    options: [
+      { value:'starting', icon:'🌱', label:'Just Starting' },
+      { value:'learning', icon:'📖', label:'Learning' },
+      { value:'practicing', icon:'🔥', label:'Practicing' },
+      { value:'final', icon:'🏆', label:'Final Revision' },
+    ]
+  },
+  {
+    key: 'weakness', title: 'What do you want to improve most right now?',
+    sub: 'Select up to 2',
+    why: 'Helps the app recommend the right type of practice.',
+    multi: true, maxSelect: 2,
+    options: [
+      { value:'mcq_accuracy', icon:'📝', label:'MCQ Accuracy' },
+      { value:'memory', icon:'🧠', label:'Memory & Retention' },
+      { value:'speed', icon:'⏱️', label:'Exam Speed' },
+      { value:'mistakes', icon:'❌', label:'Reducing Mistakes' },
+      { value:'concept', icon:'📚', label:'Concept Clarity' },
+      { value:'written', icon:'✍️', label:'Written Answers' },
+    ]
+  },
+  {
+    key: 'studyStyle', title: 'How do you learn best?',
+    why: "Matches the app's recommendations to your natural learning preference.",
+    multi: false,
+    options: [
+      { value:'questions_first', icon:'📝', label:'Questions First' },
+      { value:'concept_first', icon:'📖', label:'Concept First' },
+      { value:'mixed', icon:'🔄', label:'Mixed Method' },
+      { value:'short_sessions', icon:'⚡', label:'Short Sessions' },
+    ]
+  },
+  {
+    key: 'studyTime', title: 'When do you usually study?',
+    sub: 'This helps set smart reminders',
+    multi: false,
+    options: [
+      { value:'morning', icon:'🌅', label:'Morning (5–9 AM)' },
+      { value:'daytime', icon:'☀️', label:'Daytime (9 AM–4 PM)' },
+      { value:'evening', icon:'🌆', label:'Evening (5–8 PM)' },
+      { value:'night', icon:'🌙', label:'Night (8–11 PM)' },
+      { value:'later', icon:'⏰', label:"I'll set it later" },
+    ]
+  },
+];
+const ONBOARDING_LABELS = {
+  dailyTime: { '30min':'30 minutes', '1hr':'1 hour', '2hr':'2 hours', '3hr+':'3+ hours' },
+  stage: { starting:'Just Starting', learning:'Learning', practicing:'Practicing', final:'Final Revision' },
+  weakness: { mcq_accuracy:'MCQ Accuracy', memory:'Memory & Retention', speed:'Exam Speed', mistakes:'Reducing Mistakes', concept:'Concept Clarity', written:'Written Answers' },
+  studyStyle: { questions_first:'Questions First', concept_first:'Concept First', mixed:'Mixed Method', short_sessions:'Short Sessions' },
+  studyTime: { morning:'Morning', daytime:'Daytime', evening:'Evening', night:'Night', later:'Not set yet' },
+};
+let onboardingStep = 0;
+let onboardingAnswers = {};
+let onboardingEditMode = false;
+function startOnboardingWizard(editMode){
+  onboardingEditMode = !!editMode;
+  onboardingStep = 0;
+  if(editMode){
+    try{ onboardingAnswers = JSON.parse(localStorage.getItem('hl_onboarding_answers') || '{}'); }catch(e){ onboardingAnswers = {}; }
+  } else {
+    onboardingAnswers = {};
+  }
+  showScreen(onboardingWizardScreen);
+  renderOnboardingStep();
+}
+function renderOnboardingDots(){
+  document.getElementById('onboardingProgressDots').innerHTML = ONBOARDING_QUESTIONS.map((_, i) => `
+    <span style="width:${i === onboardingStep ? '20px' : '7px'}; height:7px; border-radius:4px; background:${i <= onboardingStep ? 'var(--crimson)' : 'var(--line)'}; transition:all 0.2s;"></span>
+  `).join('');
+}
+function renderOnboardingStep(){
+  const q = ONBOARDING_QUESTIONS[onboardingStep];
+  renderOnboardingDots();
+  document.getElementById('onboardingQuestionTitle').textContent = q.title;
+  document.getElementById('onboardingQuestionSub').textContent = q.sub || '';
+  const whyBox = document.getElementById('onboardingWhyBox');
+  if(q.why){
+    whyBox.style.display = 'block';
+    document.getElementById('onboardingWhyText').textContent = q.why;
+  } else {
+    whyBox.style.display = 'none';
+  }
+
+  const current = onboardingAnswers[q.key] || (q.multi ? [] : null);
+  document.getElementById('onboardingOptionsWrap').innerHTML = q.options.map(opt => {
+    const isActive = q.multi ? current.includes(opt.value) : current === opt.value;
+    return `
+      <button class="exam-type-btn ${isActive ? 'active' : ''}" data-value="${opt.value}" style="text-align:left; display:flex; align-items:center; gap:10px;">
+        <span class="radio-dot"></span> <span>${opt.icon} ${opt.label}</span>
+      </button>
+    `;
+  }).join('');
+
+  document.querySelectorAll('#onboardingOptionsWrap .exam-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.value;
+      if(q.multi){
+        let arr = onboardingAnswers[q.key] || [];
+        if(arr.includes(value)){
+          arr = arr.filter(v => v !== value);
+        } else {
+          if(arr.length >= (q.maxSelect || 2)){
+            alert(`You can only pick ${q.maxSelect || 2} — remove one first.`);
+            return;
+          }
+          arr.push(value);
+        }
+        onboardingAnswers[q.key] = arr;
+      } else {
+        onboardingAnswers[q.key] = value;
+      }
+      renderOnboardingStep();
+    });
+  });
+
+  document.getElementById('onboardingNextBtn').textContent = (onboardingStep === ONBOARDING_QUESTIONS.length - 1) ? 'Finish' : 'Next';
+}
+document.getElementById('onboardingNextBtn').addEventListener('click', () => {
+  const q = ONBOARDING_QUESTIONS[onboardingStep];
+  const answer = onboardingAnswers[q.key];
+  const hasAnswer = q.multi ? (answer && answer.length > 0) : !!answer;
+  if(!hasAnswer){
+    alert('Please pick an option, or tap "Skip for now" below.');
+    return;
+  }
+  if(onboardingStep < ONBOARDING_QUESTIONS.length - 1){
+    onboardingStep++;
+    renderOnboardingStep();
+  } else {
+    finishOnboardingWizard();
+  }
+});
+document.getElementById('onboardingSkipLink').addEventListener('click', () => {
+  if(onboardingStep < ONBOARDING_QUESTIONS.length - 1){
+    onboardingStep++;
+    renderOnboardingStep();
+  } else {
+    finishOnboardingWizard();
+  }
+});
+function finishOnboardingWizard(){
+  try{
+    localStorage.setItem('hl_onboarding_answers', JSON.stringify(onboardingAnswers));
+    localStorage.setItem('hl_onboarding_done', '1');
+  }catch(e){}
+  if(window.syncToCloud) window.syncToCloud({ onboardingAnswers });
+  if(onboardingEditMode){
+    alert('Preferences updated!');
+    showScreen(profileScreen);
+  } else {
+    showOnboardingSummary();
+  }
+}
+function showOnboardingSummary(){
+  const a = onboardingAnswers;
+  const weaknessLabels = (a.weakness || []).map(w => ONBOARDING_LABELS.weakness[w]).join(' + ') || '—';
+  document.getElementById('onboardingSummaryCard').innerHTML = `
+    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);"><span style="color:var(--ink-soft); font-size:12.5px;">Daily Goal</span><b style="font-size:12.5px;">${ONBOARDING_LABELS.dailyTime[a.dailyTime] || '—'}</b></div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);"><span style="color:var(--ink-soft); font-size:12.5px;">Focus</span><b style="font-size:12.5px;">${weaknessLabels}</b></div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);"><span style="color:var(--ink-soft); font-size:12.5px;">Study Style</span><b style="font-size:12.5px;">${ONBOARDING_LABELS.studyStyle[a.studyStyle] || '—'}</b></div>
+    <div style="display:flex; justify-content:space-between; padding:8px 0;"><span style="color:var(--ink-soft); font-size:12.5px;">Preferred Time</span><b style="font-size:12.5px;">${ONBOARDING_LABELS.studyTime[a.studyTime] || '—'}</b></div>
+  `;
+  showScreen(onboardingSummaryScreen);
+}
+document.getElementById('onboardingStartBtn').addEventListener('click', () => {
+  showScreen(homeScreen);
+});
+document.getElementById('editPreferencesBtn').addEventListener('click', () => {
+  startOnboardingWizard(true);
+});
 
 // ---------- Daily activity log: powers the Home screen's Daily/Weekly/Monthly/Yearly chart.
 // This is a brand-new tracking system starting from today — existing users will see a mostly
@@ -6068,7 +6302,13 @@ document.getElementById('postGateContinueBtn').addEventListener('click', () => {
     alert('Please select at least 1 exam to continue.');
     return;
   }
-  showScreen(homeScreen);
+  let onboardingDone = false;
+  try{ onboardingDone = localStorage.getItem('hl_onboarding_done') === '1'; }catch(e){}
+  if(onboardingDone){
+    showScreen(homeScreen);
+  } else {
+    startOnboardingWizard();
+  }
 });
 
 // ---------- High Contrast Mode (accessibility) ----------
