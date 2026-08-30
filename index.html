@@ -1205,6 +1205,27 @@
   .badge-tile .badge-label{ font-size:10.5px; font-weight:700; color:var(--ink-soft); line-height:1.3; }
   .badge-tile.earned .badge-label{ color:var(--ink); }
   .badge-tile.earned{ border-color:var(--gold); box-shadow:0 0 10px rgba(201,162,39,0.2); }
+  .swipe-card{ background:var(--panel); border-radius:16px; border:1px solid var(--line); overflow:hidden; }
+  .home-chart-tab{
+    flex:1; text-align:center; padding:7px 4px; border-radius:8px; font-size:11px;
+    font-weight:700; color:var(--ink-soft); background:transparent; border:none; cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .home-chart-tab.active{ background:rgba(20,163,168,0.18); color:var(--crimson); }
+  #homeSwipeDots span{ width:6px; height:6px; border-radius:50%; background:var(--line); cursor:pointer; }
+  #homeSwipeDots span.on{ background:var(--crimson); width:18px; border-radius:3px; }
+  .mood-checkin-btn{
+    background:none; border:none; font-size:32px; cursor:pointer; padding:8px;
+    border-radius:14px; transition:background 0.15s;
+  }
+  .mood-checkin-btn.picked{ background:rgba(20,163,168,0.2); }
+  .promo-banner{
+    background:var(--panel); border:1px dashed var(--line); border-radius:14px;
+    padding:16px; text-align:center; cursor:pointer;
+  }
+  .promo-banner .pb-label{ color:var(--ink-soft); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+  .promo-banner .pb-title{ color:#fff; font-size:13px; font-weight:700; }
+  .promo-banner .pb-sub{ color:var(--ink-soft); font-size:11.5px; margin-top:4px; }
   .chat-input-row{
     display:flex; gap:8px; padding:12px 16px 16px;
     border-top:1px solid var(--line); background:var(--panel);
@@ -1621,6 +1642,27 @@
     </div>
   </div>
 
+  <!-- MOOD CHECK-IN — shown once per calendar day, before the app reaches Home -->
+  <div class="screen" id="moodCheckinScreen">
+    <div class="home-body" style="padding-top:60px; text-align:center;">
+      <div style="font-size:34px; margin-bottom:10px;">👋</div>
+      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); margin-bottom:6px;">How was your mood today?</div>
+      <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:26px;">This helps Health Loksewa notice your best study days.</div>
+      <div style="display:flex; justify-content:space-between; padding:0 8px; margin-bottom:8px;" id="moodOptionsRow">
+        <button class="mood-checkin-btn" data-mood="bad">😫</button>
+        <button class="mood-checkin-btn" data-mood="low">😕</button>
+        <button class="mood-checkin-btn" data-mood="ok">😐</button>
+        <button class="mood-checkin-btn" data-mood="good">🙂</button>
+        <button class="mood-checkin-btn" data-mood="great">🤩</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; padding:0 8px; color:var(--ink-soft); font-size:10px; margin-bottom:30px;">
+        <span>Low</span><span>Great</span>
+      </div>
+      <button class="start-btn" id="moodContinueBtn" disabled>Continue to Health Loksewa</button>
+      <div id="moodSkipLink" style="color:var(--ink-soft); font-size:11.5px; margin-top:14px; text-decoration:underline; cursor:pointer;">Skip for today</div>
+    </div>
+  </div>
+
   <div class="screen" id="homeScreen">
     <div class="home-body" style="padding-top:0;">
 
@@ -1679,6 +1721,33 @@
       <div class="home-greeting" id="homeGreeting">नमस्ते! 👋</div>
       <div class="home-title">What do you want to study today?</div>
 
+      <div class="swipe-card" id="homeSwipeCard" style="margin:0 16px 16px;">
+        <div id="homeProgressPanel">
+          <div class="swipe-tabs" style="display:flex; gap:6px; padding:14px 14px 0;">
+            <button class="home-chart-tab active" data-mode="daily">Daily</button>
+            <button class="home-chart-tab" data-mode="weekly">Weekly</button>
+            <button class="home-chart-tab" data-mode="monthly">Monthly</button>
+            <button class="home-chart-tab" data-mode="yearly">Yearly</button>
+          </div>
+          <div style="padding:14px 16px;">
+            <svg id="homeChartSvg" width="100%" height="80" viewBox="0 0 300 80"></svg>
+          </div>
+          <div style="display:flex; justify-content:space-around; padding:0 16px 16px; text-align:center;">
+            <div><div id="homeChartQ" style="color:#fff; font-size:15px; font-weight:700;">0</div><div style="color:var(--ink-soft); font-size:9.5px; text-transform:uppercase;">Questions</div></div>
+            <div><div id="homeChartAcc" style="color:#fff; font-size:15px; font-weight:700;">0%</div><div style="color:var(--ink-soft); font-size:9.5px; text-transform:uppercase;">Accuracy</div></div>
+          </div>
+        </div>
+        <div id="homeMoodPanel" style="display:none; padding:18px 20px 4px; text-align:center;">
+          <div style="color:#fff; font-size:12.5px; margin-bottom:14px;">😊 Your study mood this week</div>
+          <div id="homeMoodRow" style="display:flex; justify-content:space-around; font-size:22px; margin-bottom:8px;"></div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:6px; padding-bottom:10px;" id="homeSwipeDots">
+          <span class="on" data-panel="0"></span>
+          <span data-panel="1"></span>
+        </div>
+        <div style="text-align:center; color:var(--ink-soft); font-size:10px; padding-bottom:12px;">← swipe for mood →</div>
+      </div>
+
       <div class="dash-grid">
         <button class="dash-card c-quiz" id="cardQuiz">
           <div class="dc-icon">📝</div>
@@ -1716,6 +1785,13 @@
           <div style="text-align:left;">
             <div class="dc-label">AI Assistant</div>
             <div class="dc-sub">Ask about syllabus, subjects, study tips &amp; more</div>
+          </div>
+        </button>
+        <button class="dash-card c-current" id="cardHealthGuide">
+          <div class="dc-icon">🩺</div>
+          <div style="text-align:left;">
+            <div class="dc-label">Health Guide</div>
+            <div class="dc-sub">Basic health education articles</div>
           </div>
         </button>
         <div class="dash-card c-qotd qotd-card" id="cardQotd">
@@ -1757,6 +1833,8 @@
           </div>
         </button>
       </div>
+
+      <div id="homePromoBanner" style="display:none; margin:6px 16px 16px;"></div>
 
       <div class="app-footer">
         <div class="footer-brand">Health Loksewa</div>
@@ -2192,6 +2270,10 @@
         <div class="lc-text"><h4>🧮 Smart Tools</h4><p>Calculators — BMI, Health Indicators &amp; more</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToHealthGuideFromLearn">
+        <div class="lc-text"><h4>🩺 Health Guide</h4><p>Basic health education articles</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
       </div>
     </div>
   </div>
@@ -2268,6 +2350,17 @@
     <div class="home-body">
       <div class="section-title">🧩 Flashcards</div>
       <div id="flashcardsWrap">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="healthGuideScreen">
+    <div class="back-link" data-back="learn">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🩺 Health Guide</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:16px;">Basic health education — general information only, not medical advice or diagnosis.</p>
+      <div id="healthGuideContent">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
     </div>
@@ -2927,7 +3020,8 @@
           uid: user.uid, name: name, email: user.email
         }));
       }catch(e){}
-      window.showScreen(window.postGateScreen);
+      window.showScreen(window.moodCheckinScreen || window.postGateScreen);
+      if(window.initMoodCheckin) window.initMoodCheckin();
       if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
       if(window.renderHomePremiumBanner) window.renderHomePremiumBanner();
       if(window.checkForEsewaReturnAndActivate) window.checkForEsewaReturnAndActivate();
@@ -3466,7 +3560,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzQz9TlsACPqAdHFLIqtNWRC44Gc_ldbZnxEZ77S4_MmSZHurP6SCtLB576Yh3ZeLCT/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyvbPCSY3KwYNUZi77blTDxi_pzOsKufj0ai6YZ6Kn6TkFGHYoAdPfOOmKDPp_qkQsPBg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -3482,6 +3576,7 @@ let currentTournamentWeekKey = null; // set only while taking a Weekly Tournamen
 const appLoadingScreen = document.getElementById('appLoadingScreen');
 const loginScreen = document.getElementById('loginScreen');
 const postGateScreen = document.getElementById('postGateScreen');
+const moodCheckinScreen = document.getElementById('moodCheckinScreen');
 const homeScreen = document.getElementById('homeScreen');
 const syllabusScreen = document.getElementById('syllabusScreen');
 const currentAffairsScreen = document.getElementById('currentAffairsScreen');
@@ -3505,6 +3600,7 @@ const learnScreen = document.getElementById('learnScreen');
 const practiceScreen = document.getElementById('practiceScreen');
 const mistakeBookScreen = document.getElementById('mistakeBookScreen');
 const flashcardsScreen = document.getElementById('flashcardsScreen');
+const healthGuideScreen = document.getElementById('healthGuideScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const battleScreen = document.getElementById('battleScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
@@ -3535,10 +3631,11 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
+window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
 const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen };
 let docViewerBackTarget = homeScreen;
@@ -3590,6 +3687,11 @@ function showScreen(el){
   if(appEl) appEl.scrollTop = 0;
   updateBottomNav(el);
   if(el === learnScreen) resetGlobalSearch();
+  if(el === homeScreen){
+    const activeTab = document.querySelector('.home-chart-tab.active');
+    renderHomeChart(activeTab ? activeTab.dataset.mode : 'daily');
+    loadHomePromo();
+  }
 }
 // Use this instead of showScreen() specifically for BACK actions — it stops the screen
 // you're leaving from being pushed onto history again (which would otherwise let you get
@@ -3674,7 +3776,7 @@ const SCREEN_REFRESH_MAP = {
   }, { passive: true });
 })();
 
-const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, quizScreen]; // full-focus screens, no bottom nav
+const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, quizScreen]; // full-focus screens, no bottom nav
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
@@ -3686,7 +3788,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -3724,6 +3826,10 @@ document.getElementById('goToStudyResourcesFromLearn').addEventListener('click',
 document.getElementById('goToSmartToolsFromLearn').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(calculatorScreen);
+});
+document.getElementById('goToHealthGuideFromLearn').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('cardHealthGuide').click();
 });
 
 // ---------- Practice hub — same delegation pattern ----------
@@ -3817,6 +3923,10 @@ document.getElementById('cardAi').addEventListener('click', () => {
 });
 document.getElementById('cardSmartToolsHome').addEventListener('click', () => {
   showScreen(calculatorScreen);
+});
+document.getElementById('cardHealthGuide').addEventListener('click', () => {
+  showScreen(healthGuideScreen);
+  renderHealthGuide();
 });
 // Question of the Day is now inline on the dashboard card itself — no tap-to-navigate needed
 // (see loadQuestionOfDay() call further below, which runs automatically on page load)
@@ -4495,6 +4605,49 @@ async function renderVideoLessons(){
   }
 }
 
+// ---------- Health Guide: basic health education, Sheet-driven, grouped by category ----------
+async function renderHealthGuide(){
+  const wrap = document.getElementById('healthGuideContent');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=healthGuide`);
+    const rows = await res.json();
+    const clean = rows.filter(r => r && r.Title && r.Content);
+
+    if(clean.length === 0){
+      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No health guide articles added yet — check back soon!</p>`;
+      return;
+    }
+
+    const groups = {};
+    clean.forEach(r => {
+      const cat = r.Category || 'General';
+      if(!groups[cat]) groups[cat] = [];
+      groups[cat].push(r);
+    });
+
+    wrap.innerHTML = Object.keys(groups).map(cat => `
+      <div class="content-card" style="margin-bottom:14px;">
+        <h4 style="margin-bottom:10px;">${cat}</h4>
+        ${groups[cat].map((r, i) => `
+          <div class="faq-item" data-hg="${cat}-${i}">
+            <div class="faq-question"><span>${r.Title}</span><span class="faq-chevron">▾</span></div>
+            <div class="faq-answer">${r.Content}</div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+
+    document.querySelectorAll('#healthGuideContent .faq-item').forEach(item => {
+      item.querySelector('.faq-question').addEventListener('click', () => {
+        item.classList.toggle('open');
+      });
+    });
+  }catch(err){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load the Health Guide. Check your internet connection.</p>`;
+  }
+}
+
 // ---------- Daily Study Reminder (foundation: preference + permission; full delivery needs FCM setup) ----------
 document.getElementById('goToReminder').addEventListener('click', (e) => {
   e.preventDefault();
@@ -4529,6 +4682,195 @@ function addDaysISO(days){
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+// ---------- Mood check-in: shown once per calendar day, before the app reaches Home ----------
+function initMoodCheckin(){
+  const today = todayISO();
+  let lastShown = null;
+  try{ lastShown = localStorage.getItem('hl_mood_last_shown'); }catch(e){}
+  if(lastShown === today){
+    // Already handled today — skip straight to the post-gate screen, no flash of the mood prompt
+    showScreen(postGateScreen);
+    if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
+    return;
+  }
+  document.querySelectorAll('.mood-checkin-btn').forEach(b => b.classList.remove('picked'));
+  const continueBtn = document.getElementById('moodContinueBtn');
+  continueBtn.disabled = true;
+  continueBtn.dataset.mood = '';
+}
+window.initMoodCheckin = initMoodCheckin;
+function saveTodaysMood(mood){
+  try{
+    const log = JSON.parse(localStorage.getItem('hl_mood_log') || '{}');
+    log[todayISO()] = mood;
+    localStorage.setItem('hl_mood_log', JSON.stringify(log));
+  }catch(e){}
+}
+function finishMoodCheckin(){
+  try{ localStorage.setItem('hl_mood_last_shown', todayISO()); }catch(e){}
+  showScreen(postGateScreen);
+  if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
+}
+document.querySelectorAll('.mood-checkin-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mood-checkin-btn').forEach(b => b.classList.remove('picked'));
+    btn.classList.add('picked');
+    const continueBtn = document.getElementById('moodContinueBtn');
+    continueBtn.disabled = false;
+    continueBtn.dataset.mood = btn.dataset.mood;
+  });
+});
+document.getElementById('moodContinueBtn').addEventListener('click', () => {
+  const mood = document.getElementById('moodContinueBtn').dataset.mood;
+  if(mood) saveTodaysMood(mood);
+  finishMoodCheckin();
+});
+document.getElementById('moodSkipLink').addEventListener('click', finishMoodCheckin);
+
+// ---------- Daily activity log: powers the Home screen's Daily/Weekly/Monthly/Yearly chart.
+// This is a brand-new tracking system starting from today — existing users will see a mostly
+// empty chart at first, which is honest (there's no real history to show), not a bug. ----------
+function getDailyActivityLog(){
+  try{ return JSON.parse(localStorage.getItem('hl_daily_activity') || '{}'); }catch(e){ return {}; }
+}
+function recordDailyActivity(questionsCount, correctCount){
+  if(!questionsCount) return;
+  const log = getDailyActivityLog();
+  const today = todayISO();
+  if(!log[today]) log[today] = { questions: 0, correct: 0 };
+  log[today].questions += questionsCount;
+  log[today].correct += correctCount;
+  try{ localStorage.setItem('hl_daily_activity', JSON.stringify(log)); }catch(e){}
+}
+function bucketActivity(mode){
+  const log = getDailyActivityLog();
+  const now = new Date();
+  const buckets = [];
+  if(mode === 'daily'){
+    for(let i = 6; i >= 0; i--){
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const entry = log[key] || { questions: 0, correct: 0 };
+      buckets.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), questions: entry.questions, correct: entry.correct });
+    }
+  } else if(mode === 'weekly'){
+    for(let i = 7; i >= 0; i--){
+      let qSum = 0, cSum = 0;
+      for(let d = 0; d < 7; d++){
+        const day = new Date(now); day.setDate(day.getDate() - (i * 7 + d));
+        const entry = log[day.toISOString().slice(0, 10)];
+        if(entry){ qSum += entry.questions; cSum += entry.correct; }
+      }
+      buckets.push({ label: `W${8 - i}`, questions: qSum, correct: cSum });
+    }
+  } else if(mode === 'monthly'){
+    for(let i = 11; i >= 0; i--){
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = d.toISOString().slice(0, 7);
+      let qSum = 0, cSum = 0;
+      Object.keys(log).forEach(k => { if(k.startsWith(monthKey)){ qSum += log[k].questions; cSum += log[k].correct; } });
+      buckets.push({ label: d.toLocaleDateString('en-US', { month: 'short' }), questions: qSum, correct: cSum });
+    }
+  } else { // yearly
+    for(let i = 4; i >= 0; i--){
+      const year = String(now.getFullYear() - i);
+      let qSum = 0, cSum = 0;
+      Object.keys(log).forEach(k => { if(k.startsWith(year)){ qSum += log[k].questions; cSum += log[k].correct; } });
+      buckets.push({ label: year, questions: qSum, correct: cSum });
+    }
+  }
+  return buckets;
+}
+function renderHomeChart(mode){
+  const buckets = bucketActivity(mode);
+  const maxQ = Math.max(1, ...buckets.map(b => b.questions));
+  const w = 300, h = 80, pad = 6;
+  const stepX = (w - pad * 2) / (buckets.length - 1 || 1);
+  const coords = buckets.map((b, i) => ({
+    x: pad + i * stepX,
+    y: h - pad - ((b.questions / maxQ) * (h - pad * 2))
+  }));
+  const points = coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
+  const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.5" fill="#14A3A8"/>`).join('');
+  document.getElementById('homeChartSvg').innerHTML = `<polyline points="${points}" fill="none" stroke="#14A3A8" stroke-width="2.5"/>${dots}`;
+
+  const totalQ = buckets.reduce((s, b) => s + b.questions, 0);
+  const totalC = buckets.reduce((s, b) => s + b.correct, 0);
+  document.getElementById('homeChartQ').textContent = totalQ;
+  document.getElementById('homeChartAcc').textContent = (totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0) + '%';
+}
+function renderHomeMoodRow(){
+  let log = {};
+  try{ log = JSON.parse(localStorage.getItem('hl_mood_log') || '{}'); }catch(e){}
+  const emojiMap = { great:'🤩', good:'🙂', ok:'😐', low:'😕', bad:'😫' };
+  const now = new Date();
+  let html = '';
+  for(let i = 6; i >= 0; i--){
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    const mood = log[d.toISOString().slice(0, 10)];
+    html += `<span style="opacity:${mood ? 1 : 0.3}">${mood ? emojiMap[mood] : '·'}</span>`;
+  }
+  document.getElementById('homeMoodRow').innerHTML = html;
+}
+// ---------- Home Promotions banner: Sheet-driven, single card, shown once loaded. Empty
+// "Promotions" tab = the whole section just stays hidden — never shows a broken placeholder. ----------
+let homePromoLoaded = false;
+async function loadHomePromo(){
+  if(homePromoLoaded) return;
+  homePromoLoaded = true;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=promotions`);
+    const rows = await res.json();
+    const promo = rows.find(r => r && r.Title);
+    if(!promo) return;
+    const wrap = document.getElementById('homePromoBanner');
+    wrap.innerHTML = `
+      <div class="promo-banner" id="homePromoCard" style="${promo.BgColor ? `background:${promo.BgColor};` : ''}">
+        <div class="pb-label">Sponsored</div>
+        <div class="pb-title">${promo.Title}</div>
+        ${promo.Subtitle ? `<div class="pb-sub">${promo.Subtitle}</div>` : ''}
+      </div>
+    `;
+    wrap.style.display = 'block';
+    if(promo.LinkURL){
+      document.getElementById('homePromoCard').addEventListener('click', () => {
+        window.open(promo.LinkURL, '_blank');
+      });
+    }
+  }catch(err){
+    // Silent — a missing/failed promo shouldn't show an error on Home
+  }
+}
+function showHomeSwipePanel(i){
+  document.querySelectorAll('#homeSwipeDots span').forEach((d, idx) => d.classList.toggle('on', idx === i));
+  document.getElementById('homeProgressPanel').style.display = i === 0 ? 'block' : 'none';
+  document.getElementById('homeMoodPanel').style.display = i === 1 ? 'block' : 'none';
+  if(i === 1) renderHomeMoodRow();
+}
+document.querySelectorAll('.home-chart-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.home-chart-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderHomeChart(tab.dataset.mode);
+  });
+});
+document.querySelectorAll('#homeSwipeDots span').forEach(dot => {
+  dot.addEventListener('click', () => showHomeSwipePanel(parseInt(dot.dataset.panel, 10)));
+});
+(function(){
+  const card = document.getElementById('homeSwipeCard');
+  let startX = 0, currentPanel = 0;
+  card.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+  card.addEventListener('touchend', (e) => {
+    const delta = e.changedTouches[0].clientX - startX;
+    if(Math.abs(delta) < 40) return;
+    if(delta < 0 && currentPanel === 0){ currentPanel = 1; showHomeSwipePanel(1); }
+    else if(delta > 0 && currentPanel === 1){ currentPanel = 0; showHomeSwipePanel(0); }
+  }, { passive: true });
+})();
+renderHomeChart('daily'); // initial paint on page load
+
 function getWrongQuestions(){
   try{ return JSON.parse(localStorage.getItem('hl_wrong_questions') || '[]'); }
   catch(e){ return []; }
@@ -8146,6 +8488,7 @@ function finishQuiz(){
   document.getElementById('statSkip').textContent = skipped;
   document.getElementById('reviewList').innerHTML = reviewHtml.join('');
   renderSubjectBreakdown();
+  recordDailyActivity(correct + wrong, correct); // powers the Home screen's Daily/Weekly/Monthly/Yearly chart — skipped questions don't count as "answered"
 
   currentMarksPerQuestion = 1; // reset back to default for the next quiz (Sets/GK always use 1)
 
