@@ -1179,6 +1179,11 @@
   .flashcard-rate-btn.forgot{ background:var(--wrong); }
   .flashcard-rate-btn.difficult{ background:var(--gold); }
   .flashcard-rate-btn.easy{ background:var(--correct); }
+  #globalSearchInput:focus{ outline:none; border-color:var(--navy); }
+  .search-result-item{ padding:8px 0; border-bottom:1px solid var(--line); }
+  .search-result-item:last-child{ border-bottom:none; }
+  .search-result-item b{ display:block; font-size:13.5px; color:var(--ink); margin-bottom:2px; }
+  .search-result-item p{ font-size:12.5px; color:var(--ink-soft); }
   .chat-input-row{
     display:flex; gap:8px; padding:12px 16px 16px;
     border-top:1px solid var(--line); background:var(--panel);
@@ -2128,6 +2133,9 @@
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
       <div class="section-title">📚 Learn</div>
+      <input type="text" id="globalSearchInput" placeholder="🔍 Search formulas, mnemonics, health days, FAQs…" style="width:100%; padding:13px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14.5px; background:var(--panel); color:var(--ink); margin-bottom:16px;">
+      <div id="globalSearchResults" style="display:none; margin-bottom:20px;"></div>
+      <div id="learnLinkCardsWrap">
       <a class="link-card" href="#" id="goToSyllabusFromLearn">
         <div class="lc-text"><h4>📖 Syllabus</h4><p>Complete Loksewa syllabus, by post</p></div>
         <div class="lc-arrow">→</div>
@@ -2148,6 +2156,7 @@
         <div class="lc-text"><h4>🧮 Smart Tools</h4><p>Calculators — BMI, Health Indicators &amp; more</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      </div>
     </div>
   </div>
 
@@ -3588,6 +3597,7 @@ document.getElementById('navHome').addEventListener('click', () => {
 });
 document.getElementById('navLearn').addEventListener('click', () => {
   showScreen(learnScreen);
+  loadStudyResourcesData(); // ensures Formulas/Mnemonics/Health Days/FAQs are ready to search
 });
 document.getElementById('navPractice').addEventListener('click', () => {
   showScreen(practiceScreen);
@@ -7377,6 +7387,50 @@ function nextFlashcard(){
   flashcardsRevealed = false;
   renderFlashcard();
 }
+
+// ---------- Global Search: searches across content already fully loaded for Study Resources
+// (Formulas, Mnemonics, Health Days, FAQs) — results shown inline, no navigation needed ----------
+function runGlobalSearch(query){
+  const resultsWrap = document.getElementById('globalSearchResults');
+  const linkCardsWrap = document.getElementById('learnLinkCardsWrap');
+  const q = query.trim().toLowerCase();
+
+  if(q.length < 2){
+    resultsWrap.style.display = 'none';
+    resultsWrap.innerHTML = '';
+    linkCardsWrap.style.display = 'block';
+    return;
+  }
+  linkCardsWrap.style.display = 'none';
+
+  const formulaMatches = FORMULAS.filter(f => f.name.toLowerCase().includes(q) || f.formula.toLowerCase().includes(q));
+  const mnemonicMatches = MNEMONICS.filter(m => m.topic.toLowerCase().includes(q) || m.trick.toLowerCase().includes(q));
+  const healthDayMatches = HEALTH_DAYS.filter(h => h.title.toLowerCase().includes(q));
+  const faqMatches = FAQS.filter(f => f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q));
+  const totalMatches = formulaMatches.length + mnemonicMatches.length + healthDayMatches.length + faqMatches.length;
+
+  resultsWrap.style.display = 'block';
+  if(totalMatches === 0){
+    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No matches found in Formulas, Mnemonics, Health Days, or FAQs.</p>`;
+    return;
+  }
+
+  const section = (icon, title, items, renderItem) => items.length === 0 ? '' : `
+    <div class="content-card" style="margin-bottom:12px;">
+      <h4 style="margin-bottom:10px;">${icon} ${title}</h4>
+      ${items.map(renderItem).join('')}
+    </div>
+  `;
+
+  resultsWrap.innerHTML =
+    section('🔢', 'Formulas', formulaMatches, f => `<div class="search-result-item"><b>${f.name}</b><p>${f.formula}</p></div>`) +
+    section('🧩', 'Mnemonics', mnemonicMatches, m => `<div class="search-result-item"><b>${m.topic}</b><p>${m.trick}</p></div>`) +
+    section('📅', 'Health Days', healthDayMatches, h => `<div class="search-result-item"><b>${h.title}</b><p>${h.date}</p></div>`) +
+    section('❓', 'FAQs', faqMatches, f => `<div class="search-result-item"><b>${f.q}</b><p>${f.a}</p></div>`);
+}
+document.getElementById('globalSearchInput').addEventListener('input', (e) => {
+  runGlobalSearch(e.target.value);
+});
 
 // Subject counts now load on demand (see cardQuiz click handler above) — not at app startup,
 // so opening the app is instant and doesn't wait on network data it may not even need.
