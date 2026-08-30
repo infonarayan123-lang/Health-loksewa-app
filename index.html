@@ -1221,6 +1221,19 @@
   }
   .resource-row .ri{ font-size:18px; margin-bottom:6px; }
   .resource-row .rl{ color:var(--ink); font-size:10.5px; font-weight:700; }
+  .rf-mode-card{
+    display:flex; align-items:center; gap:12px; background:var(--panel);
+    border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer;
+  }
+  .rf-mode-card .rf-icon{ font-size:22px; flex-shrink:0; }
+  .rf-mode-card .rf-label{ color:#fff; font-size:13.5px; font-weight:700; }
+  .rf-mode-card .rf-desc{ color:var(--ink-soft); font-size:11.5px; margin-top:2px; }
+  .rf-time-chip{
+    background:var(--panel); border:1.5px solid var(--line); border-radius:10px;
+    padding:12px 4px; text-align:center; font-size:13px; font-weight:700; color:var(--ink);
+    cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .rf-time-chip.active{ border-color:var(--crimson); background:rgba(20,163,168,0.15); color:var(--crimson); }
   .chat-input-row{
     display:flex; gap:8px; padding:12px 16px 16px;
     border-top:1px solid var(--line); background:var(--panel);
@@ -2332,6 +2345,46 @@
         <div class="lc-text"><h4>⚔️ Battle Challenge</h4><p>Challenge a friend — same questions, compare scores</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToRapidFireFromPractice">
+        <div class="lc-text"><h4>⚡ Rapid Fire</h4><p>Pick your time — get a paced mini-test, 9 ways</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="screen" id="rapidFireScreen">
+    <div class="back-link" data-back="practice">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚡ Rapid Fire</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">Choose your time. Get your questions. Test yourself.</p>
+      <div id="rapidFireModeGrid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="rapidFireSetupScreen">
+    <div class="back-link" data-back="rapidFire">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="rapidFireSetupTitle">⚡ Rapid Fire</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;" id="rapidFireSetupDesc"></p>
+
+      <div id="rapidFireSubjectRow" style="display:none; margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:8px;">Choose a subject</label>
+        <select id="rapidFireSubjectSelect" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink);"></select>
+      </div>
+
+      <div id="rapidFireTimeRow" style="display:none;">
+        <label style="font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:8px;">Choose your time</label>
+        <div id="rapidFireTimeGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:14px;"></div>
+        <input type="number" id="rapidFireCustomTime" placeholder="Custom minutes (1–60)" min="1" max="60" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink); margin-bottom:16px;">
+      </div>
+
+      <div class="content-card" id="rapidFirePreviewCard" style="display:none; text-align:center; margin-bottom:16px;">
+        <div style="font-size:12px; color:var(--ink-soft); margin-bottom:4px;" id="rapidFirePreviewLabel">—</div>
+        <div style="font-size:22px; font-weight:800; color:#fff;" id="rapidFirePreviewCount">—</div>
+        <div style="font-size:11px; color:var(--ink-soft); margin-top:4px;" id="rapidFirePreviewPace">—</div>
+      </div>
+
+      <button class="start-btn" id="rapidFireStartBtn">Start Rapid Fire</button>
     </div>
   </div>
 
@@ -2874,6 +2927,7 @@
   <div class="screen" id="resultsScreen">
     <div class="results">
       <div id="battleResultBox" style="display:none; margin-bottom:16px;"></div>
+      <div id="rapidFireResultBox" style="display:none; margin-bottom:16px;"></div>
       <div class="score-card">
         <div class="score-big" id="finalScore">0.0</div>
         <div class="score-label">Final Score (with negative marking)</div>
@@ -3609,6 +3663,8 @@ const flashcardsScreen = document.getElementById('flashcardsScreen');
 const healthGuideScreen = document.getElementById('healthGuideScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const battleScreen = document.getElementById('battleScreen');
+const rapidFireScreen = document.getElementById('rapidFireScreen');
+const rapidFireSetupScreen = document.getElementById('rapidFireSetupScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
@@ -3637,13 +3693,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -3796,7 +3852,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, healthGuideScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -3884,6 +3940,11 @@ document.getElementById('goToAnswerCheckerFromPractice').addEventListener('click
 document.getElementById('goToBattleFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(battleScreen);
+});
+document.getElementById('goToRapidFireFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(rapidFireScreen);
+  renderRapidFireModes();
 });
 
 // ---------- Dashboard navigation ----------
@@ -8234,6 +8295,191 @@ function showBattleJoinResult(correct){
   currentBattleJoinData = null;
 }
 
+// ---------- Rapid Fire: 9 modes, all sharing the same "pick your time, get a paced question
+// set" mechanic, using your verified official exam timings. Some modes (Mistake/Revision/
+// Weak Topic) draw from the same pools as Mistake Book/Revision Mode/Progress — the
+// differentiator is the time-boxing, not a new data source. Battle Fire delegates straight
+// to the real Battle Challenge screen rather than rebuilding it. ----------
+const RAPID_FIRE_PACE_SEC = { pho: 45, ha: 54, ahw: 54, anm: 54, sn: 54, bph_license: 36, ha_license: 36 };
+const RAPID_FIRE_TIME_PRESETS = [1, 2, 5, 10, 15, 20, 30, 45, 60];
+const RAPID_FIRE_MODES = [
+  { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam' },
+  { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject' },
+  { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths' },
+  { key:'revision', icon:'🔄', label:'Revision Fire', desc:'Questions due for revision today' },
+  { key:'random', icon:'🎲', label:'Random Fire', desc:'Mixed across all your selected posts' },
+  { key:'concept', icon:'🧠', label:'Concept Fire', desc:'Understand key concepts in a topic' },
+  { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject' },
+  { key:'daily', icon:'🏆', label:'Daily Fire', desc:"Today's fixed mini-test — build a streak" },
+  { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend' },
+];
+let rapidFireSelectedMode = null;
+let rapidFireSelectedMinutes = 10;
+let currentRapidFireMode = null;
+let currentRapidFirePace = 45;
+
+function renderRapidFireModes(){
+  document.getElementById('rapidFireModeGrid').innerHTML = RAPID_FIRE_MODES.map(m => `
+    <div class="rf-mode-card" data-mode="${m.key}">
+      <div class="rf-icon">${m.icon}</div>
+      <div>
+        <div class="rf-label">${m.label}</div>
+        <div class="rf-desc">${m.desc}</div>
+      </div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.rf-mode-card').forEach(card => {
+    card.addEventListener('click', () => openRapidFireSetup(card.dataset.mode));
+  });
+}
+function rapidFireDefaultPost(){
+  const selected = getSelectedPosts();
+  return selected.length > 0 ? selected[0] : (currentMcqPost || 'pho');
+}
+function openRapidFireSetup(modeKey){
+  if(modeKey === 'battle'){
+    showScreen(battleScreen);
+    return;
+  }
+  const mode = RAPID_FIRE_MODES.find(m => m.key === modeKey);
+  rapidFireSelectedMode = modeKey;
+  rapidFireSelectedMinutes = 10;
+
+  document.getElementById('rapidFireSetupTitle').textContent = `${mode.icon} ${mode.label}`;
+  document.getElementById('rapidFireSetupDesc').textContent = mode.desc;
+
+  const needsSubject = (modeKey === 'concept' || modeKey === 'topic');
+  const needsTime = (modeKey !== 'daily');
+  document.getElementById('rapidFireSubjectRow').style.display = needsSubject ? 'block' : 'none';
+  document.getElementById('rapidFireTimeRow').style.display = needsTime ? 'block' : 'none';
+  document.getElementById('rapidFireCustomTime').value = '';
+
+  if(needsSubject){
+    const post = rapidFireDefaultPost();
+    const subjects = (post === 'pho') ? KNOWN_SUBJECTS : (KNOWN_SUBJECTS_BY_POST[post] || KNOWN_SUBJECTS);
+    document.getElementById('rapidFireSubjectSelect').innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+  }
+  if(needsTime){
+    document.getElementById('rapidFireTimeGrid').innerHTML = RAPID_FIRE_TIME_PRESETS.map(min => `
+      <button class="rf-time-chip ${min === 10 ? 'active' : ''}" data-min="${min}">${min} min</button>
+    `).join('');
+    document.querySelectorAll('.rf-time-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.rf-time-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.getElementById('rapidFireCustomTime').value = '';
+        rapidFireSelectedMinutes = parseInt(chip.dataset.min, 10);
+        updateRapidFirePreview();
+      });
+    });
+  }
+  updateRapidFirePreview();
+  showScreen(rapidFireSetupScreen);
+}
+document.getElementById('rapidFireCustomTime').addEventListener('input', (e) => {
+  const val = parseInt(e.target.value, 10);
+  if(val >= 1 && val <= 60){
+    document.querySelectorAll('.rf-time-chip').forEach(c => c.classList.remove('active'));
+    rapidFireSelectedMinutes = val;
+    updateRapidFirePreview();
+  }
+});
+document.getElementById('rapidFireSubjectSelect').addEventListener('change', updateRapidFirePreview);
+function updateRapidFirePreview(){
+  const previewCard = document.getElementById('rapidFirePreviewCard');
+  if(rapidFireSelectedMode === 'daily'){
+    let streak = 0;
+    try{ streak = parseInt(localStorage.getItem('hl_dailyfire_streak') || '0', 10); }catch(e){}
+    previewCard.style.display = 'block';
+    document.getElementById('rapidFirePreviewLabel').textContent = "Today's Fire";
+    document.getElementById('rapidFirePreviewCount').textContent = '10 Questions';
+    document.getElementById('rapidFirePreviewPace').textContent = `🔥 ${streak}-day streak`;
+    return;
+  }
+  const pace = RAPID_FIRE_PACE_SEC[rapidFireDefaultPost()] || 45;
+  const count = Math.max(1, Math.round((rapidFireSelectedMinutes * 60) / pace));
+  previewCard.style.display = 'block';
+  document.getElementById('rapidFirePreviewLabel').textContent = `${rapidFireSelectedMinutes} minute${rapidFireSelectedMinutes !== 1 ? 's' : ''}`;
+  document.getElementById('rapidFirePreviewCount').textContent = `${count} Question${count !== 1 ? 's' : ''}`;
+  document.getElementById('rapidFirePreviewPace').textContent = `Target pace: ~${pace} sec/question`;
+}
+document.getElementById('rapidFireStartBtn').addEventListener('click', startRapidFire);
+async function startRapidFire(){
+  const mode = rapidFireSelectedMode;
+  const post = rapidFireDefaultPost();
+  const pace = RAPID_FIRE_PACE_SEC[post] || 45;
+  const questionCount = mode === 'daily' ? 10 : Math.max(1, Math.round((rapidFireSelectedMinutes * 60) / pace));
+
+  showQuizLoading('Preparing your Rapid Fire…');
+  try{
+    let pool = [];
+    if(mode === 'quick' || mode === 'daily'){
+      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${post}`)).json();
+    } else if(mode === 'weak'){
+      const stats = computeProgressStats();
+      if(!stats.weakest){
+        hideQuizLoading();
+        alert('Complete a few Sets first so Health Loksewa knows your weak areas.');
+        return;
+      }
+      const weakPost = findPostForSubject(stats.weakest.subject) || post;
+      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${weakPost}&subject=${encodeURIComponent(stats.weakest.subject)}`)).json();
+    } else if(mode === 'mistake'){
+      pool = getWrongQuestions().slice(0, questionCount);
+      if(pool.length === 0){ hideQuizLoading(); alert('No mistakes tracked yet — this mode needs some practice history first.'); return; }
+    } else if(mode === 'revision'){
+      pool = getRevisionPool().slice(0, questionCount);
+      if(pool.length === 0){ hideQuizLoading(); alert('Nothing due for revision right now.'); return; }
+    } else if(mode === 'random'){
+      const posts = getSelectedPosts().length > 0 ? getSelectedPosts() : [post];
+      const perPost = Math.max(1, Math.ceil(questionCount / posts.length));
+      const results = await Promise.all(posts.map(p => fetch(`${SHEET_API_URL}?action=random&count=${perPost}&post=${p}`).then(r => r.json())));
+      pool = results.flat().sort(() => Math.random() - 0.5).slice(0, questionCount);
+    } else if(mode === 'concept' || mode === 'topic'){
+      const subject = document.getElementById('rapidFireSubjectSelect').value;
+      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${post}&subject=${encodeURIComponent(subject)}`)).json();
+    }
+
+    if(!pool || pool.length === 0){
+      hideQuizLoading();
+      alert('No questions available yet. Add MCQs to your Google Sheet first!');
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = mode === 'daily' ? 10 * pace : rapidFireSelectedMinutes * 60;
+    currentMarksPerQuestion = 1;
+    currentSetInfo = null; // Rapid Fire isn't part of Set-based progress tracking
+    currentRapidFireMode = mode;
+    currentRapidFirePace = pace;
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    alert('Could not start Rapid Fire. Check your connection and try again.');
+  }
+}
+function updateDailyFireStreak(){
+  const today = todayISO();
+  let lastDate = null, streak = 0;
+  try{
+    lastDate = localStorage.getItem('hl_dailyfire_last_date');
+    streak = parseInt(localStorage.getItem('hl_dailyfire_streak') || '0', 10);
+  }catch(e){}
+  if(lastDate === today) return; // already completed today — don't double-count
+  streak = (lastDate === addDaysISO(-1)) ? streak + 1 : 1;
+  try{
+    localStorage.setItem('hl_dailyfire_streak', String(streak));
+    localStorage.setItem('hl_dailyfire_last_date', today);
+  }catch(e){}
+}
+
 // ---------- Global Search: searches across content already fully loaded for Study Resources
 // (Formulas, Mnemonics, Health Days, FAQs) — results shown inline, no navigation needed ----------
 // Called every time the Learn screen becomes active (navigating to it, or navigating back to
@@ -8507,6 +8753,7 @@ document.getElementById('quizExitBtn').addEventListener('click', () => {
 function finishQuiz(){
   showScreen(resultsScreen);
   document.getElementById('battleResultBox').style.display = 'none'; // reset — only Battle quizzes populate this
+  document.getElementById('rapidFireResultBox').style.display = 'none'; // reset — only Rapid Fire quizzes populate this
 
   let correct = 0, wrong = 0, skipped = 0, score = 0;
   const reviewHtml = [];
@@ -8589,6 +8836,34 @@ function finishQuiz(){
     showBattleJoinResult(correct);
   }
   currentBattleMode = null;
+
+  // ---- Rapid Fire: pace summary, and streak update for Daily Fire ----
+  if(currentRapidFireMode){
+    const mode = RAPID_FIRE_MODES.find(m => m.key === currentRapidFireMode);
+    const secondsUsed = (mode.key === 'daily' ? 10 * currentRapidFirePace : rapidFireSelectedMinutes * 60) - secondsLeft;
+    const actualPace = quizQuestions.length > 0 ? Math.round(secondsUsed / quizQuestions.length) : 0;
+    const paceVerdict = actualPace <= currentRapidFirePace
+      ? `⚡ Great pace! You answered faster than the recommended ${currentRapidFirePace} sec/question.`
+      : `🐢 A bit slower than the target ${currentRapidFirePace} sec/question — that's fine, accuracy matters more.`;
+    if(mode.key === 'daily') updateDailyFireStreak();
+    let streakLine = '';
+    if(mode.key === 'daily'){
+      let streak = 0;
+      try{ streak = parseInt(localStorage.getItem('hl_dailyfire_streak') || '0', 10); }catch(e){}
+      streakLine = `<p style="font-size:12.5px; color:var(--gold); font-weight:700; margin-top:8px;">🔥 ${streak}-day Daily Fire streak</p>`;
+    }
+    const box = document.getElementById('rapidFireResultBox');
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div class="content-card" style="border:1.5px solid var(--crimson); text-align:center;">
+        <h4 style="margin-bottom:8px;">${mode.icon} ${mode.label} Complete!</h4>
+        <p style="font-size:13px; color:var(--ink-soft);">Your pace: <b style="color:#fff;">${actualPace} sec/question</b> · Target: ${currentRapidFirePace} sec/question</p>
+        <p style="font-size:12.5px; color:var(--ink); margin-top:8px;">${paceVerdict}</p>
+        ${streakLine}
+      </div>
+    `;
+    currentRapidFireMode = null;
+  }
 }
 
 function renderSubjectBreakdown(){
