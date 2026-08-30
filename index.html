@@ -1772,7 +1772,7 @@
         <button class="chat-quick-btn" data-template="Explain this topic simply: ">📖 Explain Topic</button>
         <button class="chat-quick-btn" data-template="Generate 5 MCQs about: ">📝 Generate MCQs</button>
         <button class="chat-quick-btn" data-template="Make a mnemonic to remember: ">🧠 Make Mnemonic</button>
-        <button class="chat-quick-btn" data-template="Check my answer — Question: [paste question] My answer: [paste your answer]">✍️ Check Answer</button>
+        <button class="chat-quick-btn" id="chatQuickCheckAnswerBtn">✍️ Check Answer</button>
       </div>
       <div class="chat-input-row">
         <input type="text" id="chatInput" placeholder="Ask about subjects, syllabus, study tips…">
@@ -2215,6 +2215,10 @@
         <div class="lc-text"><h4>🧩 Flashcards</h4><p>Flip-card active recall practice</p></div>
         <div class="lc-arrow">→</div>
       </a>
+      <a class="link-card" href="#" id="goToAnswerCheckerFromPractice">
+        <div class="lc-text"><h4>✍️ Check My Answer</h4><p>Write a written answer, get AI feedback</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
     </div>
   </div>
 
@@ -2225,6 +2229,27 @@
       <div id="flashcardsWrap">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
+    </div>
+  </div>
+
+  <div class="screen" id="answerCheckerScreen">
+    <div class="back-link" data-back="practice">← Back</div>
+    <div class="home-body">
+      <div class="section-title">✍️ Check My Answer</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">Write a Loksewa-style written answer and get instant AI feedback — content, completeness, and clarity.</p>
+
+      <div class="field">
+        <label>Question</label>
+        <textarea id="answerCheckerQuestion" rows="2" placeholder="e.g. Define Primary Health Care and explain its principles." style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink); resize:vertical;"></textarea>
+      </div>
+      <div class="field">
+        <label>Your Answer</label>
+        <textarea id="answerCheckerAnswer" rows="6" placeholder="Write your answer here…" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink); resize:vertical;"></textarea>
+      </div>
+
+      <button class="start-btn" id="answerCheckerSubmitBtn">Check My Answer</button>
+
+      <div id="answerCheckerResult" style="display:none; margin-top:18px;"></div>
     </div>
   </div>
 
@@ -3367,6 +3392,7 @@ const learnScreen = document.getElementById('learnScreen');
 const practiceScreen = document.getElementById('practiceScreen');
 const mistakeBookScreen = document.getElementById('mistakeBookScreen');
 const flashcardsScreen = document.getElementById('flashcardsScreen');
+const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
@@ -3394,7 +3420,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -3522,7 +3548,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -3598,6 +3624,10 @@ document.getElementById('goToSpeedChallengeFromPractice').addEventListener('clic
 document.getElementById('goToFlashcardsFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
   startFlashcards();
+});
+document.getElementById('goToAnswerCheckerFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(answerCheckerScreen);
 });
 
 // ---------- Dashboard navigation ----------
@@ -7864,13 +7894,18 @@ function initChat(){
   });
 
   // ---- Quick action chips: pre-fill a template into the input, same send flow as always ----
-  document.querySelectorAll('.chat-quick-btn').forEach(btn => {
+  document.querySelectorAll('.chat-quick-btn[data-template]').forEach(btn => {
     btn.addEventListener('click', () => {
       const input = document.getElementById('chatInput');
       input.value = btn.dataset.template;
       input.focus();
       input.setSelectionRange(input.value.length, input.value.length);
     });
+  });
+  // "Check Answer" gets its own structured screen instead of a plain chat template — better UX
+  // for a task with two distinct fields (question + answer) than one free-text chat line.
+  document.getElementById('chatQuickCheckAnswerBtn').addEventListener('click', () => {
+    showScreen(answerCheckerScreen);
   });
 
   // ---- 3-dot menu: toggle open/closed ----
@@ -7953,6 +7988,61 @@ async function sendChatMessage(){
     document.getElementById('chatSendBtn').disabled = false;
   }
 }
+
+// ---------- Written Answer Checker: reuses the exact same AI chat backend (action=chat),
+// just with a structured grading prompt instead of a free-text message. Counts against the
+// same daily free-tier limit as regular AI chat, since it's the same underlying AI call. ----------
+async function submitAnswerCheck(){
+  const question = document.getElementById('answerCheckerQuestion').value.trim();
+  const answer = document.getElementById('answerCheckerAnswer').value.trim();
+  const resultWrap = document.getElementById('answerCheckerResult');
+  const submitBtn = document.getElementById('answerCheckerSubmitBtn');
+
+  if(!question || !answer){
+    alert('Please fill in both the question and your answer.');
+    return;
+  }
+
+  if(window.checkAndIncrementChatCount){
+    const limitCheck = await window.checkAndIncrementChatCount();
+    if(!limitCheck.allowed){
+      resultWrap.style.display = 'block';
+      resultWrap.innerHTML = `<div class="content-card"><p style="color:var(--wrong); font-size:13.5px;">You've reached today's free limit of 10 AI uses. Upgrade to Premium for unlimited access, or come back tomorrow! 💎</p></div>`;
+      return;
+    }
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Checking…';
+  resultWrap.style.display = 'block';
+  resultWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Thinking…</p>`;
+
+  const prompt = `You are grading a Loksewa exam written answer. Be a strict but fair examiner.
+
+Question: ${question}
+
+Student's Answer: ${answer}
+
+Give: (1) a score out of 10, (2) 2-3 short bullet points on what's good, (3) 2-3 short bullet points on what's missing or could improve. Keep it concise and structured with clear headings. Do not repeat the question or answer back.`;
+
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'chat', message: prompt, history: [] })
+    });
+    const data = await res.json();
+    const reply = data.reply || "Sorry, I couldn't check that. Please try again.";
+    resultWrap.innerHTML = `<div class="content-card"><div id="answerCheckerReplyText" style="white-space:pre-wrap; font-size:13.5px; color:var(--ink); line-height:1.6;"></div></div>`;
+    document.getElementById('answerCheckerReplyText').textContent = reply;
+  }catch(err){
+    resultWrap.innerHTML = `<div class="content-card"><p style="color:var(--wrong); font-size:13.5px;">Sorry, I couldn't connect right now. Please check your internet and try again.</p></div>`;
+  }finally{
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Check My Answer';
+  }
+}
+document.getElementById('answerCheckerSubmitBtn').addEventListener('click', submitAnswerCheck);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
