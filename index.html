@@ -2716,7 +2716,7 @@
         <div class="tt-icon">❤️</div>
         <div class="tt-label">My Health</div>
       </a>
-      <a class="tool-tile" href="#" id="goToEverydayTools" data-search="date difference emi loan length weight temperature converter world clock time zone">
+      <a class="tool-tile" href="#" id="goToEverydayTools" data-search="date difference emi loan length weight temperature converter world clock time zone qr code generator">
         <div class="tt-icon">🧭</div>
         <div class="tt-label">Everyday</div>
       </a>
@@ -3363,6 +3363,14 @@
       <div class="calc-card">
         <h4>World Clock</h4>
         <div id="worldClockList"></div>
+      </div>
+
+      <div class="calc-card" style="text-align:center;">
+        <h4 style="text-align:left;">QR Code Generator</h4>
+        <input type="text" id="qrTextInput" placeholder="Enter text or a URL" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:13.5px; background:var(--panel); color:var(--ink); margin-bottom:12px;">
+        <button class="calc-btn" id="calcQrBtn">Generate QR Code</button>
+        <div id="qrCodeDisplay" style="display:flex; justify-content:center; margin:16px 0;"></div>
+        <a id="qrDownloadLink" href="#" download="qrcode.png" style="display:none; color:var(--crimson); font-size:12.5px; text-decoration:underline;">Download PNG</a>
       </div>
     </div>
   </div>
@@ -4384,6 +4392,9 @@
 
 <!-- jsPDF — used for the Premium "Download Set as PDF" feature -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<!-- QRCode.js — used for the Smart Tools QR Generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
 // ============================================================
@@ -6144,6 +6155,38 @@ function renderWorldClock(){
     return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);"><span style="color:var(--ink); font-size:13px;">${c.name}</span><span style="color:var(--ink-soft); font-size:12.5px;">${time} · ${date}</span></div>`;
   }).join('');
 }
+
+// ---------- QR Code Generator: uses the CDN-loaded QRCode.js library. Guards against the
+// script failing to load (e.g. no internet on first load) rather than throwing a silent error. ----------
+document.getElementById('calcQrBtn').addEventListener('click', () => {
+  const text = document.getElementById('qrTextInput').value.trim();
+  const displayEl = document.getElementById('qrCodeDisplay');
+  const downloadLink = document.getElementById('qrDownloadLink');
+  downloadLink.style.display = 'none';
+  if(!text){
+    displayEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px;">Please enter some text or a URL.</p>`;
+    return;
+  }
+  if(typeof QRCode === 'undefined'){
+    displayEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px;">QR code library failed to load — check your internet connection and try again.</p>`;
+    return;
+  }
+  displayEl.innerHTML = '';
+  new QRCode(displayEl, {
+    text: text,
+    width: 200,
+    height: 200,
+    colorDark: '#0B1C3D',
+    colorLight: '#ffffff'
+  });
+  setTimeout(() => {
+    const canvas = displayEl.querySelector('canvas');
+    if(canvas){
+      downloadLink.href = canvas.toDataURL('image/png');
+      downloadLink.style.display = 'inline-block';
+    }
+  }, 150);
+});
 
 // ---------- Wellness: Meditation Timer, Breathing Exercise, Gratitude Journal, Habit Tracker ----------
 let meditationInterval = null;
