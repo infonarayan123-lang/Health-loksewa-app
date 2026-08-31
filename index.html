@@ -2708,6 +2708,14 @@
         <div class="tt-icon">📝</div>
         <div class="tt-label">Exam Tools</div>
       </a>
+      <a class="tool-tile" href="#" id="goToStudyTimer" data-search="study timer pomodoro focus session">
+        <div class="tt-icon">⏱️</div>
+        <div class="tt-label">Study Timer</div>
+      </a>
+      <a class="tool-tile" href="#" id="goToMyHealth" data-search="water sleep blood pressure bp health tracker log">
+        <div class="tt-icon">❤️</div>
+        <div class="tt-label">My Health</div>
+      </a>
       <a class="tool-tile" href="#" id="goToImmunization" data-search="immunization vaccine schedule nepal nip">
         <div class="tt-icon">💉</div>
         <div class="tt-label">Immunization</div>
@@ -3083,6 +3091,31 @@
     </div>
   </div>
 
+  <!-- STUDY TIMER -->
+  <div class="screen" id="studyTimerScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body" style="text-align:center;">
+      <div class="section-title" style="text-align:left;">⏱️ Study Timer</div>
+      <div id="studyTimerPresets" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px;">
+        <button class="rf-time-chip active" data-min="25">25 min</button>
+        <button class="rf-time-chip" data-min="50">50 min</button>
+        <button class="rf-time-chip" data-min="60">60 min</button>
+        <button class="rf-time-chip" data-min="0">Custom</button>
+      </div>
+      <input type="number" id="studyTimerCustomMin" placeholder="Custom minutes" style="display:none; width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink); margin-bottom:16px;">
+      <input type="text" id="studyTimerLabel" placeholder="What are you studying? (optional)" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:13.5px; background:var(--panel); color:var(--ink); margin-bottom:20px;">
+
+      <div style="font-size:52px; font-weight:800; color:#fff; margin:16px 0;" id="studyTimerDisplay">25:00</div>
+
+      <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px;">
+        <button class="start-btn" id="studyTimerStartBtn" style="width:auto; padding:12px 34px; margin-top:0;">Start</button>
+        <button class="font-size-btn" id="studyTimerResetBtn" style="width:auto; padding:12px 20px;">Reset</button>
+      </div>
+
+      <div style="padding-top:18px; border-top:1px solid var(--line); color:var(--ink-soft); font-size:12.5px;" id="studyTimerTodayTotal"></div>
+    </div>
+  </div>
+
   <!-- IMMUNIZATION SCHEDULE -->
   <div class="screen" id="immunizationScreen">
     <div class="back-link" data-back="calculatorHub">← Back</div>
@@ -3133,6 +3166,45 @@
         <div class="calc-field"><label>Investment period (years)</label><input type="number" id="sipYears" placeholder="e.g. 10"></div>
         <button class="calc-btn" id="calcSipBtn">Calculate SIP</button>
         <div id="sipResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY HEALTH -->
+  <div class="screen" id="myHealthScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">❤️ My Health</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:16px;">Personal logs, kept on this device. Not a substitute for professional medical advice — single readings don't diagnose anything; look at the trend.</p>
+
+      <div class="calc-card">
+        <h4>💧 Water Tracker</h4>
+        <div id="waterGlassRow" style="display:flex; gap:6px; margin:12px 0; flex-wrap:wrap;"></div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <label style="font-size:12px; color:var(--ink-soft);">Daily goal</label>
+          <input type="number" id="waterGoalInput" value="8" min="1" style="width:60px; padding:6px 8px; border:1.5px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+          <span style="font-size:12px; color:var(--ink-soft);">glasses</span>
+        </div>
+        <button class="calc-btn" id="waterAddGlassBtn">+ 1 Glass</button>
+      </div>
+
+      <div class="calc-card">
+        <h4>😴 Sleep Log</h4>
+        <div class="calc-field"><label>Bedtime</label><input type="time" id="sleepBedtime"></div>
+        <div class="calc-field"><label>Wake time</label><input type="time" id="sleepWaketime"></div>
+        <button class="calc-btn" id="sleepSaveBtn">Save Sleep Entry</button>
+        <div id="sleepResult"></div>
+        <div id="sleepHistory" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>🩸 Blood Pressure Log</h4>
+        <div class="calc-field"><label>Systolic</label><input type="number" id="bpSystolic" placeholder="e.g. 120"></div>
+        <div class="calc-field"><label>Diastolic</label><input type="number" id="bpDiastolic" placeholder="e.g. 80"></div>
+        <div class="calc-field"><label>Pulse (optional)</label><input type="number" id="bpPulse" placeholder="e.g. 72"></div>
+        <button class="calc-btn" id="bpSaveBtn">Save BP Entry</button>
+        <div id="bpResult"></div>
+        <div id="bpHistory" style="margin-top:12px;"></div>
       </div>
     </div>
   </div>
@@ -4173,8 +4245,10 @@ const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
 const epiCalcScreen = document.getElementById('epiCalcScreen');
 const statsCalcScreen = document.getElementById('statsCalcScreen');
 const studyToolsCalcScreen = document.getElementById('studyToolsCalcScreen');
+const studyTimerScreen = document.getElementById('studyTimerScreen');
 const immunizationScreen = document.getElementById('immunizationScreen');
 const pensionScreen = document.getElementById('pensionScreen');
+const myHealthScreen = document.getElementById('myHealthScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
@@ -4194,7 +4268,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, immunizationScreen, pensionScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -4353,7 +4427,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, immunizationScreen, pensionScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -4816,6 +4890,18 @@ document.getElementById('goToStatsCalc').addEventListener('click', (e) => {
 document.getElementById('goToStudyToolsCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(studyToolsCalcScreen);
+});
+document.getElementById('goToStudyTimer').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(studyTimerScreen);
+  renderStudyTimerToday();
+});
+document.getElementById('goToMyHealth').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(myHealthScreen);
+  renderWaterTracker();
+  renderSleepHistory();
+  renderBpHistory();
 });
 document.getElementById('goToImmunization').addEventListener('click', (e) => {
   e.preventDefault();
@@ -5435,6 +5521,198 @@ document.getElementById('calcNegativeMarkingBtn').addEventListener('click', () =
     <div class="calc-result">Accuracy: ${accuracy.toFixed(1)}%</div>
   `;
 });
+
+// ---------- Study Timer: presets (25/50/60 min) or custom, tracks a simple daily
+// study-minutes tally shown on this screen (separate from the Home question-activity chart,
+// which tracks quiz activity, not raw study time). ----------
+let studyTimerInterval = null;
+let studyTimerSecondsLeft = 25 * 60;
+let studyTimerTotalSeconds = 25 * 60;
+let studyTimerRunning = false;
+function updateStudyTimerDisplay(){
+  const mins = Math.floor(studyTimerSecondsLeft / 60);
+  const secs = studyTimerSecondsLeft % 60;
+  document.getElementById('studyTimerDisplay').textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+}
+document.querySelectorAll('#studyTimerPresets .rf-time-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#studyTimerPresets .rf-time-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    const min = parseInt(chip.dataset.min, 10);
+    const customInput = document.getElementById('studyTimerCustomMin');
+    if(min === 0){
+      customInput.style.display = 'block';
+      customInput.focus();
+    } else {
+      customInput.style.display = 'none';
+      studyTimerTotalSeconds = min * 60;
+      studyTimerSecondsLeft = studyTimerTotalSeconds;
+      updateStudyTimerDisplay();
+    }
+  });
+});
+document.getElementById('studyTimerCustomMin').addEventListener('input', (e) => {
+  const min = parseFloat(e.target.value);
+  if(min > 0){
+    studyTimerTotalSeconds = Math.round(min * 60);
+    studyTimerSecondsLeft = studyTimerTotalSeconds;
+    updateStudyTimerDisplay();
+  }
+});
+document.getElementById('studyTimerStartBtn').addEventListener('click', () => {
+  const btn = document.getElementById('studyTimerStartBtn');
+  if(studyTimerRunning){
+    clearInterval(studyTimerInterval);
+    studyTimerRunning = false;
+    btn.textContent = 'Resume';
+    return;
+  }
+  studyTimerRunning = true;
+  btn.textContent = 'Pause';
+  studyTimerInterval = setInterval(() => {
+    studyTimerSecondsLeft--;
+    updateStudyTimerDisplay();
+    if(studyTimerSecondsLeft <= 0){
+      clearInterval(studyTimerInterval);
+      studyTimerRunning = false;
+      btn.textContent = 'Start';
+      const completedMinutes = Math.round(studyTimerTotalSeconds / 60);
+      recordStudyMinutes(completedMinutes);
+      renderStudyTimerToday();
+      alert(`🎉 ${completedMinutes} minutes completed!`);
+    }
+  }, 1000);
+});
+document.getElementById('studyTimerResetBtn').addEventListener('click', () => {
+  clearInterval(studyTimerInterval);
+  studyTimerRunning = false;
+  studyTimerSecondsLeft = studyTimerTotalSeconds;
+  document.getElementById('studyTimerStartBtn').textContent = 'Start';
+  updateStudyTimerDisplay();
+});
+function recordStudyMinutes(minutes){
+  try{
+    const log = JSON.parse(localStorage.getItem('hl_study_minutes_log') || '{}');
+    const today = todayISO();
+    log[today] = (log[today] || 0) + minutes;
+    localStorage.setItem('hl_study_minutes_log', JSON.stringify(log));
+  }catch(e){}
+}
+function renderStudyTimerToday(){
+  let log = {};
+  try{ log = JSON.parse(localStorage.getItem('hl_study_minutes_log') || '{}'); }catch(e){}
+  const todayMinutes = log[todayISO()] || 0;
+  const hrs = Math.floor(todayMinutes / 60);
+  const mins = todayMinutes % 60;
+  document.getElementById('studyTimerTodayTotal').textContent = `Today's study time: ${hrs > 0 ? hrs + 'h ' : ''}${mins}m`;
+}
+updateStudyTimerDisplay();
+
+// ---------- My Health: Water Tracker, Sleep Log, BP Log — all manual entry, kept on-device,
+// with clear "not a diagnosis, look at the trend" language throughout. ----------
+function getWaterLog(){
+  try{ return JSON.parse(localStorage.getItem('hl_water_log') || '{}'); }catch(e){ return {}; }
+}
+function renderWaterTracker(){
+  const log = getWaterLog();
+  const today = todayISO();
+  const goal = log.goal || 8;
+  const count = (log[today] || 0);
+  document.getElementById('waterGoalInput').value = goal;
+  document.getElementById('waterGlassRow').innerHTML = Array.from({length: Math.max(goal, count)}, (_, i) => `
+    <span style="font-size:24px; opacity:${i < count ? 1 : 0.25};">🥛</span>
+  `).join('') + `<span style="align-self:center; margin-left:6px; font-size:13px; color:var(--ink-soft);">${count} / ${goal}</span>`;
+}
+document.getElementById('waterGoalInput').addEventListener('change', (e) => {
+  const log = getWaterLog();
+  log.goal = Math.max(1, parseInt(e.target.value, 10) || 8);
+  try{ localStorage.setItem('hl_water_log', JSON.stringify(log)); }catch(err){}
+  renderWaterTracker();
+});
+document.getElementById('waterAddGlassBtn').addEventListener('click', () => {
+  const log = getWaterLog();
+  const today = todayISO();
+  log[today] = (log[today] || 0) + 1;
+  try{ localStorage.setItem('hl_water_log', JSON.stringify(log)); }catch(e){}
+  renderWaterTracker();
+});
+
+function getSleepEntries(){
+  try{ return JSON.parse(localStorage.getItem('hl_sleep_log') || '[]'); }catch(e){ return []; }
+}
+document.getElementById('sleepSaveBtn').addEventListener('click', () => {
+  const bedtime = document.getElementById('sleepBedtime').value;
+  const waketime = document.getElementById('sleepWaketime').value;
+  const resultEl = document.getElementById('sleepResult');
+  if(!bedtime || !waketime){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter both bedtime and wake time.</p>`;
+    return;
+  }
+  const [bh, bm] = bedtime.split(':').map(Number);
+  const [wh, wm] = waketime.split(':').map(Number);
+  let bedMinutes = bh * 60 + bm;
+  let wakeMinutes = wh * 60 + wm;
+  if(wakeMinutes <= bedMinutes) wakeMinutes += 24 * 60; // crossed midnight
+  const durationMinutes = wakeMinutes - bedMinutes;
+  const hrs = Math.floor(durationMinutes / 60);
+  const mins = durationMinutes % 60;
+  const entries = getSleepEntries();
+  entries.push({ date: todayISO(), bedtime, waketime, durationMinutes });
+  try{ localStorage.setItem('hl_sleep_log', JSON.stringify(entries.slice(-30))); }catch(e){}
+  resultEl.innerHTML = `<div class="calc-result">Sleep duration: ${hrs}h ${mins}m</div>`;
+  renderSleepHistory();
+});
+function renderSleepHistory(){
+  const entries = getSleepEntries().slice(-7).reverse();
+  if(entries.length === 0){
+    document.getElementById('sleepHistory').innerHTML = '';
+    return;
+  }
+  const avgMinutes = entries.reduce((s, e) => s + e.durationMinutes, 0) / entries.length;
+  const avgHrs = Math.floor(avgMinutes / 60), avgMins = Math.round(avgMinutes % 60);
+  document.getElementById('sleepHistory').innerHTML = `
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Last ${entries.length} nights — average ${avgHrs}h ${avgMins}m</div>
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${e.date}: ${e.bedtime} → ${e.waketime} (${Math.floor(e.durationMinutes/60)}h ${e.durationMinutes%60}m)</div>`).join('')}
+  `;
+}
+
+function getBpEntries(){
+  try{ return JSON.parse(localStorage.getItem('hl_bp_log') || '[]'); }catch(e){ return []; }
+}
+document.getElementById('bpSaveBtn').addEventListener('click', () => {
+  const systolic = parseFloat(document.getElementById('bpSystolic').value);
+  const diastolic = parseFloat(document.getElementById('bpDiastolic').value);
+  const pulse = parseFloat(document.getElementById('bpPulse').value);
+  const resultEl = document.getElementById('bpResult');
+  if(!systolic || systolic <= 0 || !diastolic || diastolic <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid systolic and diastolic values.</p>`;
+    return;
+  }
+  const now = new Date();
+  const entries = getBpEntries();
+  entries.push({
+    date: todayISO(),
+    time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }),
+    systolic, diastolic, pulse: isNaN(pulse) ? null : pulse
+  });
+  try{ localStorage.setItem('hl_bp_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  resultEl.innerHTML = `<div class="calc-result">Saved: ${systolic}/${diastolic}${!isNaN(pulse) ? ' · Pulse ' + pulse : ''}</div>`;
+  document.getElementById('bpSystolic').value = '';
+  document.getElementById('bpDiastolic').value = '';
+  document.getElementById('bpPulse').value = '';
+  renderBpHistory();
+});
+function renderBpHistory(){
+  const entries = getBpEntries().slice(-7).reverse();
+  if(entries.length === 0){
+    document.getElementById('bpHistory').innerHTML = '';
+    return;
+  }
+  document.getElementById('bpHistory').innerHTML = `
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${e.date} ${e.time}: ${e.systolic}/${e.diastolic}${e.pulse ? ' · Pulse ' + e.pulse : ''}</div>`).join('')}
+  `;
+}
 
 // ---------- Pension Estimator: Legacy scheme, standard accrual formula. Clearly labeled as
 // an estimate — see the disclaimer card on the screen itself for what this doesn't account for. ----------
