@@ -4290,7 +4290,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, immunizationScreen, pensionScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, immunizationScreen, pensionScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -4730,6 +4730,10 @@ document.getElementById('goToBasicCalc').addEventListener('click', (e) => {
   showScreen(basicCalcScreen);
   renderBasicCalcKeys();
 });
+document.getElementById('goToHealthCalc').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(healthCalcScreen);
+});
 document.getElementById('goToBmiCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(bmiCalcScreen);
@@ -4853,6 +4857,170 @@ document.getElementById('calcBmiBtn').addEventListener('click', () => {
   else if(bmi >= 30) category = 'Obese';
   resultEl.innerHTML = `<div class="calc-result">BMI: ${bmi.toFixed(1)} — ${category}</div>`;
 });
+
+// ---------- Health Calculators (Phase A) ----------
+document.getElementById('calcBmrBtn').addEventListener('click', () => {
+  const sex = document.getElementById('bmrSex').value;
+  const age = parseFloat(document.getElementById('bmrAge').value);
+  const weight = parseFloat(document.getElementById('bmrWeight').value);
+  const height = parseFloat(document.getElementById('bmrHeight').value);
+  const resultEl = document.getElementById('bmrResult');
+  if(!age || age <= 0 || !weight || weight <= 0 || !height || height <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+  bmr += (sex === 'male') ? 5 : -161;
+  resultEl.innerHTML = `
+    <div class="calc-result">BMR: ${bmr.toFixed(0)} kcal/day</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Sedentary: ${(bmr*1.2).toFixed(0)} · Light: ${(bmr*1.375).toFixed(0)} · Moderate: ${(bmr*1.55).toFixed(0)} · Very Active: ${(bmr*1.725).toFixed(0)}</div>
+  `;
+});
+
+document.getElementById('calcIbwBtn').addEventListener('click', () => {
+  const sex = document.getElementById('ibwSex').value;
+  const heightCm = parseFloat(document.getElementById('ibwHeight').value);
+  const resultEl = document.getElementById('ibwResult');
+  if(!heightCm || heightCm <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a valid height.</p>`;
+    return;
+  }
+  const heightInches = heightCm / 2.54;
+  const base = sex === 'male' ? 50 : 45.5;
+  const ibw = heightInches > 60 ? base + (2.3 * (heightInches - 60)) : base;
+  resultEl.innerHTML = `
+    <div class="calc-result">Estimated Ideal Weight: ${ibw.toFixed(1)} kg</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">This is an estimate, not a required target — healthy weight varies by build and individual factors.</p>
+  `;
+});
+
+document.getElementById('calcWhrBtn').addEventListener('click', () => {
+  const sex = document.getElementById('whrSex').value;
+  const waist = parseFloat(document.getElementById('whrWaist').value);
+  const hip = parseFloat(document.getElementById('whrHip').value);
+  const resultEl = document.getElementById('whrResult');
+  if(!waist || waist <= 0 || !hip || hip <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const whr = waist / hip;
+  let risk;
+  if(sex === 'male') risk = whr < 0.90 ? 'Low risk' : (whr < 1.0 ? 'Moderate risk' : 'High risk');
+  else risk = whr < 0.80 ? 'Low risk' : (whr < 0.85 ? 'Moderate risk' : 'High risk');
+  resultEl.innerHTML = `<div class="calc-result">WHR: ${whr.toFixed(2)} — ${risk}</div>`;
+});
+
+document.getElementById('calcWhtrBtn').addEventListener('click', () => {
+  const waist = parseFloat(document.getElementById('whtrWaist').value);
+  const height = parseFloat(document.getElementById('whtrHeight').value);
+  const resultEl = document.getElementById('whtrResult');
+  if(!waist || waist <= 0 || !height || height <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const ratio = waist / height;
+  const flag = ratio >= 0.5 ? 'Above the commonly-cited 0.5 threshold' : 'Below the commonly-cited 0.5 threshold';
+  resultEl.innerHTML = `<div class="calc-result">Waist-to-Height Ratio: ${ratio.toFixed(2)}</div><div class="calc-result" style="font-size:11.5px; opacity:0.85;">${flag}</div>`;
+});
+
+document.getElementById('calcBsaBtn').addEventListener('click', () => {
+  const height = parseFloat(document.getElementById('bsaHeight').value);
+  const weight = parseFloat(document.getElementById('bsaWeight').value);
+  const resultEl = document.getElementById('bsaResult');
+  if(!height || height <= 0 || !weight || weight <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const bsa = Math.sqrt((height * weight) / 3600);
+  resultEl.innerHTML = `<div class="calc-result">BSA: ${bsa.toFixed(2)} m²</div>`;
+});
+
+document.getElementById('bfSex').addEventListener('change', (e) => {
+  document.getElementById('bfHipField').style.display = (e.target.value === 'female') ? 'block' : 'none';
+});
+document.getElementById('calcBfBtn').addEventListener('click', () => {
+  const sex = document.getElementById('bfSex').value;
+  const height = parseFloat(document.getElementById('bfHeight').value);
+  const neck = parseFloat(document.getElementById('bfNeck').value);
+  const waist = parseFloat(document.getElementById('bfWaist').value);
+  const hip = parseFloat(document.getElementById('bfHip').value);
+  const resultEl = document.getElementById('bfResult');
+  if(!height || height <= 0 || !neck || neck <= 0 || !waist || waist <= 0 || (sex === 'female' && (!hip || hip <= 0))){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers${sex === 'female' ? ' (hip is required for women)' : ''}.</p>`;
+    return;
+  }
+  let bodyFat;
+  if(sex === 'male'){
+    bodyFat = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+  } else {
+    bodyFat = 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.22100 * Math.log10(height)) - 450;
+  }
+  if(!isFinite(bodyFat) || isNaN(bodyFat)){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">These measurements don't produce a valid estimate — please double-check them.</p>`;
+    return;
+  }
+  resultEl.innerHTML = `
+    <div class="calc-result">Estimated Body Fat: ${bodyFat.toFixed(1)}%</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">US Navy method — an estimate, not a precise clinical measurement.</p>
+  `;
+});
+
+document.getElementById('calcEddBtn').addEventListener('click', () => {
+  const lmpStr = document.getElementById('eddLmp').value;
+  const resultEl = document.getElementById('eddResult');
+  if(!lmpStr){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select the first day of the last menstrual period.</p>`;
+    return;
+  }
+  const lmp = new Date(lmpStr + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if(lmp > today){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">That date is in the future — please check it.</p>`;
+    return;
+  }
+  const edd = new Date(lmp);
+  edd.setDate(edd.getDate() + 280);
+  const daysPregnant = Math.floor((today - lmp) / (1000 * 60 * 60 * 24));
+  const gaWeeks = Math.floor(daysPregnant / 7);
+  const gaDays = daysPregnant % 7;
+  const eddFormatted = edd.toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
+  resultEl.innerHTML = `
+    <div class="calc-result">Estimated Due Date: ${eddFormatted}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Gestational age: ${gaWeeks} weeks + ${gaDays} days</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">Naegele's rule — an estimate, not a substitute for clinical assessment.</p>
+  `;
+});
+
+document.getElementById('calcChildAgeBtn').addEventListener('click', () => {
+  const dobStr = document.getElementById('childDob').value;
+  const resultEl = document.getElementById('childAgeResult');
+  if(!dobStr){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select a date of birth.</p>`;
+    return;
+  }
+  const dob = new Date(dobStr + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if(dob > today){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">That date is in the future — please check it.</p>`;
+    return;
+  }
+  let years = today.getFullYear() - dob.getFullYear();
+  let months = today.getMonth() - dob.getMonth();
+  let days = today.getDate() - dob.getDate();
+  if(days < 0){
+    months--;
+    const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += lastMonth.getDate();
+  }
+  if(months < 0){
+    years--;
+    months += 12;
+  }
+  resultEl.innerHTML = `<div class="calc-result">Age: ${years} years, ${months} months, ${days} days</div>`;
+});
+
 document.getElementById('calcImrBtn').addEventListener('click', () => {
   const deaths = parseFloat(document.getElementById('imrDeaths').value);
   const births = parseFloat(document.getElementById('imrBirths').value);
