@@ -2720,6 +2720,10 @@
         <div class="tt-icon">🧭</div>
         <div class="tt-label">Everyday</div>
       </a>
+      <a class="tool-tile" href="#" id="goToWellness" data-search="meditation breathing gratitude journal habit tracker wellness">
+        <div class="tt-icon">🧘</div>
+        <div class="tt-label">Wellness</div>
+      </a>
       <a class="tool-tile" href="#" id="goToImmunization" data-search="immunization vaccine schedule nepal nip">
         <div class="tt-icon">💉</div>
         <div class="tt-label">Immunization</div>
@@ -3210,6 +3214,47 @@
         <div id="bpResult"></div>
         <div id="bpHistory" style="margin-top:12px;"></div>
       </div>
+
+      <div class="calc-card">
+        <h4>🩸 Glucose Log</h4>
+        <div class="calc-field"><label>Reading (mg/dL)</label><input type="number" id="glucoseReading" placeholder="e.g. 95"></div>
+        <div class="calc-field"><label>Type</label>
+          <select id="glucoseType" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="Fasting">Fasting</option>
+            <option value="Before Meal">Before Meal</option>
+            <option value="After Meal">After Meal</option>
+            <option value="Bedtime">Bedtime</option>
+            <option value="Random">Random</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="glucoseSaveBtn">Save Glucose Entry</button>
+        <div id="glucoseResult"></div>
+        <div id="glucoseHistory" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>❤️ Heart Rate Log</h4>
+        <div class="calc-field"><label>BPM</label><input type="number" id="hrBpm" placeholder="e.g. 72"></div>
+        <div class="calc-field"><label>Type</label>
+          <select id="hrType" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="Resting">Resting</option>
+            <option value="Exercise">Exercise</option>
+            <option value="Recovery">Recovery</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="hrSaveBtn">Save Heart Rate Entry</button>
+        <div id="hrResult"></div>
+        <div id="hrHistory" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>🫁 SpO₂ Log</h4>
+        <div class="calc-field"><label>SpO₂ (%)</label><input type="number" id="spo2Value" placeholder="e.g. 98"></div>
+        <div class="calc-field"><label>Pulse (optional)</label><input type="number" id="spo2Pulse" placeholder="e.g. 74"></div>
+        <button class="calc-btn" id="spo2SaveBtn">Save SpO₂ Entry</button>
+        <div id="spo2Result"></div>
+        <div id="spo2History" style="margin-top:12px;"></div>
+      </div>
     </div>
   </div>
 
@@ -3318,6 +3363,54 @@
       <div class="calc-card">
         <h4>World Clock</h4>
         <div id="worldClockList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WELLNESS -->
+  <div class="screen" id="wellnessScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🧘 Wellness</div>
+
+      <div class="calc-card" style="text-align:center;">
+        <h4 style="text-align:left;">🧘 Meditation Timer</h4>
+        <div id="meditationPresets" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0;">
+          <button class="rf-time-chip" data-min="2">2 min</button>
+          <button class="rf-time-chip active" data-min="5">5 min</button>
+          <button class="rf-time-chip" data-min="10">10 min</button>
+          <button class="rf-time-chip" data-min="15">15 min</button>
+        </div>
+        <div style="font-size:44px; font-weight:800; color:#fff; margin:12px 0;" id="meditationDisplay">05:00</div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button class="start-btn" id="meditationStartBtn" style="width:auto; padding:11px 30px; margin-top:0;">Start</button>
+          <button class="font-size-btn" id="meditationResetBtn" style="width:auto; padding:11px 18px;">Reset</button>
+        </div>
+      </div>
+
+      <div class="calc-card" style="text-align:center;">
+        <h4 style="text-align:left;">🌬️ Breathing Exercise</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); text-align:left; margin-bottom:14px;">Box breathing — 4 seconds each phase.</p>
+        <div id="breathingCircleWrap" style="display:flex; align-items:center; justify-content:center; height:180px;">
+          <div id="breathingCircle" style="width:100px; height:100px; border-radius:50%; background:radial-gradient(circle,#14A3A8,#0D7377); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; transition:transform 4s ease-in-out;">Start</div>
+        </div>
+        <button class="start-btn" id="breathingStartBtn" style="width:auto; padding:11px 30px;">Start Breathing</button>
+      </div>
+
+      <div class="calc-card">
+        <h4>🙏 Gratitude Journal</h4>
+        <div class="calc-field"><label>1.</label><input type="text" id="gratitude1" placeholder="Something you're grateful for"></div>
+        <div class="calc-field"><label>2.</label><input type="text" id="gratitude2" placeholder="Something you're grateful for"></div>
+        <div class="calc-field"><label>3.</label><input type="text" id="gratitude3" placeholder="Something you're grateful for"></div>
+        <button class="calc-btn" id="gratitudeSaveBtn">Save</button>
+        <div id="gratitudeResult"></div>
+        <div id="gratitudeHistory" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>🔥 Habit Tracker</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Tap a habit to mark it done for today.</p>
+        <div id="habitList"></div>
       </div>
     </div>
   </div>
@@ -4363,6 +4456,7 @@ const immunizationScreen = document.getElementById('immunizationScreen');
 const pensionScreen = document.getElementById('pensionScreen');
 const myHealthScreen = document.getElementById('myHealthScreen');
 const everydayToolsScreen = document.getElementById('everydayToolsScreen');
+const wellnessScreen = document.getElementById('wellnessScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
@@ -4382,7 +4476,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -4541,7 +4635,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -5021,6 +5115,12 @@ document.getElementById('goToEverydayTools').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(everydayToolsScreen);
   renderWorldClock();
+});
+document.getElementById('goToWellness').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(wellnessScreen);
+  renderGratitudeHistory();
+  renderHabitList();
 });
 document.getElementById('goToImmunization').addEventListener('click', (e) => {
   e.preventDefault();
@@ -5833,6 +5933,94 @@ function renderBpHistory(){
   `;
 }
 
+function getGlucoseEntries(){
+  try{ return JSON.parse(localStorage.getItem('hl_glucose_log') || '[]'); }catch(e){ return []; }
+}
+document.getElementById('glucoseSaveBtn').addEventListener('click', () => {
+  const reading = parseFloat(document.getElementById('glucoseReading').value);
+  const type = document.getElementById('glucoseType').value;
+  const resultEl = document.getElementById('glucoseResult');
+  if(!reading || reading <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a valid reading.</p>`;
+    return;
+  }
+  const now = new Date();
+  const entries = getGlucoseEntries();
+  entries.push({ date: todayISO(), time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }), reading, type });
+  try{ localStorage.setItem('hl_glucose_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  resultEl.innerHTML = `<div class="calc-result">Saved: ${reading} mg/dL (${type})</div>`;
+  document.getElementById('glucoseReading').value = '';
+  renderGlucoseHistory();
+});
+function renderGlucoseHistory(){
+  const entries = getGlucoseEntries().slice(-7).reverse();
+  const el = document.getElementById('glucoseHistory');
+  if(entries.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${e.date} ${e.time}: ${e.reading} mg/dL (${e.type})</div>`).join('')}
+  `;
+}
+
+function getHrEntries(){
+  try{ return JSON.parse(localStorage.getItem('hl_hr_log') || '[]'); }catch(e){ return []; }
+}
+document.getElementById('hrSaveBtn').addEventListener('click', () => {
+  const bpm = parseFloat(document.getElementById('hrBpm').value);
+  const type = document.getElementById('hrType').value;
+  const resultEl = document.getElementById('hrResult');
+  if(!bpm || bpm <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a valid BPM.</p>`;
+    return;
+  }
+  const now = new Date();
+  const entries = getHrEntries();
+  entries.push({ date: todayISO(), time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }), bpm, type });
+  try{ localStorage.setItem('hl_hr_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  resultEl.innerHTML = `<div class="calc-result">Saved: ${bpm} BPM (${type})</div>`;
+  document.getElementById('hrBpm').value = '';
+  renderHrHistory();
+});
+function renderHrHistory(){
+  const entries = getHrEntries().slice(-7).reverse();
+  const el = document.getElementById('hrHistory');
+  if(entries.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${e.date} ${e.time}: ${e.bpm} BPM (${e.type})</div>`).join('')}
+  `;
+}
+
+function getSpo2Entries(){
+  try{ return JSON.parse(localStorage.getItem('hl_spo2_log') || '[]'); }catch(e){ return []; }
+}
+document.getElementById('spo2SaveBtn').addEventListener('click', () => {
+  const value = parseFloat(document.getElementById('spo2Value').value);
+  const pulse = parseFloat(document.getElementById('spo2Pulse').value);
+  const resultEl = document.getElementById('spo2Result');
+  if(!value || value <= 0 || value > 100){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a valid SpO₂ percentage.</p>`;
+    return;
+  }
+  const now = new Date();
+  const entries = getSpo2Entries();
+  entries.push({ date: todayISO(), time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }), value, pulse: isNaN(pulse) ? null : pulse });
+  try{ localStorage.setItem('hl_spo2_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  resultEl.innerHTML = `<div class="calc-result">Saved: ${value}%${!isNaN(pulse) ? ' · Pulse ' + pulse : ''}</div>`;
+  document.getElementById('spo2Value').value = '';
+  document.getElementById('spo2Pulse').value = '';
+  renderSpo2History();
+});
+function renderSpo2History(){
+  const entries = getSpo2Entries().slice(-7).reverse();
+  const el = document.getElementById('spo2History');
+  if(entries.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${e.date} ${e.time}: ${e.value}%${e.pulse ? ' · Pulse ' + e.pulse : ''}</div>`).join('')}
+  `;
+}
+
 // ---------- Everyday Tools: Date math, EMI, unit converters, world clock ----------
 document.getElementById('calcDateDiffBtn').addEventListener('click', () => {
   const fromStr = document.getElementById('dateDiffFrom').value;
@@ -5955,6 +6143,170 @@ function renderWorldClock(){
     const date = now.toLocaleDateString('en-US', { timeZone: c.zone, weekday:'short', day:'numeric', month:'short' });
     return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);"><span style="color:var(--ink); font-size:13px;">${c.name}</span><span style="color:var(--ink-soft); font-size:12.5px;">${time} · ${date}</span></div>`;
   }).join('');
+}
+
+// ---------- Wellness: Meditation Timer, Breathing Exercise, Gratitude Journal, Habit Tracker ----------
+let meditationInterval = null;
+let meditationSecondsLeft = 5 * 60;
+let meditationTotalSeconds = 5 * 60;
+let meditationRunning = false;
+function updateMeditationDisplay(){
+  const mins = Math.floor(meditationSecondsLeft / 60);
+  const secs = meditationSecondsLeft % 60;
+  document.getElementById('meditationDisplay').textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+}
+document.querySelectorAll('#meditationPresets .rf-time-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#meditationPresets .rf-time-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    meditationTotalSeconds = parseInt(chip.dataset.min, 10) * 60;
+    meditationSecondsLeft = meditationTotalSeconds;
+    updateMeditationDisplay();
+  });
+});
+document.getElementById('meditationStartBtn').addEventListener('click', () => {
+  const btn = document.getElementById('meditationStartBtn');
+  if(meditationRunning){
+    clearInterval(meditationInterval);
+    meditationRunning = false;
+    btn.textContent = 'Resume';
+    return;
+  }
+  meditationRunning = true;
+  btn.textContent = 'Pause';
+  meditationInterval = setInterval(() => {
+    meditationSecondsLeft--;
+    updateMeditationDisplay();
+    if(meditationSecondsLeft <= 0){
+      clearInterval(meditationInterval);
+      meditationRunning = false;
+      btn.textContent = 'Start';
+      alert('🧘 Session complete.');
+    }
+  }, 1000);
+});
+document.getElementById('meditationResetBtn').addEventListener('click', () => {
+  clearInterval(meditationInterval);
+  meditationRunning = false;
+  meditationSecondsLeft = meditationTotalSeconds;
+  document.getElementById('meditationStartBtn').textContent = 'Start';
+  updateMeditationDisplay();
+});
+updateMeditationDisplay();
+
+let breathingRunning = false;
+let breathingTimeout = null;
+let breathingPhaseIndex = 0;
+const BREATHING_PHASES = [
+  { label:'Inhale', scale:1.5, duration:4000 },
+  { label:'Hold', scale:1.5, duration:4000 },
+  { label:'Exhale', scale:1.0, duration:4000 },
+  { label:'Hold', scale:1.0, duration:4000 },
+];
+function runBreathingPhase(){
+  if(!breathingRunning) return;
+  const phase = BREATHING_PHASES[breathingPhaseIndex];
+  const circle = document.getElementById('breathingCircle');
+  circle.textContent = phase.label;
+  circle.style.transform = `scale(${phase.scale})`;
+  breathingPhaseIndex = (breathingPhaseIndex + 1) % BREATHING_PHASES.length;
+  breathingTimeout = setTimeout(runBreathingPhase, phase.duration);
+}
+document.getElementById('breathingStartBtn').addEventListener('click', () => {
+  const btn = document.getElementById('breathingStartBtn');
+  const circle = document.getElementById('breathingCircle');
+  if(breathingRunning){
+    breathingRunning = false;
+    clearTimeout(breathingTimeout);
+    btn.textContent = 'Start Breathing';
+    circle.textContent = 'Start';
+    circle.style.transform = 'scale(1)';
+    breathingPhaseIndex = 0;
+    return;
+  }
+  breathingRunning = true;
+  btn.textContent = 'Stop';
+  breathingPhaseIndex = 0;
+  runBreathingPhase();
+});
+
+function getGratitudeEntries(){
+  try{ return JSON.parse(localStorage.getItem('hl_gratitude_log') || '[]'); }catch(e){ return []; }
+}
+document.getElementById('gratitudeSaveBtn').addEventListener('click', () => {
+  const g1 = document.getElementById('gratitude1').value.trim();
+  const g2 = document.getElementById('gratitude2').value.trim();
+  const g3 = document.getElementById('gratitude3').value.trim();
+  const resultEl = document.getElementById('gratitudeResult');
+  const items = [g1, g2, g3].filter(Boolean);
+  if(items.length === 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please write at least one thing.</p>`;
+    return;
+  }
+  const entries = getGratitudeEntries();
+  entries.push({ date: todayISO(), items });
+  try{ localStorage.setItem('hl_gratitude_log', JSON.stringify(entries.slice(-60))); }catch(e){}
+  resultEl.innerHTML = `<div class="calc-result">Saved 🙏</div>`;
+  document.getElementById('gratitude1').value = '';
+  document.getElementById('gratitude2').value = '';
+  document.getElementById('gratitude3').value = '';
+  renderGratitudeHistory();
+});
+function renderGratitudeHistory(){
+  const entries = getGratitudeEntries().slice(-5).reverse();
+  const el = document.getElementById('gratitudeHistory');
+  if(entries.length === 0){ el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent entries</div>
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:4px 0;">${e.date}: ${e.items.join(' · ')}</div>`).join('')}
+  `;
+}
+
+const HABIT_LIST = ['Study', 'Water', 'Exercise', 'Meditation', 'Reading', 'Sleep'];
+function getHabitLog(){
+  try{ return JSON.parse(localStorage.getItem('hl_habit_log') || '{}'); }catch(e){ return {}; }
+}
+function calculateHabitStreak(log, habitName){
+  let streak = 0;
+  const checkDate = new Date();
+  for(let i = 0; i < 1000; i++){ // capped — defensive against any malformed-data infinite loop
+    const dateKey = checkDate.toISOString().slice(0, 10);
+    if(log[dateKey] && log[dateKey].includes(habitName)){
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+function renderHabitList(){
+  const log = getHabitLog();
+  const today = todayISO();
+  const todayHabits = log[today] || [];
+  document.getElementById('habitList').innerHTML = HABIT_LIST.map(h => {
+    const done = todayHabits.includes(h);
+    const streak = calculateHabitStreak(log, h);
+    return `
+      <div class="mood-level-row" data-habit="${h}" style="cursor:pointer;">
+        <div class="mlr-icon">${done ? '✅' : '⬜'}</div>
+        <div class="mlr-label">${h}</div>
+        <div style="font-size:11px; color:var(--gold);">${streak > 0 ? '🔥 ' + streak : ''}</div>
+      </div>
+    `;
+  }).join('');
+  document.querySelectorAll('#habitList .mood-level-row').forEach(row => {
+    row.addEventListener('click', () => toggleHabit(row.dataset.habit));
+  });
+}
+function toggleHabit(habitName){
+  const log = getHabitLog();
+  const today = todayISO();
+  if(!log[today]) log[today] = [];
+  if(log[today].includes(habitName)) log[today] = log[today].filter(h => h !== habitName);
+  else log[today].push(habitName);
+  try{ localStorage.setItem('hl_habit_log', JSON.stringify(log)); }catch(e){}
+  renderHabitList();
 }
 
 // ---------- Pension Estimator: Legacy scheme, standard accrual formula. Clearly labeled as
