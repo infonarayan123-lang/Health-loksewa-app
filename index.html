@@ -2680,7 +2680,7 @@
       <div class="section-title">🧮 Smart Tools</div>
       <input type="text" class="formula-search-box" id="toolsSearchBox" placeholder="🔍 Search Smart Tools…" style="margin-bottom:14px;">
       <div id="toolsGrid" class="tool-grid-4">
-      <a class="tool-tile" href="#" id="goToHealthCalc" data-search="bmr ideal weight whr waist hip bsa body fat pregnancy due date child age">
+      <a class="tool-tile" href="#" id="goToHealthCalc" data-search="bmr ideal weight whr waist hip bsa body fat pregnancy due date age calculator">
         <div class="tt-icon">🩺</div>
         <div class="tt-label">Health Calc</div>
       </a>
@@ -2715,6 +2715,10 @@
       <a class="tool-tile" href="#" id="goToMyHealth" data-search="water sleep blood pressure bp health tracker log">
         <div class="tt-icon">❤️</div>
         <div class="tt-label">My Health</div>
+      </a>
+      <a class="tool-tile" href="#" id="goToEverydayTools" data-search="date difference emi loan length weight temperature converter world clock time zone">
+        <div class="tt-icon">🧭</div>
+        <div class="tt-label">Everyday</div>
       </a>
       <a class="tool-tile" href="#" id="goToImmunization" data-search="immunization vaccine schedule nepal nip">
         <div class="tt-icon">💉</div>
@@ -2848,7 +2852,7 @@
       </div>
 
       <div class="calc-card">
-        <h4>Child Age Calculator</h4>
+        <h4>Age Calculator</h4>
         <div class="calc-field"><label>Date of birth</label><input type="date" id="childDob"></div>
         <button class="calc-btn" id="calcChildAgeBtn">Calculate Age</button>
         <div id="childAgeResult"></div>
@@ -3205,6 +3209,115 @@
         <button class="calc-btn" id="bpSaveBtn">Save BP Entry</button>
         <div id="bpResult"></div>
         <div id="bpHistory" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVERYDAY TOOLS -->
+  <div class="screen" id="everydayToolsScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🧭 Everyday Tools</div>
+
+      <div class="calc-card">
+        <h4>Date Difference</h4>
+        <div class="calc-field"><label>From date</label><input type="date" id="dateDiffFrom"></div>
+        <div class="calc-field"><label>To date</label><input type="date" id="dateDiffTo"></div>
+        <button class="calc-btn" id="calcDateDiffBtn">Calculate Difference</button>
+        <div id="dateDiffResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Add / Subtract Days</h4>
+        <div class="calc-field"><label>Start date</label><input type="date" id="dateAddStart"></div>
+        <div class="calc-field"><label>Days (use negative to subtract)</label><input type="number" id="dateAddDays" placeholder="e.g. 45 or -10"></div>
+        <button class="calc-btn" id="calcDateAddBtn">Calculate Date</button>
+        <div id="dateAddResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>EMI Calculator</h4>
+        <div class="calc-field"><label>Loan amount (Rs.)</label><input type="number" id="emiAmount" placeholder="e.g. 2000000"></div>
+        <div class="calc-field"><label>Annual interest rate (%)</label><input type="number" id="emiRate" placeholder="e.g. 10"></div>
+        <div class="calc-field"><label>Tenure (years)</label><input type="number" id="emiYears" placeholder="e.g. 10"></div>
+        <button class="calc-btn" id="calcEmiBtn">Calculate EMI</button>
+        <div id="emiResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Length Converter</h4>
+        <div class="calc-field"><label>Value</label><input type="number" id="lenValue" placeholder="e.g. 10"></div>
+        <div class="calc-field"><label>From</label>
+          <select id="lenFrom" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="km">Kilometers</option>
+            <option value="mi">Miles</option>
+            <option value="m">Meters</option>
+            <option value="ft">Feet</option>
+            <option value="cm">Centimeters</option>
+            <option value="in">Inches</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>To</label>
+          <select id="lenTo" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="mi">Miles</option>
+            <option value="km">Kilometers</option>
+            <option value="m">Meters</option>
+            <option value="ft">Feet</option>
+            <option value="cm">Centimeters</option>
+            <option value="in">Inches</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="calcLenBtn">Convert</button>
+        <div id="lenResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Weight Converter</h4>
+        <div class="calc-field"><label>Value</label><input type="number" id="wtValue" placeholder="e.g. 65"></div>
+        <div class="calc-field"><label>From</label>
+          <select id="wtFrom" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="kg">Kilograms</option>
+            <option value="lb">Pounds</option>
+            <option value="g">Grams</option>
+            <option value="oz">Ounces</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>To</label>
+          <select id="wtTo" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="lb">Pounds</option>
+            <option value="kg">Kilograms</option>
+            <option value="g">Grams</option>
+            <option value="oz">Ounces</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="calcWtBtn">Convert</button>
+        <div id="wtResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Temperature Converter</h4>
+        <div class="calc-field"><label>Value</label><input type="number" id="tempValue" placeholder="e.g. 37"></div>
+        <div class="calc-field"><label>From</label>
+          <select id="tempFrom" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="c">Celsius</option>
+            <option value="f">Fahrenheit</option>
+            <option value="k">Kelvin</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>To</label>
+          <select id="tempTo" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="f">Fahrenheit</option>
+            <option value="c">Celsius</option>
+            <option value="k">Kelvin</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="calcTempBtn">Convert</button>
+        <div id="tempResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>World Clock</h4>
+        <div id="worldClockList"></div>
       </div>
     </div>
   </div>
@@ -4249,6 +4362,7 @@ const studyTimerScreen = document.getElementById('studyTimerScreen');
 const immunizationScreen = document.getElementById('immunizationScreen');
 const pensionScreen = document.getElementById('pensionScreen');
 const myHealthScreen = document.getElementById('myHealthScreen');
+const everydayToolsScreen = document.getElementById('everydayToolsScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
@@ -4268,7 +4382,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -4427,7 +4541,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -4902,6 +5016,11 @@ document.getElementById('goToMyHealth').addEventListener('click', (e) => {
   renderWaterTracker();
   renderSleepHistory();
   renderBpHistory();
+});
+document.getElementById('goToEverydayTools').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(everydayToolsScreen);
+  renderWorldClock();
 });
 document.getElementById('goToImmunization').addEventListener('click', (e) => {
   e.preventDefault();
@@ -5712,6 +5831,130 @@ function renderBpHistory(){
     <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
     ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${e.date} ${e.time}: ${e.systolic}/${e.diastolic}${e.pulse ? ' · Pulse ' + e.pulse : ''}</div>`).join('')}
   `;
+}
+
+// ---------- Everyday Tools: Date math, EMI, unit converters, world clock ----------
+document.getElementById('calcDateDiffBtn').addEventListener('click', () => {
+  const fromStr = document.getElementById('dateDiffFrom').value;
+  const toStr = document.getElementById('dateDiffTo').value;
+  const resultEl = document.getElementById('dateDiffResult');
+  if(!fromStr || !toStr){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select both dates.</p>`;
+    return;
+  }
+  const from = new Date(fromStr + 'T00:00:00');
+  const to = new Date(toStr + 'T00:00:00');
+  const diffDays = Math.round((to - from) / (1000 * 60 * 60 * 24));
+  const weeks = Math.floor(Math.abs(diffDays) / 7);
+  const remDays = Math.abs(diffDays) % 7;
+  resultEl.innerHTML = `
+    <div class="calc-result">${Math.abs(diffDays)} days ${diffDays < 0 ? '(To date is earlier)' : ''}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">${weeks} weeks, ${remDays} days</div>
+  `;
+});
+document.getElementById('calcDateAddBtn').addEventListener('click', () => {
+  const startStr = document.getElementById('dateAddStart').value;
+  const days = parseInt(document.getElementById('dateAddDays').value, 10);
+  const resultEl = document.getElementById('dateAddResult');
+  if(!startStr || isNaN(days)){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select a date and enter a number of days.</p>`;
+    return;
+  }
+  const start = new Date(startStr + 'T00:00:00');
+  start.setDate(start.getDate() + days);
+  const formatted = start.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  resultEl.innerHTML = `<div class="calc-result">${formatted}</div>`;
+});
+
+document.getElementById('calcEmiBtn').addEventListener('click', () => {
+  const principal = parseFloat(document.getElementById('emiAmount').value);
+  const annualRate = parseFloat(document.getElementById('emiRate').value);
+  const years = parseFloat(document.getElementById('emiYears').value);
+  const resultEl = document.getElementById('emiResult');
+  if(!principal || principal <= 0 || !annualRate || annualRate < 0 || !years || years <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const monthlyRate = (annualRate / 100) / 12;
+  const months = years * 12;
+  let emi;
+  if(monthlyRate === 0){
+    emi = principal / months;
+  } else {
+    emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+  }
+  const totalPayment = emi * months;
+  const totalInterest = totalPayment - principal;
+  resultEl.innerHTML = `
+    <div class="calc-result">Monthly EMI: Rs. ${emi.toFixed(0)}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Total Interest: Rs. ${totalInterest.toFixed(0)} · Total Payment: Rs. ${totalPayment.toFixed(0)}</div>
+  `;
+});
+
+const LENGTH_TO_METERS = { km:1000, mi:1609.344, m:1, ft:0.3048, cm:0.01, in:0.0254 };
+document.getElementById('calcLenBtn').addEventListener('click', () => {
+  const value = parseFloat(document.getElementById('lenValue').value);
+  const from = document.getElementById('lenFrom').value;
+  const to = document.getElementById('lenTo').value;
+  const resultEl = document.getElementById('lenResult');
+  if(isNaN(value)){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a value.</p>`;
+    return;
+  }
+  const meters = value * LENGTH_TO_METERS[from];
+  const converted = meters / LENGTH_TO_METERS[to];
+  resultEl.innerHTML = `<div class="calc-result">${converted.toFixed(4)}</div>`;
+});
+
+const WEIGHT_TO_KG = { kg:1, lb:0.453592, g:0.001, oz:0.0283495 };
+document.getElementById('calcWtBtn').addEventListener('click', () => {
+  const value = parseFloat(document.getElementById('wtValue').value);
+  const from = document.getElementById('wtFrom').value;
+  const to = document.getElementById('wtTo').value;
+  const resultEl = document.getElementById('wtResult');
+  if(isNaN(value)){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a value.</p>`;
+    return;
+  }
+  const kg = value * WEIGHT_TO_KG[from];
+  const converted = kg / WEIGHT_TO_KG[to];
+  resultEl.innerHTML = `<div class="calc-result">${converted.toFixed(4)}</div>`;
+});
+
+document.getElementById('calcTempBtn').addEventListener('click', () => {
+  const value = parseFloat(document.getElementById('tempValue').value);
+  const from = document.getElementById('tempFrom').value;
+  const to = document.getElementById('tempTo').value;
+  const resultEl = document.getElementById('tempResult');
+  if(isNaN(value)){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a value.</p>`;
+    return;
+  }
+  let celsius;
+  if(from === 'c') celsius = value;
+  else if(from === 'f') celsius = (value - 32) * 5/9;
+  else celsius = value - 273.15;
+  let result;
+  if(to === 'c') result = celsius;
+  else if(to === 'f') result = (celsius * 9/5) + 32;
+  else result = celsius + 273.15;
+  resultEl.innerHTML = `<div class="calc-result">${result.toFixed(2)}°${to.toUpperCase()}</div>`;
+});
+
+function renderWorldClock(){
+  const cities = [
+    { name:'Kathmandu', zone:'Asia/Kathmandu' },
+    { name:'Delhi', zone:'Asia/Kolkata' },
+    { name:'London', zone:'Europe/London' },
+    { name:'New York', zone:'America/New_York' },
+    { name:'Tokyo', zone:'Asia/Tokyo' },
+  ];
+  const now = new Date();
+  document.getElementById('worldClockList').innerHTML = cities.map(c => {
+    const time = now.toLocaleTimeString('en-US', { timeZone: c.zone, hour:'2-digit', minute:'2-digit' });
+    const date = now.toLocaleDateString('en-US', { timeZone: c.zone, weekday:'short', day:'numeric', month:'short' });
+    return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);"><span style="color:var(--ink); font-size:13px;">${c.name}</span><span style="color:var(--ink-soft); font-size:12.5px;">${time} · ${date}</span></div>`;
+  }).join('');
 }
 
 // ---------- Pension Estimator: Legacy scheme, standard accrual formula. Clearly labeled as
