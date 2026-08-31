@@ -2943,9 +2943,22 @@
     <div class="back-link" data-back="calculatorHub">← Back</div>
     <div class="home-body">
       <div class="section-title">📈 Epidemiology Calculator</div>
+      <div class="tool-grid-4">
+        <a class="tool-tile" href="#" id="goToEpiScreening"><div class="tt-icon">🔬</div><div class="tt-label">Screening Test</div></a>
+        <a class="tool-tile" href="#" id="goToEpiIncidence"><div class="tt-icon">📈</div><div class="tt-label">Incidence</div></a>
+        <a class="tool-tile" href="#" id="goToEpiPrevalence"><div class="tt-icon">📊</div><div class="tt-label">Prevalence</div></a>
+        <a class="tool-tile" href="#" id="goToEpiRiskOdds"><div class="tt-icon">⚖️</div><div class="tt-label">Risk &amp; Odds</div></a>
+        <a class="tool-tile" href="#" id="goToEpiCfr"><div class="tt-icon">☠️</div><div class="tt-label">CFR</div></a>
+        <a class="tool-tile" href="#" id="goToEpiVe"><div class="tt-icon">💉</div><div class="tt-label">Vaccine Efficacy</div></a>
+      </div>
+    </div>
+  </div>
 
+  <div class="screen" id="epiScreeningScreen">
+    <div class="back-link" data-back="epiCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔬 Screening Test Accuracy</div>
       <div class="calc-card">
-        <h4>Screening Test Accuracy</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Enter your 2×2 table to get Sensitivity, Specificity, PPV and NPV all at once.</p>
         <div class="calc-field"><label>True Positives (TP)</label><input type="number" id="epiTP" placeholder="e.g. 80"></div>
         <div class="calc-field"><label>False Positives (FP)</label><input type="number" id="epiFP" placeholder="e.g. 20"></div>
@@ -2954,25 +2967,40 @@
         <button class="calc-btn" id="calcScreeningBtn">Calculate</button>
         <div id="screeningResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="epiIncidenceScreen">
+    <div class="back-link" data-back="epiCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📈 Incidence Rate</div>
       <div class="calc-card">
-        <h4>Incidence Rate</h4>
         <div class="calc-field"><label>New cases in the period</label><input type="number" id="incidenceNewCases" placeholder="e.g. 50"></div>
         <div class="calc-field"><label>Population at risk</label><input type="number" id="incidencePopulation" placeholder="e.g. 5000"></div>
         <button class="calc-btn" id="calcIncidenceBtn">Calculate Incidence</button>
         <div id="incidenceResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="epiPrevalenceScreen">
+    <div class="back-link" data-back="epiCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📊 Prevalence</div>
       <div class="calc-card">
-        <h4>Prevalence</h4>
         <div class="calc-field"><label>Total existing cases</label><input type="number" id="prevalenceCases" placeholder="e.g. 300"></div>
         <div class="calc-field"><label>Total population</label><input type="number" id="prevalencePopulation" placeholder="e.g. 5000"></div>
         <button class="calc-btn" id="calcPrevalenceBtn">Calculate Prevalence</button>
         <div id="prevalenceResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="epiRiskOddsScreen">
+    <div class="back-link" data-back="epiCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚖️ Risk &amp; Odds (Cohort / Case-Control)</div>
       <div class="calc-card">
-        <h4>Risk &amp; Odds (Cohort / Case-Control)</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Enter your exposure 2×2 table to get Relative Risk, Odds Ratio, Attributable Risk and NNT together.</p>
         <div class="calc-field"><label>Exposed, Disease+ (A)</label><input type="number" id="roA" placeholder="e.g. 40"></div>
         <div class="calc-field"><label>Exposed, Disease− (B)</label><input type="number" id="roB" placeholder="e.g. 60"></div>
@@ -2981,17 +3009,27 @@
         <button class="calc-btn" id="calcRiskOddsBtn">Calculate</button>
         <div id="riskOddsResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="epiCfrScreen">
+    <div class="back-link" data-back="epiCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">☠️ Case Fatality Rate</div>
       <div class="calc-card">
-        <h4>Case Fatality Rate</h4>
         <div class="calc-field"><label>Deaths from the disease</label><input type="number" id="epiCfrDeaths" placeholder="e.g. 15"></div>
         <div class="calc-field"><label>Total cases of the disease</label><input type="number" id="epiCfrCases" placeholder="e.g. 300"></div>
         <button class="calc-btn" id="calcEpiCfrBtn">Calculate CFR</button>
         <div id="epiCfrResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="epiVeScreen">
+    <div class="back-link" data-back="epiCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">💉 Vaccine Efficacy / Effectiveness</div>
       <div class="calc-card">
-        <h4>Vaccine Efficacy / Effectiveness</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Compares attack rate in unvaccinated vs vaccinated groups.</p>
         <div class="calc-field"><label>Cases among vaccinated</label><input type="number" id="veCasesVax" placeholder="e.g. 10"></div>
         <div class="calc-field"><label>Total vaccinated</label><input type="number" id="veTotalVax" placeholder="e.g. 1000"></div>
@@ -4460,6 +4498,12 @@ const bmiCalcScreen = document.getElementById('bmiCalcScreen');
 const healthCalcScreen = document.getElementById('healthCalcScreen');
 const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
 const epiCalcScreen = document.getElementById('epiCalcScreen');
+const epiScreeningScreen = document.getElementById('epiScreeningScreen');
+const epiIncidenceScreen = document.getElementById('epiIncidenceScreen');
+const epiPrevalenceScreen = document.getElementById('epiPrevalenceScreen');
+const epiRiskOddsScreen = document.getElementById('epiRiskOddsScreen');
+const epiCfrScreen = document.getElementById('epiCfrScreen');
+const epiVeScreen = document.getElementById('epiVeScreen');
 const statsCalcScreen = document.getElementById('statsCalcScreen');
 const studyToolsCalcScreen = document.getElementById('studyToolsCalcScreen');
 const studyTimerScreen = document.getElementById('studyTimerScreen');
@@ -4487,13 +4531,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -4646,7 +4690,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -5101,6 +5145,30 @@ document.getElementById('goToIndicatorCalc').addEventListener('click', (e) => {
 document.getElementById('goToEpiCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(epiCalcScreen);
+});
+document.getElementById('goToEpiScreening').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(epiScreeningScreen);
+});
+document.getElementById('goToEpiIncidence').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(epiIncidenceScreen);
+});
+document.getElementById('goToEpiPrevalence').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(epiPrevalenceScreen);
+});
+document.getElementById('goToEpiRiskOdds').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(epiRiskOddsScreen);
+});
+document.getElementById('goToEpiCfr').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(epiCfrScreen);
+});
+document.getElementById('goToEpiVe').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(epiVeScreen);
 });
 document.getElementById('goToStatsCalc').addEventListener('click', (e) => {
   e.preventDefault();
