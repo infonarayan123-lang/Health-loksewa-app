@@ -2692,15 +2692,15 @@
         <div class="tt-icon">⚖️</div>
         <div class="tt-label">BMI</div>
       </a>
-      <a class="tool-tile" href="#" id="goToIndicatorCalc" data-search="indicator imr mmr cbr cdr cfr">
+      <a class="tool-tile" href="#" id="goToIndicatorCalc" data-search="indicator imr mmr cbr cdr cfr nmr u5mr neonatal under-5 mortality">
         <div class="tt-icon">📊</div>
         <div class="tt-label">Indicators</div>
       </a>
-      <a class="tool-tile" href="#" id="goToEpiCalc" data-search="epidemiology sensitivity specificity relative risk odds ratio rr or">
+      <a class="tool-tile" href="#" id="goToEpiCalc" data-search="epidemiology sensitivity specificity relative risk odds ratio rr or lr accuracy vaccine efficacy effectiveness">
         <div class="tt-icon">📈</div>
         <div class="tt-label">Epidemiology</div>
       </a>
-      <a class="tool-tile" href="#" id="goToStatsCalc" data-search="statistics research mean median mode sd sample size z-score">
+      <a class="tool-tile" href="#" id="goToStatsCalc" data-search="statistics research mean median mode sd sample size z-score confidence interval chi-square random number">
         <div class="tt-icon">📊</div>
         <div class="tt-label">Statistics</div>
       </a>
@@ -2901,6 +2901,22 @@
           <button class="calc-btn" id="calcCdrBtn">Calculate CDR</button>
           <div id="cdrResult"></div>
         </div>
+
+        <div class="calc-card">
+          <h4>Neonatal Mortality Rate (NMR)</h4>
+          <div class="calc-field"><label>Deaths under 28 days</label><input type="number" id="nmrDeaths" placeholder="e.g. 15"></div>
+          <div class="calc-field"><label>Live births</label><input type="number" id="nmrBirths" placeholder="e.g. 1000"></div>
+          <button class="calc-btn" id="calcNmrBtn">Calculate NMR</button>
+          <div id="nmrResult"></div>
+        </div>
+
+        <div class="calc-card">
+          <h4>Under-5 Mortality Rate (U5MR)</h4>
+          <div class="calc-field"><label>Deaths under 5 years</label><input type="number" id="u5mrDeaths" placeholder="e.g. 35"></div>
+          <div class="calc-field"><label>Live births</label><input type="number" id="u5mrBirths" placeholder="e.g. 1000"></div>
+          <button class="calc-btn" id="calcU5mrBtn">Calculate U5MR</button>
+          <div id="u5mrResult"></div>
+        </div>
         <!-- 🔧 More indicator calculators will be added here once Narayan shares the full list -->
       </div>
     </div>
@@ -2957,6 +2973,17 @@
         <button class="calc-btn" id="calcEpiCfrBtn">Calculate CFR</button>
         <div id="epiCfrResult"></div>
       </div>
+
+      <div class="calc-card">
+        <h4>Vaccine Efficacy / Effectiveness</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Compares attack rate in unvaccinated vs vaccinated groups.</p>
+        <div class="calc-field"><label>Cases among vaccinated</label><input type="number" id="veCasesVax" placeholder="e.g. 10"></div>
+        <div class="calc-field"><label>Total vaccinated</label><input type="number" id="veTotalVax" placeholder="e.g. 1000"></div>
+        <div class="calc-field"><label>Cases among unvaccinated</label><input type="number" id="veCasesUnvax" placeholder="e.g. 50"></div>
+        <div class="calc-field"><label>Total unvaccinated</label><input type="number" id="veTotalUnvax" placeholder="e.g. 1000"></div>
+        <button class="calc-btn" id="calcVeBtn">Calculate Vaccine Efficacy</button>
+        <div id="veResult"></div>
+      </div>
     </div>
   </div>
 
@@ -2997,6 +3024,42 @@
         </div>
         <button class="calc-btn" id="calcSampleSizeBtn">Calculate Sample Size</button>
         <div id="sampleSizeResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Confidence Interval (for a Mean)</h4>
+        <div class="calc-field"><label>Sample mean</label><input type="number" id="ciMean" placeholder="e.g. 70"></div>
+        <div class="calc-field"><label>Standard deviation</label><input type="number" id="ciSD" placeholder="e.g. 10"></div>
+        <div class="calc-field"><label>Sample size</label><input type="number" id="ciN" placeholder="e.g. 50"></div>
+        <div class="calc-field"><label>Confidence level (%)</label>
+          <select id="ciConfidence" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="90">90%</option>
+            <option value="95" selected>95%</option>
+            <option value="99">99%</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="calcCiBtn">Calculate CI</button>
+        <div id="ciResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Chi-square Test</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Enter a 2×2 contingency table.</p>
+        <div class="calc-field"><label>Group A, Outcome Yes</label><input type="number" id="chiA" placeholder="e.g. 40"></div>
+        <div class="calc-field"><label>Group A, Outcome No</label><input type="number" id="chiB" placeholder="e.g. 20"></div>
+        <div class="calc-field"><label>Group B, Outcome Yes</label><input type="number" id="chiC" placeholder="e.g. 25"></div>
+        <div class="calc-field"><label>Group B, Outcome No</label><input type="number" id="chiD" placeholder="e.g. 35"></div>
+        <button class="calc-btn" id="calcChiBtn">Calculate χ²</button>
+        <div id="chiResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Random Number Generator</h4>
+        <div class="calc-field"><label>Minimum</label><input type="number" id="rngMin" placeholder="e.g. 1"></div>
+        <div class="calc-field"><label>Maximum</label><input type="number" id="rngMax" placeholder="e.g. 100"></div>
+        <div class="calc-field"><label>How many numbers</label><input type="number" id="rngCount" placeholder="e.g. 5" value="5"></div>
+        <button class="calc-btn" id="calcRngBtn">Generate</button>
+        <div id="rngResult"></div>
       </div>
     </div>
   </div>
@@ -5088,6 +5151,29 @@ document.getElementById('calcCdrBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">CDR: ${cdr.toFixed(2)} per 1000 population</div>`;
 });
 
+document.getElementById('calcNmrBtn').addEventListener('click', () => {
+  const deaths = parseFloat(document.getElementById('nmrDeaths').value);
+  const births = parseFloat(document.getElementById('nmrBirths').value);
+  const resultEl = document.getElementById('nmrResult');
+  if(!births || births <= 0 || deaths < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const nmr = (deaths / births) * 1000;
+  resultEl.innerHTML = `<div class="calc-result">NMR: ${nmr.toFixed(2)} per 1000 live births</div>`;
+});
+document.getElementById('calcU5mrBtn').addEventListener('click', () => {
+  const deaths = parseFloat(document.getElementById('u5mrDeaths').value);
+  const births = parseFloat(document.getElementById('u5mrBirths').value);
+  const resultEl = document.getElementById('u5mrResult');
+  if(!births || births <= 0 || deaths < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const u5mr = (deaths / births) * 1000;
+  resultEl.innerHTML = `<div class="calc-result">U5MR: ${u5mr.toFixed(2)} per 1000 live births</div>`;
+});
+
 // ---------- Epidemiology Calculator ----------
 document.getElementById('calcScreeningBtn').addEventListener('click', () => {
   const tp = parseFloat(document.getElementById('epiTP').value);
@@ -5103,11 +5189,18 @@ document.getElementById('calcScreeningBtn').addEventListener('click', () => {
   const specificity = (tn / (tn + fp)) * 100;
   const ppv = (tp + fp) > 0 ? (tp / (tp + fp)) * 100 : 0;
   const npv = (tn + fn) > 0 ? (tn / (tn + fn)) * 100 : 0;
+  const accuracy = ((tp + tn) / (tp + fp + fn + tn)) * 100;
+  const sensDecimal = sensitivity / 100, specDecimal = specificity / 100;
+  const lrPlus = (1 - specDecimal) > 0 ? sensDecimal / (1 - specDecimal) : Infinity;
+  const lrMinus = specDecimal > 0 ? (1 - sensDecimal) / specDecimal : Infinity;
   resultEl.innerHTML = `
     <div class="calc-result">Sensitivity: ${sensitivity.toFixed(2)}%</div>
     <div class="calc-result">Specificity: ${specificity.toFixed(2)}%</div>
     <div class="calc-result">PPV: ${ppv.toFixed(2)}%</div>
     <div class="calc-result">NPV: ${npv.toFixed(2)}%</div>
+    <div class="calc-result">Accuracy: ${accuracy.toFixed(2)}%</div>
+    <div class="calc-result">LR+: ${isFinite(lrPlus) ? lrPlus.toFixed(2) : '—'}</div>
+    <div class="calc-result">LR−: ${isFinite(lrMinus) ? lrMinus.toFixed(2) : '—'}</div>
   `;
 });
 document.getElementById('calcIncidenceBtn').addEventListener('click', () => {
@@ -5169,7 +5262,28 @@ document.getElementById('calcEpiCfrBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">CFR: ${cfr.toFixed(2)}%</div>`;
 });
 
+document.getElementById('calcVeBtn').addEventListener('click', () => {
+  const casesVax = parseFloat(document.getElementById('veCasesVax').value);
+  const totalVax = parseFloat(document.getElementById('veTotalVax').value);
+  const casesUnvax = parseFloat(document.getElementById('veCasesUnvax').value);
+  const totalUnvax = parseFloat(document.getElementById('veTotalUnvax').value);
+  const resultEl = document.getElementById('veResult');
+  if([casesVax, totalVax, casesUnvax, totalUnvax].some(v => isNaN(v) || v < 0) || totalVax <= 0 || totalUnvax <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const arVax = casesVax / totalVax;
+  const arUnvax = casesUnvax / totalUnvax;
+  if(arUnvax === 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Attack rate among unvaccinated can't be zero for this calculation.</p>`;
+    return;
+  }
+  const ve = ((arUnvax - arVax) / arUnvax) * 100;
+  resultEl.innerHTML = `<div class="calc-result">Vaccine Efficacy: ${ve.toFixed(2)}%</div>`;
+});
+
 // ---------- Statistics & Research ----------
+
 document.getElementById('calcStatsBtn').addEventListener('click', () => {
   const raw = document.getElementById('statsInput').value;
   const resultEl = document.getElementById('statsResult');
@@ -5231,6 +5345,69 @@ document.getElementById('calcSampleSizeBtn').addEventListener('click', () => {
     <div class="calc-result">Required Sample Size: ${finalN}</div>
     <div class="calc-result" style="font-size:11.5px; opacity:0.85;">At ${confidence}% confidence, ±${marginPct}% margin of error${population ? ', finite population corrected' : ''}</div>
   `;
+});
+
+document.getElementById('calcCiBtn').addEventListener('click', () => {
+  const mean = parseFloat(document.getElementById('ciMean').value);
+  const sd = parseFloat(document.getElementById('ciSD').value);
+  const n = parseFloat(document.getElementById('ciN').value);
+  const confidence = document.getElementById('ciConfidence').value;
+  const resultEl = document.getElementById('ciResult');
+  if(isNaN(mean) || !sd || sd <= 0 || !n || n <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const zTable = { '90': 1.645, '95': 1.96, '99': 2.576 };
+  const z = zTable[confidence];
+  const se = sd / Math.sqrt(n);
+  const margin = z * se;
+  resultEl.innerHTML = `
+    <div class="calc-result">${confidence}% CI: ${(mean - margin).toFixed(2)} to ${(mean + margin).toFixed(2)}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Standard Error: ${se.toFixed(3)}</div>
+  `;
+});
+
+document.getElementById('calcChiBtn').addEventListener('click', () => {
+  const A = parseFloat(document.getElementById('chiA').value);
+  const B = parseFloat(document.getElementById('chiB').value);
+  const C = parseFloat(document.getElementById('chiC').value);
+  const D = parseFloat(document.getElementById('chiD').value);
+  const resultEl = document.getElementById('chiResult');
+  if([A, B, C, D].some(v => isNaN(v) || v < 0)){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers for all four boxes.</p>`;
+    return;
+  }
+  const total = A + B + C + D;
+  if(total === 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const chiSquare = (total * Math.pow((A * D) - (B * C), 2)) / ((A + B) * (C + D) * (A + C) * (B + D));
+  let significance;
+  if(chiSquare >= 10.828) significance = 'Significant at p < 0.001';
+  else if(chiSquare >= 6.635) significance = 'Significant at p < 0.01';
+  else if(chiSquare >= 3.841) significance = 'Significant at p < 0.05';
+  else significance = 'Not significant at p < 0.05';
+  resultEl.innerHTML = `
+    <div class="calc-result">χ² = ${chiSquare.toFixed(3)} (df = 1)</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">${significance}</div>
+  `;
+});
+
+document.getElementById('calcRngBtn').addEventListener('click', () => {
+  const min = parseFloat(document.getElementById('rngMin').value);
+  const max = parseFloat(document.getElementById('rngMax').value);
+  const count = parseInt(document.getElementById('rngCount').value, 10) || 5;
+  const resultEl = document.getElementById('rngResult');
+  if(isNaN(min) || isNaN(max) || max <= min || count <= 0 || count > 100){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers (max 100 numbers at once).</p>`;
+    return;
+  }
+  const numbers = [];
+  for(let i = 0; i < count; i++){
+    numbers.push(Math.floor(Math.random() * (max - min + 1)) + min);
+  }
+  resultEl.innerHTML = `<div class="calc-result">${numbers.join(', ')}</div>`;
 });
 
 // ---------- Study & Exam Tools ----------
