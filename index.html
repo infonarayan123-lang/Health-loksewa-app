@@ -1109,6 +1109,18 @@
   .hub-tile.t4{ background:linear-gradient(135deg,#24282C,#18191C); }
   .hub-tile.t5{ background:linear-gradient(135deg,#2A2A2E,#1C1C1F); }
   .hub-tile.t6{ background:linear-gradient(135deg,#282420,#1A1714); }
+  /* Smart Tools' own compact 4-per-row icon grid — deliberately smaller/denser than the
+     hub-tile cards elsewhere, since Smart Tools is meant to hold many tools over time. */
+  .tool-grid-4{ display:grid; grid-template-columns:repeat(4, 1fr); gap:9px; }
+  .tool-tile{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    background:var(--panel); border:1px solid rgba(255,255,255,0.07);
+    border-radius:14px; padding:14px 4px; text-decoration:none;
+    box-shadow:0 0 10px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .tool-tile .tt-icon{ font-size:23px; }
+  .tool-tile .tt-label{ font-size:10px; font-weight:700; color:var(--ink); text-align:center; line-height:1.2; }
+  .tool-tile.tool-hidden{ display:none; }
   .section-title{ font-family:'Tinos',serif; font-size:17px; margin:8px 0 12px; }
   .back-link{
     display:inline-flex; align-items:center; gap:6px;
@@ -2665,39 +2677,47 @@
   <div class="screen" id="calculatorScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">🧮 Calculator Hub</div>
-      <div class="dash-grid">
-      <a class="dash-card hub-tile t1" href="#" id="goToBasicCalc">
-        <div class="dc-icon">🔢</div>
-        <div class="dc-label">Calculator</div>
-        <div class="dc-sub">Quick arithmetic</div>
+      <div class="section-title">🧮 Smart Tools</div>
+      <input type="text" class="formula-search-box" id="toolsSearchBox" placeholder="🔍 Search Smart Tools…" style="margin-bottom:14px;">
+      <div id="toolsGrid" class="tool-grid-4">
+      <a class="tool-tile" href="#" id="goToHealthCalc" data-search="bmr ideal weight whr waist hip bsa body fat pregnancy due date child age">
+        <div class="tt-icon">🩺</div>
+        <div class="tt-label">Health Calc</div>
       </a>
-      <a class="dash-card hub-tile t2" href="#" id="goToBmiCalc">
-        <div class="dc-icon">⚖️</div>
-        <div class="dc-label">BMI Calculator</div>
-        <div class="dc-sub">Weight &amp; height</div>
+      <a class="tool-tile" href="#" id="goToBasicCalc" data-search="calculator arithmetic">
+        <div class="tt-icon">🔢</div>
+        <div class="tt-label">Calculator</div>
       </a>
-      <a class="dash-card hub-tile t3" href="#" id="goToIndicatorCalc">
-        <div class="dc-icon">📊</div>
-        <div class="dc-label">Indicator Calculator</div>
-        <div class="dc-sub">IMR, MMR &amp; more</div>
+      <a class="tool-tile" href="#" id="goToBmiCalc" data-search="bmi weight height body mass index">
+        <div class="tt-icon">⚖️</div>
+        <div class="tt-label">BMI</div>
       </a>
-      <a class="dash-card hub-tile t4" href="#" id="goToEpiCalc">
-        <div class="dc-icon">📈</div>
-        <div class="dc-label">Epidemiology Calculator</div>
-        <div class="dc-sub">Sensitivity, RR, OR</div>
+      <a class="tool-tile" href="#" id="goToIndicatorCalc" data-search="indicator imr mmr cbr cdr cfr">
+        <div class="tt-icon">📊</div>
+        <div class="tt-label">Indicators</div>
       </a>
-      <a class="dash-card hub-tile t5" href="#" id="goToStatsCalc">
-        <div class="dc-icon">📊</div>
-        <div class="dc-label">Statistics &amp; Research</div>
-        <div class="dc-sub">Mean, SD, sample size</div>
+      <a class="tool-tile" href="#" id="goToEpiCalc" data-search="epidemiology sensitivity specificity relative risk odds ratio rr or">
+        <div class="tt-icon">📈</div>
+        <div class="tt-label">Epidemiology</div>
       </a>
-      <a class="dash-card hub-tile t6" href="#" id="goToStudyToolsCalc">
-        <div class="dc-icon">📝</div>
-        <div class="dc-label">Study &amp; Exam Tools</div>
-        <div class="dc-sub">Negative marking</div>
+      <a class="tool-tile" href="#" id="goToStatsCalc" data-search="statistics research mean median mode sd sample size z-score">
+        <div class="tt-icon">📊</div>
+        <div class="tt-label">Statistics</div>
+      </a>
+      <a class="tool-tile" href="#" id="goToStudyToolsCalc" data-search="study exam negative marking score">
+        <div class="tt-icon">📝</div>
+        <div class="tt-label">Exam Tools</div>
+      </a>
+      <a class="tool-tile" href="#" id="goToImmunization" data-search="immunization vaccine schedule nepal nip">
+        <div class="tt-icon">💉</div>
+        <div class="tt-label">Immunization</div>
+      </a>
+      <a class="tool-tile" href="#" id="goToPension" data-search="pension retirement civil service government ssf social security sip investment">
+        <div class="tt-icon">💰</div>
+        <div class="tt-label">Pension &amp; SSF</div>
       </a>
       </div>
+      <p id="toolsNoResults" style="display:none; text-align:center; color:var(--ink-soft); font-size:13px; margin-top:20px;">No tools match your search.</p>
     </div>
   </div>
 
@@ -2723,6 +2743,107 @@
         <div class="calc-field"><label>Height (cm)</label><input type="number" id="bmiHeight" placeholder="e.g. 165"></div>
         <button class="calc-btn" id="calcBmiBtn">Calculate BMI</button>
         <div id="bmiResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEALTH CALCULATORS -->
+  <div class="screen" id="healthCalcScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🩺 Health Calculators</div>
+
+      <div class="calc-card">
+        <h4>BMR Calculator (Basal Metabolic Rate)</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Mifflin-St Jeor equation.</p>
+        <div class="calc-field"><label>Sex</label>
+          <select id="bmrSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Age (years)</label><input type="number" id="bmrAge" placeholder="e.g. 24"></div>
+        <div class="calc-field"><label>Weight (kg)</label><input type="number" id="bmrWeight" placeholder="e.g. 60"></div>
+        <div class="calc-field"><label>Height (cm)</label><input type="number" id="bmrHeight" placeholder="e.g. 165"></div>
+        <button class="calc-btn" id="calcBmrBtn">Calculate BMR</button>
+        <div id="bmrResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Ideal Body Weight</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Devine formula — shown as an estimate, not a required target.</p>
+        <div class="calc-field"><label>Sex</label>
+          <select id="ibwSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Height (cm)</label><input type="number" id="ibwHeight" placeholder="e.g. 165"></div>
+        <button class="calc-btn" id="calcIbwBtn">Calculate Ideal Weight</button>
+        <div id="ibwResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Waist-to-Hip Ratio (WHR)</h4>
+        <div class="calc-field"><label>Sex</label>
+          <select id="whrSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Waist (cm)</label><input type="number" id="whrWaist" placeholder="e.g. 82"></div>
+        <div class="calc-field"><label>Hip (cm)</label><input type="number" id="whrHip" placeholder="e.g. 98"></div>
+        <button class="calc-btn" id="calcWhrBtn">Calculate WHR</button>
+        <div id="whrResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Waist-to-Height Ratio</h4>
+        <div class="calc-field"><label>Waist (cm)</label><input type="number" id="whtrWaist" placeholder="e.g. 82"></div>
+        <div class="calc-field"><label>Height (cm)</label><input type="number" id="whtrHeight" placeholder="e.g. 165"></div>
+        <button class="calc-btn" id="calcWhtrBtn">Calculate Ratio</button>
+        <div id="whtrResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Body Surface Area (BSA)</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Mosteller formula.</p>
+        <div class="calc-field"><label>Height (cm)</label><input type="number" id="bsaHeight" placeholder="e.g. 165"></div>
+        <div class="calc-field"><label>Weight (kg)</label><input type="number" id="bsaWeight" placeholder="e.g. 60"></div>
+        <button class="calc-btn" id="calcBsaBtn">Calculate BSA</button>
+        <div id="bsaResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Body Fat % Estimator</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">US Navy method — clearly labeled as an estimate.</p>
+        <div class="calc-field"><label>Sex</label>
+          <select id="bfSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Height (cm)</label><input type="number" id="bfHeight" placeholder="e.g. 165"></div>
+        <div class="calc-field"><label>Neck (cm)</label><input type="number" id="bfNeck" placeholder="e.g. 35"></div>
+        <div class="calc-field"><label>Waist (cm)</label><input type="number" id="bfWaist" placeholder="e.g. 82"></div>
+        <div class="calc-field" id="bfHipField" style="display:none;"><label>Hip (cm) — women only</label><input type="number" id="bfHip" placeholder="e.g. 98"></div>
+        <button class="calc-btn" id="calcBfBtn">Estimate Body Fat %</button>
+        <div id="bfResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Pregnancy Due Date &amp; Gestational Age</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Naegele's rule (280 days / 40 weeks from LMP) — an estimate, not a substitute for clinical assessment.</p>
+        <div class="calc-field"><label>First day of last menstrual period (LMP)</label><input type="date" id="eddLmp"></div>
+        <button class="calc-btn" id="calcEddBtn">Calculate Due Date</button>
+        <div id="eddResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>Child Age Calculator</h4>
+        <div class="calc-field"><label>Date of birth</label><input type="date" id="childDob"></div>
+        <button class="calc-btn" id="calcChildAgeBtn">Calculate Age</button>
+        <div id="childAgeResult"></div>
       </div>
     </div>
   </div>
@@ -2895,6 +3016,60 @@
         <div class="calc-field"><label>Negative marking (%)</label><input type="number" id="nmNegative" placeholder="e.g. 25" value="25"></div>
         <button class="calc-btn" id="calcNegativeMarkingBtn">Calculate Score</button>
         <div id="negativeMarkingResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMMUNIZATION SCHEDULE -->
+  <div class="screen" id="immunizationScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">💉 Immunization Schedule</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;">Nepal's National Immunization Programme — for general reference. Always confirm details with a health facility.</p>
+      <div id="immunizationContent">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENSION ESTIMATOR -->
+  <div class="screen" id="pensionScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">💰 Pension &amp; Savings Tools</div>
+      <div class="calc-card" style="border:1.5px solid var(--gold); margin-bottom:16px;">
+        <p style="font-size:11.5px; color:var(--ink);"><b style="color:var(--gold);">⚠️ Estimate only, not official.</b> This uses the standard accrual formula for Nepal's pre-2076 (Legacy) civil service pension scheme. It does not account for caps, dearness allowance adjustments, or scheme-specific rules that may apply to you. For your actual pension amount, confirm with the Pension Management Office (pension.gov.np). This tool does not cover the Contributory Pension scheme (for those appointed after Shrawan 1, 2076) or the private-sector SSF scheme, which use different calculations entirely.</p>
+      </div>
+      <div class="calc-card">
+        <h4>Legacy Government Pension (pre-2076 appointees)</h4>
+        <div class="calc-field"><label>Total years of service</label><input type="number" id="pensionYears" placeholder="e.g. 25"></div>
+        <div class="calc-field"><label>Last take-home basic salary (monthly, Rs.)</label><input type="number" id="pensionSalary" placeholder="e.g. 45000"></div>
+        <div class="calc-field"><label>Employee category</label>
+          <select id="pensionCategory" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="50">Civil Service / Teacher (÷50)</option>
+            <option value="40">Lower-rank Military / Police (÷40)</option>
+          </select>
+        </div>
+        <button class="calc-btn" id="calcPensionBtn">Estimate Pension</button>
+        <div id="pensionResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>SSF Contribution Calculator</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Nepal's Social Security Fund — Employee 11% + Employer 20% = 31% of basic salary. Calculated on basic salary only (allowances excluded). Per Social Security Act 2074 &amp; Regulations 2075.</p>
+        <div class="calc-field"><label>Monthly basic salary (Rs.)</label><input type="number" id="ssfSalary" placeholder="e.g. 40000"></div>
+        <button class="calc-btn" id="calcSsfBtn">Calculate SSF</button>
+        <div id="ssfResult"></div>
+      </div>
+
+      <div class="calc-card">
+        <h4>SIP Calculator</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Estimate the future value of a monthly Systematic Investment Plan.</p>
+        <div class="calc-field"><label>Monthly investment (Rs.)</label><input type="number" id="sipAmount" placeholder="e.g. 5000"></div>
+        <div class="calc-field"><label>Expected annual return (%)</label><input type="number" id="sipReturn" placeholder="e.g. 12" value="12"></div>
+        <div class="calc-field"><label>Investment period (years)</label><input type="number" id="sipYears" placeholder="e.g. 10"></div>
+        <button class="calc-btn" id="calcSipBtn">Calculate SIP</button>
+        <div id="sipResult"></div>
       </div>
     </div>
   </div>
@@ -3874,7 +4049,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyvbPCSY3KwYNUZi77blTDxi_pzOsKufj0ai6YZ6Kn6TkFGHYoAdPfOOmKDPp_qkQsPBg/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxPc28xBXUaEGqeGP-Cs79yB3ob0kWYU0gptfjSvvVoItDve6yPvsBtvYs5yLYwQFy1qg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -3930,10 +4105,13 @@ const dictionaryScreen = document.getElementById('dictionaryScreen');
 const calculatorScreen = document.getElementById('calculatorScreen');
 const basicCalcScreen = document.getElementById('basicCalcScreen');
 const bmiCalcScreen = document.getElementById('bmiCalcScreen');
+const healthCalcScreen = document.getElementById('healthCalcScreen');
 const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
 const epiCalcScreen = document.getElementById('epiCalcScreen');
 const statsCalcScreen = document.getElementById('statsCalcScreen');
 const studyToolsCalcScreen = document.getElementById('studyToolsCalcScreen');
+const immunizationScreen = document.getElementById('immunizationScreen');
+const pensionScreen = document.getElementById('pensionScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
@@ -3953,7 +4131,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, immunizationScreen, pensionScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -4009,6 +4187,7 @@ function showScreen(el){
   if(appEl) appEl.scrollTop = 0;
   updateBottomNav(el);
   if(el === learnScreen) resetGlobalSearch();
+  if(el === calculatorScreen) resetToolsSearch();
   if(el === homeScreen){
     const activeTab = document.querySelector('.home-chart-tab.active');
     renderHomeChart(activeTab ? activeTab.dataset.mode : 'daily');
@@ -4111,7 +4290,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, indicatorCalcScreen, epiCalcScreen, statsCalcScreen, studyToolsCalcScreen, immunizationScreen, pensionScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -4571,6 +4750,36 @@ document.getElementById('goToStudyToolsCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(studyToolsCalcScreen);
 });
+document.getElementById('goToImmunization').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(immunizationScreen);
+  renderImmunization();
+});
+document.getElementById('goToPension').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(pensionScreen);
+});
+
+// ---------- Smart Tools search: filters the tile grid client-side by tool name/keywords ----------
+function resetToolsSearch(){
+  const box = document.getElementById('toolsSearchBox');
+  if(box) box.value = '';
+  document.querySelectorAll('#toolsGrid .tool-tile').forEach(tile => tile.classList.remove('tool-hidden'));
+  document.getElementById('toolsNoResults').style.display = 'none';
+}
+document.getElementById('toolsSearchBox').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  const tiles = document.querySelectorAll('#toolsGrid .tool-tile');
+  let visibleCount = 0;
+  tiles.forEach(tile => {
+    const label = tile.querySelector('.tt-label').textContent.toLowerCase();
+    const keywords = (tile.dataset.search || '').toLowerCase();
+    const matches = q === '' || label.includes(q) || keywords.includes(q);
+    tile.classList.toggle('tool-hidden', !matches);
+    if(matches) visibleCount++;
+  });
+  document.getElementById('toolsNoResults').style.display = (visibleCount === 0) ? 'block' : 'none';
+});
 
 // ---------- Basic Calculator (normal arithmetic calculator) ----------
 let basicCalcExpression = '';
@@ -4882,6 +5091,82 @@ document.getElementById('calcNegativeMarkingBtn').addEventListener('click', () =
   `;
 });
 
+// ---------- Pension Estimator: Legacy scheme, standard accrual formula. Clearly labeled as
+// an estimate — see the disclaimer card on the screen itself for what this doesn't account for. ----------
+document.getElementById('calcPensionBtn').addEventListener('click', () => {
+  const years = parseFloat(document.getElementById('pensionYears').value);
+  const salary = parseFloat(document.getElementById('pensionSalary').value);
+  const denominator = parseFloat(document.getElementById('pensionCategory').value);
+  const resultEl = document.getElementById('pensionResult');
+  if(!years || years <= 0 || !salary || salary <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  if(years < 20){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">The Legacy scheme generally requires a minimum of 20 years of service for a lifelong monthly pension — with fewer years, different rules may apply. This estimate isn't meaningful below 20 years.</p>`;
+    return;
+  }
+  const monthlyPension = (years * salary) / denominator;
+  const pctOfSalary = (monthlyPension / salary) * 100;
+  resultEl.innerHTML = `
+    <div class="calc-result">Estimated Monthly Pension: Rs. ${monthlyPension.toFixed(0)}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">≈ ${pctOfSalary.toFixed(1)}% of your last basic salary</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">This is an estimate using the standard accrual formula — your actual pension may differ. Confirm with the Pension Management Office.</p>
+  `;
+});
+
+// ---------- SSF Contribution Calculator: rates per Social Security Act 2074 & Regulations
+// 2075 — Employee 11%, Employer 20% (split: Medical 1%, Accident/Disability 1.4%,
+// Life Insurance 0.27%, Old Age Pension 17.33%), calculated on basic salary only. ----------
+document.getElementById('calcSsfBtn').addEventListener('click', () => {
+  const salary = parseFloat(document.getElementById('ssfSalary').value);
+  const resultEl = document.getElementById('ssfResult');
+  if(!salary || salary <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a valid basic salary.</p>`;
+    return;
+  }
+  const employee = salary * 0.11;
+  const employer = salary * 0.20;
+  const total = employee + employer;
+  const medical = salary * 0.01;
+  const accident = salary * 0.014;
+  const lifeIns = salary * 0.0027;
+  const oldAge = salary * 0.1733;
+  resultEl.innerHTML = `
+    <div class="calc-result">Employee (11%): Rs. ${employee.toFixed(0)}/month</div>
+    <div class="calc-result">Employer (20%): Rs. ${employer.toFixed(0)}/month</div>
+    <div class="calc-result">Total SSF (31%): Rs. ${total.toFixed(0)}/month</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">Employer's 20% breakdown — Medical &amp; Health: Rs. ${medical.toFixed(0)} · Accident &amp; Disability: Rs. ${accident.toFixed(0)} · Life Insurance: Rs. ${lifeIns.toFixed(0)} · Old Age Pension: Rs. ${oldAge.toFixed(0)}</p>
+  `;
+});
+
+// ---------- SIP Calculator: standard compound-growth formula for monthly investments ----------
+document.getElementById('calcSipBtn').addEventListener('click', () => {
+  const monthly = parseFloat(document.getElementById('sipAmount').value);
+  const annualReturn = parseFloat(document.getElementById('sipReturn').value);
+  const years = parseFloat(document.getElementById('sipYears').value);
+  const resultEl = document.getElementById('sipResult');
+  if(!monthly || monthly <= 0 || !years || years <= 0 || isNaN(annualReturn) || annualReturn < 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const monthlyRate = (annualReturn / 100) / 12;
+  const months = years * 12;
+  let futureValue;
+  if(monthlyRate === 0){
+    futureValue = monthly * months;
+  } else {
+    futureValue = monthly * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+  }
+  const invested = monthly * months;
+  const gains = futureValue - invested;
+  resultEl.innerHTML = `
+    <div class="calc-result">Future Value: Rs. ${futureValue.toFixed(0)}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Invested: Rs. ${invested.toFixed(0)} · Estimated Gains: Rs. ${gains.toFixed(0)}</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">Assumes a constant return rate for illustration — actual investment returns vary.</p>
+  `;
+});
+
 // ---------- FAQs ----------
 document.getElementById('goToFaqsFromHub').addEventListener('click', (e) => {
   e.preventDefault();
@@ -5107,6 +5392,48 @@ async function renderHealthGuide(){
     });
   }catch(err){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load the Health Guide. Check your internet connection.</p>`;
+  }
+}
+
+// ---------- Immunization Schedule: Sheet-driven, grouped by category, shows Source +
+// Last Updated per row so the content stays honestly attributable rather than presented
+// as unconditionally authoritative. ----------
+async function renderImmunization(){
+  const wrap = document.getElementById('immunizationContent');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=immunization`);
+    const rows = await res.json();
+    const clean = rows.filter(r => r && r.Vaccine);
+
+    if(clean.length === 0){
+      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Immunization schedule not added yet — check back soon!</p>`;
+      return;
+    }
+
+    const groups = {};
+    clean.forEach(r => {
+      const cat = r.Category || 'General';
+      if(!groups[cat]) groups[cat] = [];
+      groups[cat].push(r);
+    });
+
+    wrap.innerHTML = Object.keys(groups).map(cat => `
+      <div class="content-card" style="margin-bottom:14px;">
+        <h4 style="margin-bottom:10px;">${cat}</h4>
+        ${groups[cat].map(r => `
+          <div style="padding:10px 0; border-bottom:1px solid var(--line);">
+            <div style="color:var(--ink); font-size:13.5px; font-weight:700;">${r.Vaccine}</div>
+            <div style="color:var(--ink-soft); font-size:11.5px; margin-top:2px;">${r.Age || ''}${r.Route ? ' · ' + r.Route : ''}</div>
+            ${r.Diseases ? `<div style="color:var(--ink-soft); font-size:11.5px; margin-top:2px;">Protects against: ${r.Diseases}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `).join('') + `
+      <p style="font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:6px;">Source: ${clean[0].Source || 'DoHS/CHD guidelines'}${clean[0].LastUpdated ? ' · Updated ' + clean[0].LastUpdated : ''} — please confirm with a health facility for current details.</p>
+    `;
+  }catch(err){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load the Immunization Schedule. Check your internet connection.</p>`;
   }
 }
 
