@@ -2768,9 +2768,24 @@
     <div class="back-link" data-back="calculatorHub">← Back</div>
     <div class="home-body">
       <div class="section-title">🩺 Health Calculators</div>
+      <div class="tool-grid-4">
+        <a class="tool-tile" href="#" id="goToHcBmr"><div class="tt-icon">🔥</div><div class="tt-label">BMR</div></a>
+        <a class="tool-tile" href="#" id="goToHcIbw"><div class="tt-icon">⚖️</div><div class="tt-label">Ideal Weight</div></a>
+        <a class="tool-tile" href="#" id="goToHcWhr"><div class="tt-icon">📏</div><div class="tt-label">WHR</div></a>
+        <a class="tool-tile" href="#" id="goToHcWhtr"><div class="tt-icon">📐</div><div class="tt-label">Waist:Height</div></a>
+        <a class="tool-tile" href="#" id="goToHcBsa"><div class="tt-icon">📊</div><div class="tt-label">BSA</div></a>
+        <a class="tool-tile" href="#" id="goToHcBf"><div class="tt-icon">💪</div><div class="tt-label">Body Fat %</div></a>
+        <a class="tool-tile" href="#" id="goToHcEdd"><div class="tt-icon">🤰</div><div class="tt-label">Due Date</div></a>
+        <a class="tool-tile" href="#" id="goToHcAge"><div class="tt-icon">🎂</div><div class="tt-label">Age</div></a>
+      </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcBmrScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔥 BMR Calculator</div>
       <div class="calc-card">
-        <h4>BMR Calculator (Basal Metabolic Rate)</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Mifflin-St Jeor equation.</p>
         <div class="calc-field"><label>Sex</label>
           <select id="bmrSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
@@ -2784,9 +2799,14 @@
         <button class="calc-btn" id="calcBmrBtn">Calculate BMR</button>
         <div id="bmrResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcIbwScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚖️ Ideal Body Weight</div>
       <div class="calc-card">
-        <h4>Ideal Body Weight</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Devine formula — shown as an estimate, not a required target.</p>
         <div class="calc-field"><label>Sex</label>
           <select id="ibwSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
@@ -2798,9 +2818,14 @@
         <button class="calc-btn" id="calcIbwBtn">Calculate Ideal Weight</button>
         <div id="ibwResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcWhrScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📏 Waist-to-Hip Ratio</div>
       <div class="calc-card">
-        <h4>Waist-to-Hip Ratio (WHR)</h4>
         <div class="calc-field"><label>Sex</label>
           <select id="whrSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
             <option value="male">Male</option>
@@ -2812,26 +2837,41 @@
         <button class="calc-btn" id="calcWhrBtn">Calculate WHR</button>
         <div id="whrResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcWhtrScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📐 Waist-to-Height Ratio</div>
       <div class="calc-card">
-        <h4>Waist-to-Height Ratio</h4>
         <div class="calc-field"><label>Waist (cm)</label><input type="number" id="whtrWaist" placeholder="e.g. 82"></div>
         <div class="calc-field"><label>Height (cm)</label><input type="number" id="whtrHeight" placeholder="e.g. 165"></div>
         <button class="calc-btn" id="calcWhtrBtn">Calculate Ratio</button>
         <div id="whtrResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcBsaScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📊 Body Surface Area</div>
       <div class="calc-card">
-        <h4>Body Surface Area (BSA)</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Mosteller formula.</p>
         <div class="calc-field"><label>Height (cm)</label><input type="number" id="bsaHeight" placeholder="e.g. 165"></div>
         <div class="calc-field"><label>Weight (kg)</label><input type="number" id="bsaWeight" placeholder="e.g. 60"></div>
         <button class="calc-btn" id="calcBsaBtn">Calculate BSA</button>
         <div id="bsaResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcBfScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">💪 Body Fat % Estimator</div>
       <div class="calc-card">
-        <h4>Body Fat % Estimator</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">US Navy method — clearly labeled as an estimate.</p>
         <div class="calc-field"><label>Sex</label>
           <select id="bfSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
@@ -2846,17 +2886,27 @@
         <button class="calc-btn" id="calcBfBtn">Estimate Body Fat %</button>
         <div id="bfResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcEddScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🤰 Pregnancy Due Date</div>
       <div class="calc-card">
-        <h4>Pregnancy Due Date &amp; Gestational Age</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Naegele's rule (280 days / 40 weeks from LMP) — an estimate, not a substitute for clinical assessment.</p>
         <div class="calc-field"><label>First day of last menstrual period (LMP)</label><input type="date" id="eddLmp"></div>
         <button class="calc-btn" id="calcEddBtn">Calculate Due Date</button>
         <div id="eddResult"></div>
       </div>
+    </div>
+  </div>
 
+  <div class="screen" id="hcAgeScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🎂 Age Calculator</div>
       <div class="calc-card">
-        <h4>Age Calculator</h4>
         <div class="calc-field"><label>Date of birth</label><input type="date" id="childDob"></div>
         <button class="calc-btn" id="calcChildAgeBtn">Calculate Age</button>
         <div id="childAgeResult"></div>
@@ -2869,71 +2919,119 @@
     <div class="back-link" data-back="calculatorHub">← Back</div>
     <div class="home-body">
       <div class="section-title">📊 Indicator Calculator</div>
-      <div id="indicatorCalcList">
-        <div class="calc-card">
-          <h4>IMR Calculator (Infant Mortality Rate)</h4>
-          <div class="calc-field"><label>Infant deaths (under 1 year)</label><input type="number" id="imrDeaths" placeholder="e.g. 25"></div>
-          <div class="calc-field"><label>Live births</label><input type="number" id="imrBirths" placeholder="e.g. 1000"></div>
-          <button class="calc-btn" id="calcImrBtn">Calculate IMR</button>
-          <div id="imrResult"></div>
-        </div>
+      <div class="tool-grid-4">
+        <a class="tool-tile" href="#" id="goToIcImr"><div class="tt-icon">👶</div><div class="tt-label">IMR</div></a>
+        <a class="tool-tile" href="#" id="goToIcMmr"><div class="tt-icon">🤱</div><div class="tt-label">MMR</div></a>
+        <a class="tool-tile" href="#" id="goToIcCfr"><div class="tt-icon">☠️</div><div class="tt-label">CFR</div></a>
+        <a class="tool-tile" href="#" id="goToIcAttack"><div class="tt-icon">🦠</div><div class="tt-label">Attack Rate</div></a>
+        <a class="tool-tile" href="#" id="goToIcCbr"><div class="tt-icon">📈</div><div class="tt-label">CBR</div></a>
+        <a class="tool-tile" href="#" id="goToIcCdr"><div class="tt-icon">📉</div><div class="tt-label">CDR</div></a>
+        <a class="tool-tile" href="#" id="goToIcNmr"><div class="tt-icon">🍼</div><div class="tt-label">NMR</div></a>
+        <a class="tool-tile" href="#" id="goToIcU5mr"><div class="tt-icon">🧒</div><div class="tt-label">U5MR</div></a>
+      </div>
+    </div>
+  </div>
 
-        <div class="calc-card">
-          <h4>MMR Calculator (Maternal Mortality Ratio)</h4>
-          <div class="calc-field"><label>Maternal deaths</label><input type="number" id="mmrDeaths" placeholder="e.g. 15"></div>
-          <div class="calc-field"><label>Live births</label><input type="number" id="mmrBirths" placeholder="e.g. 10000"></div>
-          <button class="calc-btn" id="calcMmrBtn">Calculate MMR</button>
-          <div id="mmrResult"></div>
-        </div>
+  <div class="screen" id="icImrScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">👶 IMR (Infant Mortality Rate)</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Infant deaths (under 1 year)</label><input type="number" id="imrDeaths" placeholder="e.g. 25"></div>
+        <div class="calc-field"><label>Live births</label><input type="number" id="imrBirths" placeholder="e.g. 1000"></div>
+        <button class="calc-btn" id="calcImrBtn">Calculate IMR</button>
+        <div id="imrResult"></div>
+      </div>
+    </div>
+  </div>
 
-        <div class="calc-card">
-          <h4>Case Fatality Rate (CFR)</h4>
-          <div class="calc-field"><label>Deaths from the disease</label><input type="number" id="cfrDeaths" placeholder="e.g. 20"></div>
-          <div class="calc-field"><label>Total cases of the disease</label><input type="number" id="cfrCases" placeholder="e.g. 400"></div>
-          <button class="calc-btn" id="calcCfrBtn">Calculate CFR</button>
-          <div id="cfrResult"></div>
-        </div>
+  <div class="screen" id="icMmrScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🤱 MMR (Maternal Mortality Ratio)</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Maternal deaths</label><input type="number" id="mmrDeaths" placeholder="e.g. 15"></div>
+        <div class="calc-field"><label>Live births</label><input type="number" id="mmrBirths" placeholder="e.g. 10000"></div>
+        <button class="calc-btn" id="calcMmrBtn">Calculate MMR</button>
+        <div id="mmrResult"></div>
+      </div>
+    </div>
+  </div>
 
-        <div class="calc-card">
-          <h4>Attack Rate</h4>
-          <div class="calc-field"><label>New cases during outbreak</label><input type="number" id="attackCases" placeholder="e.g. 40"></div>
-          <div class="calc-field"><label>Population at risk</label><input type="number" id="attackPopulation" placeholder="e.g. 500"></div>
-          <button class="calc-btn" id="calcAttackBtn">Calculate Attack Rate</button>
-          <div id="attackResult"></div>
-        </div>
+  <div class="screen" id="icCfrScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">☠️ Case Fatality Rate</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Deaths from the disease</label><input type="number" id="cfrDeaths" placeholder="e.g. 20"></div>
+        <div class="calc-field"><label>Total cases of the disease</label><input type="number" id="cfrCases" placeholder="e.g. 400"></div>
+        <button class="calc-btn" id="calcCfrBtn">Calculate CFR</button>
+        <div id="cfrResult"></div>
+      </div>
+    </div>
+  </div>
 
-        <div class="calc-card">
-          <h4>Crude Birth Rate (CBR)</h4>
-          <div class="calc-field"><label>Live births in a year</label><input type="number" id="cbrBirths" placeholder="e.g. 250"></div>
-          <div class="calc-field"><label>Mid-year population</label><input type="number" id="cbrPopulation" placeholder="e.g. 10000"></div>
-          <button class="calc-btn" id="calcCbrBtn">Calculate CBR</button>
-          <div id="cbrResult"></div>
-        </div>
+  <div class="screen" id="icAttackScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🦠 Attack Rate</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>New cases during outbreak</label><input type="number" id="attackCases" placeholder="e.g. 40"></div>
+        <div class="calc-field"><label>Population at risk</label><input type="number" id="attackPopulation" placeholder="e.g. 500"></div>
+        <button class="calc-btn" id="calcAttackBtn">Calculate Attack Rate</button>
+        <div id="attackResult"></div>
+      </div>
+    </div>
+  </div>
 
-        <div class="calc-card">
-          <h4>Crude Death Rate (CDR)</h4>
-          <div class="calc-field"><label>Total deaths in a year</label><input type="number" id="cdrDeaths" placeholder="e.g. 80"></div>
-          <div class="calc-field"><label>Mid-year population</label><input type="number" id="cdrPopulation" placeholder="e.g. 10000"></div>
-          <button class="calc-btn" id="calcCdrBtn">Calculate CDR</button>
-          <div id="cdrResult"></div>
-        </div>
+  <div class="screen" id="icCbrScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📈 Crude Birth Rate</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Live births in a year</label><input type="number" id="cbrBirths" placeholder="e.g. 250"></div>
+        <div class="calc-field"><label>Mid-year population</label><input type="number" id="cbrPopulation" placeholder="e.g. 10000"></div>
+        <button class="calc-btn" id="calcCbrBtn">Calculate CBR</button>
+        <div id="cbrResult"></div>
+      </div>
+    </div>
+  </div>
 
-        <div class="calc-card">
-          <h4>Neonatal Mortality Rate (NMR)</h4>
-          <div class="calc-field"><label>Deaths under 28 days</label><input type="number" id="nmrDeaths" placeholder="e.g. 15"></div>
-          <div class="calc-field"><label>Live births</label><input type="number" id="nmrBirths" placeholder="e.g. 1000"></div>
-          <button class="calc-btn" id="calcNmrBtn">Calculate NMR</button>
-          <div id="nmrResult"></div>
-        </div>
+  <div class="screen" id="icCdrScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📉 Crude Death Rate</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Total deaths in a year</label><input type="number" id="cdrDeaths" placeholder="e.g. 80"></div>
+        <div class="calc-field"><label>Mid-year population</label><input type="number" id="cdrPopulation" placeholder="e.g. 10000"></div>
+        <button class="calc-btn" id="calcCdrBtn">Calculate CDR</button>
+        <div id="cdrResult"></div>
+      </div>
+    </div>
+  </div>
 
-        <div class="calc-card">
-          <h4>Under-5 Mortality Rate (U5MR)</h4>
-          <div class="calc-field"><label>Deaths under 5 years</label><input type="number" id="u5mrDeaths" placeholder="e.g. 35"></div>
-          <div class="calc-field"><label>Live births</label><input type="number" id="u5mrBirths" placeholder="e.g. 1000"></div>
-          <button class="calc-btn" id="calcU5mrBtn">Calculate U5MR</button>
-          <div id="u5mrResult"></div>
-        </div>
-        <!-- 🔧 More indicator calculators will be added here once Narayan shares the full list -->
+  <div class="screen" id="icNmrScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🍼 Neonatal Mortality Rate</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Deaths under 28 days</label><input type="number" id="nmrDeaths" placeholder="e.g. 15"></div>
+        <div class="calc-field"><label>Live births</label><input type="number" id="nmrBirths" placeholder="e.g. 1000"></div>
+        <button class="calc-btn" id="calcNmrBtn">Calculate NMR</button>
+        <div id="nmrResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="icU5mrScreen">
+    <div class="back-link" data-back="indicatorCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🧒 Under-5 Mortality Rate</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Deaths under 5 years</label><input type="number" id="u5mrDeaths" placeholder="e.g. 35"></div>
+        <div class="calc-field"><label>Live births</label><input type="number" id="u5mrBirths" placeholder="e.g. 1000"></div>
+        <button class="calc-btn" id="calcU5mrBtn">Calculate U5MR</button>
+        <div id="u5mrResult"></div>
       </div>
     </div>
   </div>
@@ -4496,7 +4594,23 @@ const calculatorScreen = document.getElementById('calculatorScreen');
 const basicCalcScreen = document.getElementById('basicCalcScreen');
 const bmiCalcScreen = document.getElementById('bmiCalcScreen');
 const healthCalcScreen = document.getElementById('healthCalcScreen');
+const hcBmrScreen = document.getElementById('hcBmrScreen');
+const hcIbwScreen = document.getElementById('hcIbwScreen');
+const hcWhrScreen = document.getElementById('hcWhrScreen');
+const hcWhtrScreen = document.getElementById('hcWhtrScreen');
+const hcBsaScreen = document.getElementById('hcBsaScreen');
+const hcBfScreen = document.getElementById('hcBfScreen');
+const hcEddScreen = document.getElementById('hcEddScreen');
+const hcAgeScreen = document.getElementById('hcAgeScreen');
 const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
+const icImrScreen = document.getElementById('icImrScreen');
+const icMmrScreen = document.getElementById('icMmrScreen');
+const icCfrScreen = document.getElementById('icCfrScreen');
+const icAttackScreen = document.getElementById('icAttackScreen');
+const icCbrScreen = document.getElementById('icCbrScreen');
+const icCdrScreen = document.getElementById('icCdrScreen');
+const icNmrScreen = document.getElementById('icNmrScreen');
+const icU5mrScreen = document.getElementById('icU5mrScreen');
 const epiCalcScreen = document.getElementById('epiCalcScreen');
 const epiScreeningScreen = document.getElementById('epiScreeningScreen');
 const epiIncidenceScreen = document.getElementById('epiIncidenceScreen');
@@ -4531,13 +4645,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -4690,7 +4804,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, indicatorCalcScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, statsCalcScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -5134,6 +5248,14 @@ document.getElementById('goToHealthCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(healthCalcScreen);
 });
+document.getElementById('goToHcBmr').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcBmrScreen); });
+document.getElementById('goToHcIbw').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcIbwScreen); });
+document.getElementById('goToHcWhr').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcWhrScreen); });
+document.getElementById('goToHcWhtr').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcWhtrScreen); });
+document.getElementById('goToHcBsa').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcBsaScreen); });
+document.getElementById('goToHcBf').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcBfScreen); });
+document.getElementById('goToHcEdd').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcEddScreen); });
+document.getElementById('goToHcAge').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcAgeScreen); });
 document.getElementById('goToBmiCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(bmiCalcScreen);
@@ -5142,6 +5264,14 @@ document.getElementById('goToIndicatorCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(indicatorCalcScreen);
 });
+document.getElementById('goToIcImr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icImrScreen); });
+document.getElementById('goToIcMmr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icMmrScreen); });
+document.getElementById('goToIcCfr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icCfrScreen); });
+document.getElementById('goToIcAttack').addEventListener('click', (e) => { e.preventDefault(); showScreen(icAttackScreen); });
+document.getElementById('goToIcCbr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icCbrScreen); });
+document.getElementById('goToIcCdr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icCdrScreen); });
+document.getElementById('goToIcNmr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icNmrScreen); });
+document.getElementById('goToIcU5mr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icU5mrScreen); });
 document.getElementById('goToEpiCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(epiCalcScreen);
