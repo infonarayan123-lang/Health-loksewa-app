@@ -323,23 +323,19 @@
   }
   .live-clock-line .clock-seconds{ color:var(--crimson); }
   .header-profile-block{ display:flex; flex-direction:column; align-items:flex-start; }
-  .header-profile-btn{
-    display:flex; align-items:center; gap:9px;
-    background:none; border:none; cursor:pointer; padding:2px;
-  }
-  .header-avatar{
-    width:34px; height:34px; border-radius:50%;
-    background:var(--navy); color:#fff;
+  .header-logo-btn{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--panel); border:1px solid var(--line);
+    font-size:16px; cursor:pointer; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    font-weight:700; font-size:14px; font-family:'Tinos',serif;
-    flex-shrink:0;
   }
-  .header-username-row{ display:flex; align-items:center; gap:6px; }
-  .header-username{ font-size:13.5px; font-weight:700; color:var(--ink); }
-  .header-dots{ font-size:14px; color:var(--ink-soft); line-height:1; }
+  .header-brand-title{
+    flex:1; text-align:center; color:#fff; font-weight:800;
+    font-size:15px; letter-spacing:0.01em;
+  }
   .header-status-line{
     font-size:11.5px; color:var(--ink-soft); cursor:pointer;
-    margin-top:8px; padding-left:2px; line-height:1.35; max-width:220px;
+    margin:4px 0 8px; padding-left:2px; line-height:1.35;
   }
   .header-icons{ display:flex; gap:6px; }
   .header-icon-btn{
@@ -1807,16 +1803,8 @@
 
       <!-- TOP HEADER BAR -->
       <div class="app-header-bar">
-        <div class="header-profile-block">
-          <button class="header-profile-btn" id="headerProfileBtn">
-            <span class="header-dots">⋮</span>
-            <span class="header-avatar" id="headerAvatar">?</span>
-            <span class="header-username-row">
-              <span class="header-username" id="headerUsername">Loading…</span>
-            </span>
-          </button>
-          <div class="header-status-line" id="headerStatusLine"></div>
-        </div>
+        <button class="header-logo-btn" id="headerLogoBtn" aria-label="News &amp; Resources">📰</button>
+        <div class="header-brand-title">Health Loksewa</div>
         <div class="header-icons">
           <button class="header-icon-btn notif-btn-wrap" id="headerNotifBtn" aria-label="Notifications">
             🔔
@@ -1825,27 +1813,16 @@
           <button class="header-icon-btn" id="headerDarkBtn" aria-label="Toggle dark mode">🌙</button>
         </div>
       </div>
+      <div class="header-status-line" id="headerStatusLine"></div>
 
       <!-- LIVE CLOCK: date, day, and ticking time (updates every second) -->
       <div class="live-clock-line" id="liveClockLine">Loading…</div>
-
-      <!-- LINE 1: Continuous scrolling marquee ticker -->
-      <div class="marquee-wrap">
-        <div class="marquee-track">
-          <span>Nepal Health Service Loksewa Preparation &nbsp;·&nbsp; AHW &nbsp;·&nbsp; ANM &nbsp;·&nbsp; HA &nbsp;·&nbsp; Staff Nurse &nbsp;·&nbsp; Public Health Officer &nbsp;·&nbsp; NHPC License &nbsp;·&nbsp;&nbsp;&nbsp;</span>
-          <span>Nepal Health Service Loksewa Preparation &nbsp;·&nbsp; AHW &nbsp;·&nbsp; ANM &nbsp;·&nbsp; HA &nbsp;·&nbsp; Staff Nurse &nbsp;·&nbsp; Public Health Officer &nbsp;·&nbsp; NHPC License &nbsp;·&nbsp;&nbsp;&nbsp;</span>
-        </div>
-      </div>
 
       <!-- LINE 2: Auto-sliding feature carousel (6 slides) -->
       <div class="carousel-wrap" id="carouselWrap">
         <div class="carousel-track" id="carouselTrack"></div>
         <div class="carousel-dots" id="carouselDots"></div>
       </div>
-
-      <!-- EXAM COUNTDOWN TIMER (auto-rotating slideshow of all upcoming Federal/Provincial exams) -->
-      <div class="countdown-banner" id="countdownBanner"></div>
-      <div class="countdown-dots" id="countdownDots"></div>
 
       <!-- QUOTE OF THE DAY -->
       <div class="quote-banner" id="quoteBanner">
@@ -1941,13 +1918,6 @@
             <div class="dc-sub">Basic health education articles</div>
           </div>
         </button>
-        <div class="dash-card c-qotd qotd-card" id="cardQotd">
-          <div class="qotd-card-header">
-            <div class="dc-icon">🎯</div>
-            <div class="dc-label" style="color:#fff;">Question of the Day</div>
-          </div>
-          <div id="qotdCardContent" class="qotd-card-body">Loading today's question…</div>
-        </div>
         <button class="dash-card c-tournament" id="cardTournament">
           <div class="dc-icon">🏆</div>
           <div class="dc-label">Weekly Tournament</div>
@@ -1963,6 +1933,13 @@
           <div class="dc-label">Rapid Fire</div>
           <div class="dc-sub">Fast-paced practice, 5 modes</div>
         </button>
+        <div class="dash-card c-qotd qotd-card" id="cardQotd">
+          <div class="qotd-card-header">
+            <div class="dc-icon">🎯</div>
+            <div class="dc-label" style="color:#fff;">Question of the Day</div>
+          </div>
+          <div id="qotdCardContent" class="qotd-card-body">Loading today's question…</div>
+        </div>
       </div>
 
       <div class="section-title" style="padding:0 16px; margin:4px 0 10px; color:#fff; font-size:14px; font-weight:700;">📚 Resources</div>
@@ -1973,6 +1950,10 @@
         <div class="rcard" id="homeResDictionary"><div class="ri">📖</div><div class="rl">Dictionary</div></div>
         <div class="rcard" id="homeResFaqs"><div class="ri">❓</div><div class="rl">FAQs</div></div>
       </div>
+
+      <!-- EXAM COUNTDOWN TIMER (auto-rotating slideshow of all upcoming Federal/Provincial exams) -->
+      <div class="countdown-banner" id="countdownBanner"></div>
+      <div class="countdown-dots" id="countdownDots"></div>
 
       <div id="homePromoBanner" style="display:none; margin:16px 16px 16px;"></div>
 
@@ -4371,8 +4352,6 @@
 
   function paintUserInfo(name, email){
     const firstLetter = name.trim().charAt(0).toUpperCase();
-    document.getElementById('headerAvatar').textContent = firstLetter;
-    document.getElementById('headerUsername').textContent = name;
     document.getElementById('homeGreeting').textContent = `नमस्ते, ${name.split(' ')[0]}! 👋`;
     document.getElementById('profileAvatarBig').textContent = firstLetter;
     document.getElementById('profileName').textContent = name;
@@ -5352,7 +5331,8 @@ document.getElementById('navProgress').addEventListener('click', () => {
   renderProgressScreen();
 });
 document.getElementById('navProfile').addEventListener('click', () => {
-  document.getElementById('headerProfileBtn').click();
+  showScreen(profileScreen);
+  refreshProfileData();
 });
 
 document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
@@ -9255,9 +9235,9 @@ async function refreshProfileData(){
   document.getElementById('premiumFeaturesTable').style.display = isPaid ? 'none' : 'block';
   document.getElementById('premiumActiveBanner').style.display = isPaid ? 'block' : 'none';
 }
-document.getElementById('headerProfileBtn').addEventListener('click', () => {
-  showScreen(profileScreen);
-  refreshProfileData();
+document.getElementById('headerLogoBtn').addEventListener('click', () => {
+  showScreen(resourcesScreen);
+  renderResources();
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
