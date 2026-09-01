@@ -1951,25 +1951,15 @@
           <div class="dc-label">Weekly Tournament</div>
           <div class="dc-sub">Same questions for everyone — compete this week!</div>
         </button>
-        <button class="dash-card c-gk" id="cardGK">
-          <div class="dc-icon">🧠</div>
-          <div class="dc-label">General Knowledge and Guidelines</div>
-          <div class="dc-sub">Constitution · Acts · Samsamayik · Guidelines</div>
-        </button>
         <button class="dash-card c-current" id="cardCurrent">
           <div class="dc-icon">🔄</div>
           <div class="dc-label">New Update</div>
           <div class="dc-sub">Official reports · view in-app</div>
         </button>
-        <button class="dash-card c-resources" id="cardResources">
-          <div class="dc-icon">🌐</div>
-          <div class="dc-label">Resources &amp; News</div>
-          <div class="dc-sub">Official notices, e-papers &amp; documents</div>
-        </button>
-        <button class="dash-card c-video" id="cardVideo">
-          <div class="dc-icon">🎥</div>
-          <div class="dc-label">Video Lessons</div>
-          <div class="dc-sub">Short videos explaining key topics</div>
+        <button class="dash-card c-video" id="cardRapidFire">
+          <div class="dc-icon">⚡</div>
+          <div class="dc-label">Rapid Fire</div>
+          <div class="dc-sub">Fast-paced practice, 5 modes</div>
         </button>
       </div>
 
@@ -2433,6 +2423,11 @@
         <div class="dc-label">Study Resources</div>
         <div class="dc-sub">Notes &amp; references</div>
       </a>
+      <a class="dash-card hub-tile t5" href="#" id="goToResourcesFromLearn">
+        <div class="dc-icon">🌐</div>
+        <div class="dc-label">Resources &amp; News</div>
+        <div class="dc-sub">Notices &amp; e-papers</div>
+      </a>
       <a class="dash-card hub-tile t5" href="#" id="goToSmartToolsFromLearn">
         <div class="dc-icon">🧮</div>
         <div class="dc-label">Smart Tools</div>
@@ -2487,12 +2482,7 @@
         <div class="dc-label">My Mistakes</div>
         <div class="dc-sub">Tracked automatically</div>
       </a>
-      <a class="dash-card hub-tile t2" href="#" id="goToSpeedChallengeFromPractice">
-        <div class="dc-icon">⏱️</div>
-        <div class="dc-label">Speed Challenge</div>
-        <div class="dc-sub">60-second sprint</div>
-      </a>
-      <a class="dash-card hub-tile t3" href="#" id="goToFlashcardsFromPractice">
+      <a class="dash-card hub-tile t2" href="#" id="goToFlashcardsFromPractice">
         <div class="dc-icon">🧩</div>
         <div class="dc-label">Flashcards</div>
         <div class="dc-sub">Active recall</div>
@@ -2724,6 +2714,10 @@
         <div class="tt-icon">🧘</div>
         <div class="tt-label">Wellness</div>
       </a>
+      <a class="tool-tile" href="#" id="goToSafetySignal" data-search="sos signal emergency siren alarm whistle step counter walk">
+        <div class="tt-icon">🚨</div>
+        <div class="tt-label">Safety &amp; Signal</div>
+      </a>
       <a class="tool-tile" href="#" id="goToImmunization" data-search="immunization vaccine schedule nepal nip">
         <div class="tt-icon">💉</div>
         <div class="tt-label">Immunization</div>
@@ -2784,43 +2778,145 @@
     <div class="home-body">
       <div class="section-title">💵 Government Salary Calculator</div>
       <div class="calc-card" style="border:1.5px solid var(--gold); margin-bottom:16px;">
-        <p style="font-size:11.5px; color:var(--ink);"><b style="color:var(--gold);">⚠️ Estimate only — please verify against official sources.</b> Salary scale is transcribed from a Ministry of Finance circular (spot-check against the original PDF). EPF/Pension/Insurance rates and tax slabs are independently researched and Sheet-driven. This covers salary, standard allowances, EPF/Pension, life insurance, CIT and income tax only — it does not yet cover remote-posting rules, promotions, retirement projections, or a full monthly payroll table.</p>
+        <p style="font-size:11.5px; color:var(--ink);"><b style="color:var(--gold);">⚠️ Estimate only.</b> Salary scale from an official circular (cross-checked, low error risk). EPF/Pension/Insurance/Tax rules independently researched. Verify anything important against official sources.</p>
       </div>
-      <div class="calc-card">
-        <div class="calc-field"><label>Service / Post</label>
-          <select id="salaryPostSelect" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+
+      <!-- Step indicator -->
+      <div id="swStepBar" style="display:flex; justify-content:space-between; margin-bottom:16px; overflow-x:auto; gap:4px;">
+        <div class="sw-step active" data-step="1" style="flex:1; text-align:center; font-size:10px; color:var(--gold); padding-bottom:6px; border-bottom:2px solid var(--gold);">① सेवा</div>
+        <div class="sw-step" data-step="2" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">② पद</div>
+        <div class="sw-step" data-step="3" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">③ ग्रेड</div>
+        <div class="sw-step" data-step="4" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">④ विवरण</div>
+        <div class="sw-step" data-step="5" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">⑤ भत्ता</div>
+        <div class="sw-step" data-step="6" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">⑥ कट्टी</div>
+        <div class="sw-step" data-step="7" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">⑦ परिणाम</div>
+      </div>
+
+      <!-- STEP 1: सेवा (Service) -->
+      <div class="calc-card sw-panel" id="swPanel1">
+        <h4>🏛️ सरकार / सेवा छान्नुहोस्</h4>
+        <div class="calc-field"><label>Schedule / Service</label>
+          <select id="swService" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
             <option value="">Loading…</option>
           </select>
         </div>
-        <div class="calc-field"><label>Number of grades earned so far</label><input type="number" id="salaryGradeCount" placeholder="e.g. 2" value="0"></div>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-          <input type="checkbox" id="salaryIncludeAllowances" checked>
-          <label for="salaryIncludeAllowances" style="font-size:12.5px; color:var(--ink-soft);">Include standard allowances (10% incentive, dearness, uniform, Dashain bonus)</label>
-        </div>
-        <div class="calc-field"><label>Remote/difficult-area allowance (Rs./month, if applicable)</label><input type="number" id="salaryRemoteAllowance" placeholder="e.g. 0" value="0"></div>
+        <button class="calc-btn sw-next" data-next="2">Next →</button>
       </div>
 
-      <div class="calc-card">
-        <h4>Deductions</h4>
-        <div class="calc-field"><label>Retirement scheme (mandatory — pick one)</label>
-          <select id="salaryPensionSystem" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
-            <option value="pf">Provident Fund / Legacy pension (appointed before Shrawan 1, 2076)</option>
-            <option value="pension">Contributory Pension (appointed after Shrawan 1, 2076)</option>
+      <!-- STEP 2: पद (Post) -->
+      <div class="calc-card sw-panel" id="swPanel2" style="display:none;">
+        <h4>👤 पद / श्रेणी / तह छान्नुहोस्</h4>
+        <div class="calc-field"><label>Post</label>
+          <select id="swPost" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="">-- पहिले सेवा छान्नुहोस् --</option>
           </select>
         </div>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-          <input type="checkbox" id="salaryIncludeInsurance" checked>
-          <label for="salaryIncludeInsurance" style="font-size:12.5px; color:var(--ink-soft);">Mandatory group life insurance (Rs. 400/month)</label>
+        <div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
+          <input type="checkbox" id="swManualSalaryToggle">
+          <label for="swManualSalaryToggle" style="font-size:12.5px; color:var(--ink-soft);">मासिक आधारभूत तलब आफैं प्रविष्ट गर्नुहोस् (post देखिएन भने)</label>
         </div>
-        <div class="calc-field"><label>CIT — Citizen Investment Trust (Rs./month, optional)</label><input type="number" id="salaryCit" placeholder="e.g. 0" value="0"></div>
-        <button class="calc-btn" id="calcSalaryBtn">Calculate Salary</button>
+        <div class="calc-field" id="swManualSalaryField" style="display:none;"><label>मासिक आधारभूत तलब (Rs.)</label><input type="number" id="swManualSalary" placeholder="e.g. 50000"></div>
+        <button class="calc-btn sw-back" data-back="1" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← Back</button>
+        <button class="calc-btn sw-next" data-next="3">Next →</button>
+      </div>
+
+      <!-- STEP 3: ग्रेड (Grade) -->
+      <div class="calc-card sw-panel" id="swPanel3" style="display:none;">
+        <h4>📈 हालको ग्रेड संख्या</h4>
+        <div class="calc-field"><label>Grade count</label><input type="number" id="swGrade" value="0" placeholder="e.g. 2"></div>
+        <p id="swMaxGradeNote" style="font-size:11px; color:var(--ink-soft);"></p>
+        <button class="calc-btn sw-back" data-back="2" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← Back</button>
+        <button class="calc-btn sw-next" data-next="4">Next →</button>
+      </div>
+
+      <!-- STEP 4: विवरण (Employee Details) -->
+      <div class="calc-card sw-panel" id="swPanel4" style="display:none;">
+        <h4>🧑‍💼 कर्मचारी सेवा विवरण</h4>
+        <div class="calc-field"><label>सेवाको प्रकार</label>
+          <select id="swEmploymentType" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="permanent">स्थायी (Permanent)</option>
+            <option value="contract">करार (Contract)</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>नियुक्ति मिति (पेन्सन प्रणाली)</label>
+          <select id="swPensionSystem" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="old">२०७५ साउन १ अघि (पुरानो पेन्सन व्यवस्था)</option>
+            <option value="contributory">२०७५ साउन १ पछि (योगदानमा आधारित ६% कट्टी)</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>वैवाहिक स्थिति</label>
+          <select id="swMaritalStatus" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="single">अविवाहित (Single)</option>
+            <option value="married">विवाहित (Married)</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>लिङ्ग (महिला १०% कर छुट)</label>
+          <select id="swGender" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="other">पुरुष / अन्य</option>
+            <option value="female">महिला (१०% छुट)</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>अपाङ्गता कर छुट</label>
+          <select id="swDisability" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="no">छैन (नियमित)</option>
+            <option value="yes">छ (५०% थप छुट)</option>
+          </select>
+        </div>
+        <button class="calc-btn sw-back" data-back="3" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← Back</button>
+        <button class="calc-btn sw-next" data-next="5">Next →</button>
+      </div>
+
+      <!-- STEP 5: भत्ता (Allowances) -->
+      <div class="calc-card sw-panel" id="swPanel5" style="display:none;">
+        <h4>💰 लागू हुने भत्ताहरू</h4>
+        <div class="calc-field"><label>दुर्गम भत्ता (Rs./महिना — जे रकम भए पनि सिधै लेख्नुहोस्)</label><input type="number" id="swRemoteAllowance" placeholder="e.g. 5000 वा 10000" value="0"></div>
+        <div class="calc-field"><label>दुर्गम क्षेत्र कर छुट वर्ग</label>
+          <select id="swRemoteTaxClass" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="0">लागू नहुने</option>
+            <option value="50000">वर्ग 'क' (Rs. 50,000 कर छुट)</option>
+            <option value="40000">वर्ग 'ख' (Rs. 40,000 कर छुट)</option>
+            <option value="30000">वर्ग 'ग' (Rs. 30,000 कर छुट)</option>
+            <option value="20000">वर्ग 'घ' (Rs. 20,000 कर छुट)</option>
+            <option value="10000">वर्ग 'ङ' (Rs. 10,000 कर छुट)</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>थप अन्य भत्ता (नाम) — ऐच्छिक</label><input type="text" id="swExtraAllowanceName" placeholder="जस्तै: विशेष प्रोत्साहन भत्ता"></div>
+        <div class="calc-field"><label>थप भत्ता रकम (Rs./महिना) — ऐच्छिक</label><input type="number" id="swExtraAllowanceAmount" value="0"></div>
+        <button class="calc-btn sw-back" data-back="4" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← Back</button>
+        <button class="calc-btn sw-next" data-next="6">Next →</button>
+      </div>
+
+      <!-- STEP 6: कट्टी (Deductions) -->
+      <div class="calc-card sw-panel" id="swPanel6" style="display:none;">
+        <h4>📉 ऐच्छिक कट्टीहरू</h4>
+        <div class="calc-field"><label>नागरिक लगानी कोष (CIT) — Rs./महिना</label><input type="number" id="swCit" value="0"></div>
+        <div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
+          <input type="checkbox" id="swVehicleFacility">
+          <label for="swVehicleFacility" style="font-size:12.5px; color:var(--ink-soft);">🚗 सवारी साधन सुविधा छ (आधार तलबको ०.५%)</label>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+          <input type="checkbox" id="swHousingFacility">
+          <label for="swHousingFacility" style="font-size:12.5px; color:var(--ink-soft);">🏠 आवास सुविधा छ (कुल पारिश्रमिकको २.०%)</label>
+        </div>
+        <div class="calc-field"><label>स्वास्थ्य बिमा वार्षिक (बढीमा Rs. 20,000)</label><input type="number" id="swHealthInsurance" value="0"></div>
+        <div class="calc-field"><label>सन्तति शिक्षण शुल्क वार्षिक (बढीमा Rs. 25,000)</label><input type="number" id="swEducationFee" value="0"></div>
+        <div class="calc-field"><label>ऋण / सापटी / अन्य कट्टी (Rs./महिना) — ऐच्छिक</label><input type="number" id="swOtherDeduction" value="0"></div>
+        <button class="calc-btn sw-back" data-back="5" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← Back</button>
+        <button class="calc-btn sw-next" data-next="7">Next →</button>
+      </div>
+
+      <!-- STEP 7: परिणाम (Result) -->
+      <div class="calc-card sw-panel" id="swPanel7" style="display:none;">
+        <h4>✨ परिणाम</h4>
+        <button class="calc-btn" id="calcSalaryBtn">✨ तलब गणना गर्नुहोस्</button>
         <div id="salaryCalcResult"></div>
         <button class="calc-btn" id="copyPayslipBtn" style="display:none; margin-top:10px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📋 Copy Payslip Summary</button>
+        <button class="calc-btn sw-back" data-back="6" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line); margin-top:10px;">← Back</button>
       </div>
 
       <div class="calc-card">
         <h4>📈 Grade Projection</h4>
-        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Uses the post selected above.</p>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Uses the post selected in Step 2.</p>
         <button class="calc-btn" id="calcGradeProjectionBtn">Show Projection</button>
         <div id="gradeProjectionResult"></div>
       </div>
@@ -3830,6 +3926,42 @@
         <h4>🔥 Habit Tracker</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Tap a habit to mark it done for today.</p>
         <div id="habitList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAFETY & SIGNAL -->
+  <div class="screen" id="safetySignalScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🚨 Safety &amp; Signal</div>
+
+      <div class="calc-card" style="text-align:center;">
+        <h4 style="text-align:left;">🔦 SOS Signal</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); text-align:left; margin-bottom:14px;">Real SOS Morse pattern (··· −−− ···) using screen flashes — for being seen or signaling at night. Not a strobe.</p>
+        <div id="sosSignalBox" style="width:100%; height:120px; border-radius:12px; background:#000; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; margin-bottom:14px;">Tap Start</div>
+        <button class="start-btn" id="sosSignalBtn" style="width:auto; padding:11px 30px;">Start SOS Signal</button>
+      </div>
+
+      <div class="calc-card" style="text-align:center;">
+        <h4 style="text-align:left;">🔊 Emergency Sounds</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); text-align:left; margin-bottom:14px;">Loud attention-getting sounds — generic, not modeled on any specific emergency vehicle's siren.</p>
+        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
+          <button class="calc-btn" id="soundLoudAlarmBtn" style="margin:0;">🔔 Loud Alarm</button>
+          <button class="calc-btn" id="soundSirenBtn" style="margin:0;">📢 SOS Siren</button>
+          <button class="calc-btn" id="soundWhistleBtn" style="margin:0;">🌬️ Whistle</button>
+          <button class="calc-btn" id="soundContinuousBtn" style="margin:0;">🔁 Continuous</button>
+        </div>
+        <button class="calc-btn" id="soundStopBtn" style="margin-top:10px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); display:none;">⏹️ Stop</button>
+      </div>
+
+      <div class="calc-card" style="text-align:center;">
+        <h4 style="text-align:left;">🚶 Step Counter</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); text-align:left; margin-bottom:14px;">⚠️ Counts only while this screen stays open and on top — this app can't count steps in the background like a phone's built-in health app. Good for tracking one walk, not all-day tracking.</p>
+        <div style="font-size:44px; font-weight:800; color:#fff; margin:12px 0;" id="stepCountDisplay">0</div>
+        <div style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;" id="stepDistanceDisplay">≈ 0.0 km</div>
+        <button class="start-btn" id="stepCounterBtn" style="width:auto; padding:11px 30px;">Start Walking</button>
+        <p id="stepPermissionNote" style="font-size:11px; color:var(--ink-soft); margin-top:10px;"></p>
       </div>
     </div>
   </div>
@@ -4918,6 +5050,7 @@ const realSalaryScreen = document.getElementById('realSalaryScreen');
 const myHealthScreen = document.getElementById('myHealthScreen');
 const everydayToolsScreen = document.getElementById('everydayToolsScreen');
 const wellnessScreen = document.getElementById('wellnessScreen');
+const safetySignalScreen = document.getElementById('safetySignalScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
@@ -4937,7 +5070,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -5096,7 +5229,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -5121,11 +5254,18 @@ document.getElementById('goToSyllabusFromLearn').addEventListener('click', (e) =
 });
 document.getElementById('goToGkFromLearn').addEventListener('click', (e) => {
   e.preventDefault();
-  document.getElementById('cardGK').click();
+  showScreen(gkScreen);
+  renderGkCategories();
 });
 document.getElementById('goToVideoFromLearn').addEventListener('click', (e) => {
   e.preventDefault();
-  document.getElementById('cardVideo').click();
+  showScreen(videoScreen);
+  renderVideoLessons();
+});
+document.getElementById('goToResourcesFromLearn').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(resourcesScreen);
+  renderResources();
 });
 document.getElementById('goToStudyResourcesFromLearn').addEventListener('click', (e) => {
   e.preventDefault();
@@ -5169,10 +5309,6 @@ document.getElementById('goToMistakeBookFromPractice').addEventListener('click',
   e.preventDefault();
   showScreen(mistakeBookScreen);
   renderMistakeBook();
-});
-document.getElementById('goToSpeedChallengeFromPractice').addEventListener('click', (e) => {
-  e.preventDefault();
-  startSpeedChallenge();
 });
 document.getElementById('goToFlashcardsFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
@@ -5222,13 +5358,9 @@ document.getElementById('cardCurrent').addEventListener('click', () => {
   showScreen(currentAffairsScreen);
   renderCurrentAffairs();
 });
-document.getElementById('cardGK').addEventListener('click', () => {
-  showScreen(gkScreen);
-  renderGkCategories();
-});
-document.getElementById('cardResources').addEventListener('click', () => {
-  showScreen(resourcesScreen);
-  renderResources();
+document.getElementById('cardRapidFire').addEventListener('click', () => {
+  showScreen(rapidFireScreen);
+  renderRapidFireModes();
 });
 document.getElementById('cardAi').addEventListener('click', () => {
   showScreen(aiChatScreen);
@@ -5484,10 +5616,6 @@ document.getElementById('goToFormulaFromHub').addEventListener('click', (e) => {
 });
 
 // ---------- Video Lessons ----------
-document.getElementById('cardVideo').addEventListener('click', () => {
-  showScreen(videoScreen);
-  renderVideoLessons();
-});
 
 // ---------- Mnemonics Library ----------
 document.getElementById('goToMnemonicsFromHub').addEventListener('click', async (e) => {
@@ -5635,6 +5763,10 @@ document.getElementById('goToWellness').addEventListener('click', (e) => {
   showScreen(wellnessScreen);
   renderGratitudeHistory();
   renderHabitList();
+});
+document.getElementById('goToSafetySignal').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(safetySignalScreen);
 });
 document.getElementById('goToImmunization').addEventListener('click', (e) => {
   e.preventDefault();
@@ -7071,6 +7203,168 @@ function toggleHabit(habitName){
   renderHabitList();
 }
 
+// ---------- SOS Signal: real Morse SOS pattern (··· −−− ···) via screen flash. Deliberately
+// NOT a strobe — no frequency here falls in the 3-30Hz photosensitive-seizure range; the
+// fastest element (a dot) is a 200ms flash, roughly 2.5Hz at most. ----------
+let sosRunning = false;
+let sosTimeout = null;
+const SOS_UNIT = 200; // ms
+const SOS_SEQUENCE = [
+  // [duration_ms, isOn]
+  [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT*3, false], // S
+  [SOS_UNIT*3, true], [SOS_UNIT, false], [SOS_UNIT*3, true], [SOS_UNIT, false], [SOS_UNIT*3, true], [SOS_UNIT*3, false], // O
+  [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT*7, false], // S + word gap
+];
+let sosStepIndex = 0;
+function runSosStep(){
+  if(!sosRunning) return;
+  const box = document.getElementById('sosSignalBox');
+  const [duration, isOn] = SOS_SEQUENCE[sosStepIndex];
+  box.style.background = isOn ? '#ffffff' : '#000000';
+  box.textContent = isOn ? '' : '';
+  sosStepIndex = (sosStepIndex + 1) % SOS_SEQUENCE.length;
+  sosTimeout = setTimeout(runSosStep, duration);
+}
+document.getElementById('sosSignalBtn').addEventListener('click', () => {
+  const btn = document.getElementById('sosSignalBtn');
+  const box = document.getElementById('sosSignalBox');
+  if(sosRunning){
+    sosRunning = false;
+    clearTimeout(sosTimeout);
+    box.style.background = '#000';
+    box.textContent = 'Tap Start';
+    btn.textContent = 'Start SOS Signal';
+    return;
+  }
+  sosRunning = true;
+  sosStepIndex = 0;
+  btn.textContent = 'Stop';
+  runSosStep();
+});
+
+// ---------- Emergency Sounds: Web Audio API tones — generic attention sounds, deliberately
+// not modeled on any specific police/ambulance/fire vehicle's siren pattern. ----------
+let emergencyAudioCtx = null;
+let emergencyOscillators = [];
+let emergencyIntervals = [];
+function getEmergencyAudioCtx(){
+  if(!emergencyAudioCtx) emergencyAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return emergencyAudioCtx;
+}
+function stopAllEmergencySounds(){
+  emergencyOscillators.forEach(osc => { try{ osc.stop(); }catch(e){} });
+  emergencyOscillators = [];
+  emergencyIntervals.forEach(id => clearInterval(id));
+  emergencyIntervals = [];
+  document.getElementById('soundStopBtn').style.display = 'none';
+}
+function playTone(freq, type){
+  const ctx = getEmergencyAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  gain.gain.value = 0.3;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  emergencyOscillators.push(osc);
+  return osc;
+}
+document.getElementById('soundLoudAlarmBtn').addEventListener('click', () => {
+  stopAllEmergencySounds();
+  let high = true;
+  const osc = playTone(800, 'square');
+  const id = setInterval(() => {
+    high = !high;
+    osc.frequency.value = high ? 1000 : 700;
+  }, 300);
+  emergencyIntervals.push(id);
+  document.getElementById('soundStopBtn').style.display = 'block';
+});
+document.getElementById('soundSirenBtn').addEventListener('click', () => {
+  stopAllEmergencySounds();
+  const osc = playTone(500, 'sine');
+  let rising = true;
+  let freq = 500;
+  const id = setInterval(() => {
+    freq += rising ? 40 : -40;
+    if(freq >= 1000){ freq = 1000; rising = false; }
+    if(freq <= 500){ freq = 500; rising = true; }
+    osc.frequency.value = freq;
+  }, 50);
+  emergencyIntervals.push(id);
+  document.getElementById('soundStopBtn').style.display = 'block';
+});
+document.getElementById('soundWhistleBtn').addEventListener('click', () => {
+  stopAllEmergencySounds();
+  playTone(2200, 'sine');
+  document.getElementById('soundStopBtn').style.display = 'block';
+});
+document.getElementById('soundContinuousBtn').addEventListener('click', () => {
+  stopAllEmergencySounds();
+  playTone(700, 'square');
+  document.getElementById('soundStopBtn').style.display = 'block';
+});
+document.getElementById('soundStopBtn').addEventListener('click', stopAllEmergencySounds);
+
+// ---------- Step Counter: session-only (while this screen is open), using accelerometer
+// peak detection. Cannot run in the background — that needs a native app, not a PWA. ----------
+let stepCount = 0;
+let stepRunning = false;
+let stepLastMagnitude = 0;
+let stepLastPeakTime = 0;
+let stepMotionHandler = null;
+function handleStepMotion(event){
+  const acc = event.accelerationIncludingGravity;
+  if(!acc || acc.x === null) return;
+  const magnitude = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+  const now = Date.now();
+  const delta = magnitude - stepLastMagnitude;
+  stepLastMagnitude = magnitude;
+  // Simple peak detection: a big enough jump, debounced so one physical step isn't counted twice
+  if(delta > 3 && (now - stepLastPeakTime) > 300){
+    stepLastPeakTime = now;
+    stepCount++;
+    document.getElementById('stepCountDisplay').textContent = stepCount;
+    const km = (stepCount * 0.762) / 1000; // ~0.762m average stride
+    document.getElementById('stepDistanceDisplay').textContent = `≈ ${km.toFixed(2)} km`;
+  }
+}
+document.getElementById('stepCounterBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('stepCounterBtn');
+  const noteEl = document.getElementById('stepPermissionNote');
+  if(stepRunning){
+    stepRunning = false;
+    if(stepMotionHandler) window.removeEventListener('devicemotion', stepMotionHandler);
+    btn.textContent = 'Start Walking';
+    noteEl.textContent = 'Stopped.';
+    return;
+  }
+  if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
+    try{
+      const permission = await DeviceMotionEvent.requestPermission();
+      if(permission !== 'granted'){
+        noteEl.textContent = 'Motion access denied — this device requires permission to count steps.';
+        return;
+      }
+    }catch(err){
+      noteEl.textContent = 'Could not request motion access on this device.';
+      return;
+    }
+  }
+  stepCount = 0;
+  stepLastMagnitude = 0;
+  stepLastPeakTime = 0;
+  document.getElementById('stepCountDisplay').textContent = '0';
+  document.getElementById('stepDistanceDisplay').textContent = '≈ 0.0 km';
+  stepMotionHandler = handleStepMotion;
+  window.addEventListener('devicemotion', stepMotionHandler);
+  stepRunning = true;
+  btn.textContent = 'Stop';
+  noteEl.textContent = 'Counting — keep this screen open.';
+});
+
 // ---------- Pension Estimator: Legacy scheme, standard accrual formula. Clearly labeled as
 // an estimate — see the disclaimer card on the screen itself for what this doesn't account for. ----------
 document.getElementById('calcPensionBtn').addEventListener('click', () => {
@@ -7227,79 +7521,166 @@ document.getElementById('calcTaxBtn').addEventListener('click', async () => {
   }
 });
 
-// ---------- Government Salary Calculator: post/grade data is Sheet-driven, transcribed from
-// a real Ministry of Finance circular. Deductions (EPF/Pension, Insurance, CIT, Tax) are now
-// integrated — EPF and Tax are mandatory, CIT is optional, matching the real payroll structure.
-// PF/Pension rates and insurance premium are Sheet-driven (PayrollRates tab), independently
-// verified via research, not copied from any single source. Tax reuses the same slab logic
-// and Sheet data as the standalone Income Tax Calculator, so both stay consistent. ----------
+// ---------- Government Salary Calculator: 7-step wizard (सेवा→पद→ग्रेड→विवरण→भत्ता→कट्टी→परिणाम).
+// Salary scale from an official circular (SalaryScale Sheet tab). EPF/Pension/Insurance rates
+// are Sheet-driven (PayrollRates tab), independently researched. Tax reuses the same slab
+// engine as the standalone Tax Calculator, plus: women's 10% tax rebate, disability 50%
+// exemption increase, and remote-area exemption brackets (क-ङ) — all per Nepal's Income Tax
+// Act 2058, cross-checked against the person's own detailed reference. ----------
 let salaryScaleCache = null;
+let salaryServiceGroups = {}; // Service name -> array of post rows
 async function loadSalaryScaleOptions(){
-  const selectEl = document.getElementById('salaryPostSelect');
+  const serviceEl = document.getElementById('swService');
   try{
     const res = await fetch(`${SHEET_API_URL}?action=salaryScale`);
     const rows = await res.json();
     salaryScaleCache = rows.filter(r => r && r.Post && r.StartingSalary);
-    if(salaryScaleCache.length === 0){
-      selectEl.innerHTML = `<option value="">No salary scale data added yet</option>`;
+    salaryServiceGroups = {};
+    salaryScaleCache.forEach(r => {
+      const svc = r.Service || 'Other';
+      if(!salaryServiceGroups[svc]) salaryServiceGroups[svc] = [];
+      salaryServiceGroups[svc].push(r);
+    });
+    const serviceNames = Object.keys(salaryServiceGroups);
+    if(serviceNames.length === 0){
+      serviceEl.innerHTML = `<option value="">No salary scale data added yet</option>`;
       return;
     }
-    selectEl.innerHTML = salaryScaleCache.map((r, i) => `<option value="${i}">${r.Service ? r.Service + ' — ' : ''}${r.Post}</option>`).join('');
+    serviceEl.innerHTML = `<option value="">-- सेवा छान्नुहोस् --</option>` + serviceNames.map(s => `<option value="${s}">${s}</option>`).join('');
   }catch(err){
-    selectEl.innerHTML = `<option value="">Could not load — check your connection</option>`;
+    serviceEl.innerHTML = `<option value="">Could not load — check your connection</option>`;
   }
 }
 function getPayrollRate(rates, type, fallback){
   const row = rates.find(r => r.RateType === type);
   return row && row.Rate ? parseFloat(row.Rate) : fallback;
 }
-document.getElementById('calcSalaryBtn').addEventListener('click', async () => {
-  const resultEl = document.getElementById('salaryCalcResult');
-  const selectedIndex = document.getElementById('salaryPostSelect').value;
-  const gradeCount = parseFloat(document.getElementById('salaryGradeCount').value) || 0;
-  const includeAllowances = document.getElementById('salaryIncludeAllowances').checked;
-  const remoteAllowance = parseFloat(document.getElementById('salaryRemoteAllowance').value) || 0;
-  const pensionSystem = document.getElementById('salaryPensionSystem').value;
-  const includeInsurance = document.getElementById('salaryIncludeInsurance').checked;
-  const citMonthly = parseFloat(document.getElementById('salaryCit').value) || 0;
-
-  if(selectedIndex === '' || !salaryScaleCache || !salaryScaleCache[selectedIndex]){
-    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select a post.</p>`;
+document.getElementById('swService').addEventListener('change', (e) => {
+  const svc = e.target.value;
+  const postEl = document.getElementById('swPost');
+  if(!svc || !salaryServiceGroups[svc]){
+    postEl.innerHTML = `<option value="">-- पहिले सेवा छान्नुहोस् --</option>`;
     return;
   }
-  resultEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Calculating…</p>`;
+  postEl.innerHTML = `<option value="">-- पद छान्नुहोस् --</option>` + salaryServiceGroups[svc].map((r, i) => `<option value="${i}">${r.Post}${r.MaxGrade ? ' (अधिकतम ' + r.MaxGrade + ' ग्रेड)' : ''}</option>`).join('');
+});
+document.getElementById('swManualSalaryToggle').addEventListener('change', (e) => {
+  document.getElementById('swManualSalaryField').style.display = e.target.checked ? 'block' : 'none';
+});
 
-  const post = salaryScaleCache[selectedIndex];
+// ---- Step navigation ----
+function goToSwStep(stepNum){
+  document.querySelectorAll('.sw-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(`swPanel${stepNum}`).style.display = 'block';
+  document.querySelectorAll('.sw-step').forEach(s => {
+    const isActive = parseInt(s.dataset.step, 10) === stepNum;
+    s.style.color = isActive ? 'var(--gold)' : 'var(--ink-soft)';
+    s.style.borderBottomColor = isActive ? 'var(--gold)' : 'var(--line)';
+  });
+}
+document.querySelectorAll('.sw-next').forEach(btn => {
+  btn.addEventListener('click', () => goToSwStep(parseInt(btn.dataset.next, 10)));
+});
+document.querySelectorAll('.sw-back').forEach(btn => {
+  btn.addEventListener('click', () => goToSwStep(parseInt(btn.dataset.back, 10)));
+});
+
+function getSelectedSwPost(){
+  const svc = document.getElementById('swService').value;
+  const idx = document.getElementById('swPost').value;
+  if(!svc || idx === '' || !salaryServiceGroups[svc]) return null;
+  return salaryServiceGroups[svc][idx];
+}
+
+document.getElementById('calcGradeProjectionBtn').addEventListener('click', () => {
+  const post = getSelectedSwPost();
+  const gradeCount = parseFloat(document.getElementById('swGrade').value) || 0;
+  const resultEl = document.getElementById('gradeProjectionResult');
+  if(!post){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">कृपया पहिले Step 2 मा पद छान्नुहोस्।</p>`;
+    return;
+  }
   const startingSalary = parseFloat(post.StartingSalary);
   const gradeRate = parseFloat(post.GradeRate) || 0;
-  const gradeAmount = gradeCount * gradeRate;
-  const basicSalary = startingSalary + gradeAmount;
+  const maxGrade = post.MaxGrade ? parseFloat(post.MaxGrade) : null;
+  const currentBasic = startingSalary + (gradeCount * gradeRate);
+  const nextBasic = currentBasic + gradeRate;
+  let html = `
+    <div class="calc-result">Current Basic (Grade ${gradeCount}): Rs. ${currentBasic.toFixed(0)}</div>
+    <div class="calc-result">After Next Grade (Grade ${gradeCount + 1}): Rs. ${nextBasic.toFixed(0)}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Increase per grade: Rs. ${gradeRate.toFixed(0)}</div>
+  `;
+  if(maxGrade){
+    const maxBasic = startingSalary + (maxGrade * gradeRate);
+    html += `<div class="calc-result" style="font-size:11.5px; opacity:0.85;">Maximum Basic (Grade ${maxGrade}): Rs. ${maxBasic.toFixed(0)}</div>`;
+  }
+  resultEl.innerHTML = html;
+});
 
-  let breakdown = [
-    `Starting Salary: Rs. ${startingSalary.toFixed(0)}`,
-    `Grade Amount (${gradeCount} × Rs. ${gradeRate.toFixed(0)}): Rs. ${gradeAmount.toFixed(0)}`,
-    `Basic Salary: Rs. ${basicSalary.toFixed(0)}`
-  ];
+document.getElementById('calcSalaryBtn').addEventListener('click', async () => {
+  const resultEl = document.getElementById('salaryCalcResult');
+  const manualMode = document.getElementById('swManualSalaryToggle').checked;
+  const post = getSelectedSwPost();
+  const gradeCount = parseFloat(document.getElementById('swGrade').value) || 0;
+  const employmentType = document.getElementById('swEmploymentType').value; // permanent/contract
+  const pensionSystem = document.getElementById('swPensionSystem').value; // old/contributory
+  const isFemale = document.getElementById('swGender').value === 'female';
+  const hasDisability = document.getElementById('swDisability').value === 'yes';
+  const remoteAllowance = parseFloat(document.getElementById('swRemoteAllowance').value) || 0;
+  const remoteTaxExemption = parseFloat(document.getElementById('swRemoteTaxClass').value) || 0;
+  const extraAllowanceAmount = parseFloat(document.getElementById('swExtraAllowanceAmount').value) || 0;
+  const citMonthly = parseFloat(document.getElementById('swCit').value) || 0;
+  const hasVehicle = document.getElementById('swVehicleFacility').checked;
+  const hasHousing = document.getElementById('swHousingFacility').checked;
+  const healthInsuranceAnnual = parseFloat(document.getElementById('swHealthInsurance').value) || 0;
+  const educationFeeAnnual = parseFloat(document.getElementById('swEducationFee').value) || 0;
+  const otherDeductionMonthly = parseFloat(document.getElementById('swOtherDeduction').value) || 0;
 
+  let basicSalary, postLabel;
+  if(manualMode){
+    basicSalary = parseFloat(document.getElementById('swManualSalary').value);
+    postLabel = 'Manual Entry';
+    if(!basicSalary || basicSalary <= 0){
+      resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">कृपया मासिक आधारभूत तलब प्रविष्ट गर्नुहोस्।</p>`;
+      return;
+    }
+  } else {
+    if(!post){
+      resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">कृपया पद छान्नुहोस्, वा Step 2 मा तलब आफैं प्रविष्ट गर्नुहोस्।</p>`;
+      return;
+    }
+    const startingSalary = parseFloat(post.StartingSalary);
+    const gradeRate = parseFloat(post.GradeRate) || 0;
+    basicSalary = startingSalary + (gradeCount * gradeRate);
+    postLabel = post.Post;
+  }
+
+  resultEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Calculating…</p>`;
+  const isPermanent = employmentType === 'permanent';
+
+  // ---- Gross ----
   let grossMonthly = basicSalary;
-  if(includeAllowances){
-    const incentive = basicSalary * 0.10;
-    const dearness = 5000;
-    grossMonthly += incentive + dearness;
-    breakdown.push(`+ Incentive Allowance (10%): Rs. ${incentive.toFixed(0)}`);
-    breakdown.push(`+ Dearness Allowance: Rs. ${dearness.toFixed(0)}`);
+  let breakdown = [`Basic Salary: Rs. ${basicSalary.toFixed(0)}`];
+  const incentive = basicSalary * 0.10; // both permanent and contract, per reference
+  grossMonthly += incentive;
+  breakdown.push(`+ Incentive Allowance (10%): Rs. ${incentive.toFixed(0)}`);
+  if(isPermanent){
+    grossMonthly += 5000;
+    breakdown.push(`+ Dearness Allowance: Rs. 5,000`);
   }
   if(remoteAllowance > 0){
     grossMonthly += remoteAllowance;
-    breakdown.push(`+ Remote Area Allowance: Rs. ${remoteAllowance.toFixed(0)}`);
+    breakdown.push(`+ दुर्गम भत्ता: Rs. ${remoteAllowance.toFixed(0)}`);
   }
-
+  if(extraAllowanceAmount > 0){
+    grossMonthly += extraAllowanceAmount;
+    breakdown.push(`+ ${document.getElementById('swExtraAllowanceName').value || 'थप भत्ता'}: Rs. ${extraAllowanceAmount.toFixed(0)}`);
+  }
   let grossAnnual = grossMonthly * 12;
-  if(includeAllowances){
-    grossAnnual += 10000; // uniform allowance, annual lump sum
-    grossAnnual += basicSalary; // Dashain bonus — 1 month's basic salary
-    breakdown.push(`+ Uniform Allowance (annual): Rs. 10,000`);
-    breakdown.push(`+ Dashain Bonus (1 month basic): Rs. ${basicSalary.toFixed(0)}`);
+  if(isPermanent){
+    grossAnnual += 10000 + basicSalary; // uniform + Dashain bonus
+    breakdown.push(`+ पोशाक भत्ता (वार्षिक): Rs. 10,000`);
+    breakdown.push(`+ चाडपर्व खर्च (१ महिना आधार तलब): Rs. ${basicSalary.toFixed(0)}`);
   }
 
   try{
@@ -7312,38 +7693,52 @@ document.getElementById('calcSalaryBtn').addEventListener('click', async () => {
     const slabs = await slabsRes.json();
     const limits = await limitsRes.json();
 
-    // ---- EPF / Pension (mandatory — one or the other, based on scheme) ----
-    let employeeRetirement, employerRetirement, retirementLabel;
-    if(pensionSystem === 'pf'){
-      const empRate = getPayrollRate(rates, 'PF_Employee', 10);
-      const erRate = getPayrollRate(rates, 'PF_Employer', 10);
-      employeeRetirement = basicSalary * (empRate / 100);
-      employerRetirement = basicSalary * (erRate / 100);
-      retirementLabel = 'EPF';
-    } else {
-      const empRate = getPayrollRate(rates, 'Pension_Employee', 6);
-      const erRate = getPayrollRate(rates, 'Pension_Employer', 6);
-      employeeRetirement = basicSalary * (empRate / 100);
-      employerRetirement = basicSalary * (erRate / 100);
-      retirementLabel = 'Pension Contribution';
+    // ---- EPF / Pension (permanent employees only, per reference) ----
+    let employeeRetirement = 0, employerRetirement = 0, retirementLabel = '—';
+    let insuranceMonthly = 0;
+    if(isPermanent){
+      if(pensionSystem === 'old'){
+        const empRate = getPayrollRate(rates, 'PF_Employee', 10);
+        const erRate = getPayrollRate(rates, 'PF_Employer', 10);
+        employeeRetirement = basicSalary * (empRate / 100);
+        employerRetirement = basicSalary * (erRate / 100);
+        retirementLabel = 'EPF (सञ्चय कोष)';
+      } else {
+        const empRate = getPayrollRate(rates, 'Pension_Employee', 6);
+        const erRate = getPayrollRate(rates, 'Pension_Employer', 6);
+        employeeRetirement = basicSalary * (empRate / 100);
+        employerRetirement = basicSalary * (erRate / 100);
+        retirementLabel = 'निवृत्तिभरण कट्टी';
+      }
+      insuranceMonthly = getPayrollRate(rates, 'LifeInsurance_Monthly', 400);
     }
     const annualEmployeeRetirement = employeeRetirement * 12;
-
-    // ---- Life insurance (mandatory if checked) ----
-    const insuranceMonthly = includeInsurance ? getPayrollRate(rates, 'LifeInsurance_Monthly', 400) : 0;
     const annualInsurance = insuranceMonthly * 12;
-
-    // ---- CIT (optional) ----
     const annualCit = citMonthly * 12;
+    const annualOtherDeduction = otherDeductionMonthly * 12;
 
-    // ---- Income Tax (mandatory) — same progressive engine as the standalone Tax Calculator ----
-    const getLimit = (type) => {
+    // ---- Office facility taxable perquisites (added to taxable income, not cash) ----
+    let perquisiteAnnual = 0;
+    if(hasVehicle) perquisiteAnnual += grossAnnual * 0.005;
+    if(hasHousing) perquisiteAnnual += grossAnnual * 0.02;
+
+    // ---- Tax deduction caps ----
+    const getLimit = (type, fallback) => {
       const row = limits.find(r => r.DeductionType === type);
-      return row && row.Limit ? parseFloat(row.Limit) : Infinity;
+      return row && row.Limit ? parseFloat(row.Limit) : fallback;
     };
-    const retirementLimit = getLimit('Retirement');
+    const retirementLimit = getLimit('Retirement', 500000);
+    const healthInsLimit = getLimit('HealthInsurance', 20000);
+    const lifeInsLimit = getLimit('LifeInsurance', 40000);
+    const educationLimit = 25000; // per person's reference — not yet in Sheet, using stated figure
+
     const retirementDeduction = Math.min(annualEmployeeRetirement + annualCit, retirementLimit, grossAnnual / 3);
-    const taxableIncome = Math.max(0, grossAnnual - retirementDeduction);
+    const healthInsDeduction = Math.min(healthInsuranceAnnual, healthInsLimit);
+    const lifeInsDeduction = Math.min(annualInsurance, lifeInsLimit);
+    const educationDeduction = Math.min(educationFeeAnnual, educationLimit);
+    const remoteExemption = remoteTaxExemption; // additional tax-free amount for remote posting
+
+    let taxableIncome = Math.max(0, grossAnnual + perquisiteAnnual - retirementDeduction - healthInsDeduction - lifeInsDeduction - educationDeduction - remoteExemption);
 
     const sortedSlabs = (slabs || []).map(s => ({
       from: parseFloat(s.SlabFrom),
@@ -7356,36 +7751,33 @@ document.getElementById('calcSalaryBtn').addEventListener('click', async () => {
       if(taxableIncome > slab.from){
         const slabAmount = Math.min(taxableIncome, slab.to) - slab.from;
         let slabRate = slab.rate;
-        if(slab.from === 0) slabRate = 0; // waived — employee is a mandatory EPF/Pension contributor
+        if(slab.from === 0 && isPermanent) slabRate = 0; // waived — mandatory EPF/Pension contributor
         annualTax += slabAmount * (slabRate / 100);
       }
     });
+    if(isFemale) annualTax *= 0.90; // महिला १०% कर छुट (rebate on calculated tax)
     const monthlyTax = annualTax / 12;
 
-    // ---- Net take-home ----
-    const netMonthly = grossMonthly - employeeRetirement - insuranceMonthly - citMonthly - monthlyTax;
-    const netAnnual = grossAnnual - annualEmployeeRetirement - annualInsurance - annualCit - annualTax;
-
-    // ---- Total compensation (net + employer contributions) — a second, different number ----
+    const netMonthly = grossMonthly - employeeRetirement - insuranceMonthly - citMonthly - otherDeductionMonthly - monthlyTax;
+    const netAnnual = grossAnnual - annualEmployeeRetirement - annualInsurance - annualCit - annualOtherDeduction - annualTax;
     const totalCompensationAnnual = netAnnual + (employerRetirement * 12);
 
     resultEl.innerHTML = `
       <div class="calc-result">Gross Monthly: Rs. ${grossMonthly.toFixed(0)}</div>
-      <div class="calc-result">${retirementLabel} (employee, ${((employeeRetirement/basicSalary)*100).toFixed(0)}%): − Rs. ${employeeRetirement.toFixed(0)}</div>
-      ${insuranceMonthly > 0 ? `<div class="calc-result">Life Insurance: − Rs. ${insuranceMonthly.toFixed(0)}</div>` : ''}
+      ${employeeRetirement > 0 ? `<div class="calc-result">${retirementLabel}: − Rs. ${employeeRetirement.toFixed(0)}</div>` : ''}
+      ${insuranceMonthly > 0 ? `<div class="calc-result">जीवन बिमा: − Rs. ${insuranceMonthly.toFixed(0)}</div>` : ''}
       ${citMonthly > 0 ? `<div class="calc-result">CIT: − Rs. ${citMonthly.toFixed(0)}</div>` : ''}
-      <div class="calc-result">Income Tax (approx monthly): − Rs. ${monthlyTax.toFixed(0)}</div>
-      <div class="calc-result" style="font-weight:800; color:var(--gold);">Net Take-Home: Rs. ${netMonthly.toFixed(0)}/month</div>
-      <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Annual Net: Rs. ${netAnnual.toFixed(0)} · Annual Tax: Rs. ${annualTax.toFixed(0)}</div>
-      <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Est. Total Compensation (Net + Employer ${retirementLabel}): Rs. ${totalCompensationAnnual.toFixed(0)}/year</div>
+      ${otherDeductionMonthly > 0 ? `<div class="calc-result">ऋण/अन्य: − Rs. ${otherDeductionMonthly.toFixed(0)}</div>` : ''}
+      <div class="calc-result">आयकर (मासिक अनुमानित): − Rs. ${monthlyTax.toFixed(0)}</div>
+      <div class="calc-result" style="font-weight:800; color:var(--gold);">खुद तलब (Net Take-Home): Rs. ${netMonthly.toFixed(0)}/महिना</div>
+      <div class="calc-result" style="font-size:11.5px; opacity:0.85;">वार्षिक खुद: Rs. ${netAnnual.toFixed(0)} · वार्षिक कर: Rs. ${annualTax.toFixed(0)}</div>
+      ${employerRetirement > 0 ? `<div class="calc-result" style="font-size:11.5px; opacity:0.85;">अनुमानित कुल पारिश्रमिक (Total Compensation): Rs. ${totalCompensationAnnual.toFixed(0)}/वर्ष</div>` : ''}
       <p style="font-size:11px; color:var(--ink-soft); margin-top:10px;">${breakdown.join('<br>')}</p>
+      ${isFemale ? '<p style="font-size:11px; color:var(--gold); margin-top:6px;">✓ महिला १०% कर छुट लागू भयो</p>' : ''}
+      ${hasDisability ? '<p style="font-size:11px; color:var(--gold);">✓ अपाङ्गता ५०% थप छुट — यो अझै पूर्ण रूपमा लागू भएको छैन, हस्तपुस्तिकाबाट पुष्टि गर्नुहोस्</p>' : ''}
     `;
 
-    lastPayslipData = {
-      post: `${post.Service ? post.Service + ' — ' : ''}${post.Post}`,
-      basicSalary, grossMonthly, retirementLabel, employeeRetirement,
-      insuranceMonthly, citMonthly, monthlyTax, netMonthly, netAnnual
-    };
+    lastPayslipData = { post: postLabel, basicSalary, grossMonthly, retirementLabel, employeeRetirement, insuranceMonthly, citMonthly, monthlyTax, netMonthly, netAnnual };
     document.getElementById('copyPayslipBtn').style.display = 'block';
   }catch(err){
     resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Could not load deduction rates. Check your internet connection.</p>`;
@@ -7396,7 +7788,7 @@ let lastPayslipData = null;
 document.getElementById('copyPayslipBtn').addEventListener('click', () => {
   if(!lastPayslipData) return;
   const d = lastPayslipData;
-  const text = `Health Loksewa — Estimated Payslip\n${d.post}\n\nBasic Salary: Rs. ${d.basicSalary.toFixed(0)}\nGross Monthly: Rs. ${d.grossMonthly.toFixed(0)}\n${d.retirementLabel}: − Rs. ${d.employeeRetirement.toFixed(0)}\n${d.insuranceMonthly > 0 ? `Life Insurance: − Rs. ${d.insuranceMonthly.toFixed(0)}\n` : ''}${d.citMonthly > 0 ? `CIT: − Rs. ${d.citMonthly.toFixed(0)}\n` : ''}Income Tax: − Rs. ${d.monthlyTax.toFixed(0)}\n\nNet Take-Home: Rs. ${d.netMonthly.toFixed(0)}/month\nAnnual Net: Rs. ${d.netAnnual.toFixed(0)}\n\n(Estimate only — verify against official sources)`;
+  const text = `Health Loksewa — Estimated Payslip\n${d.post}\n\nBasic Salary: Rs. ${d.basicSalary.toFixed(0)}\nGross Monthly: Rs. ${d.grossMonthly.toFixed(0)}\n${d.retirementLabel !== '—' ? `${d.retirementLabel}: − Rs. ${d.employeeRetirement.toFixed(0)}\n` : ''}${d.insuranceMonthly > 0 ? `Life Insurance: − Rs. ${d.insuranceMonthly.toFixed(0)}\n` : ''}${d.citMonthly > 0 ? `CIT: − Rs. ${d.citMonthly.toFixed(0)}\n` : ''}Income Tax: − Rs. ${d.monthlyTax.toFixed(0)}\n\nNet Take-Home: Rs. ${d.netMonthly.toFixed(0)}/month\nAnnual Net: Rs. ${d.netAnnual.toFixed(0)}\n\n(Estimate only — verify against official sources)`;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copyPayslipBtn');
     const original = btn.textContent;
@@ -7405,34 +7797,6 @@ document.getElementById('copyPayslipBtn').addEventListener('click', () => {
   }).catch(() => {
     alert('Could not copy — your browser may not support clipboard access here.');
   });
-});
-
-document.getElementById('calcGradeProjectionBtn').addEventListener('click', () => {
-  const selectedIndex = document.getElementById('salaryPostSelect').value;
-  const gradeCount = parseFloat(document.getElementById('salaryGradeCount').value) || 0;
-  const resultEl = document.getElementById('gradeProjectionResult');
-  if(selectedIndex === '' || !salaryScaleCache || !salaryScaleCache[selectedIndex]){
-    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select a post above first.</p>`;
-    return;
-  }
-  const post = salaryScaleCache[selectedIndex];
-  const startingSalary = parseFloat(post.StartingSalary);
-  const gradeRate = parseFloat(post.GradeRate) || 0;
-  const maxGrades = post.MaxGrades ? parseFloat(post.MaxGrades) : null;
-  const currentBasic = startingSalary + (gradeCount * gradeRate);
-  const nextBasic = currentBasic + gradeRate;
-  let html = `
-    <div class="calc-result">Current Basic (Grade ${gradeCount}): Rs. ${currentBasic.toFixed(0)}</div>
-    <div class="calc-result">After Next Grade (Grade ${gradeCount + 1}): Rs. ${nextBasic.toFixed(0)}</div>
-    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Increase per grade: Rs. ${gradeRate.toFixed(0)}</div>
-  `;
-  if(maxGrades){
-    const maxBasic = startingSalary + (maxGrades * gradeRate);
-    html += `<div class="calc-result" style="font-size:11.5px; opacity:0.85;">Maximum Basic (Grade ${maxGrades}): Rs. ${maxBasic.toFixed(0)}</div>`;
-  } else {
-    html += `<p style="font-size:11px; color:var(--ink-soft); margin-top:6px;">Maximum grade count for this post isn't in the Sheet yet — add a MaxGrades column to SalaryScale to show the ceiling.</p>`;
-  }
-  resultEl.innerHTML = html;
 });
 
 document.getElementById('calcComparisonBtn').addEventListener('click', () => {
@@ -10671,13 +11035,13 @@ const TOURNAMENT_POSTS = [
 ];
 
 const MOCK_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:50, marksEach:2},
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1, minutes:75},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2, minutes:45},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2, minutes:45},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2, minutes:45},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2, minutes:45},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1, minutes:60},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:100, marksEach:1, minutes:60},
 ];
 function renderMockPosts(){
   const selected = getSelectedPosts();
@@ -10686,7 +11050,7 @@ function renderMockPosts(){
     <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
       <div class="dc-label" style="font-size:14px;">${post.label}</div>
-      <div class="dc-sub">${post.questionCount} Qs · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
+      <div class="dc-sub">${post.questionCount} Qs · ${post.minutes} min · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
     </button>
   `).join('');
 
@@ -10742,7 +11106,7 @@ async function startMockTest(post){
     quizQuestions = pool;
     currentIndex = 0;
     answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+    secondsLeft = post.minutes * 60; // per-post official exam timing, not a fixed value
     currentMarksPerQuestion = post.marksEach;
 
     buildOmrStrip();
@@ -11372,7 +11736,7 @@ async function startSet(subject, setNumber, totalSets){
           restBatch = shuffle([...restBatch]); // vary display order each attempt, within this batch
           quizQuestions = quizQuestions.concat(restBatch);
           answers = answers.concat(new Array(restBatch.length).fill(null));
-          secondsLeft += restBatch.length * 45; // extend the timer to match the full set
+          secondsLeft += restBatch.length * (RAPID_FIRE_PACE_SEC[currentMcqPost] || 45); // extend the timer to match the full set, at this post's real exam pace
           buildOmrStrip();
           refreshOmrStrip();
         }
@@ -11401,7 +11765,7 @@ function launchQuiz(pool, subject, setNumber, totalSets){
   quizQuestions = pool;
   currentIndex = 0;
   answers = new Array(quizQuestions.length).fill(null);
-  secondsLeft = quizQuestions.length * 45;
+  secondsLeft = quizQuestions.length * (RAPID_FIRE_PACE_SEC[currentMcqPost] || 45);
   currentSetInfo = { subject, setNumber, totalSets };
 
   buildOmrStrip();
@@ -11666,11 +12030,7 @@ const RAPID_FIRE_MODES = [
   { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
   { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject', shortDesc:'Your weak subject' },
   { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths', shortDesc:'Past mistakes' },
-  { key:'revision', icon:'🔄', label:'Revision Fire', desc:'Questions due for revision today', shortDesc:'Due for revision' },
-  { key:'random', icon:'🎲', label:'Random Fire', desc:'Mixed across all your selected posts', shortDesc:'Mixed posts' },
-  { key:'concept', icon:'🧠', label:'Concept Fire', desc:'Understand key concepts in a topic', shortDesc:'Pick a topic' },
   { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject', shortDesc:'Pick a subject' },
-  { key:'daily', icon:'🏆', label:'Daily Fire', desc:"Today's fixed mini-test — build a streak", shortDesc:'Daily streak' },
   { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend', shortDesc:'Challenge a friend' },
 ];
 let rapidFireSelectedMode = null;
