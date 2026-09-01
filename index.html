@@ -2740,6 +2740,14 @@
         <div class="tt-icon">💵</div>
         <div class="tt-label">Gov. Salary</div>
       </a>
+      <a class="tool-tile" href="#" id="goToSalaryComparison" data-search="compare posts salary comparison job">
+        <div class="tt-icon">⚖️</div>
+        <div class="tt-label">Compare Posts</div>
+      </a>
+      <a class="tool-tile" href="#" id="goToRealSalary" data-search="inflation real salary purchasing power">
+        <div class="tt-icon">📉</div>
+        <div class="tt-label">Real Salary</div>
+      </a>
       </div>
       <p id="toolsNoResults" style="display:none; text-align:center; color:var(--ink-soft); font-size:13px; margin-top:20px;">No tools match your search.</p>
     </div>
@@ -2807,6 +2815,55 @@
         <div class="calc-field"><label>CIT — Citizen Investment Trust (Rs./month, optional)</label><input type="number" id="salaryCit" placeholder="e.g. 0" value="0"></div>
         <button class="calc-btn" id="calcSalaryBtn">Calculate Salary</button>
         <div id="salaryCalcResult"></div>
+        <button class="calc-btn" id="copyPayslipBtn" style="display:none; margin-top:10px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📋 Copy Payslip Summary</button>
+      </div>
+
+      <div class="calc-card">
+        <h4>📈 Grade Projection</h4>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Uses the post selected above.</p>
+        <button class="calc-btn" id="calcGradeProjectionBtn">Show Projection</button>
+        <div id="gradeProjectionResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALARY COMPARISON -->
+  <div class="screen" id="salaryComparisonScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚖️ Compare Two Posts</div>
+      <div class="calc-card">
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Compares Basic Salary and Net Take-Home using standard allowances, EPF (legacy scheme), and mandatory insurance for both.</p>
+        <div class="calc-field"><label>Post A</label>
+          <select id="compPostA" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="">Loading…</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Post A grade count</label><input type="number" id="compGradeA" value="0"></div>
+        <div class="calc-field"><label>Post B</label>
+          <select id="compPostB" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="">Loading…</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Post B grade count</label><input type="number" id="compGradeB" value="0"></div>
+        <button class="calc-btn" id="calcComparisonBtn">Compare</button>
+        <div id="comparisonResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REAL SALARY / INFLATION CALCULATOR -->
+  <div class="screen" id="realSalaryScreen">
+    <div class="back-link" data-back="calculatorHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📉 Real Salary (Inflation-Adjusted)</div>
+      <div class="calc-card">
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">Shows what today's salary will be worth in real purchasing power after inflation.</p>
+        <div class="calc-field"><label>Current monthly salary (Rs.)</label><input type="number" id="realSalaryCurrent" placeholder="e.g. 50000"></div>
+        <div class="calc-field"><label>Expected annual inflation (%)</label><input type="number" id="realSalaryInflation" placeholder="e.g. 6" value="6"></div>
+        <div class="calc-field"><label>Years ahead</label><input type="number" id="realSalaryYears" placeholder="e.g. 5" value="5"></div>
+        <button class="calc-btn" id="calcRealSalaryBtn">Calculate</button>
+        <div id="realSalaryResult"></div>
       </div>
     </div>
   </div>
@@ -4856,6 +4913,8 @@ const immunizationScreen = document.getElementById('immunizationScreen');
 const pensionScreen = document.getElementById('pensionScreen');
 const taxCalcScreen = document.getElementById('taxCalcScreen');
 const salaryCalcScreen = document.getElementById('salaryCalcScreen');
+const salaryComparisonScreen = document.getElementById('salaryComparisonScreen');
+const realSalaryScreen = document.getElementById('realSalaryScreen');
 const myHealthScreen = document.getElementById('myHealthScreen');
 const everydayToolsScreen = document.getElementById('everydayToolsScreen');
 const wellnessScreen = document.getElementById('wellnessScreen');
@@ -4878,7 +4937,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -5037,7 +5096,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -5594,6 +5653,18 @@ document.getElementById('goToSalaryCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(salaryCalcScreen);
   loadSalaryScaleOptions();
+});
+document.getElementById('goToSalaryComparison').addEventListener('click', async (e) => {
+  e.preventDefault();
+  showScreen(salaryComparisonScreen);
+  await loadSalaryScaleOptions(); // ensures salaryScaleCache is populated
+  const options = salaryScaleCache ? salaryScaleCache.map((r, i) => `<option value="${i}">${r.Service ? r.Service + ' — ' : ''}${r.Post}</option>`).join('') : `<option value="">No data</option>`;
+  document.getElementById('compPostA').innerHTML = options;
+  document.getElementById('compPostB').innerHTML = options;
+});
+document.getElementById('goToRealSalary').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(realSalaryScreen);
 });
 
 // ---------- Smart Tools search: filters the tile grid client-side by tool name/keywords ----------
@@ -7309,9 +7380,118 @@ document.getElementById('calcSalaryBtn').addEventListener('click', async () => {
       <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Est. Total Compensation (Net + Employer ${retirementLabel}): Rs. ${totalCompensationAnnual.toFixed(0)}/year</div>
       <p style="font-size:11px; color:var(--ink-soft); margin-top:10px;">${breakdown.join('<br>')}</p>
     `;
+
+    lastPayslipData = {
+      post: `${post.Service ? post.Service + ' — ' : ''}${post.Post}`,
+      basicSalary, grossMonthly, retirementLabel, employeeRetirement,
+      insuranceMonthly, citMonthly, monthlyTax, netMonthly, netAnnual
+    };
+    document.getElementById('copyPayslipBtn').style.display = 'block';
   }catch(err){
     resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Could not load deduction rates. Check your internet connection.</p>`;
   }
+});
+
+let lastPayslipData = null;
+document.getElementById('copyPayslipBtn').addEventListener('click', () => {
+  if(!lastPayslipData) return;
+  const d = lastPayslipData;
+  const text = `Health Loksewa — Estimated Payslip\n${d.post}\n\nBasic Salary: Rs. ${d.basicSalary.toFixed(0)}\nGross Monthly: Rs. ${d.grossMonthly.toFixed(0)}\n${d.retirementLabel}: − Rs. ${d.employeeRetirement.toFixed(0)}\n${d.insuranceMonthly > 0 ? `Life Insurance: − Rs. ${d.insuranceMonthly.toFixed(0)}\n` : ''}${d.citMonthly > 0 ? `CIT: − Rs. ${d.citMonthly.toFixed(0)}\n` : ''}Income Tax: − Rs. ${d.monthlyTax.toFixed(0)}\n\nNet Take-Home: Rs. ${d.netMonthly.toFixed(0)}/month\nAnnual Net: Rs. ${d.netAnnual.toFixed(0)}\n\n(Estimate only — verify against official sources)`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyPayslipBtn');
+    const original = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.textContent = original; }, 2000);
+  }).catch(() => {
+    alert('Could not copy — your browser may not support clipboard access here.');
+  });
+});
+
+document.getElementById('calcGradeProjectionBtn').addEventListener('click', () => {
+  const selectedIndex = document.getElementById('salaryPostSelect').value;
+  const gradeCount = parseFloat(document.getElementById('salaryGradeCount').value) || 0;
+  const resultEl = document.getElementById('gradeProjectionResult');
+  if(selectedIndex === '' || !salaryScaleCache || !salaryScaleCache[selectedIndex]){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select a post above first.</p>`;
+    return;
+  }
+  const post = salaryScaleCache[selectedIndex];
+  const startingSalary = parseFloat(post.StartingSalary);
+  const gradeRate = parseFloat(post.GradeRate) || 0;
+  const maxGrades = post.MaxGrades ? parseFloat(post.MaxGrades) : null;
+  const currentBasic = startingSalary + (gradeCount * gradeRate);
+  const nextBasic = currentBasic + gradeRate;
+  let html = `
+    <div class="calc-result">Current Basic (Grade ${gradeCount}): Rs. ${currentBasic.toFixed(0)}</div>
+    <div class="calc-result">After Next Grade (Grade ${gradeCount + 1}): Rs. ${nextBasic.toFixed(0)}</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Increase per grade: Rs. ${gradeRate.toFixed(0)}</div>
+  `;
+  if(maxGrades){
+    const maxBasic = startingSalary + (maxGrades * gradeRate);
+    html += `<div class="calc-result" style="font-size:11.5px; opacity:0.85;">Maximum Basic (Grade ${maxGrades}): Rs. ${maxBasic.toFixed(0)}</div>`;
+  } else {
+    html += `<p style="font-size:11px; color:var(--ink-soft); margin-top:6px;">Maximum grade count for this post isn't in the Sheet yet — add a MaxGrades column to SalaryScale to show the ceiling.</p>`;
+  }
+  resultEl.innerHTML = html;
+});
+
+document.getElementById('calcComparisonBtn').addEventListener('click', () => {
+  const idxA = document.getElementById('compPostA').value;
+  const idxB = document.getElementById('compPostB').value;
+  const gradeA = parseFloat(document.getElementById('compGradeA').value) || 0;
+  const gradeB = parseFloat(document.getElementById('compGradeB').value) || 0;
+  const resultEl = document.getElementById('comparisonResult');
+  if(idxA === '' || idxB === '' || !salaryScaleCache || !salaryScaleCache[idxA] || !salaryScaleCache[idxB]){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select both posts.</p>`;
+    return;
+  }
+  function quickCalc(post, gradeCount){
+    const startingSalary = parseFloat(post.StartingSalary);
+    const gradeRate = parseFloat(post.GradeRate) || 0;
+    const basicSalary = startingSalary + (gradeCount * gradeRate);
+    const grossMonthly = basicSalary + (basicSalary * 0.10) + 5000; // incentive + dearness, standard allowances
+    const epf = basicSalary * 0.10;
+    const insurance = 400;
+    const netMonthly = grossMonthly - epf - insurance; // tax omitted here for a quick side-by-side; use the main calculator for exact tax
+    return { basicSalary, grossMonthly, netMonthly };
+  }
+  const a = quickCalc(salaryScaleCache[idxA], gradeA);
+  const b = quickCalc(salaryScaleCache[idxB], gradeB);
+  resultEl.innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+      <div>
+        <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">${salaryScaleCache[idxA].Post}</div>
+        <div class="calc-result" style="font-size:12px;">Basic: Rs. ${a.basicSalary.toFixed(0)}</div>
+        <div class="calc-result" style="font-size:12px;">Gross: Rs. ${a.grossMonthly.toFixed(0)}</div>
+        <div class="calc-result" style="font-size:12px; font-weight:800; color:var(--gold);">Net (approx): Rs. ${a.netMonthly.toFixed(0)}</div>
+      </div>
+      <div>
+        <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">${salaryScaleCache[idxB].Post}</div>
+        <div class="calc-result" style="font-size:12px;">Basic: Rs. ${b.basicSalary.toFixed(0)}</div>
+        <div class="calc-result" style="font-size:12px;">Gross: Rs. ${b.grossMonthly.toFixed(0)}</div>
+        <div class="calc-result" style="font-size:12px; font-weight:800; color:var(--gold);">Net (approx): Rs. ${b.netMonthly.toFixed(0)}</div>
+      </div>
+    </div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:10px;">Net shown here excludes income tax for a quick comparison — use the Gov. Salary Calculator on each post individually for exact take-home including tax.</p>
+  `;
+});
+
+document.getElementById('calcRealSalaryBtn').addEventListener('click', () => {
+  const current = parseFloat(document.getElementById('realSalaryCurrent').value);
+  const inflationRate = parseFloat(document.getElementById('realSalaryInflation').value);
+  const years = parseFloat(document.getElementById('realSalaryYears').value);
+  const resultEl = document.getElementById('realSalaryResult');
+  if(!current || current <= 0 || isNaN(inflationRate) || !years || years <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter valid numbers.</p>`;
+    return;
+  }
+  const realValue = current / Math.pow(1 + (inflationRate / 100), years);
+  const requiredFutureSalary = current * Math.pow(1 + (inflationRate / 100), years);
+  resultEl.innerHTML = `
+    <div class="calc-result">Today's Rs. ${current.toFixed(0)} will feel like Rs. ${realValue.toFixed(0)} in ${years} years</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">To keep the same purchasing power, your salary would need to grow to Rs. ${requiredFutureSalary.toFixed(0)} by then</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">Assumes a constant inflation rate — an economic projection, not a guarantee.</p>
+  `;
 });
 
 // ---------- FAQs ----------
