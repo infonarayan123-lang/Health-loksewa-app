@@ -5,20 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Health Loksewa — MCQ Practice</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0B1C3D">
+<meta name="theme-color" content="#0B1426">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0B1C3D;
-    --panel:#112A45;
+    --bg:#0B1426;
+    --panel:#13233F;
+    --panel-elevated:#1B2F52;
     --ink:#FFFFFF;
-    --ink-soft:#A9BCCB;
-    --crimson:#14A3A8;
-    --crimson-deep:#0D7377;
-    --navy:#0D7377;
+    --ink-soft:#E2E8F0;
+    --ink-muted:#64748B;
+    --crimson:#0D9488;
+    --crimson-deep:#14B8A6;
+    --navy:#14B8A6;
     --gold:#C9A227;
     --correct:#34D399;
     --correct-bg:rgba(52,211,153,0.15);
@@ -94,7 +96,7 @@
     height:100%;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch; /* momentum scrolling on iOS/older Android WebViews */
-    background:linear-gradient(180deg, #0B1C3D 0%, #14141A 55%, #1A140F 100%);
+    background:linear-gradient(180deg, #0B1426 0%, #13233F 100%);
     display:flex;
     flex-direction:column;
     box-shadow:0 0 40px rgba(0,0,0,0.06);
@@ -134,27 +136,27 @@
 
   /* Per-icon accent glow colors, applied when active — unified to the brand teal family */
   .bottom-nav-item[data-nav="home"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    background:radial-gradient(circle at 35% 30%, #0D9488, #14B8A6);
     box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:floatHover 2s ease-in-out infinite;
   }
   .bottom-nav-item[data-nav="learn"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    background:radial-gradient(circle at 35% 30%, #0D9488, #14B8A6);
     box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 3px 6px rgba(0,0,0,0.45), inset 0 -1px 1px rgba(255,255,255,0.15);
     transform:scale(0.92) translateY(1px); /* pressed depth effect */
   }
   .bottom-nav-item[data-nav="practice"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    background:radial-gradient(circle at 35% 30%, #0D9488, #14B8A6);
     box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:keyBounce 1.6s ease-in-out infinite;
   }
   .bottom-nav-item[data-nav="myprogress"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    background:radial-gradient(circle at 35% 30%, #0D9488, #14B8A6);
     box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:spinRefresh 3s linear infinite;
   }
   .bottom-nav-item[data-nav="profile"].active .bn-icon-wrap{
-    background:radial-gradient(circle at 35% 30%, #14A3A8, #0D7377);
+    background:radial-gradient(circle at 35% 30%, #0D9488, #14B8A6);
     box-shadow:0 0 16px rgba(20,163,168,0.6), inset 0 -2px 4px rgba(0,0,0,0.3), inset 0 2px 2px rgba(255,255,255,0.35);
     animation:floatHover 2s ease-in-out infinite;
   }
@@ -208,7 +210,7 @@
   .home-body{ padding:20px 20px 24px; flex:1; }
   /* ---------- Login / Splash Screen ---------- */
   .login-hero{
-    background:linear-gradient(160deg, #0B1C3D 0%, #146B8C 60%, #14A3A8 100%);
+    background:linear-gradient(160deg, #0B1426 0%, #0D9488 60%, #0D9488 100%);
     padding:52px 24px 34px;
     text-align:center;
     color:#fff;
@@ -245,7 +247,7 @@
   .app-loading-wrap{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     height:100%; width:100%;
-    background:linear-gradient(180deg, #0B1C3D 0%, #08101F 100%);
+    background:linear-gradient(180deg, #0B1426 0%, #13233F 100%);
   }
   .splash-logo{
     width:96px; height:96px; border-radius:22px;
@@ -268,7 +270,7 @@
   .splash-dots{ display:flex; gap:7px; margin-top:38px; }
   .splash-dots span{
     width:8px; height:8px; border-radius:50%;
-    background:#14A3A8; box-shadow:0 0 8px rgba(20,163,168,0.7);
+    background:#0D9488; box-shadow:0 0 8px rgba(20,163,168,0.7);
     animation:splashDotPulse 1.2s ease-in-out infinite;
   }
   .splash-dots span:nth-child(2){ animation-delay:0.2s; }
@@ -360,7 +362,7 @@
   /* ---------- Line 1: Continuous Marquee Ticker ---------- */
   .marquee-wrap{
     overflow:hidden; white-space:nowrap;
-    background:linear-gradient(90deg, #0FA3A8, #14A3A8, #35C6C9, #146B8C, #0FA3A8);
+    background:linear-gradient(90deg, #0FA3A8, #0D9488, #35C6C9, #0D9488, #0FA3A8);
     background-size:300% 100%;
     animation:rainbowShift 8s ease infinite;
     border-radius:10px;
@@ -469,7 +471,7 @@
     position:relative;
     font-family:'JetBrains Mono',monospace; font-size:32px; font-weight:700;
     text-align:right;
-    background:linear-gradient(180deg, #6EEBCB 0%, #14A3A8 55%, #0B4A63 100%);
+    background:linear-gradient(180deg, #6EEBCB 0%, #0D9488 55%, #0B4A63 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
     filter:drop-shadow(0 0 10px rgba(15,163,168,0.55)) drop-shadow(0 2px 0 rgba(0,0,0,0.35));
   }
@@ -477,7 +479,7 @@
   .countdown-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:14px; }
   .countdown-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:all 0.25s ease; }
   .countdown-dot.active{
-    background:linear-gradient(90deg,#6EEBCB,#14A3A8); width:16px; border-radius:4px;
+    background:linear-gradient(90deg,#6EEBCB,#0D9488); width:16px; border-radius:4px;
     box-shadow:0 0 8px rgba(15,163,168,0.55);
   }
 
@@ -527,16 +529,16 @@
 
   /* ---------- Question of the Day card + screen ---------- */
   .dash-card.c-progress{
-    background:linear-gradient(135deg,#146B8C,#0B4A63);
+    background:linear-gradient(135deg,#0D9488,#0B4A63);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-tournament{
-    background:linear-gradient(135deg,#14A3A8,#0D7377);
+    background:linear-gradient(135deg,#0D9488,#14B8A6);
   }
   .tournament-hero{
     text-align:center; padding:24px 20px;
-    background:linear-gradient(160deg, #14A3A8 0%, #0D7377 100%);
+    background:linear-gradient(160deg, #0D9488 0%, #14B8A6 100%);
     color:#fff; border-radius:16px; margin-bottom:16px;
   }
   .tournament-hero h2{ font-family:'Tinos',serif; font-size:19px; margin-bottom:4px; }
@@ -549,19 +551,19 @@
   .group-card .gc-name{ font-family:'Tinos',serif; font-weight:700; font-size:14px; margin-bottom:3px; }
   .group-card .gc-meta{ font-size:11.5px; color:var(--ink-soft); }
   .dash-card.c-formula{
-    background:linear-gradient(135deg,#146B8C,#0B4A63);
+    background:linear-gradient(135deg,#0D9488,#0B4A63);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-video{
-    background:linear-gradient(135deg,#14A3A8,#0D7377);
+    background:linear-gradient(135deg,#0D9488,#14B8A6);
   }
   .dash-card.c-studyres{
     background:linear-gradient(135deg,#1B3B6F,#0F2648);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-mnemonics{
-    background:linear-gradient(135deg,#146B8C,#0B4A63);
+    background:linear-gradient(135deg,#0D9488,#0B4A63);
     grid-column:1 / -1;
     flex-direction:row; align-items:center; gap:16px;
   }
@@ -570,11 +572,11 @@
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-dictionary{
-    background:linear-gradient(135deg,#14A3A8,#0D7377);
+    background:linear-gradient(135deg,#0D9488,#14B8A6);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-calculator{
-    background:linear-gradient(135deg,#146B8C,#0B4A63);
+    background:linear-gradient(135deg,#0D9488,#0B4A63);
     grid-column:1 / -1; flex-direction:row; align-items:center; gap:16px;
   }
   .dash-card.c-faqs{
@@ -849,7 +851,7 @@
   /* ---------- Profile Screen ---------- */
   .profile-hero{
     text-align:center; padding:36px 20px 26px;
-    background:linear-gradient(160deg, #0B1C3D 0%, #146B8C 100%);
+    background:linear-gradient(160deg, #0B1426 0%, #0D9488 100%);
     color:#fff; border-radius:0 0 24px 24px;
   }
   .profile-avatar-big{
@@ -1091,9 +1093,9 @@
   .dash-card .dc-icon{ font-size:26px; }
   .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
   .dash-card .dc-sub{ font-size:11px; opacity:0.85; }
-  .dash-card.c-quiz{ background:linear-gradient(135deg,#14A3A8,#0D7377); }
+  .dash-card.c-quiz{ background:linear-gradient(135deg,#0D9488,#14B8A6); }
   .dash-card.c-syllabus{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
-  .dash-card.c-current{ background:linear-gradient(135deg,#146B8C,#0B4A63); }
+  .dash-card.c-current{ background:linear-gradient(135deg,#0D9488,#0B4A63); }
   .dash-card.c-gk{ background:linear-gradient(135deg,#1B3B6F,#0F2648); }
   /* Sub-hub grids (Learn/Practice/Smart Tools/Progress) — same exact shape as Home's cards,
      but a deliberately different, quieter treatment: neutral dark grey/charcoal family
@@ -1141,14 +1143,14 @@
   .ca-date{ font-size:11px; color:var(--gold); font-weight:700; margin-bottom:3px; letter-spacing:0.03em; }
 
   .dash-card.c-mock{
-    background:linear-gradient(135deg,#0B1C3D,#071021);
+    background:linear-gradient(135deg,#0B1426,#071021);
   }
 
   .dash-card.c-resources{
-    background:linear-gradient(135deg,#146B8C,#0B4A63);
+    background:linear-gradient(135deg,#0D9488,#0B4A63);
   }
   .dash-card.c-ai{
-    background:linear-gradient(135deg,#14A3A8,#0D7377);
+    background:linear-gradient(135deg,#0D9488,#14B8A6);
   }
 
   /* ---------- AI Chat Screen ---------- */
@@ -3907,7 +3909,7 @@
         <h4 style="text-align:left;">🌬️ Breathing Exercise</h4>
         <p style="font-size:11.5px; color:var(--ink-soft); text-align:left; margin-bottom:14px;">Box breathing — 4 seconds each phase.</p>
         <div id="breathingCircleWrap" style="display:flex; align-items:center; justify-content:center; height:180px;">
-          <div id="breathingCircle" style="width:100px; height:100px; border-radius:50%; background:radial-gradient(circle,#14A3A8,#0D7377); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; transition:transform 4s ease-in-out;">Start</div>
+          <div id="breathingCircle" style="width:100px; height:100px; border-radius:50%; background:radial-gradient(circle,#0D9488,#14B8A6); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; transition:transform 4s ease-in-out;">Start</div>
         </div>
         <button class="start-btn" id="breathingStartBtn" style="width:auto; padding:11px 30px;">Start Breathing</button>
       </div>
@@ -7027,7 +7029,7 @@ document.getElementById('calcQrBtn').addEventListener('click', () => {
     text: text,
     width: 200,
     height: 200,
-    colorDark: '#0B1C3D',
+    colorDark: '#0B1426',
     colorLight: '#ffffff'
   });
   setTimeout(() => {
@@ -8557,8 +8559,8 @@ function renderHomeChart(mode){
     y: h - pad - ((b.questions / maxQ) * (h - pad * 2))
   }));
   const points = coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
-  const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.5" fill="#14A3A8"/>`).join('');
-  document.getElementById('homeChartSvg').innerHTML = `<polyline points="${points}" fill="none" stroke="#14A3A8" stroke-width="2.5"/>${dots}`;
+  const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.5" fill="#0D9488"/>`).join('');
+  document.getElementById('homeChartSvg').innerHTML = `<polyline points="${points}" fill="none" stroke="#0D9488" stroke-width="2.5"/>${dots}`;
 
   const totalQ = buckets.reduce((s, b) => s + b.questions, 0);
   const totalC = buckets.reduce((s, b) => s + b.correct, 0);
@@ -9612,7 +9614,7 @@ applyDarkModePreference();
 
 // ---------- Accent Color: one navy background for everyone, pick your own accent tint ----------
 const APP_THEMES = [
-  { key:'teal', label:'Teal', swatch:'#14A3A8' },
+  { key:'teal', label:'Teal', swatch:'#0D9488' },
   { key:'blue', label:'Ocean Blue', swatch:'#42A5F5' },
   { key:'emerald', label:'Emerald', swatch:'#34D399' },
   { key:'violet', label:'Violet', swatch:'#A78BFA' },
@@ -10026,12 +10028,12 @@ applyHighContrastPreference(); // apply immediately on app load
 
 // ---------- Auto-sliding carousel ----------
 const DEFAULT_CAROUSEL_SLIDES = [
-  { bg:'linear-gradient(135deg,#14A3A8,#0D7377)', icon:'📝', title:'Subject-wise MCQs', sub:'1000+ questions, Set-locked progression', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
+  { bg:'linear-gradient(135deg,#0D9488,#14B8A6)', icon:'📝', title:'Subject-wise MCQs', sub:'1000+ questions, Set-locked progression', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
   { bg:'linear-gradient(135deg,#1B3B6F,#0F2648)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
-  { bg:'linear-gradient(135deg,#146B8C,#0B4A63)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
+  { bg:'linear-gradient(135deg,#0D9488,#0B4A63)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
   { bg:'linear-gradient(135deg,#1B3B6F,#0F2648)', icon:'🧠', title:'General Knowledge and Guidelines', sub:'Constitution, Acts, Samsamayik &amp; more', action:() => { showScreen(gkScreen); renderGkCategories(); } },
-  { bg:'linear-gradient(135deg,#14A3A8,#0D7377)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { document.getElementById('cardQotd').scrollIntoView({behavior:'smooth', block:'center'}); } },
-  { bg:'linear-gradient(135deg,#146B8C,#0B4A63)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
+  { bg:'linear-gradient(135deg,#0D9488,#14B8A6)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { document.getElementById('cardQotd').scrollIntoView({behavior:'smooth', block:'center'}); } },
+  { bg:'linear-gradient(135deg,#0D9488,#0B4A63)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
 ];
 let CAROUSEL_SLIDES = DEFAULT_CAROUSEL_SLIDES;
 async function loadCarouselSlides(){
@@ -10040,7 +10042,7 @@ async function loadCarouselSlides(){
     const rows = await res.json();
     if(Array.isArray(rows) && rows.length > 0){
       CAROUSEL_SLIDES = rows.map(r => ({
-        bg: r.BgColor || 'linear-gradient(135deg,#146B8C,#0B4A63)',
+        bg: r.BgColor || 'linear-gradient(135deg,#0D9488,#0B4A63)',
         image: r.ImageURL || '',
         icon: r.Icon || '📢',
         title: r.Title || '',
@@ -11646,8 +11648,8 @@ function generateCertificate(subject, totalSets){
 
   // Background gradient
   const grad = ctx.createLinearGradient(0, 0, 1000, 700);
-  grad.addColorStop(0, '#0B1C3D');
-  grad.addColorStop(1, '#146B8C');
+  grad.addColorStop(0, '#0B1426');
+  grad.addColorStop(1, '#0D9488');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1000, 700);
 
