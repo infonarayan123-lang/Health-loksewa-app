@@ -334,7 +334,7 @@
   }
   .header-brand-title{
     flex:1; text-align:center; color:var(--ink); font-weight:800;
-    font-size:17px; letter-spacing:0.01em;
+    font-size:18px; letter-spacing:0.03em; font-family:'Tinos',serif;
   }
   .header-status-line{
     font-size:12px; color:var(--ink); cursor:pointer; font-weight:600;
@@ -1106,7 +1106,10 @@
   .hub-tile{
     box-shadow:0 0 14px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.06);
     border:1px solid rgba(255,255,255,0.07);
+    color:#fff; /* backgrounds below are fixed dark gradients regardless of light/dark mode,
+                   so text must stay white — var(--ink) would go dark in light mode and vanish */
   }
+  .hub-tile .dc-sub{ color:rgba(255,255,255,0.65); }
   .hub-tile.t1{ background:linear-gradient(135deg,#26262B,#1A1A1D); }
   .hub-tile.t2{ background:linear-gradient(135deg,#202023,#141416); }
   .hub-tile.t3{ background:linear-gradient(135deg,#2B2723,#1D1A17); }
@@ -1359,15 +1362,17 @@
   /* Sub-option grids (GK categories, post-pickers for MCQ/Mock/Tournament/Past Questions) —
      deliberately more muted/darker than Home's top-level cards, same navy/teal family, so the
      deeper you go into the app the quieter the color gets, never louder. */
-  .gk-c1{ background:linear-gradient(135deg,#1B4A4D,#123436); }
-  .mock-c-pho{ background:linear-gradient(135deg,#16294A,#101D35); }
-  .gk-c2{ background:linear-gradient(135deg,#16294A,#101D35); }
-  .gk-c3{ background:linear-gradient(135deg,#1C3A4A,#142B38); }
-  .gk-c4{ background:linear-gradient(135deg,#16294A,#101D35); }
-  .gk-c5{ background:linear-gradient(135deg,#1C3A4A,#142B38); }
-  .gk-c7{ background:linear-gradient(135deg,#1B4A4D,#123436); }
-  .gk-c8{ background:linear-gradient(135deg,#16294A,#101D35); }
-  .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#1C3A4A,#142B38); }
+  .gk-c1{ background:linear-gradient(135deg,#1B4A4D,#123436); color:#fff; }
+  .mock-c-pho{ background:linear-gradient(135deg,#16294A,#101D35); color:#fff; }
+  .gk-c2{ background:linear-gradient(135deg,#16294A,#101D35); color:#fff; }
+  .gk-c3{ background:linear-gradient(135deg,#1C3A4A,#142B38); color:#fff; }
+  .gk-c4{ background:linear-gradient(135deg,#16294A,#101D35); color:#fff; }
+  .gk-c5{ background:linear-gradient(135deg,#1C3A4A,#142B38); color:#fff; }
+  .gk-c7{ background:linear-gradient(135deg,#1B4A4D,#123436); color:#fff; }
+  .gk-c8{ background:linear-gradient(135deg,#16294A,#101D35); color:#fff; }
+  .gk-cat-btn.gk-c6{ background:linear-gradient(135deg,#1C3A4A,#142B38); color:#fff; }
+  .gk-c1 .dc-sub, .mock-c-pho .dc-sub, .gk-c2 .dc-sub, .gk-c3 .dc-sub, .gk-c4 .dc-sub,
+  .gk-c5 .dc-sub, .gk-c7 .dc-sub, .gk-c8 .dc-sub, .gk-cat-btn.gk-c6 .dc-sub{ color:rgba(255,255,255,0.65); }
 
   .set-card{
     display:flex; align-items:center; gap:14px;
