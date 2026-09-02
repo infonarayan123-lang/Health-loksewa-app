@@ -10687,34 +10687,48 @@ async function renderNewsPortal(){
   sourcesEl.innerHTML = `<p style="color:var(--ink-soft); font-size:12px;">Loading sources…</p>`;
   listEl.innerHTML = '';
   const sources = await fetchNewsPortalSources();
+
+  // "Saved" pill always shown first, ahead of every real portal — works even with zero sources.
+  const savedPillHtml = `<button class="calc-btn news-source-pill" data-key="__saved__" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${newsPortalSelectedKey === '__saved__' ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">💾 Saved</button>`;
+
   if(sources.length === 0){
-    sourcesEl.innerHTML = '';
-    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">No news sources added yet — add a portal name and its RSS feed URL to the NewsPortalSources Sheet tab.</p>`;
+    sourcesEl.innerHTML = savedPillHtml;
+    document.querySelector('.news-source-pill').addEventListener('click', () => loadSavedNews());
+    if(newsPortalSelectedKey === '__saved__') loadSavedNews();
+    else listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">No news sources added yet — add a portal name and its RSS feed URL to the NewsPortalSources Sheet tab.</p>`;
     return;
   }
   // Pills render instantly — nothing about any specific portal's articles loads until tapped,
   // matching Web Portal's category-tab pattern exactly.
-  sourcesEl.innerHTML = sources.map(s => `
+  sourcesEl.innerHTML = savedPillHtml + sources.map(s => `
     <button class="calc-btn news-source-pill" data-key="${s.Key}" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${s.Key === newsPortalSelectedKey ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">${s.Name}</button>
   `).join('');
   document.querySelectorAll('.news-source-pill').forEach(btn => {
-    btn.addEventListener('click', () => loadNewsPortalSource(btn.dataset.key, sources));
+    btn.addEventListener('click', () => {
+      if(btn.dataset.key === '__saved__') loadSavedNews();
+      else loadNewsPortalSource(btn.dataset.key, sources);
+    });
   });
 
-  if(newsPortalSelectedKey){
+  if(newsPortalSelectedKey === '__saved__'){
+    loadSavedNews();
+  } else if(newsPortalSelectedKey){
     loadNewsPortalSource(newsPortalSelectedKey, sources);
   } else {
     listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">Tap a source above to see its latest headlines.</p>`;
   }
 }
-async function loadNewsPortalSource(key, sources){
-  newsPortalSelectedKey = key;
+function highlightSelectedPill(key){
   document.querySelectorAll('.news-source-pill').forEach(btn => {
     const isActive = btn.dataset.key === key;
     btn.style.background = isActive ? 'var(--crimson)' : 'var(--panel)';
     btn.style.color = '#fff';
     btn.style.border = isActive ? 'none' : '1.5px solid var(--line)';
   });
+}
+async function loadNewsPortalSource(key, sources){
+  newsPortalSelectedKey = key;
+  highlightSelectedPill(key);
 
   const listEl = document.getElementById('newsPortalList');
   listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading latest news…</p>`;
@@ -10728,17 +10742,75 @@ async function loadNewsPortalSource(key, sources){
     listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">Could not load this feed right now — try another source or check back shortly.</p>`;
     return;
   }
-  // Tapping a headline opens the real article directly — no in-app detail step
-  listEl.innerHTML = articles.map(a => `
-    <a href="${a.Link || '#'}" target="_blank" rel="noopener" class="calc-card" style="display:flex; gap:12px; text-decoration:none; margin-bottom:12px; padding:12px;">
-      ${a.ImageURL ? `<img src="${a.ImageURL}" style="width:72px; height:72px; border-radius:10px; object-fit:cover; flex-shrink:0;" alt="">` : ''}
-      <div style="min-width:0;">
-        <div style="font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.3;">${a.Title || ''}</div>
-        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${a.Snippet || ''}</div>
-        <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${formatRssTime(a.TimeLabel)}</div>
+  renderNewsArticleCards(articles, source.Name);
+}
+function getSavedNews(){
+  try{ return JSON.parse(localStorage.getItem('hl_saved_news') || '[]'); }catch(e){ return []; }
+}
+function isNewsSaved(link){
+  return getSavedNews().some(a => a.Link === link);
+}
+function toggleSaveNews(article, sourceName){
+  let saved = getSavedNews();
+  if(isNewsSaved(article.Link)){
+    saved = saved.filter(a => a.Link !== article.Link);
+  } else {
+    saved.unshift({ ...article, SourceName: sourceName || '' });
+    saved = saved.slice(0, 100); // cap so localStorage doesn't grow unbounded
+  }
+  try{ localStorage.setItem('hl_saved_news', JSON.stringify(saved)); }catch(e){}
+}
+function loadSavedNews(){
+  newsPortalSelectedKey = '__saved__';
+  highlightSelectedPill('__saved__');
+  const saved = getSavedNews();
+  const listEl = document.getElementById('newsPortalList');
+  if(saved.length === 0){
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">No saved articles yet — tap 🔖 on any article to save it here.</p>`;
+    return;
+  }
+  renderNewsArticleCards(saved, null);
+}
+function renderNewsArticleCards(articles, sourceName){
+  const listEl = document.getElementById('newsPortalList');
+  listEl.innerHTML = articles.map((a, i) => `
+    <div class="calc-card" style="margin-bottom:12px; padding:12px;">
+      <a href="${a.Link || '#'}" target="_blank" rel="noopener" style="display:flex; gap:12px; text-decoration:none;">
+        ${a.ImageURL ? `<img src="${a.ImageURL}" style="width:72px; height:72px; border-radius:10px; object-fit:cover; flex-shrink:0;" alt="">` : ''}
+        <div style="min-width:0;">
+          <div style="font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.3;">${a.Title || ''}</div>
+          <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${a.Snippet || ''}</div>
+          <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${formatRssTime(a.TimeLabel)}${a.SourceName ? ' · ' + a.SourceName : ''}</div>
+        </div>
+      </a>
+      <div style="display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line);">
+        <button class="news-save-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">${isNewsSaved(a.Link) ? '🔖 Saved' : '🔖 Save'}</button>
+        <button class="news-share-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">📤 Share</button>
       </div>
-    </a>
+    </div>
   `).join('');
+  document.querySelectorAll('.news-save-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const article = articles[parseInt(btn.dataset.idx, 10)];
+      toggleSaveNews(article, sourceName || article.SourceName);
+      btn.textContent = isNewsSaved(article.Link) ? '🔖 Saved' : '🔖 Save';
+    });
+  });
+  document.querySelectorAll('.news-share-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const article = articles[parseInt(btn.dataset.idx, 10)];
+      const shareText = `${article.Title}\n${article.Link}`;
+      if(navigator.share){
+        try{ await navigator.share({ title: article.Title, url: article.Link }); }catch(e){}
+      } else {
+        try{
+          await navigator.clipboard.writeText(shareText);
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = '📤 Share'; }, 2000);
+        }catch(e){}
+      }
+    });
+  });
 }
 function formatRssTime(pubDate){
   if(!pubDate) return '';
