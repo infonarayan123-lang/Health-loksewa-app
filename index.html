@@ -727,6 +727,16 @@
     color:var(--ink); font-size:11px; font-weight:600; cursor:pointer;
   }
   .note-revision-btn.active{ background:var(--crimson); color:#fff; border:none; }
+  .note-create-option{
+    display:block; width:100%; text-align:left; padding:14px 16px; background:none;
+    border:none; border-bottom:1px solid var(--line); color:var(--ink); font-size:13px; cursor:pointer;
+  }
+  .note-create-option:last-child{ border-bottom:none; }
+  .hw-tool-btn.active{ background:var(--crimson); color:#fff; border:none; }
+  .hw-color-btn{
+    width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0;
+  }
+  .hw-color-btn.active{ border-color:var(--ink); }
 
   /* ---------- Detailed Results: subject-wise breakdown (Mock Test) ---------- */
   .breakdown-wrap{
@@ -4183,6 +4193,39 @@
       <div id="notesListContent"></div>
 
       <button class="start-btn" id="addNoteBtn" style="position:fixed; bottom:90px; right:20px; width:56px; height:56px; border-radius:50%; font-size:24px; padding:0; display:flex; align-items:center; justify-content:center; z-index:50; box-shadow:0 4px 14px rgba(0,0,0,0.3);">＋</button>
+
+      <div id="noteCreateMenu" style="display:none; position:fixed; bottom:155px; right:20px; z-index:51; background:var(--panel-elevated); border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,0.35); overflow:hidden; min-width:180px;">
+        <button class="note-create-option" id="createTextNoteBtn">📝 Text Note</button>
+        <button class="note-create-option" id="createHandwrittenNoteBtn">✍️ Handwritten Note</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="handwrittenNoteScreen">
+    <div class="back-link" data-back="notes">← Back</div>
+    <div class="home-body" style="padding-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="font-size:14px; font-weight:700; color:var(--ink);">✍️ Handwritten Note</div>
+        <button class="calc-btn" id="handwrittenSaveBtn" style="margin:0; width:auto; padding:8px 16px; font-size:12px;">✓ Save</button>
+      </div>
+      <canvas id="handwrittenCanvas" style="width:100%; aspect-ratio:3/4; background:#fff; border-radius:10px; touch-action:none; display:block;"></canvas>
+      <div style="display:flex; gap:6px; margin-top:10px; overflow-x:auto; padding-bottom:4px;">
+        <button class="note-fmt-btn hw-tool-btn active" data-tool="pen" title="Pen">✏️</button>
+        <button class="note-fmt-btn hw-tool-btn" data-tool="highlighter" title="Highlighter">🖍️</button>
+        <button class="note-fmt-btn hw-tool-btn" data-tool="eraser" title="Eraser">🧹</button>
+        <button class="note-fmt-btn" id="hwUndoBtn" title="Undo">↩️</button>
+        <button class="note-fmt-btn" id="hwRedoBtn" title="Redo">↪️</button>
+        <button class="note-fmt-btn" id="hwClearBtn" title="Clear all">🗑️</button>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:8px; align-items:center;">
+        <span style="font-size:11px; color:var(--ink-soft);">Color:</span>
+        <button class="hw-color-btn active" data-color="#1a1a1a" style="background:#1a1a1a;"></button>
+        <button class="hw-color-btn" data-color="#d32f2f" style="background:#d32f2f;"></button>
+        <button class="hw-color-btn" data-color="#1976d2" style="background:#1976d2;"></button>
+        <button class="hw-color-btn" data-color="#388e3c" style="background:#388e3c;"></button>
+        <span style="font-size:11px; color:var(--ink-soft); margin-left:10px;">Width:</span>
+        <input type="range" id="hwWidthSlider" min="2" max="20" value="4" style="flex:1;">
+      </div>
     </div>
   </div>
 
@@ -5293,6 +5336,7 @@ const groupDetailScreen = document.getElementById('groupDetailScreen');
 const notesScreen = document.getElementById('notesScreen');
 const noteEditorScreen = document.getElementById('noteEditorScreen');
 const noteTrashScreen = document.getElementById('noteTrashScreen');
+const handwrittenNoteScreen = document.getElementById('handwrittenNoteScreen');
 const reminderScreen = document.getElementById('reminderScreen');
 const revisionScreen = document.getElementById('revisionScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
@@ -5306,7 +5350,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, handwrittenNoteScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -9852,7 +9896,186 @@ document.getElementById('noteExportPdfBtn').addEventListener('click', () => {
   pdf.save(`${title}.pdf`);
 });
 
-document.getElementById('addNoteBtn').addEventListener('click', () => openNoteEditor());
+document.getElementById('addNoteBtn').addEventListener('click', () => {
+  const menu = document.getElementById('noteCreateMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('createTextNoteBtn').addEventListener('click', () => {
+  document.getElementById('noteCreateMenu').style.display = 'none';
+  openNoteEditor();
+});
+document.getElementById('createHandwrittenNoteBtn').addEventListener('click', () => {
+  document.getElementById('noteCreateMenu').style.display = 'none';
+  openHandwrittenNoteScreen();
+});
+
+// ---------- Handwritten Notes: HTML5 Canvas drawing, saved as an image via the same
+// IndexedDB layer built for regular note images — a handwritten note is just a note whose
+// one image happens to be a drawing, not a photo. ----------
+let hwCanvas, hwCtx;
+let hwDrawing = false;
+let hwCurrentTool = 'pen';
+let hwCurrentColor = '#1a1a1a';
+let hwCurrentWidth = 4;
+let hwHistory = [];
+let hwHistoryIndex = -1;
+let hwLastX = 0, hwLastY = 0;
+
+function openHandwrittenNoteScreen(){
+  showScreen(handwrittenNoteScreen);
+  hwCanvas = document.getElementById('handwrittenCanvas');
+  const rect = hwCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  hwCanvas.width = rect.width * dpr;
+  hwCanvas.height = rect.height * dpr;
+  hwCtx = hwCanvas.getContext('2d');
+  hwCtx.scale(dpr, dpr);
+  hwCtx.fillStyle = '#fff';
+  hwCtx.fillRect(0, 0, rect.width, rect.height);
+  hwCtx.lineCap = 'round';
+  hwCtx.lineJoin = 'round';
+  hwHistory = [hwCanvas.toDataURL()];
+  hwHistoryIndex = 0;
+  hwCurrentTool = 'pen';
+  document.querySelectorAll('.hw-tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === 'pen'));
+  // Only attach pointer listeners once — the canvas element is reused across visits to this
+  // screen, so re-attaching every time would stack duplicate listeners and multiply drawing.
+  if(!hwCanvas.dataset.listenersAttached){
+    hwAttachCanvasListeners();
+    hwCanvas.dataset.listenersAttached = '1';
+  }
+}
+function hwGetPos(e){
+  const rect = hwCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: (clientX - rect.left), y: (clientY - rect.top) };
+}
+function hwStartDraw(e){
+  e.preventDefault();
+  hwDrawing = true;
+  const pos = hwGetPos(e);
+  hwLastX = pos.x; hwLastY = pos.y;
+}
+function hwDraw(e){
+  if(!hwDrawing) return;
+  e.preventDefault();
+  const pos = hwGetPos(e);
+  hwCtx.beginPath();
+  hwCtx.moveTo(hwLastX, hwLastY);
+  hwCtx.lineTo(pos.x, pos.y);
+  if(hwCurrentTool === 'eraser'){
+    hwCtx.globalCompositeOperation = 'destination-out';
+    hwCtx.globalAlpha = 1;
+    hwCtx.lineWidth = hwCurrentWidth * 3;
+  } else if(hwCurrentTool === 'highlighter'){
+    hwCtx.globalCompositeOperation = 'source-over';
+    hwCtx.globalAlpha = 0.35;
+    hwCtx.lineWidth = hwCurrentWidth * 3;
+    hwCtx.strokeStyle = hwCurrentColor;
+  } else {
+    hwCtx.globalCompositeOperation = 'source-over';
+    hwCtx.globalAlpha = 1;
+    hwCtx.lineWidth = hwCurrentWidth;
+    hwCtx.strokeStyle = hwCurrentColor;
+  }
+  hwCtx.stroke();
+  hwLastX = pos.x; hwLastY = pos.y;
+}
+function hwEndDraw(){
+  if(!hwDrawing) return;
+  hwDrawing = false;
+  // Push a new undo state, discarding any "redo" states beyond the current point
+  hwHistory = hwHistory.slice(0, hwHistoryIndex + 1);
+  hwHistory.push(hwCanvas.toDataURL());
+  hwHistoryIndex = hwHistory.length - 1;
+}
+document.addEventListener('DOMContentLoaded', () => {}); // no-op, canvas is set up when opened
+function hwAttachCanvasListeners(){
+  hwCanvas.addEventListener('pointerdown', hwStartDraw);
+  hwCanvas.addEventListener('pointermove', hwDraw);
+  hwCanvas.addEventListener('pointerup', hwEndDraw);
+  hwCanvas.addEventListener('pointerleave', hwEndDraw);
+}
+document.querySelectorAll('.hw-tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    hwCurrentTool = btn.dataset.tool;
+    document.querySelectorAll('.hw-tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.querySelectorAll('.hw-color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    hwCurrentColor = btn.dataset.color;
+    document.querySelectorAll('.hw-color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.getElementById('hwWidthSlider').addEventListener('input', (e) => {
+  hwCurrentWidth = parseInt(e.target.value, 10);
+});
+function hwRestoreFromHistory(){
+  const img = new Image();
+  img.onload = () => {
+    const rect = hwCanvas.getBoundingClientRect();
+    hwCtx.clearRect(0, 0, rect.width, rect.height);
+    hwCtx.globalCompositeOperation = 'source-over';
+    hwCtx.globalAlpha = 1;
+    hwCtx.drawImage(img, 0, 0, rect.width, rect.height);
+  };
+  img.src = hwHistory[hwHistoryIndex];
+}
+document.getElementById('hwUndoBtn').addEventListener('click', () => {
+  if(hwHistoryIndex > 0){ hwHistoryIndex--; hwRestoreFromHistory(); }
+});
+document.getElementById('hwRedoBtn').addEventListener('click', () => {
+  if(hwHistoryIndex < hwHistory.length - 1){ hwHistoryIndex++; hwRestoreFromHistory(); }
+});
+document.getElementById('hwClearBtn').addEventListener('click', () => {
+  if(!confirm('Clear the whole page?')) return;
+  const rect = hwCanvas.getBoundingClientRect();
+  hwCtx.globalCompositeOperation = 'source-over';
+  hwCtx.globalAlpha = 1;
+  hwCtx.fillStyle = '#fff';
+  hwCtx.fillRect(0, 0, rect.width, rect.height);
+  hwHistory = hwHistory.slice(0, hwHistoryIndex + 1);
+  hwHistory.push(hwCanvas.toDataURL());
+  hwHistoryIndex = hwHistory.length - 1;
+});
+document.getElementById('handwrittenSaveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('handwrittenSaveBtn');
+  btn.textContent = 'Saving…';
+  try{
+    const dataUrl = hwCanvas.toDataURL('image/png');
+    const resized = await downscaleImage(dataUrl, 1400);
+    const imgId = 'img' + Date.now() + Math.random().toString(36).slice(2,7);
+    await saveNoteImage(imgId, resized);
+    const notes = getNotes();
+    const newNote = {
+      id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+      title: 'Handwritten Note — ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}),
+      body: '',
+      folder: 'Handwritten',
+      tags: [],
+      pinned: false,
+      revisionStatus: null,
+      reviewDateAD: null,
+      imageIds: [imgId],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+    };
+    notes.unshift(newNote);
+    saveNotes(notes);
+    showScreen(notesScreen);
+    renderNotes();
+  }catch(err){
+    alert('Could not save this handwritten note — please try again.');
+    btn.textContent = '✓ Save';
+  }
+});
+
 
 function renderProgressScreen(){
   const streak = getStudyStreak();
