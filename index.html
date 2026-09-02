@@ -1973,6 +1973,7 @@
         <div class="rcard" id="webPortalGovt"><div class="ri">🏛️</div><div class="rl">Nepal Health Gov</div></div>
         <div class="rcard" id="webPortalIntl"><div class="ri">🌍</div><div class="rl">International</div></div>
         <div class="rcard" id="webPortalExam"><div class="ri">📝</div><div class="rl">Lok Sewa Aayog</div></div>
+        <div class="rcard" id="webPortalResearch"><div class="ri">📚</div><div class="rl">Research &amp; Education</div></div>
       </div>
 
       <div class="app-footer">
@@ -1999,11 +2000,7 @@
       <div class="section-title">🌐 Web Portal</div>
       <p style="font-size:11px; color:var(--ink-soft); margin-bottom:16px;">Official websites — opens the real site in a new tab. Starting with a verified core set; more categories added as they're confirmed.</p>
 
-      <div id="webPortalCategoryTabs" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
-        <button class="calc-btn" id="wpTabGovt" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap;">🏛️ Nepal Health Gov</button>
-        <button class="calc-btn" id="wpTabIntl" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🌍 International</button>
-        <button class="calc-btn" id="wpTabExam" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📝 Lok Sewa Aayog</button>
-      </div>
+      <div id="webPortalCategoryTabs" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;"></div>
 
       <div id="webPortalList"></div>
     </div>
@@ -5003,7 +5000,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw3-9libLSSetkmn4c4UwYuucDATZRJh7vXmH4iPF5p26OOtJhy3Vcj6ajYgjWoqzW6Vw/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyt2wO3xAEJLfZ5l4O8giJGU3o9YeC1-wrSJQWSOswt3Z6iACVDbO5LilPsM5FW6TrtVg/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -8720,15 +8717,19 @@ document.getElementById('homeFocusRow').addEventListener('click', () => {
 // Study Resources hub — no duplicated logic, just a faster shortcut from Home. ----------
 document.getElementById('webPortalGovt').addEventListener('click', () => {
   showScreen(webPortalScreen);
-  renderWebPortalCategory('govt');
+  renderWebPortalScreen('Nepal Health Gov');
 });
 document.getElementById('webPortalIntl').addEventListener('click', () => {
   showScreen(webPortalScreen);
-  renderWebPortalCategory('intl');
+  renderWebPortalScreen('International');
 });
 document.getElementById('webPortalExam').addEventListener('click', () => {
   showScreen(webPortalScreen);
-  renderWebPortalCategory('exam');
+  renderWebPortalScreen('Lok Sewa Aayog');
+});
+document.getElementById('webPortalResearch').addEventListener('click', () => {
+  showScreen(webPortalScreen);
+  renderWebPortalScreen('Research and Education');
 });
 
 function showHomeSwipePanel(i){
@@ -10682,20 +10683,34 @@ async function renderResources(){
 // web-verified this session — not the full category list from the reference document, since
 // fabricating unverified government URLs would be worse than a smaller, trustworthy starter set. ----------
 const WEB_PORTAL_FALLBACK = {
-  govt: [
+  'Nepal Health Gov': [
     { name:'Ministry of Health & Food Hygiene', sub:'Formerly MoHP — renamed May 2026', url:'https://mohp.gov.np/' },
     { name:'Department of Health Services (DoHS)', sub:'Health service delivery', url:'https://dohs.gov.np/' },
   ],
-  intl: [
+  'International': [
     { name:'World Health Organization (WHO)', sub:'Global health authority', url:'https://www.who.int/' },
     { name:'UNICEF', sub:'Child health & welfare', url:'https://www.unicef.org/' },
   ],
-  exam: [
+  'Lok Sewa Aayog': [
     { name:'Public Service Commission (Loksewa Aayog)', sub:'Official exam notices & results', url:'https://psc.gov.np/' },
   ],
 };
+const WEB_PORTAL_FALLBACK_CATEGORIES = Object.keys(WEB_PORTAL_FALLBACK);
+let webPortalCategoriesCache = null;
 let webPortalCache = {}; // keyed by category — each category fetched and cached independently,
                           // never all at once, matching the "only load what's tapped" rule
+let webPortalSelectedCategory = null;
+async function fetchWebPortalCategories(){
+  if(webPortalCategoriesCache) return webPortalCategoriesCache;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=webPortalCategories`);
+    const cats = await res.json();
+    webPortalCategoriesCache = (cats && cats.length) ? cats : WEB_PORTAL_FALLBACK_CATEGORIES;
+  }catch(err){
+    webPortalCategoriesCache = WEB_PORTAL_FALLBACK_CATEGORIES;
+  }
+  return webPortalCategoriesCache;
+}
 async function fetchWebPortalLinks(category){
   if(webPortalCache[category]) return webPortalCache[category];
   try{
@@ -10711,9 +10726,37 @@ async function fetchWebPortalLinks(category){
   }
   return webPortalCache[category];
 }
-async function renderWebPortalCategory(category){
-  document.querySelectorAll('#webPortalCategoryTabs button').forEach(btn => {
-    const isActive = btn.id === 'wpTab' + category.charAt(0).toUpperCase() + category.slice(1);
+// Renders the whole Web Portal screen: fetches the list of categories that actually exist in
+// the Sheet and builds one tab per distinct category automatically — adding a new category is
+// just a new Sheet row (e.g. "Research and Education"), no code change needed for a new tab
+// to appear. If openCategory is given (from a Home tile), that one loads immediately since the
+// user already made a deliberate choice by tapping that specific tile.
+async function renderWebPortalScreen(openCategory){
+  const tabsEl = document.getElementById('webPortalCategoryTabs');
+  const listEl = document.getElementById('webPortalList');
+  tabsEl.innerHTML = `<p style="color:var(--ink-soft); font-size:12px;">Loading categories…</p>`;
+  listEl.innerHTML = '';
+  const categories = await fetchWebPortalCategories();
+  if(categories.length === 0){
+    tabsEl.innerHTML = '';
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">No categories added yet — add rows to the WebPortalLinks Sheet tab.</p>`;
+    return;
+  }
+  webPortalSelectedCategory = openCategory || webPortalSelectedCategory || categories[0];
+  if(!categories.includes(webPortalSelectedCategory)) webPortalSelectedCategory = categories[0];
+
+  tabsEl.innerHTML = categories.map(cat => `
+    <button class="calc-btn web-portal-tab" data-cat="${cat}" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${cat === webPortalSelectedCategory ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">${cat}</button>
+  `).join('');
+  document.querySelectorAll('.web-portal-tab').forEach(btn => {
+    btn.addEventListener('click', () => loadWebPortalCategory(btn.dataset.cat));
+  });
+  loadWebPortalCategory(webPortalSelectedCategory);
+}
+async function loadWebPortalCategory(category){
+  webPortalSelectedCategory = category;
+  document.querySelectorAll('.web-portal-tab').forEach(btn => {
+    const isActive = btn.dataset.cat === category;
     btn.style.background = isActive ? 'var(--crimson)' : 'var(--panel)';
     btn.style.color = '#fff';
     btn.style.border = isActive ? 'none' : '1.5px solid var(--line)';
@@ -10732,9 +10775,6 @@ async function renderWebPortalCategory(category){
     </a>
   `).join('');
 }
-document.getElementById('wpTabGovt').addEventListener('click', () => renderWebPortalCategory('govt'));
-document.getElementById('wpTabIntl').addEventListener('click', () => renderWebPortalCategory('intl'));
-document.getElementById('wpTabExam').addEventListener('click', () => renderWebPortalCategory('exam'));
 
 // ---------- News Portal: horizontal source selector, tap a source to open its real health-news
 // page directly — deliberately NOT an in-app aggregated feed. Fetching/scraping live articles
