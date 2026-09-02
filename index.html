@@ -337,7 +337,7 @@
     font-size:18px; letter-spacing:0.03em; font-family:'Tinos',serif;
   }
   .header-status-line{
-    font-size:12px; color:var(--ink); cursor:pointer; font-weight:600;
+    font-size:12px; color:#fff; cursor:pointer; font-weight:600;
     margin:4px 0 12px; padding:11px 14px; line-height:1.35;
     background:var(--panel-elevated); border-radius:10px;
     border-left:3px solid var(--gold);
@@ -1962,13 +1962,11 @@
         </div>
       </div>
 
-      <div class="section-title" style="padding:0 16px; margin:4px 0 10px; color:var(--ink); font-size:14px; font-weight:700;">📚 Resources</div>
-      <div class="resource-row" id="homeResourceRow" style="padding:0 16px;">
-        <div class="rcard" id="homeResGuidelines"><div class="ri">📑</div><div class="rl">Guidelines</div></div>
-        <div class="rcard" id="homeResHealthDays"><div class="ri">📅</div><div class="rl">Health Days</div></div>
-        <div class="rcard" id="homeResFormula"><div class="ri">🔢</div><div class="rl">Quick Ref</div></div>
-        <div class="rcard" id="homeResDictionary"><div class="ri">📖</div><div class="rl">Dictionary</div></div>
-        <div class="rcard" id="homeResFaqs"><div class="ri">❓</div><div class="rl">FAQs</div></div>
+      <div class="section-title" style="padding:0 16px; margin:4px 0 10px; color:var(--ink); font-size:14px; font-weight:700;">🌐 Web Portal</div>
+      <div class="resource-row" id="homeWebPortalRow" style="padding:0 16px;">
+        <div class="rcard" id="webPortalGovt"><div class="ri">🏛️</div><div class="rl">Nepal Health Gov</div></div>
+        <div class="rcard" id="webPortalIntl"><div class="ri">🌍</div><div class="rl">International</div></div>
+        <div class="rcard" id="webPortalExam"><div class="ri">📝</div><div class="rl">Exam &amp; Govt</div></div>
       </div>
 
       <!-- EXAM COUNTDOWN TIMER (auto-rotating slideshow of all upcoming Federal/Provincial exams) -->
@@ -1991,6 +1989,35 @@
     <div class="home-body">
       <div class="section-title">Resources &amp; News Sites</div>
       <div id="resourcesList"></div>
+    </div>
+  </div>
+
+  <!-- WEB PORTAL -->
+  <div class="screen" id="webPortalScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">🌐 Web Portal</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:16px;">Official websites — opens the real site in a new tab. Starting with a verified core set; more categories added as they're confirmed.</p>
+
+      <div id="webPortalCategoryTabs" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
+        <button class="calc-btn" id="wpTabGovt" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap;">🏛️ Nepal Health Gov</button>
+        <button class="calc-btn" id="wpTabIntl" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🌍 International</button>
+        <button class="calc-btn" id="wpTabExam" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📝 Exam &amp; Govt</button>
+      </div>
+
+      <div id="webPortalList"></div>
+    </div>
+  </div>
+
+  <!-- NEWS PORTAL -->
+  <div class="screen" id="newsPortalScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">📰 News Portal</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:16px;">Tap a source to open its real health news page in a new tab. This links to the actual publisher rather than showing copied articles in-app.</p>
+
+      <div id="newsPortalSources" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;"></div>
+      <div id="newsPortalList"></div>
     </div>
   </div>
 
@@ -4975,6 +5002,8 @@ const ainSangrahaScreen = document.getElementById('ainSangrahaScreen');
 const samsamayikScreen = document.getElementById('samsamayikScreen');
 const docListScreen = document.getElementById('docListScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
+const webPortalScreen = document.getElementById('webPortalScreen');
+const newsPortalScreen = document.getElementById('newsPortalScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
 const changePasswordScreen = document.getElementById('changePasswordScreen');
@@ -5071,7 +5100,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -5230,7 +5259,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -8658,20 +8687,17 @@ document.getElementById('homeFocusRow').addEventListener('click', () => {
 
 // ---------- Home Resources row: delegates to the exact same existing screens/handlers as
 // Study Resources hub — no duplicated logic, just a faster shortcut from Home. ----------
-document.getElementById('homeResGuidelines').addEventListener('click', () => {
-  openDocList('Guidelines', 'Guidelines', gkScreen); // calling directly, not via .click() delegation — gkGuidelines is rendered dynamically and may not exist in the DOM yet if GK was never opened
+document.getElementById('webPortalGovt').addEventListener('click', () => {
+  showScreen(webPortalScreen);
+  renderWebPortalCategory('govt');
 });
-document.getElementById('homeResHealthDays').addEventListener('click', () => {
-  document.getElementById('goToHealthDaysFromHub').click();
+document.getElementById('webPortalIntl').addEventListener('click', () => {
+  showScreen(webPortalScreen);
+  renderWebPortalCategory('intl');
 });
-document.getElementById('homeResFormula').addEventListener('click', () => {
-  document.getElementById('goToFormulaFromHub').click();
-});
-document.getElementById('homeResDictionary').addEventListener('click', () => {
-  document.getElementById('goToDictionaryFromHub').click();
-});
-document.getElementById('homeResFaqs').addEventListener('click', () => {
-  document.getElementById('goToFaqsFromHub').click();
+document.getElementById('webPortalExam').addEventListener('click', () => {
+  showScreen(webPortalScreen);
+  renderWebPortalCategory('exam');
 });
 
 function showHomeSwipePanel(i){
@@ -9256,8 +9282,8 @@ async function refreshProfileData(){
   document.getElementById('premiumActiveBanner').style.display = isPaid ? 'block' : 'none';
 }
 document.getElementById('headerLogoBtn').addEventListener('click', () => {
-  showScreen(resourcesScreen);
-  renderResources();
+  showScreen(newsPortalScreen);
+  renderNewsPortal();
 });
 document.getElementById('headerNotifBtn').addEventListener('click', () => {
   showScreen(notificationsScreen);
@@ -10556,6 +10582,76 @@ async function renderResources(){
   }catch(err){
     // Already showing cached or fallback data — nothing more to do, no need to alarm the user
   }
+}
+
+// ---------- Web Portal: official website directory. Only includes links independently
+// web-verified this session — not the full category list from the reference document, since
+// fabricating unverified government URLs would be worse than a smaller, trustworthy starter set. ----------
+const WEB_PORTAL_LINKS = {
+  govt: [
+    { name:'Ministry of Health & Food Hygiene', sub:'Formerly MoHP — renamed May 2026', url:'https://mohp.gov.np/' },
+    { name:'Department of Health Services (DoHS)', sub:'Health service delivery', url:'https://dohs.gov.np/' },
+  ],
+  intl: [
+    { name:'World Health Organization (WHO)', sub:'Global health authority', url:'https://www.who.int/' },
+    { name:'UNICEF', sub:'Child health & welfare', url:'https://www.unicef.org/' },
+  ],
+  exam: [
+    { name:'Public Service Commission (Loksewa Aayog)', sub:'Official exam notices & results', url:'https://psc.gov.np/' },
+  ],
+};
+function renderWebPortalCategory(category){
+  document.querySelectorAll('#webPortalCategoryTabs button').forEach(btn => {
+    const isActive = btn.id === 'wpTab' + category.charAt(0).toUpperCase() + category.slice(1);
+    btn.style.background = isActive ? 'var(--crimson)' : 'var(--panel)';
+    btn.style.color = '#fff';
+    btn.style.border = isActive ? 'none' : '1.5px solid var(--line)';
+  });
+  const links = WEB_PORTAL_LINKS[category] || [];
+  const listEl = document.getElementById('webPortalList');
+  if(links.length === 0){
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">More links coming to this category soon.</p>`;
+    return;
+  }
+  listEl.innerHTML = links.map(l => `
+    <a href="${l.url}" target="_blank" rel="noopener" class="calc-card" style="display:block; text-decoration:none; margin-bottom:10px;">
+      <div style="font-size:14px; font-weight:700; color:var(--ink);">${l.name}</div>
+      <div style="font-size:11.5px; color:var(--ink-soft); margin-top:3px;">${l.sub}</div>
+    </a>
+  `).join('');
+}
+document.getElementById('wpTabGovt').addEventListener('click', () => renderWebPortalCategory('govt'));
+document.getElementById('wpTabIntl').addEventListener('click', () => renderWebPortalCategory('intl'));
+document.getElementById('wpTabExam').addEventListener('click', () => renderWebPortalCategory('exam'));
+
+// ---------- News Portal: horizontal source selector, tap a source to open its real health-news
+// page directly — deliberately NOT an in-app aggregated feed. Fetching/scraping live articles
+// from these publishers reliably would need real backend RSS/scraping infrastructure this app
+// doesn't have; faking article previews would show stale or invented content, which is worse
+// than being upfront that this opens the real source. ----------
+const NEWS_PORTAL_SOURCES = [
+  { key:'latest', name:'📰 Latest', url:'https://www.onlinekhabar.com/health' },
+  { key:'swasthya', name:'🏥 Swasthya Khabar', url:'https://swasthyakhabar.com/' },
+  { key:'onlinekhabar', name:'🇳🇵 Onlinekhabar Health', url:'https://www.onlinekhabar.com/health' },
+];
+let newsPortalSelected = 'latest';
+function renderNewsPortal(){
+  document.getElementById('newsPortalSources').innerHTML = NEWS_PORTAL_SOURCES.map(s => `
+    <button class="calc-btn news-source-pill" data-key="${s.key}" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${s.key === newsPortalSelected ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">${s.name}</button>
+  `).join('');
+  document.querySelectorAll('.news-source-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      newsPortalSelected = btn.dataset.key;
+      renderNewsPortal();
+    });
+  });
+  const source = NEWS_PORTAL_SOURCES.find(s => s.key === newsPortalSelected);
+  document.getElementById('newsPortalList').innerHTML = `
+    <a href="${source.url}" target="_blank" rel="noopener" class="calc-card" style="display:block; text-decoration:none; text-align:center; padding:30px 20px;">
+      <div style="font-size:15px; font-weight:700; color:var(--ink); margin-bottom:6px;">Open ${source.name.replace(/^\S+\s/, '')}</div>
+      <div style="font-size:12px; color:var(--ink-soft);">Opens the real site in a new tab →</div>
+    </a>
+  `;
 }
 
 // ---------- Syllabus: one combined PDF per post, VIEW-ONLY in-app ----------
