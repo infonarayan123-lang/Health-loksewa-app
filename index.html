@@ -2075,9 +2075,40 @@
       <button class="upgrade-btn" id="upgradeNowBtn" style="width:100%; justify-content:center;">💳 Proceed to Payment</button>
     </div>
     <div class="profile-menu">
+      <div class="calc-card" id="myPreparationCard" style="margin:0 4px 18px;">
+        <h4 style="margin-bottom:10px;">🎯 My Preparation</h4>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px;">
+          <span style="color:var(--ink-soft);">Goal</span>
+          <span id="myPrepGoal" style="color:var(--ink); font-weight:700;">—</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-top:1px solid var(--line);">
+          <span style="color:var(--ink-soft);">Daily Goal</span>
+          <span id="myPrepDailyGoal" style="color:var(--ink); font-weight:700;">—</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-top:1px solid var(--line);">
+          <span style="color:var(--ink-soft);">Current Streak</span>
+          <span id="myPrepStreak" style="color:var(--gold); font-weight:700;">—</span>
+        </div>
+        <button class="calc-btn" id="myPrepViewProgressBtn" style="margin-top:12px;">View My Progress →</button>
+      </div>
+
+      <div class="calc-card" id="mySavedContentCard" style="margin:0 4px 18px;">
+        <h4 style="margin-bottom:10px;">🔖 My Saved Content</h4>
+        <button class="profile-menu-item" id="menuMyBookmarks" style="padding:10px 4px;"><span class="pm-icon">📚</span> Bookmarks</button>
+        <button class="profile-menu-item" id="menuMyNotes" style="padding:10px 4px;"><span class="pm-icon">📝</span> My Notes</button>
+        <button class="profile-menu-item" id="menuMyMistakes" style="padding:10px 4px;"><span class="pm-icon">❌</span> Mistake Book</button>
+        <button class="profile-menu-item" id="menuMySavedNews" style="padding:10px 4px;"><span class="pm-icon">📰</span> Saved News</button>
+      </div>
+
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
-        <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎯 Which exam are you preparing for?</div>
-        <div id="examTypeRow"></div>
+        <div id="examTypeClickTarget" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎯 Which exam are you preparing for?</div>
+            <div id="examTypeSummary" style="font-size:14px; font-weight:700; color:var(--ink);">Not set</div>
+          </div>
+          <span id="examTypeCaret" style="font-size:12px; color:var(--ink-soft);">▾</span>
+        </div>
+        <div id="examTypeRow" style="display:none; margin-top:12px;"></div>
       </div>
 
       <details class="profile-accordion" id="accDisplay">
@@ -9249,6 +9280,7 @@ async function refreshProfileData(){
   renderThemeSwatches();
   renderFontSizePicker();
   renderExamTypePicker();
+  renderMyPreparationCard();
   renderHighContrastToggle();
   renderLanguagePicker();
   renderProfileDarkModeToggle();
@@ -9726,6 +9758,14 @@ function getSelectedPosts(){
 function setSelectedPosts(arr){
   try{ localStorage.setItem('hl_selected_posts', JSON.stringify(arr)); }catch(e){}
 }
+function summarizeSelectedPosts(){
+  const selected = getSelectedPosts();
+  if(selected.length === 0) return 'Not set — tap to choose';
+  return selected.map(key => {
+    const found = EXAM_TYPES.find(t => t.key === key);
+    return found ? found.label : key;
+  }).join(', ');
+}
 function renderPostPickerInto(containerId){
   const container = document.getElementById(containerId);
   if(!container) return;
@@ -9753,6 +9793,8 @@ function renderPostPickerInto(containerId){
       // Re-render everywhere this picker appears so Profile and the Gate screen stay in sync
       renderPostPickerInto('examTypeRow');
       renderPostPickerInto('postGateRow');
+      const summaryEl = document.getElementById('examTypeSummary');
+      if(summaryEl) summaryEl.textContent = summarizeSelectedPosts();
       if(typeof computeUpcomingExams === 'function'){
         computeUpcomingExams();
         examSlideIndex = 0;
@@ -9766,7 +9808,56 @@ window.renderPostPickerInto = renderPostPickerInto;
 
 function renderExamTypePicker(){
   renderPostPickerInto('examTypeRow');
+  const summaryEl = document.getElementById('examTypeSummary');
+  if(summaryEl) summaryEl.textContent = summarizeSelectedPosts();
 }
+const examTypeClickTargetEl = document.getElementById('examTypeClickTarget');
+if(examTypeClickTargetEl){
+  examTypeClickTargetEl.addEventListener('click', () => {
+    const row = document.getElementById('examTypeRow');
+    const caret = document.getElementById('examTypeCaret');
+    const isOpen = row.style.display !== 'none';
+    row.style.display = isOpen ? 'none' : 'block';
+    caret.textContent = isOpen ? '▾' : '▴';
+  });
+}
+
+// ---------- My Preparation card: compact summary reusing real existing data (selected exam,
+// onboarding daily-goal answer, real study streak) — no duplicate analytics, just links out
+// to the existing Progress screen. ----------
+const DAILY_GOAL_LABELS = { '30min':'30 minutes', '1hr':'1 hour', '2hr':'2 hours', '3hr+':'3+ hours' };
+function renderMyPreparationCard(){
+  document.getElementById('myPrepGoal').textContent = summarizeSelectedPosts();
+  let dailyGoal = '—';
+  try{
+    const answers = JSON.parse(localStorage.getItem('hl_onboarding_answers') || '{}');
+    if(answers.dailyTime) dailyGoal = DAILY_GOAL_LABELS[answers.dailyTime] || answers.dailyTime;
+  }catch(e){}
+  document.getElementById('myPrepDailyGoal').textContent = dailyGoal;
+  const streak = typeof getStudyStreak === 'function' ? getStudyStreak() : 0;
+  document.getElementById('myPrepStreak').textContent = `🔥 ${streak} day${streak === 1 ? '' : 's'}`;
+}
+document.getElementById('myPrepViewProgressBtn').addEventListener('click', () => {
+  showScreen(progressScreen);
+  renderProgressScreen();
+});
+document.getElementById('menuMyBookmarks').addEventListener('click', () => {
+  showScreen(bookmarksScreen);
+  renderBookmarks();
+});
+document.getElementById('menuMyNotes').addEventListener('click', () => {
+  showScreen(notesScreen);
+  renderNotes();
+});
+document.getElementById('menuMyMistakes').addEventListener('click', () => {
+  showScreen(mistakeBookScreen);
+  renderMistakeBook();
+});
+document.getElementById('menuMySavedNews').addEventListener('click', () => {
+  showScreen(newsPortalScreen);
+  newsPortalSelectedKey = '__saved__';
+  renderNewsPortal();
+});
 
 document.getElementById('postGateContinueBtn').addEventListener('click', () => {
   const selected = getSelectedPosts();
