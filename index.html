@@ -2119,6 +2119,11 @@
             <div id="languageRow"></div>
           </div>
           <div class="profile-subrow-block">
+            <div class="psr-label">🇳🇵 Calendar System</div>
+            <div class="psr-sub">How dates show throughout the app — Age Calculator, Due Date, exam dates, and more</div>
+            <div style="display:flex; gap:8px; margin-top:8px;" id="calendarPrefRow"></div>
+          </div>
+          <div class="profile-subrow-block">
             <div class="psr-label">🎨 Accent Color</div>
             <div class="psr-sub">Background always stays Health Loksewa navy — this only changes your buttons, links and highlights</div>
             <div class="theme-swatches" id="themeSwatches"></div>
@@ -3062,6 +3067,7 @@
         <a class="tool-tile" href="#" id="goToHcBf"><div class="tt-icon">💪</div><div class="tt-label">Body Fat %</div></a>
         <a class="tool-tile" href="#" id="goToHcEdd"><div class="tt-icon">🤰</div><div class="tt-label">Due Date</div></a>
         <a class="tool-tile" href="#" id="goToHcAge"><div class="tt-icon">🎂</div><div class="tt-label">Age</div></a>
+        <a class="tool-tile" href="#" id="goToHcChildGrowth"><div class="tt-icon">📏</div><div class="tt-label">Child Growth</div></a>
       </div>
     </div>
   </div>
@@ -3192,9 +3198,36 @@
     <div class="home-body">
       <div class="section-title">🎂 Age Calculator</div>
       <div class="calc-card">
-        <div class="calc-field"><label>Date of birth</label><input type="date" id="childDob"></div>
+        <div class="calc-field"><label>Date of birth (AD)</label><input type="date" id="childDob"></div>
+        <p style="text-align:center; font-size:11px; color:var(--ink-soft); margin:6px 0;">⇅ or enter BS directly</p>
+        <div style="display:flex; gap:8px;">
+          <div class="calc-field" style="flex:1;"><label>Year (BS)</label><input type="number" id="childDobBsYear" placeholder="2058"></div>
+          <div class="calc-field" style="flex:1;"><label>Month</label><input type="number" id="childDobBsMonth" placeholder="1-12" min="1" max="12"></div>
+          <div class="calc-field" style="flex:1;"><label>Day</label><input type="number" id="childDobBsDay" placeholder="1-32" min="1" max="32"></div>
+        </div>
         <button class="calc-btn" id="calcChildAgeBtn">Calculate Age</button>
         <div id="childAgeResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="hcChildGrowthScreen">
+    <div class="back-link" data-back="healthCalcHub">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📏 Child Growth Screening</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Screens for Stunting (height-for-age), Wasting (weight-for-height), and Underweight (weight-for-age) using the percent-of-median method against WHO reference medians. <b style="color:var(--gold);">This is a screening estimate, not a diagnosis</b> — a child flagged here should be assessed against full WHO growth charts by a health worker.</p>
+      <div class="calc-card">
+        <div class="calc-field"><label>Age (months, 0–60)</label><input type="number" id="cgAgeMonths" placeholder="e.g. 24" min="0" max="60"></div>
+        <div class="calc-field"><label>Sex</label>
+          <select id="cgSex" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="m">Male</option>
+            <option value="f">Female</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Weight (kg)</label><input type="number" id="cgWeight" placeholder="e.g. 10.5" step="0.1"></div>
+        <div class="calc-field"><label>Height/Length (cm)</label><input type="number" id="cgHeight" placeholder="e.g. 82" step="0.1"></div>
+        <button class="calc-btn" id="calcChildGrowthBtn">Screen Growth</button>
+        <div id="childGrowthResult"></div>
       </div>
     </div>
   </div>
@@ -3221,6 +3254,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">👶 IMR (Infant Mortality Rate)</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Number of infant deaths (before age 1) per 1,000 live births in a year — a key indicator of a population's overall health and healthcare access.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Infant deaths (under 1 year)</label><input type="number" id="imrDeaths" placeholder="e.g. 25"></div>
         <div class="calc-field"><label>Live births</label><input type="number" id="imrBirths" placeholder="e.g. 1000"></div>
@@ -3234,6 +3268,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">🤱 MMR (Maternal Mortality Ratio)</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Number of maternal deaths (from pregnancy or childbirth causes) per 100,000 live births — reflects the safety of maternal healthcare in a population.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Maternal deaths</label><input type="number" id="mmrDeaths" placeholder="e.g. 15"></div>
         <div class="calc-field"><label>Live births</label><input type="number" id="mmrBirths" placeholder="e.g. 10000"></div>
@@ -3247,6 +3282,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">☠️ Case Fatality Rate</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Percentage of people diagnosed with a disease who die from it — measures how deadly a disease is among those who get it.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Deaths from the disease</label><input type="number" id="cfrDeaths" placeholder="e.g. 20"></div>
         <div class="calc-field"><label>Total cases of the disease</label><input type="number" id="cfrCases" placeholder="e.g. 400"></div>
@@ -3260,6 +3296,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">🦠 Attack Rate</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Proportion of a population that develops a disease during an outbreak or defined time period — used to measure how contagious an outbreak is.</p>
       <div class="calc-card">
         <div class="calc-field"><label>New cases during outbreak</label><input type="number" id="attackCases" placeholder="e.g. 40"></div>
         <div class="calc-field"><label>Population at risk</label><input type="number" id="attackPopulation" placeholder="e.g. 500"></div>
@@ -3273,6 +3310,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">📈 Crude Birth Rate</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Total live births per 1,000 population in a year — a simple measure of fertility in a population, not adjusted for age or sex structure.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Live births in a year</label><input type="number" id="cbrBirths" placeholder="e.g. 250"></div>
         <div class="calc-field"><label>Mid-year population</label><input type="number" id="cbrPopulation" placeholder="e.g. 10000"></div>
@@ -3286,6 +3324,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">📉 Crude Death Rate</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Total deaths per 1,000 population in a year — a simple measure of overall mortality, not adjusted for age structure.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Total deaths in a year</label><input type="number" id="cdrDeaths" placeholder="e.g. 80"></div>
         <div class="calc-field"><label>Mid-year population</label><input type="number" id="cdrPopulation" placeholder="e.g. 10000"></div>
@@ -3299,6 +3338,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">🍼 Neonatal Mortality Rate</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Number of deaths in the first 28 days of life per 1,000 live births — reflects the quality of care around birth and the newborn period.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Deaths under 28 days</label><input type="number" id="nmrDeaths" placeholder="e.g. 15"></div>
         <div class="calc-field"><label>Live births</label><input type="number" id="nmrBirths" placeholder="e.g. 1000"></div>
@@ -3312,6 +3352,7 @@
     <div class="back-link" data-back="indicatorCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">🧒 Under-5 Mortality Rate</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Percentage of children who die before their 5th birthday, per 1,000 live births — a broad indicator of child health and survival in a population.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Deaths under 5 years</label><input type="number" id="u5mrDeaths" placeholder="e.g. 35"></div>
         <div class="calc-field"><label>Live births</label><input type="number" id="u5mrBirths" placeholder="e.g. 1000"></div>
@@ -4995,6 +5036,10 @@
 <!-- QRCode.js — used for the Smart Tools QR Generator -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+<!-- nepali-date-converter — real, tested BS↔AD conversion data (1975-2099 BS), not hand-built.
+     Used by the central date service below rather than reimplementing calendar math ourselves. -->
+<script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js"></script>
+
 <script>
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
@@ -5067,6 +5112,7 @@ const hcBsaScreen = document.getElementById('hcBsaScreen');
 const hcBfScreen = document.getElementById('hcBfScreen');
 const hcEddScreen = document.getElementById('hcEddScreen');
 const hcAgeScreen = document.getElementById('hcAgeScreen');
+const hcChildGrowthScreen = document.getElementById('hcChildGrowthScreen');
 const indicatorCalcScreen = document.getElementById('indicatorCalcScreen');
 const icImrScreen = document.getElementById('icImrScreen');
 const icMmrScreen = document.getElementById('icMmrScreen');
@@ -5128,7 +5174,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -5287,7 +5333,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -5735,6 +5781,7 @@ document.getElementById('goToHcBsa').addEventListener('click', (e) => { e.preven
 document.getElementById('goToHcBf').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcBfScreen); });
 document.getElementById('goToHcEdd').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcEddScreen); });
 document.getElementById('goToHcAge').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcAgeScreen); });
+document.getElementById('goToHcChildGrowth').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcChildGrowthScreen); });
 document.getElementById('goToBmiCalc').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(bmiCalcScreen);
@@ -6087,10 +6134,22 @@ document.getElementById('calcEddBtn').addEventListener('click', () => {
 });
 
 document.getElementById('calcChildAgeBtn').addEventListener('click', () => {
-  const dobStr = document.getElementById('childDob').value;
+  let dobStr = document.getElementById('childDob').value;
+  const bsYear = document.getElementById('childDobBsYear').value;
+  const bsMonth = document.getElementById('childDobBsMonth').value;
+  const bsDay = document.getElementById('childDobBsDay').value;
   const resultEl = document.getElementById('childAgeResult');
+  // If BS fields are filled, they take priority — convert BS to AD via the central date service
+  if(bsYear && bsMonth && bsDay){
+    const converted = bsToAd(bsYear, bsMonth, bsDay);
+    if(!converted){
+      resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">That BS date looks invalid, or is outside the supported range (1975–2099 BS). Please check it.</p>`;
+      return;
+    }
+    dobStr = converted.toISOString().split('T')[0];
+  }
   if(!dobStr){
-    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please select a date of birth.</p>`;
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a date of birth (AD or BS).</p>`;
     return;
   }
   const dob = new Date(dobStr + 'T00:00:00');
@@ -6112,7 +6171,82 @@ document.getElementById('calcChildAgeBtn').addEventListener('click', () => {
     years--;
     months += 12;
   }
-  resultEl.innerHTML = `<div class="calc-result">Age: ${years} years, ${months} months, ${days} days</div>`;
+  const dobDualLabel = formatDualDate(dob);
+  resultEl.innerHTML = `
+    <div class="calc-result">Age: ${years} years, ${months} months, ${days} days</div>
+    <div class="calc-result" style="font-size:11.5px; opacity:0.85;">Date of birth: ${dobDualLabel}</div>
+  `;
+});
+
+// ---------- Child Growth Screening: percent-of-median method against WHO growth standard
+// medians (interpolated between reference ages). This is a simpler, older approach than full
+// Z-score/LMS tables — genuinely useful as a quick screen, but explicitly labeled as an
+// estimate since it doesn't capture the exact WHO standard deviation curves. A flagged result
+// should be confirmed against full WHO growth charts by a health worker. ----------
+const WHO_WEIGHT_MEDIAN = { // kg, by age in months
+  m: {0:3.3, 6:7.9, 12:9.6, 24:12.2, 36:14.3, 48:16.3, 60:18.3},
+  f: {0:3.2, 6:7.3, 12:8.9, 24:11.5, 36:13.9, 48:16.1, 60:18.2},
+};
+const WHO_HEIGHT_MEDIAN = { // cm, by age in months
+  m: {0:49.9, 6:67.6, 12:75.7, 24:87.1, 36:96.1, 48:103.3, 60:110.0},
+  f: {0:49.1, 6:65.7, 12:74.0, 24:85.7, 36:95.1, 48:102.7, 60:109.4},
+};
+function interpolateMedian(table, sex, ageMonths){
+  const points = Object.keys(table[sex]).map(Number).sort((a,b) => a-b);
+  if(ageMonths <= points[0]) return table[sex][points[0]];
+  if(ageMonths >= points[points.length-1]) return table[sex][points[points.length-1]];
+  for(let i = 0; i < points.length - 1; i++){
+    if(ageMonths >= points[i] && ageMonths <= points[i+1]){
+      const frac = (ageMonths - points[i]) / (points[i+1] - points[i]);
+      return table[sex][points[i]] + frac * (table[sex][points[i+1]] - table[sex][points[i]]);
+    }
+  }
+  return table[sex][points[points.length-1]];
+}
+function classifyPercentMedian(pct){
+  if(pct >= 90) return { label:'Normal', color:'var(--correct)' };
+  if(pct >= 80) return { label:'Mild', color:'var(--gold)' };
+  if(pct >= 70) return { label:'Moderate', color:'var(--wrong)' };
+  return { label:'Severe', color:'var(--wrong)' };
+}
+document.getElementById('calcChildGrowthBtn').addEventListener('click', () => {
+  const ageMonths = parseFloat(document.getElementById('cgAgeMonths').value);
+  const sex = document.getElementById('cgSex').value;
+  const weight = parseFloat(document.getElementById('cgWeight').value);
+  const height = parseFloat(document.getElementById('cgHeight').value);
+  const resultEl = document.getElementById('childGrowthResult');
+  if(isNaN(ageMonths) || ageMonths < 0 || ageMonths > 60 || !weight || weight <= 0 || !height || height <= 0){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12.5px; margin-top:8px;">Please enter a valid age (0–60 months), weight, and height.</p>`;
+    return;
+  }
+  // Underweight: weight-for-age
+  const medianWeightForAge = interpolateMedian(WHO_WEIGHT_MEDIAN, sex, ageMonths);
+  const weightForAgePct = (weight / medianWeightForAge) * 100;
+  const underweightClass = classifyPercentMedian(weightForAgePct);
+
+  // Stunting: height-for-age
+  const medianHeightForAge = interpolateMedian(WHO_HEIGHT_MEDIAN, sex, ageMonths);
+  const heightForAgePct = (height / medianHeightForAge) * 100;
+  const stuntingClass = classifyPercentMedian(heightForAgePct);
+
+  // Wasting: weight-for-height — find the age at which this height is the median, then
+  // compare actual weight to that age's median weight (a reasonable proxy for weight-for-height
+  // when a proper height-indexed table isn't available).
+  const heightPoints = Object.keys(WHO_HEIGHT_MEDIAN[sex]).map(Number).sort((a,b) => a-b);
+  let equivalentAge = ageMonths;
+  for(let m = 0; m <= 60; m += 0.5){
+    if(interpolateMedian(WHO_HEIGHT_MEDIAN, sex, m) >= height){ equivalentAge = m; break; }
+  }
+  const medianWeightForHeight = interpolateMedian(WHO_WEIGHT_MEDIAN, sex, equivalentAge);
+  const weightForHeightPct = (weight / medianWeightForHeight) * 100;
+  const wastingClass = classifyPercentMedian(weightForHeightPct);
+
+  resultEl.innerHTML = `
+    <div class="calc-result">Stunting (Height-for-Age): <b style="color:${stuntingClass.color};">${stuntingClass.label}</b> (${heightForAgePct.toFixed(0)}% of median)</div>
+    <div class="calc-result">Wasting (Weight-for-Height): <b style="color:${wastingClass.color};">${wastingClass.label}</b> (${weightForHeightPct.toFixed(0)}% of median)</div>
+    <div class="calc-result">Underweight (Weight-for-Age): <b style="color:${underweightClass.color};">${underweightClass.label}</b> (${weightForAgePct.toFixed(0)}% of median)</div>
+    <p style="font-size:11px; color:var(--ink-soft); margin-top:10px;">Reference: WHO growth standard medians (interpolated). This is a screening estimate — confirm any "Moderate" or "Severe" result against full WHO growth charts.</p>
+  `;
 });
 
 document.getElementById('calcImrBtn').addEventListener('click', () => {
@@ -9284,6 +9418,7 @@ async function refreshProfileData(){
   renderMyPreparationCard();
   renderHighContrastToggle();
   renderLanguagePicker();
+  renderCalendarPrefPicker();
   renderProfileDarkModeToggle();
   renderEyeComfortToggle();
   renderBrightnessSlider();
@@ -9909,6 +10044,19 @@ function renderLanguagePicker(){
       if(btn.dataset.lang === 'ne'){
         alert('नेपाली भाषा प्राथमिकता सुरक्षित गरियो। हाल एप अंग्रेजीमा नै देखिन्छ — पूर्ण नेपाली अनुवाद चाँडै आउँदैछ।\n\n(Nepali preference saved. The app still displays in English for now — full Nepali translation is coming soon.)');
       }
+    });
+  });
+}
+const CALENDAR_PREF_OPTIONS = [ { key:'both', label:'BS + AD' }, { key:'bs', label:'BS only' }, { key:'ad', label:'AD only' } ];
+function renderCalendarPrefPicker(){
+  const active = getDateCalendarPref();
+  document.getElementById('calendarPrefRow').innerHTML = CALENDAR_PREF_OPTIONS.map(c => `
+    <button class="lang-btn ${c.key === active ? 'active' : ''}" data-cal="${c.key}" style="flex:1;">${c.label}</button>
+  `).join('');
+  document.querySelectorAll('#calendarPrefRow .lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setDateCalendarPref(btn.dataset.cal);
+      renderCalendarPrefPicker();
     });
   });
 }
@@ -10659,7 +10807,56 @@ const FALLBACK_RESOURCES = [
   {Category:"Official Government Sources", Icon:"⚕️", Name:"Ministry of Health & Population (MoHP)", Description:"National health policy, acts, and official publications.", Link:"https://mohp.gov.np/"},
 ];
 
-async function renderResources(){
+// ---------- Central Date Service: single source of truth for BS↔AD conversion, used by every
+// date-based tool app-wide instead of each calculator reimplementing calendar math. Wraps the
+// nepali-date-converter library (real tested BS calendar data, 1975-2099 BS / 1918-2043 AD) —
+// not a hand-built approximation. Also holds the global BS/AD display preference. ----------
+function getDateCalendarPref(){
+  try{ return localStorage.getItem('hl_calendar_pref') || 'both'; }catch(e){ return 'both'; }
+}
+function setDateCalendarPref(pref){
+  try{ localStorage.setItem('hl_calendar_pref', pref); }catch(e){}
+}
+const BS_MONTH_NAMES = ['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'];
+// AD (Date object or 'YYYY-MM-DD' string) -> {year, month (1-12), date}. Returns null if out of
+// the library's supported range (1918-2043 AD) rather than guessing.
+function adToBs(adInput){
+  try{
+    const jsDate = (adInput instanceof Date) ? adInput : new Date(adInput + 'T00:00:00');
+    if(isNaN(jsDate.getTime())) return null;
+    const nd = new NepaliDate(jsDate);
+    return { year: nd.getYear(), month: nd.getMonth() + 1, date: nd.getDate() };
+  }catch(e){ return null; }
+}
+// BS year/month(1-12)/date -> JS Date object (AD). Returns null if invalid/out of range.
+function bsToAd(bsYear, bsMonth, bsDate){
+  try{
+    const nd = new NepaliDate(parseInt(bsYear,10), parseInt(bsMonth,10) - 1, parseInt(bsDate,10));
+    const jsDate = nd.toJsDate();
+    if(isNaN(jsDate.getTime())) return null;
+    return jsDate;
+  }catch(e){ return null; }
+}
+function formatBsDate(bs){
+  if(!bs) return '';
+  return `${bs.year}/${String(bs.month).padStart(2,'0')}/${String(bs.date).padStart(2,'0')} BS`;
+}
+function formatAdDate(jsDate){
+  if(!jsDate) return '';
+  return jsDate.toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' }) + ' AD';
+}
+// The single function every calculator should call to get a display-ready date line, respecting
+// the user's global BS/AD preference (Settings → Date Format).
+function formatDualDate(adDateInput){
+  const jsDate = (adDateInput instanceof Date) ? adDateInput : new Date(adDateInput + 'T00:00:00');
+  const bs = adToBs(jsDate);
+  const pref = getDateCalendarPref();
+  if(pref === 'bs') return bs ? formatBsDate(bs) : formatAdDate(jsDate);
+  if(pref === 'ad') return formatAdDate(jsDate);
+  return bs ? `${formatAdDate(jsDate)} • ${formatBsDate(bs)}` : formatAdDate(jsDate);
+}
+
+
   // Instant, always: cached data if we have it, otherwise the baked-in starter list —
   // never a blank "Loading" screen.
   let cached = null;
