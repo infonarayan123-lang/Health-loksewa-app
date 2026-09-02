@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0B1426;
+    --bg:#0B1526;
     --panel:#13233F;
     --panel-elevated:#1B2F52;
     --ink:#FFFFFF;
@@ -96,7 +96,7 @@
     height:100%;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch; /* momentum scrolling on iOS/older Android WebViews */
-    background:linear-gradient(180deg, #0B1426 0%, #13233F 100%);
+    background:linear-gradient(180deg, #0B1526 0%, #13233F 100%);
     display:flex;
     flex-direction:column;
     box-shadow:0 0 40px rgba(0,0,0,0.06);
@@ -247,7 +247,7 @@
   .app-loading-wrap{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     height:100%; width:100%;
-    background:linear-gradient(180deg, #0B1426 0%, #13233F 100%);
+    background:linear-gradient(180deg, #0B1526 0%, #13233F 100%);
   }
   .splash-logo{
     width:96px; height:96px; border-radius:22px;
@@ -1095,6 +1095,15 @@
   .dash-card .dc-icon{ font-size:26px; }
   .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
   .dash-card .dc-sub{ font-size:11px; opacity:0.85; }
+  /* Home dashboard cards: alternating 2-color checkerboard, left/right column, per explicit
+     request — overrides the per-feature background classes below via ID+nth-child specificity.
+     QOTD keeps its own deliberate notebook-paper look, excluded here. */
+  #homeScreen .dash-grid > .dash-card:not(.qotd-card):nth-child(odd){
+    background:#0F1C2E; color:#fff;
+  }
+  #homeScreen .dash-grid > .dash-card:not(.qotd-card):nth-child(even){
+    background:#1A2A45; color:#fff;
+  }
   .dash-card.c-quiz{ background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff; }
   .dash-card.c-syllabus{ background:#13233F; color:#fff; }
   .dash-card.c-current{ background:#13233F; color:#fff; }
