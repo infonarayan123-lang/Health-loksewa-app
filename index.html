@@ -1972,7 +1972,7 @@
       <div class="resource-row" id="homeWebPortalRow" style="padding:0 16px;">
         <div class="rcard" id="webPortalGovt"><div class="ri">🏛️</div><div class="rl">Nepal Health Gov</div></div>
         <div class="rcard" id="webPortalIntl"><div class="ri">🌍</div><div class="rl">International</div></div>
-        <div class="rcard" id="webPortalExam"><div class="ri">📝</div><div class="rl">Exam &amp; Govt</div></div>
+        <div class="rcard" id="webPortalExam"><div class="ri">📝</div><div class="rl">Lok Sewa Aayog</div></div>
       </div>
 
       <div class="app-footer">
@@ -2002,7 +2002,7 @@
       <div id="webPortalCategoryTabs" style="display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
         <button class="calc-btn" id="wpTabGovt" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap;">🏛️ Nepal Health Gov</button>
         <button class="calc-btn" id="wpTabIntl" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🌍 International</button>
-        <button class="calc-btn" id="wpTabExam" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📝 Exam &amp; Govt</button>
+        <button class="calc-btn" id="wpTabExam" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📝 Lok Sewa Aayog</button>
       </div>
 
       <div id="webPortalList"></div>
@@ -10694,23 +10694,22 @@ const WEB_PORTAL_FALLBACK = {
     { name:'Public Service Commission (Loksewa Aayog)', sub:'Official exam notices & results', url:'https://psc.gov.np/' },
   ],
 };
-let webPortalCache = null;
-async function fetchWebPortalLinks(){
-  if(webPortalCache) return webPortalCache;
+let webPortalCache = {}; // keyed by category — each category fetched and cached independently,
+                          // never all at once, matching the "only load what's tapped" rule
+async function fetchWebPortalLinks(category){
+  if(webPortalCache[category]) return webPortalCache[category];
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=webPortalLinks`);
+    const res = await fetch(`${SHEET_API_URL}?action=webPortalLinks&category=${encodeURIComponent(category)}`);
     const rows = await res.json();
-    if(!rows || rows.length === 0){ webPortalCache = WEB_PORTAL_FALLBACK; return webPortalCache; }
-    const grouped = { govt:[], intl:[], exam:[] };
-    rows.forEach(r => {
-      const cat = (r.Category || '').toLowerCase();
-      if(grouped[cat]) grouped[cat].push({ name:r.Name, sub:r.Sub || '', url:r.URL });
-    });
-    webPortalCache = grouped;
+    if(!rows || rows.length === 0){
+      webPortalCache[category] = WEB_PORTAL_FALLBACK[category] || [];
+    } else {
+      webPortalCache[category] = rows.map(r => ({ name:r.Name, sub:r.Sub || '', url:r.URL }));
+    }
   }catch(err){
-    webPortalCache = WEB_PORTAL_FALLBACK;
+    webPortalCache[category] = WEB_PORTAL_FALLBACK[category] || [];
   }
-  return webPortalCache;
+  return webPortalCache[category];
 }
 async function renderWebPortalCategory(category){
   document.querySelectorAll('#webPortalCategoryTabs button').forEach(btn => {
@@ -10721,8 +10720,7 @@ async function renderWebPortalCategory(category){
   });
   const listEl = document.getElementById('webPortalList');
   listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading…</p>`;
-  const allLinks = await fetchWebPortalLinks();
-  const links = allLinks[category] || [];
+  const links = await fetchWebPortalLinks(category);
   if(links.length === 0){
     listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">More links coming to this category soon.</p>`;
     return;
