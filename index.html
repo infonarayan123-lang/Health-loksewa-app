@@ -4972,7 +4972,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyB0UxddqhytWocH6NhzYuQhc8I8NBw0a9LJXkS1CKZQHvGzJvqPANXrpDyaCDXuxFidw/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw3-9libLSSetkmn4c4UwYuucDATZRJh7vXmH4iPF5p26OOtJhy3Vcj6ajYgjWoqzW6Vw/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -10428,7 +10428,10 @@ async function loadQuestionOfDay(){
   document.getElementById('qotdCardContent').innerHTML = 'Loading today\'s question…';
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=questionOfDay`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // never hang forever — 10s cap
+    const res = await fetch(`${SHEET_API_URL}?action=questionOfDay`, { signal: controller.signal });
+    clearTimeout(timeoutId);
     const q = await res.json();
     if(!q || !q.Question){
       document.getElementById('qotdCardContent').innerHTML = 'No question available yet — check back soon!';
@@ -10649,56 +10652,103 @@ document.getElementById('wpTabExam').addEventListener('click', () => renderWebPo
 // from these publishers reliably would need real backend RSS/scraping infrastructure this app
 // doesn't have; faking article previews would show stale or invented content, which is worse
 // than being upfront that this opens the real source. ----------
-const NEWS_PORTAL_SOURCES = [
-  { key:'latest', name:'📰 Latest' },
-  { key:'swasthya', name:'🏥 Swasthya Khabar' },
-  { key:'onlinekhabar', name:'🇳🇵 Onlinekhabar Health' },
-];
-let newsPortalSelected = 'latest';
-let newsPortalArticlesCache = null;
-async function fetchNewsPortalArticles(){
-  if(newsPortalArticlesCache) return newsPortalArticlesCache;
+// ---------- News Portal: real live RSS aggregation. You add ONLY a portal's name + RSS URL
+// to the "NewsPortalSources" Sheet tab — articles are fetched live from the actual feed,
+// cached 15 min server-side (CacheService) so repeat loads are fast. Tapping a headline shows
+// an in-app detail view (title, image, full snippet from the feed) with a link out to the
+// complete article, rather than jumping straight to an external tab. ----------
+let newsPortalSourcesCache = null;
+let newsPortalSelectedKey = null;
+let newsPortalArticlesCache = {}; // keyed by source key, so switching sources doesn't refetch
+async function fetchNewsPortalSources(){
+  if(newsPortalSourcesCache) return newsPortalSourcesCache;
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=newsPortalArticles`);
+    const res = await fetch(`${SHEET_API_URL}?action=newsPortalSources`);
     const rows = await res.json();
-    newsPortalArticlesCache = rows || [];
+    newsPortalSourcesCache = (rows || []).filter(r => r.Key && r.RssURL);
   }catch(err){
-    newsPortalArticlesCache = [];
+    newsPortalSourcesCache = [];
   }
-  return newsPortalArticlesCache;
+  return newsPortalSourcesCache;
+}
+async function fetchFeedArticles(rssUrl){
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=newsPortalFeed&feedUrl=${encodeURIComponent(rssUrl)}`);
+    const data = await res.json();
+    if(data && data.error) return [];
+    return data || [];
+  }catch(err){
+    return [];
+  }
 }
 async function renderNewsPortal(){
-  document.getElementById('newsPortalSources').innerHTML = NEWS_PORTAL_SOURCES.map(s => `
-    <button class="calc-btn news-source-pill" data-key="${s.key}" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${s.key === newsPortalSelected ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">${s.name}</button>
+  const listEl = document.getElementById('newsPortalList');
+  const sourcesEl = document.getElementById('newsPortalSources');
+  sourcesEl.innerHTML = `<p style="color:var(--ink-soft); font-size:12px;">Loading sources…</p>`;
+  const sources = await fetchNewsPortalSources();
+  if(sources.length === 0){
+    sourcesEl.innerHTML = '';
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">No news sources added yet — add a portal name and its RSS feed URL to the NewsPortalSources Sheet tab.</p>`;
+    return;
+  }
+  if(!newsPortalSelectedKey) newsPortalSelectedKey = sources[0].Key;
+
+  sourcesEl.innerHTML = sources.map(s => `
+    <button class="calc-btn news-source-pill" data-key="${s.Key}" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${s.Key === newsPortalSelectedKey ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">${s.Name}</button>
   `).join('');
   document.querySelectorAll('.news-source-pill').forEach(btn => {
     btn.addEventListener('click', () => {
-      newsPortalSelected = btn.dataset.key;
+      newsPortalSelectedKey = btn.dataset.key;
       renderNewsPortal();
     });
   });
 
-  const listEl = document.getElementById('newsPortalList');
-  listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading…</p>`;
-  const allArticles = await fetchNewsPortalArticles();
-  const articles = newsPortalSelected === 'latest'
-    ? allArticles
-    : allArticles.filter(a => (a.Source || '').toLowerCase() === newsPortalSelected);
+  listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading latest news…</p>`;
+  const source = sources.find(s => s.Key === newsPortalSelectedKey);
+  if(!newsPortalArticlesCache[newsPortalSelectedKey]){
+    newsPortalArticlesCache[newsPortalSelectedKey] = await fetchFeedArticles(source.RssURL);
+  }
+  const articles = newsPortalArticlesCache[newsPortalSelectedKey];
 
   if(articles.length === 0){
-    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">No articles added for this source yet.</p>`;
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">Could not load this feed right now — try another source or check back shortly.</p>`;
     return;
   }
-  listEl.innerHTML = articles.map(a => `
-    <a href="${a.Link || '#'}" target="_blank" rel="noopener" class="calc-card" style="display:flex; gap:12px; text-decoration:none; margin-bottom:12px; padding:12px;">
+  listEl.innerHTML = articles.map((a, i) => `
+    <button class="calc-card news-article-card" data-idx="${i}" style="display:flex; gap:12px; text-align:left; width:100%; margin-bottom:12px; padding:12px; border:none; cursor:pointer;">
       ${a.ImageURL ? `<img src="${a.ImageURL}" style="width:72px; height:72px; border-radius:10px; object-fit:cover; flex-shrink:0;" alt="">` : ''}
       <div style="min-width:0;">
         <div style="font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.3;">${a.Title || ''}</div>
         <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${a.Snippet || ''}</div>
-        <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${a.TimeLabel || ''}${a.Source ? ' · ' + a.Source : ''}</div>
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${formatRssTime(a.TimeLabel)}</div>
       </div>
-    </a>
+    </button>
   `).join('');
+  document.querySelectorAll('.news-article-card').forEach(btn => {
+    btn.addEventListener('click', () => showNewsArticleDetail(articles[parseInt(btn.dataset.idx, 10)]));
+  });
+}
+function formatRssTime(pubDate){
+  if(!pubDate) return '';
+  try{
+    const d = new Date(pubDate);
+    const diffMin = Math.floor((Date.now() - d.getTime()) / 60000);
+    if(diffMin < 60) return `${diffMin} min ago`;
+    if(diffMin < 1440) return `${Math.floor(diffMin/60)} hr ago`;
+    return d.toLocaleDateString('en-US', { day:'numeric', month:'short' });
+  }catch(e){ return ''; }
+}
+function showNewsArticleDetail(article){
+  const listEl = document.getElementById('newsPortalList');
+  listEl.innerHTML = `
+    <button class="back-link" id="newsArticleBackBtn" style="margin-bottom:14px;">← Back to list</button>
+    ${article.ImageURL ? `<img src="${article.ImageURL}" style="width:100%; border-radius:12px; margin-bottom:14px;" alt="">` : ''}
+    <div style="font-size:16px; font-weight:800; color:var(--ink); margin-bottom:8px;">${article.Title || ''}</div>
+    <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">${formatRssTime(article.TimeLabel)}</div>
+    <p style="font-size:13.5px; color:var(--ink); line-height:1.6;">${article.Snippet || ''}</p>
+    <a href="${article.Link || '#'}" target="_blank" rel="noopener" class="calc-btn" style="display:block; text-align:center; text-decoration:none; margin-top:16px;">Read Full Article →</a>
+  `;
+  document.getElementById('newsArticleBackBtn').addEventListener('click', renderNewsPortal);
 }
 
 // ---------- Syllabus: one combined PDF per post, VIEW-ONLY in-app ----------
