@@ -5027,18 +5027,17 @@
   });
 </script>
 
-<!-- Nepali (Bikram Sambat) date converter — shows today's Nepali date with day on the home screen -->
-<script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js"></script>
+<!-- Nepali (Bikram Sambat) date converter — shows today's Nepali date with day on the home
+     screen, and powers the central BS↔AD date service used throughout the app. Loaded with
+     `defer` so a slow/unreachable CDN can never block the app itself from loading — the date
+     service already handles NepaliDate being unavailable gracefully (falls back to AD only). -->
+<script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js" defer></script>
 
 <!-- jsPDF — used for the Premium "Download Set as PDF" feature -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <!-- QRCode.js — used for the Smart Tools QR Generator -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-<!-- nepali-date-converter — real, tested BS↔AD conversion data (1975-2099 BS), not hand-built.
-     Used by the central date service below rather than reimplementing calendar math ourselves. -->
-<script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js"></script>
 
 <script>
 // ============================================================
@@ -10597,13 +10596,10 @@ function updateLiveClock(){
   // Nepali (Bikram Sambat) date, in Devanagari, with day name
   let dateStr = '';
   try{
-    if(typeof NepaliDate === 'undefined') throw new Error('NepaliDate is undefined - CDN script did not load');
-    // The UMD bundle sometimes exposes the actual class under .default instead of directly
-    const NDConstructor = (NepaliDate && NepaliDate.default) ? NepaliDate.default : NepaliDate;
-    dateStr = new NDConstructor().format('ddd, DD MMMM YYYY', 'np');
+    const ND = getNepaliDateConstructor();
+    if(ND) dateStr = new ND().format('ddd, DD MMMM YYYY', 'np');
   }catch(err){
-    // TEMPORARY DEBUG: show the exact reason instead of silently falling back
-    dateStr = 'DEBUG: ' + err.message;
+    // Library not loaded yet or failed — leave dateStr empty, this re-runs every second anyway
   }
 
   // 12-hour time with AM/PM, ticking live every second
@@ -10820,18 +10816,28 @@ function setDateCalendarPref(pref){
 const BS_MONTH_NAMES = ['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'];
 // AD (Date object or 'YYYY-MM-DD' string) -> {year, month (1-12), date}. Returns null if out of
 // the library's supported range (1918-2043 AD) rather than guessing.
+// Some UMD bundles export the actual class under .default instead of directly on the global —
+// this handles both shapes so callers don't need to know which one loaded.
+function getNepaliDateConstructor(){
+  if(typeof NepaliDate === 'undefined') return null;
+  return (NepaliDate && NepaliDate.default) ? NepaliDate.default : NepaliDate;
+}
 function adToBs(adInput){
   try{
+    const ND = getNepaliDateConstructor();
+    if(!ND) return null;
     const jsDate = (adInput instanceof Date) ? adInput : new Date(adInput + 'T00:00:00');
     if(isNaN(jsDate.getTime())) return null;
-    const nd = new NepaliDate(jsDate);
+    const nd = new ND(jsDate);
     return { year: nd.getYear(), month: nd.getMonth() + 1, date: nd.getDate() };
   }catch(e){ return null; }
 }
 // BS year/month(1-12)/date -> JS Date object (AD). Returns null if invalid/out of range.
 function bsToAd(bsYear, bsMonth, bsDate){
   try{
-    const nd = new NepaliDate(parseInt(bsYear,10), parseInt(bsMonth,10) - 1, parseInt(bsDate,10));
+    const ND = getNepaliDateConstructor();
+    if(!ND) return null;
+    const nd = new ND(parseInt(bsYear,10), parseInt(bsMonth,10) - 1, parseInt(bsDate,10));
     const jsDate = nd.toJsDate();
     if(isNaN(jsDate.getTime())) return null;
     return jsDate;
