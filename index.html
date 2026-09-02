@@ -10791,10 +10791,32 @@ let newsPortalSelectedKey = null;
 let newsPortalArticlesCache = {}; // keyed by source key, so switching sources doesn't refetch
 async function fetchNewsPortalSources(){
   if(newsPortalSourcesCache) return newsPortalSourcesCache;
+  // Return a cached copy from last time INSTANTLY (no network wait) if we have one, and
+  // refresh it quietly in the background for next time — same pattern used for Resources.
+  let cachedSources = null;
+  try{ cachedSources = JSON.parse(localStorage.getItem('hl_cache_news_sources') || 'null'); }catch(e){}
+  fetch(`${SHEET_API_URL}?action=newsPortalSources`)
+    .then(res => res.json())
+    .then(rows => {
+      const fresh = (rows || []).filter(r => r.Key && r.RssURL);
+      if(fresh.length){
+        newsPortalSourcesCache = fresh;
+        try{ localStorage.setItem('hl_cache_news_sources', JSON.stringify(fresh)); }catch(e){}
+      }
+    })
+    .catch(() => {}); // background refresh — a failure here just means we keep showing cache
+  if(cachedSources && cachedSources.length){
+    newsPortalSourcesCache = cachedSources;
+    return cachedSources;
+  }
+  // No cache at all (first-ever visit) — this one time, we do have to wait for the network.
   try{
     const res = await fetch(`${SHEET_API_URL}?action=newsPortalSources`);
     const rows = await res.json();
     newsPortalSourcesCache = (rows || []).filter(r => r.Key && r.RssURL);
+    if(newsPortalSourcesCache.length){
+      try{ localStorage.setItem('hl_cache_news_sources', JSON.stringify(newsPortalSourcesCache)); }catch(e){}
+    }
   }catch(err){
     newsPortalSourcesCache = [];
   }
