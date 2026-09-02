@@ -4218,6 +4218,14 @@
         <div id="noteAiResult"></div>
       </div>
 
+      <div class="calc-card" style="margin-top:10px;">
+        <h4>🖼️ Images</h4>
+        <div id="noteImagesGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px;"></div>
+        <input type="file" id="noteImageFileInput" accept="image/*" style="display:none;">
+        <button class="calc-btn" id="noteAddImageBtn" style="margin:0; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">＋ Add Image</button>
+        <p id="noteImageStorageNote" style="font-size:10px; color:var(--ink-soft); margin-top:8px;"></p>
+      </div>
+
       <div class="calc-card" style="margin-top:16px;">
         <div class="calc-field"><label>Folder</label>
           <select id="noteFolderSelect" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
@@ -9296,6 +9304,83 @@ document.getElementById('formulaSearchBox').addEventListener('input', (e) => {
   renderFormulas(e.target.value);
 });
 
+// ---------- Note Images: stored in IndexedDB, not localStorage — images are too large for
+// localStorage's ~5-10MB total limit, which the rest of My Notes' text data already shares.
+// Each note keeps only an array of image IDs (note.imageIds); actual image bytes live here,
+// keyed by those IDs. Deleting a note's images (or purging a note) removes them from here too. ----------
+const NOTE_IMAGE_DB_NAME = 'hl_notes_images_db';
+const NOTE_IMAGE_STORE = 'images';
+let noteImageDbPromise = null;
+function openNoteImageDB(){
+  if(noteImageDbPromise) return noteImageDbPromise;
+  noteImageDbPromise = new Promise((resolve, reject) => {
+    if(!window.indexedDB){ reject(new Error('IndexedDB not supported')); return; }
+    const request = indexedDB.open(NOTE_IMAGE_DB_NAME, 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(NOTE_IMAGE_STORE)) db.createObjectStore(NOTE_IMAGE_STORE);
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = () => reject(request.error);
+  });
+  return noteImageDbPromise;
+}
+async function saveNoteImage(id, dataUrl){
+  const db = await openNoteImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(NOTE_IMAGE_STORE, 'readwrite');
+    tx.objectStore(NOTE_IMAGE_STORE).put(dataUrl, id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function getNoteImage(id){
+  const db = await openNoteImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(NOTE_IMAGE_STORE, 'readonly');
+    const req = tx.objectStore(NOTE_IMAGE_STORE).get(id);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function deleteNoteImage(id){
+  const db = await openNoteImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(NOTE_IMAGE_STORE, 'readwrite');
+    tx.objectStore(NOTE_IMAGE_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+function fileToDataUrl(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+// Downscales an image before storing, so a 12MP phone photo doesn't balloon IndexedDB usage —
+// caps the longest side at 1200px, which is plenty for viewing inside a note.
+function downscaleImage(dataUrl, maxDimension){
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if(width > maxDimension || height > maxDimension){
+        if(width > height){ height = Math.round(height * maxDimension / width); width = maxDimension; }
+        else { width = Math.round(width * maxDimension / height); height = maxDimension; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => resolve(dataUrl); // fall back to original if downscaling fails
+    img.src = dataUrl;
+  });
+}
+
 // ---------- My Notes: free-text study notes, saved on-device ----------
 // ---------- My Notes: data model is {id, title, body, folder, tags[], pinned, revisionStatus,
 // reviewDateAD, createdAt, updatedAt, deletedAt}. Old notes ({subject,chapter,title,body,date})
@@ -9311,6 +9396,7 @@ function migrateOldNote(n){
     pinned: false,
     revisionStatus: null,
     reviewDateAD: null,
+    imageIds: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     deletedAt: null,
@@ -9442,7 +9528,7 @@ function openNoteEditor(noteId){
     note = {
       id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
       title: '', body: '', folder: 'General', tags: [], pinned: false,
-      revisionStatus: null, reviewDateAD: null,
+      revisionStatus: null, reviewDateAD: null, imageIds: [],
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), deletedAt: null,
     };
     notes.unshift(note);
@@ -9462,8 +9548,71 @@ function openNoteEditor(noteId){
   updateNoteReviewDateDual();
   document.getElementById('noteAiPanel').style.display = 'none';
   document.getElementById('noteAiResult').innerHTML = '';
+  renderNoteImages(note);
   showScreen(noteEditorScreen);
 }
+async function renderNoteImages(note){
+  const grid = document.getElementById('noteImagesGrid');
+  const imageIds = note.imageIds || [];
+  if(imageIds.length === 0){
+    grid.innerHTML = '';
+    document.getElementById('noteImageStorageNote').textContent = '';
+    return;
+  }
+  grid.innerHTML = `<p style="grid-column:1/-1; font-size:11px; color:var(--ink-soft);">Loading images…</p>`;
+  const thumbs = await Promise.all(imageIds.map(async (imgId) => {
+    const dataUrl = await getNoteImage(imgId).catch(() => null);
+    return { imgId, dataUrl };
+  }));
+  grid.innerHTML = thumbs.map(({imgId, dataUrl}) => dataUrl ? `
+    <div style="position:relative;">
+      <img src="${dataUrl}" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid var(--line);">
+      <button class="note-image-delete-btn" data-img-id="${imgId}" style="position:absolute; top:4px; right:4px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:11px; cursor:pointer;">✕</button>
+    </div>
+  ` : '').join('');
+  document.querySelectorAll('.note-image-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Remove this image from the note?')) return;
+      const imgId = btn.dataset.imgId;
+      await deleteNoteImage(imgId).catch(() => {});
+      const notes = getNotes();
+      const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+      if(idx !== -1){
+        notes[idx].imageIds = (notes[idx].imageIds || []).filter(id => id !== imgId);
+        notes[idx].updatedAt = new Date().toISOString();
+        saveNotes(notes);
+        renderNoteImages(notes[idx]);
+      }
+    });
+  });
+}
+document.getElementById('noteAddImageBtn').addEventListener('click', () => {
+  document.getElementById('noteImageFileInput').click();
+});
+document.getElementById('noteImageFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = ''; // reset so selecting the same file again still fires 'change'
+  if(!file) return;
+  const storageNote = document.getElementById('noteImageStorageNote');
+  storageNote.textContent = 'Adding image…';
+  try{
+    const rawDataUrl = await fileToDataUrl(file);
+    const resized = await downscaleImage(rawDataUrl, 1200);
+    const imgId = 'img' + Date.now() + Math.random().toString(36).slice(2,7);
+    await saveNoteImage(imgId, resized);
+    const notes = getNotes();
+    const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+    if(idx !== -1){
+      notes[idx].imageIds = [...(notes[idx].imageIds || []), imgId];
+      notes[idx].updatedAt = new Date().toISOString();
+      saveNotes(notes);
+      renderNoteImages(notes[idx]);
+    }
+    storageNote.textContent = '';
+  }catch(err){
+    storageNote.textContent = 'Could not add that image — please try a different one.';
+  }
+});
 function updateNoteReviewDateDual(){
   const val = document.getElementById('noteReviewDateInput').value;
   document.getElementById('noteReviewDateDual').textContent = val ? formatDualDate(val) : '';
@@ -9641,9 +9790,13 @@ function renderNoteTrash(){
     });
   });
   document.querySelectorAll('[data-purge]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if(!confirm('Permanently delete this note? This cannot be undone.')) return;
       let notes = getNotes();
+      const noteToDelete = notes.find(n => n.id === btn.dataset.purge);
+      if(noteToDelete && noteToDelete.imageIds && noteToDelete.imageIds.length){
+        await Promise.all(noteToDelete.imageIds.map(imgId => deleteNoteImage(imgId).catch(() => {})));
+      }
       notes = notes.filter(n => n.id !== btn.dataset.purge);
       saveNotes(notes);
       renderNoteTrash();
