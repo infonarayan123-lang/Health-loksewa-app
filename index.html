@@ -4197,9 +4197,36 @@
       <div id="noteCreateMenu" style="display:none; position:fixed; bottom:155px; right:20px; z-index:51; background:var(--panel-elevated); border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,0.35); overflow:hidden; min-width:180px;">
         <button class="note-create-option" id="createTextNoteBtn">📝 Text Note</button>
         <button class="note-create-option" id="createHandwrittenNoteBtn">✍️ Handwritten Note</button>
+        <button class="note-create-option" id="createScanNoteBtn">📷 Scan Document</button>
       </div>
     </div>
   </div>
+
+  <div class="screen" id="scanNoteScreen">
+    <div class="back-link" data-back="notes" id="scanBackLink">← Back</div>
+    <div class="home-body" style="padding-bottom:10px;">
+      <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:10px;">📷 Scan Document</div>
+
+      <div id="scanCameraWrap" style="position:relative; width:100%; aspect-ratio:3/4; background:#000; border-radius:10px; overflow:hidden;">
+        <video id="scanVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+        <canvas id="scanCaptureCanvas" style="width:100%; height:100%; object-fit:cover; display:none;"></canvas>
+        <p id="scanStatusText" style="color:#fff; font-size:12.5px; text-align:center; padding:40% 20px 0;">Tap "Start Camera" below to begin.</p>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <button class="calc-btn" id="scanStartCameraBtn" style="margin:0; flex:1; font-size:12.5px;">📷 Start Camera</button>
+        <button class="calc-btn" id="scanCaptureBtn" style="margin:0; flex:1; font-size:12.5px; display:none;">⬤ Capture</button>
+        <button class="calc-btn" id="scanRetakeBtn" style="margin:0; flex:1; font-size:12.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); display:none;">↺ Retake</button>
+      </div>
+
+      <div id="scanAfterCaptureActions" style="display:none; margin-top:10px;">
+        <button class="calc-btn" id="scanExtractTextBtn" style="margin:0; margin-bottom:8px; font-size:12.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔍 Extract Text (OCR)</button>
+        <div id="scanOcrResult" style="margin-bottom:8px;"></div>
+        <button class="calc-btn" id="scanSaveBtn" style="margin:0; font-size:12.5px;">✓ Save to My Notes</button>
+      </div>
+    </div>
+  </div>
+
 
   <div class="screen" id="handwrittenNoteScreen">
     <div class="back-link" data-back="notes">← Back</div>
@@ -5207,6 +5234,10 @@
      service already handles NepaliDate being unavailable gracefully (falls back to AD only). -->
 <script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js" defer></script>
 
+<!-- Tesseract.js — OCR for Scan Document's "Extract Text" feature. Loaded with `defer` (same
+     lesson as the date converter above — never let an external CDN block the app itself). -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+
 <!-- jsPDF — used for the Premium "Download Set as PDF" feature -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -5337,6 +5368,7 @@ const notesScreen = document.getElementById('notesScreen');
 const noteEditorScreen = document.getElementById('noteEditorScreen');
 const noteTrashScreen = document.getElementById('noteTrashScreen');
 const handwrittenNoteScreen = document.getElementById('handwrittenNoteScreen');
+const scanNoteScreen = document.getElementById('scanNoteScreen');
 const reminderScreen = document.getElementById('reminderScreen');
 const revisionScreen = document.getElementById('revisionScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
@@ -5350,7 +5382,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, handwrittenNoteScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, handwrittenNoteScreen, scanNoteScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -10075,6 +10107,128 @@ document.getElementById('handwrittenSaveBtn').addEventListener('click', async ()
     btn.textContent = '✓ Save';
   }
 });
+
+// ---------- Scan Document: camera capture via getUserMedia, then optional OCR (Tesseract.js)
+// before saving. OCR runs entirely on-device — no image is sent anywhere for text extraction.
+// Genuinely useful for typed/printed text; handwriting OCR accuracy is inherently unreliable,
+// which is stated plainly in the UI rather than oversold. ----------
+let scanCameraStream = null;
+let scanCapturedDataUrl = null;
+document.getElementById('createScanNoteBtn').addEventListener('click', () => {
+  document.getElementById('noteCreateMenu').style.display = 'none';
+  openScanNoteScreen();
+});
+function openScanNoteScreen(){
+  showScreen(scanNoteScreen);
+  scanCapturedDataUrl = null;
+  document.getElementById('scanVideo').style.display = 'none';
+  document.getElementById('scanCaptureCanvas').style.display = 'none';
+  document.getElementById('scanStatusText').style.display = 'block';
+  document.getElementById('scanStatusText').textContent = 'Tap "Start Camera" below to begin.';
+  document.getElementById('scanStartCameraBtn').style.display = 'block';
+  document.getElementById('scanCaptureBtn').style.display = 'none';
+  document.getElementById('scanRetakeBtn').style.display = 'none';
+  document.getElementById('scanAfterCaptureActions').style.display = 'none';
+  document.getElementById('scanOcrResult').innerHTML = '';
+}
+function stopScanCamera(){
+  if(scanCameraStream){
+    scanCameraStream.getTracks().forEach(track => track.stop());
+    scanCameraStream = null;
+  }
+}
+document.getElementById('scanStartCameraBtn').addEventListener('click', async () => {
+  const statusText = document.getElementById('scanStatusText');
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    statusText.textContent = 'Camera access isn\'t available on this device/browser.';
+    return;
+  }
+  try{
+    scanCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const video = document.getElementById('scanVideo');
+    video.srcObject = scanCameraStream;
+    video.style.display = 'block';
+    statusText.style.display = 'none';
+    document.getElementById('scanStartCameraBtn').style.display = 'none';
+    document.getElementById('scanCaptureBtn').style.display = 'block';
+  }catch(err){
+    statusText.textContent = 'Could not access the camera — check your browser/app permissions.';
+  }
+});
+document.getElementById('scanCaptureBtn').addEventListener('click', () => {
+  const video = document.getElementById('scanVideo');
+  const canvas = document.getElementById('scanCaptureCanvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  scanCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  video.style.display = 'none';
+  canvas.style.display = 'block';
+  stopScanCamera();
+  document.getElementById('scanCaptureBtn').style.display = 'none';
+  document.getElementById('scanRetakeBtn').style.display = 'block';
+  document.getElementById('scanAfterCaptureActions').style.display = 'block';
+});
+document.getElementById('scanRetakeBtn').addEventListener('click', () => {
+  openScanNoteScreen();
+});
+document.getElementById('scanExtractTextBtn').addEventListener('click', async () => {
+  const resultEl = document.getElementById('scanOcrResult');
+  if(typeof Tesseract === 'undefined'){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:11.5px;">OCR is still loading — please try again in a moment.</p>`;
+    return;
+  }
+  resultEl.innerHTML = `<p style="color:var(--ink-soft); font-size:11.5px;">🔍 Reading text… this can take a little while, especially on older phones.</p>`;
+  try{
+    const { data: { text } } = await Tesseract.recognize(scanCapturedDataUrl, 'eng');
+    if(!text || !text.trim()){
+      resultEl.innerHTML = `<p style="color:var(--ink-soft); font-size:11.5px;">No text found — OCR works best on clear, well-lit printed text.</p>`;
+      return;
+    }
+    resultEl.innerHTML = `
+      <div style="background:var(--panel-elevated); border-radius:8px; padding:10px; font-size:12px; color:var(--ink); line-height:1.5; white-space:pre-wrap; max-height:150px; overflow-y:auto;">${text}</div>
+      <p style="font-size:10px; color:var(--ink-soft); margin-top:6px;">OCR accuracy varies — please check this against the original before relying on it, especially for handwriting.</p>
+    `;
+    scanExtractedText = text;
+  }catch(err){
+    resultEl.innerHTML = `<p style="color:var(--wrong); font-size:11.5px;">Could not read text from this image. Try a clearer, better-lit photo.</p>`;
+  }
+});
+let scanExtractedText = '';
+document.getElementById('scanSaveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('scanSaveBtn');
+  btn.textContent = 'Saving…';
+  try{
+    const resized = await downscaleImage(scanCapturedDataUrl, 1400);
+    const imgId = 'img' + Date.now() + Math.random().toString(36).slice(2,7);
+    await saveNoteImage(imgId, resized);
+    const notes = getNotes();
+    const newNote = {
+      id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+      title: 'Scanned Document — ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}),
+      body: scanExtractedText || '',
+      folder: 'Scanned',
+      tags: [],
+      pinned: false,
+      revisionStatus: null,
+      reviewDateAD: null,
+      imageIds: [imgId],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+    };
+    notes.unshift(newNote);
+    saveNotes(notes);
+    scanExtractedText = '';
+    showScreen(notesScreen);
+    renderNotes();
+  }catch(err){
+    alert('Could not save this scan — please try again.');
+    btn.textContent = '✓ Save to My Notes';
+  }
+});
+// Stop the camera if the user backs out mid-capture, so it doesn't keep running in the background
+document.getElementById('scanBackLink').addEventListener('click', stopScanCamera);
 
 
 function renderProgressScreen(){
