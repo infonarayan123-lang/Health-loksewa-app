@@ -4202,8 +4202,21 @@
         <button class="note-fmt-btn" data-fmt="numbered" title="Numbered list">1.</button>
         <button class="note-fmt-btn" data-fmt="checklist" title="Checklist">☑️</button>
         <button class="note-fmt-btn" data-fmt="heading" title="Heading">H</button>
+        <button class="note-fmt-btn" id="noteAiBtn" title="AI actions" style="background:var(--crimson); color:#fff; border:none; width:auto; padding:0 12px;">✨ AI</button>
       </div>
       <textarea id="noteBodyInput" placeholder="Start writing..." style="width:100%; min-height:220px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; padding:12px; resize:vertical; line-height:1.6;"></textarea>
+
+      <div id="noteAiPanel" style="display:none; margin-top:10px;" class="calc-card">
+        <div id="noteAiActionButtons" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+          <button class="calc-btn" data-ai-action="explain" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px;">Explain</button>
+          <button class="calc-btn" data-ai-action="summarize" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Summarize</button>
+          <button class="calc-btn" data-ai-action="mcqs" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Make MCQs</button>
+          <button class="calc-btn" data-ai-action="mnemonic" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Make Mnemonic</button>
+          <button class="calc-btn" data-ai-action="simplify" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Simplify</button>
+        </div>
+        <p style="font-size:10.5px; color:var(--ink-soft); margin-bottom:8px;">Uses selected text if you've highlighted any, otherwise the whole note.</p>
+        <div id="noteAiResult"></div>
+      </div>
 
       <div class="calc-card" style="margin-top:16px;">
         <div class="calc-field"><label>Folder</label>
@@ -4243,6 +4256,7 @@
         <div style="display:flex; gap:8px;">
           <button class="calc-btn" id="noteExportTxtBtn" style="margin:0; flex:1; font-size:12px;">Export TXT</button>
           <button class="calc-btn" id="noteExportMdBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export Markdown</button>
+          <button class="calc-btn" id="noteExportPdfBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export PDF</button>
         </div>
       </div>
     </div>
@@ -9446,6 +9460,8 @@ function openNoteEditor(noteId){
   });
   document.getElementById('noteAutoSaveStatus').textContent = note.title || note.body ? `Last edited: ${new Date(note.updatedAt).toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})}` : '';
   updateNoteReviewDateDual();
+  document.getElementById('noteAiPanel').style.display = 'none';
+  document.getElementById('noteAiResult').innerHTML = '';
   showScreen(noteEditorScreen);
 }
 function updateNoteReviewDateDual(){
@@ -9537,6 +9553,57 @@ document.querySelectorAll('.note-fmt-btn').forEach(btn => {
   });
 });
 
+// ---------- AI actions inside a note: reuses the same chat backend as the AI Assistant —
+// not a second AI system, just a different prompt sent to the same endpoint. ----------
+document.getElementById('noteAiBtn').addEventListener('click', () => {
+  const panel = document.getElementById('noteAiPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
+const NOTE_AI_PROMPTS = {
+  explain: 'Explain the following simply, for a Nepal health Loksewa exam candidate:',
+  summarize: 'Summarize the following concisely, keeping the key exam-relevant points:',
+  mcqs: 'Write 1 multiple-choice question (with 4 options and the correct answer marked) based on the following:',
+  mnemonic: 'Create a short, memorable mnemonic to help remember the following:',
+  simplify: 'Rewrite the following in simpler, easier-to-understand language:',
+};
+document.querySelectorAll('[data-ai-action]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const textarea = document.getElementById('noteBodyInput');
+    const selected = textarea.value.slice(textarea.selectionStart, textarea.selectionEnd);
+    const sourceText = selected || textarea.value;
+    const resultEl = document.getElementById('noteAiResult');
+    if(!sourceText.trim()){
+      resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12px;">Write something in the note first, or select the text you want AI to work on.</p>`;
+      return;
+    }
+    resultEl.innerHTML = `<p style="color:var(--ink-soft); font-size:12px;">✨ Thinking…</p>`;
+    try{
+      const res = await fetch(SHEET_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'chat',
+          message: `${NOTE_AI_PROMPTS[btn.dataset.aiAction]}\n\n${sourceText}`,
+          history: []
+        })
+      });
+      const data = await res.json();
+      const reply = data.reply || "Sorry, couldn't get a response. Please try again.";
+      resultEl.innerHTML = `
+        <div style="background:var(--panel-elevated); border-radius:8px; padding:10px; font-size:12.5px; color:var(--ink); line-height:1.5; white-space:pre-wrap;">${reply}</div>
+        <button class="calc-btn" id="noteAiInsertBtn" style="margin-top:8px; font-size:12px;">↓ Insert into note</button>
+      `;
+      document.getElementById('noteAiInsertBtn').addEventListener('click', () => {
+        textarea.value = textarea.value + '\n\n' + reply;
+        scheduleAutoSave();
+        resultEl.innerHTML = `<p style="color:var(--correct); font-size:12px;">✓ Added to note.</p>`;
+      });
+    }catch(err){
+      resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12px;">Could not reach the AI right now. Check your connection and try again.</p>`;
+    }
+  });
+});
+
 // ---------- Delete (soft) / Trash / Restore / Permanent delete ----------
 document.getElementById('noteDeleteBtn').addEventListener('click', () => {
   if(!confirm('Move this note to Trash?')) return;
@@ -9602,6 +9669,34 @@ document.getElementById('noteExportMdBtn').addEventListener('click', () => {
   const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
   const body = document.getElementById('noteBodyInput').value;
   downloadTextFile(`${title}.md`, `# ${title}\n\n${body}`);
+});
+document.getElementById('noteExportPdfBtn').addEventListener('click', () => {
+  if(typeof window.jspdf === 'undefined'){
+    alert('PDF tool is still loading — please try again in a moment.');
+    return;
+  }
+  const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
+  const body = document.getElementById('noteBodyInput').value;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  const pageWidth = 190;
+  let y = 20;
+  pdf.setFontSize(16);
+  pdf.text(title, 10, y);
+  y += 6;
+  pdf.setFontSize(9);
+  pdf.setTextColor(120);
+  pdf.text('Health Loksewa — My Notes', 10, y);
+  pdf.setTextColor(0);
+  y += 10;
+  pdf.setFontSize(11);
+  const lines = pdf.splitTextToSize(body || '(empty note)', pageWidth);
+  lines.forEach(line => {
+    if(y > 280){ pdf.addPage(); y = 20; }
+    pdf.text(line, 10, y);
+    y += 6;
+  });
+  pdf.save(`${title}.pdf`);
 });
 
 document.getElementById('addNoteBtn').addEventListener('click', () => openNoteEditor());
