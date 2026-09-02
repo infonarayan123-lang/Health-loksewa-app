@@ -1364,6 +1364,10 @@
     display:inline-block; margin-left:8px; background:none; border:none;
     color:var(--crimson); font-size:14px; cursor:pointer; vertical-align:middle; padding:0;
   }
+  .chat-save-btn{
+    display:inline-block; margin-left:8px; background:none; border:none;
+    color:var(--crimson); font-size:14px; cursor:pointer; vertical-align:middle; padding:0;
+  }
 
   .link-card.is-loading{ opacity:0.55; cursor:default; }
   .link-card.is-loading .lc-arrow{ opacity:0.3; }
@@ -8289,8 +8293,32 @@ function renderMnemonics(searchTerm){
         <div class="mi-topic">${m.topic}</div>
         <div class="mi-trick">💡 ${m.trick}</div>
         <div class="mi-explain">${m.explain}</div>
+        <button class="chat-save-btn" data-mnemonic-idx="${i}" style="display:block; margin-top:6px;" title="Save to My Notes">🔖 Save</button>
       </div>`;
   }).join('');
+
+  document.querySelectorAll('[data-mnemonic-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m = filtered[parseInt(btn.dataset.mnemonicIdx, 10)];
+      const notes = getNotes();
+      const newNote = {
+        id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+        title: m.topic,
+        body: `${m.trick}\n\n${m.explain}`,
+        folder: 'Mnemonics',
+        tags: ['Mnemonic'],
+        pinned: false,
+        revisionStatus: null,
+        reviewDateAD: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+      };
+      notes.unshift(newNote);
+      saveNotes(notes);
+      btn.textContent = '✓ Saved';
+    });
+  });
 
   document.querySelectorAll('[data-locked-mnemonic]').forEach(item => {
     item.style.cursor = 'pointer';
@@ -9219,13 +9247,36 @@ function renderFormulas(searchTerm){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No formulas match "${searchTerm}".</p>`;
     return;
   }
-  wrap.innerHTML = filtered.map(f => `
+  wrap.innerHTML = filtered.map((f, i) => `
     <div class="formula-item">
       <div class="fi-name">${f.name}</div>
       <div class="fi-formula">${f.formula}</div>
       <div class="fi-note">${f.note}</div>
+      <button class="chat-save-btn" data-formula-idx="${i}" style="display:block; margin-top:6px;" title="Save to My Notes">🔖 Save</button>
     </div>
   `).join('');
+  document.querySelectorAll('[data-formula-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const f = filtered[parseInt(btn.dataset.formulaIdx, 10)];
+      const notes = getNotes();
+      const newNote = {
+        id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+        title: f.name,
+        body: `${f.formula}\n\n${f.note}`,
+        folder: 'Formulas',
+        tags: ['Formula'],
+        pinned: false,
+        revisionStatus: null,
+        reviewDateAD: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+      };
+      notes.unshift(newNote);
+      saveNotes(notes);
+      btn.textContent = '✓ Saved';
+    });
+  });
 }
 document.getElementById('formulaSearchBox').addEventListener('input', (e) => {
   renderFormulas(e.target.value);
@@ -11496,6 +11547,7 @@ function renderNewsArticleCards(articles, sourceName){
       <div style="display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line);">
         <button class="news-save-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">${isNewsSaved(a.Link) ? '🔖 Saved' : '🔖 Save'}</button>
         <button class="news-share-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">📤 Share</button>
+        <button class="news-note-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">📝 Note</button>
       </div>
     </div>
   `).join('');
@@ -11519,6 +11571,29 @@ function renderNewsArticleCards(articles, sourceName){
           setTimeout(() => { btn.textContent = '📤 Share'; }, 2000);
         }catch(e){}
       }
+    });
+  });
+  document.querySelectorAll('.news-note-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const article = articles[parseInt(btn.dataset.idx, 10)];
+      const notes = getNotes();
+      const newNote = {
+        id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+        title: article.Title || 'Untitled Note',
+        body: `${article.Snippet || ''}\n\nSource: ${sourceName || article.SourceName || ''}\n${article.Link || ''}`,
+        folder: 'Saved News',
+        tags: ['News'],
+        pinned: false,
+        revisionStatus: null,
+        reviewDateAD: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+      };
+      notes.unshift(newNote);
+      saveNotes(notes);
+      btn.textContent = '✓ Added';
+      setTimeout(() => { btn.textContent = '📝 Note'; }, 1500);
     });
   });
 }
@@ -13417,7 +13492,29 @@ function handleAnswer(letter){
 
   const fb = document.getElementById('feedbackBox');
   fb.className = 'feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
-  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + q.CorrectAnswer}</b>${q.Explanation || ''}`;
+  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + q.CorrectAnswer}</b>${q.Explanation || ''}${q.Explanation ? `<button class="chat-save-btn" id="saveExplanationBtn" style="display:block; margin-top:6px;" title="Save to My Notes">🔖 Save explanation</button>` : ''}`;
+  if(q.Explanation){
+    document.getElementById('saveExplanationBtn').addEventListener('click', (e) => {
+      const btn = e.target;
+      const notes = getNotes();
+      const newNote = {
+        id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+        title: (q.Question || 'Question').slice(0, 50) + (q.Question && q.Question.length > 50 ? '…' : ''),
+        body: `Q: ${q.Question || ''}\n\nAnswer: ${q.CorrectAnswer || ''}\n\nExplanation: ${q.Explanation || ''}`,
+        folder: 'Practice',
+        tags: ['MCQ'],
+        pinned: false,
+        revisionStatus: null,
+        reviewDateAD: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+      };
+      notes.unshift(newNote);
+      saveNotes(notes);
+      btn.textContent = '✓ Saved to Notes';
+    });
+  }
 
   document.getElementById('nextBtn').disabled = false;
   refreshOmrStrip();
@@ -13746,6 +13843,37 @@ function addSpeakButtonToBubble(bubble, text){
   });
   bubble.appendChild(speakBtn);
 }
+// Adds a "Save to Notes" button to an AI response bubble, same pattern as the speak button —
+// sends the AI's answer straight into a new note rather than building a second save system.
+function addSaveToNotesButtonToBubble(bubble, text){
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'chat-save-btn';
+  saveBtn.type = 'button';
+  saveBtn.textContent = '🔖';
+  saveBtn.title = 'Save to My Notes';
+  saveBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const notes = getNotes();
+    const newNote = {
+      id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+      title: text.slice(0, 50) + (text.length > 50 ? '…' : ''),
+      body: text,
+      folder: 'AI Assistant',
+      tags: ['AI'],
+      pinned: false,
+      revisionStatus: null,
+      reviewDateAD: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      deletedAt: null,
+    };
+    notes.unshift(newNote);
+    saveNotes(notes);
+    saveBtn.textContent = '✓';
+    setTimeout(() => { saveBtn.textContent = '🔖'; }, 1500);
+  });
+  bubble.appendChild(saveBtn);
+}
 function speakText(text){
   if(!window.speechSynthesis) return;
   window.speechSynthesis.cancel(); // stop anything already playing first
@@ -13791,6 +13919,7 @@ async function sendChatMessage(){
     thinkingBubble.textContent = reply;
     thinkingBubble.classList.remove('thinking');
     addSpeakButtonToBubble(thinkingBubble, reply);
+    addSaveToNotesButtonToBubble(thinkingBubble, reply);
     chatHistory.push({role:'assistant', content:reply});
     const trimmedHistory = chatHistory.slice(-20);
     try{ localStorage.setItem('hl_chat_history', JSON.stringify(trimmedHistory)); }catch(e){}
