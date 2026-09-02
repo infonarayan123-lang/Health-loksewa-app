@@ -10777,6 +10777,9 @@ async function renderNewsPortal(){
   const sourcesEl = document.getElementById('newsPortalSources');
   sourcesEl.innerHTML = `<p style="color:var(--ink-soft); font-size:12px;">Loading sources…</p>`;
   listEl.innerHTML = '';
+  // Saved is local data (instant, no network fetch) — safe to show automatically on open,
+  // unlike a real portal's RSS feed which only loads when its pill is explicitly tapped.
+  if(!newsPortalSelectedKey) newsPortalSelectedKey = '__saved__';
   const sources = await fetchNewsPortalSources();
 
   // "Saved" pill always shown first, ahead of every real portal — works even with zero sources.
@@ -10785,8 +10788,7 @@ async function renderNewsPortal(){
   if(sources.length === 0){
     sourcesEl.innerHTML = savedPillHtml;
     document.querySelector('.news-source-pill').addEventListener('click', () => loadSavedNews());
-    if(newsPortalSelectedKey === '__saved__') loadSavedNews();
-    else listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">No news sources added yet — add a portal name and its RSS feed URL to the NewsPortalSources Sheet tab.</p>`;
+    loadSavedNews();
     return;
   }
   // Pills render instantly — nothing about any specific portal's articles loads until tapped,
@@ -10803,10 +10805,8 @@ async function renderNewsPortal(){
 
   if(newsPortalSelectedKey === '__saved__'){
     loadSavedNews();
-  } else if(newsPortalSelectedKey){
-    loadNewsPortalSource(newsPortalSelectedKey, sources);
   } else {
-    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:30px 0;">Tap a source above to see its latest headlines.</p>`;
+    loadNewsPortalSource(newsPortalSelectedKey, sources);
   }
 }
 function highlightSelectedPill(key){
