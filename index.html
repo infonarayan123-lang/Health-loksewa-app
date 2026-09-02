@@ -697,7 +697,7 @@
 
   .note-item{
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
-    padding:14px; margin-bottom:10px;
+    padding:14px; margin-bottom:10px; position:relative;
   }
   .note-item .ni-header{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
   .note-item .ni-title{ font-family:'Tinos',serif; font-weight:700; font-size:14px; color:var(--ink); }
@@ -707,6 +707,26 @@
   .note-item .ni-actions button{
     background:none; border:none; font-size:11.5px; font-weight:700; cursor:pointer; padding:0;
   }
+  .note-item .ni-tags{ display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
+  .note-item .ni-tag{ font-size:10px; background:var(--panel-elevated); color:var(--ink-soft); padding:2px 8px; border-radius:10px; }
+  .note-item .ni-pin{ position:absolute; top:10px; right:12px; font-size:13px; }
+  .note-item .ni-revision-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
+  .notes-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .notes-grid .note-item{ margin-bottom:0; }
+  .note-folder-chip{
+    flex-shrink:0; padding:7px 14px; border-radius:16px; font-size:12px; font-weight:600;
+    background:var(--panel); color:var(--ink); border:1.5px solid var(--line); cursor:pointer; white-space:nowrap;
+  }
+  .note-folder-chip.active{ background:var(--crimson); color:#fff; border:none; }
+  .note-fmt-btn{
+    flex-shrink:0; width:36px; height:36px; border-radius:8px; background:var(--panel);
+    border:1.5px solid var(--line); color:var(--ink); font-size:14px; cursor:pointer;
+  }
+  .note-revision-btn{
+    padding:9px 6px; border-radius:8px; background:var(--panel); border:1.5px solid var(--line);
+    color:var(--ink); font-size:11px; font-weight:600; cursor:pointer;
+  }
+  .note-revision-btn.active{ background:var(--crimson); color:#fff; border:none; }
 
   /* ---------- Detailed Results: subject-wise breakdown (Mock Test) ---------- */
   .breakdown-wrap{
@@ -4143,8 +4163,93 @@
     <div class="back-link" data-back="progress">← Back</div>
     <div class="home-body">
       <div class="section-title">📝 My Notes</div>
-      <button class="start-btn" id="addNoteBtn" style="margin-bottom:16px;">+ Add New Note</button>
+      <div class="calc-field"><input type="text" id="notesSearchInput" placeholder="🔎 Search notes..." style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></div>
+
+      <div id="notesFolderChips" style="display:flex; gap:8px; overflow-x:auto; padding:10px 0;"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="display:flex; gap:6px;">
+          <button class="calc-btn" id="notesViewGridBtn" style="margin:0; width:auto; padding:7px 12px; font-size:12px;">▦ Grid</button>
+          <button class="calc-btn" id="notesViewListBtn" style="margin:0; width:auto; padding:7px 12px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">☰ List</button>
+        </div>
+        <button class="calc-btn" id="notesTrashBtn" style="margin:0; width:auto; padding:7px 12px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🗑️ Trash</button>
+      </div>
+
+      <div id="notesPinnedSection" style="margin-bottom:16px;"></div>
       <div id="notesListContent"></div>
+
+      <button class="start-btn" id="addNoteBtn" style="position:fixed; bottom:90px; right:20px; width:56px; height:56px; border-radius:50%; font-size:24px; padding:0; display:flex; align-items:center; justify-content:center; z-index:50; box-shadow:0 4px 14px rgba(0,0,0,0.3);">＋</button>
+    </div>
+  </div>
+
+  <div class="screen" id="noteEditorScreen">
+    <div class="back-link" data-back="notes" id="noteEditorBackLink">← Back</div>
+    <div class="home-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div id="noteAutoSaveStatus" style="font-size:11.5px; color:var(--ink-soft);"></div>
+        <button class="calc-btn" id="noteDeleteBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">🗑️ Delete</button>
+      </div>
+      <input type="text" id="noteTitleInput" placeholder="Title" style="width:100%; border:none; background:none; font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); padding:6px 0; margin-bottom:8px;">
+
+      <div style="display:flex; gap:6px; margin-bottom:10px; overflow-x:auto; padding-bottom:4px;">
+        <button class="note-fmt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+        <button class="note-fmt-btn" data-fmt="italic" title="Italic"><i>I</i></button>
+        <button class="note-fmt-btn" data-fmt="bullet" title="Bullet list">•</button>
+        <button class="note-fmt-btn" data-fmt="numbered" title="Numbered list">1.</button>
+        <button class="note-fmt-btn" data-fmt="checklist" title="Checklist">☑️</button>
+        <button class="note-fmt-btn" data-fmt="heading" title="Heading">H</button>
+      </div>
+      <textarea id="noteBodyInput" placeholder="Start writing..." style="width:100%; min-height:220px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; padding:12px; resize:vertical; line-height:1.6;"></textarea>
+
+      <div class="calc-card" style="margin-top:16px;">
+        <div class="calc-field"><label>Folder</label>
+          <select id="noteFolderSelect" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="General">General</option>
+            <option value="Health Economics">Health Economics</option>
+            <option value="Epidemiology">Epidemiology</option>
+            <option value="Community Health">Community Health</option>
+            <option value="Health Management">Health Management</option>
+            <option value="Lok Sewa">Lok Sewa</option>
+            <option value="Personal">Personal</option>
+            <option value="__new__">＋ New folder...</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Tags (comma-separated)</label><input type="text" id="noteTagsInput" placeholder="#Important, #Revision, #WeakTopic"></div>
+        <div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
+          <input type="checkbox" id="notePinnedCheckbox">
+          <label for="notePinnedCheckbox" style="font-size:12.5px; color:var(--ink-soft);">📌 Pin this note</label>
+        </div>
+      </div>
+
+      <div class="calc-card" style="margin-top:12px;">
+        <h4>🎯 Exam Revision</h4>
+        <div class="calc-field"><label>Revision Status</label>
+          <div style="display:flex; gap:8px;">
+            <button class="note-revision-btn" data-status="red" style="flex:1;">🔴 Need to Learn</button>
+            <button class="note-revision-btn" data-status="yellow" style="flex:1;">🟡 Learning</button>
+            <button class="note-revision-btn" data-status="green" style="flex:1;">🟢 Ready</button>
+          </div>
+        </div>
+        <div class="calc-field"><label>Next Review Date (AD)</label><input type="date" id="noteReviewDateInput"></div>
+        <div id="noteReviewDateDual" style="font-size:11px; color:var(--ink-soft);"></div>
+      </div>
+
+      <div class="calc-card" style="margin-top:12px;">
+        <h4>📤 Export</h4>
+        <div style="display:flex; gap:8px;">
+          <button class="calc-btn" id="noteExportTxtBtn" style="margin:0; flex:1; font-size:12px;">Export TXT</button>
+          <button class="calc-btn" id="noteExportMdBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export Markdown</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="noteTrashScreen">
+    <div class="back-link" data-back="notes">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🗑️ Recently Deleted</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:14px;">Deleted notes stay here until you restore or permanently delete them.</p>
+      <div id="noteTrashContent"></div>
     </div>
   </div>
 
@@ -5160,6 +5265,8 @@ const tournamentScreen = document.getElementById('tournamentScreen');
 const studyGroupsScreen = document.getElementById('studyGroupsScreen');
 const groupDetailScreen = document.getElementById('groupDetailScreen');
 const notesScreen = document.getElementById('notesScreen');
+const noteEditorScreen = document.getElementById('noteEditorScreen');
+const noteTrashScreen = document.getElementById('noteTrashScreen');
 const reminderScreen = document.getElementById('reminderScreen');
 const revisionScreen = document.getElementById('revisionScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
@@ -5173,13 +5280,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -9125,79 +9232,327 @@ document.getElementById('formulaSearchBox').addEventListener('input', (e) => {
 });
 
 // ---------- My Notes: free-text study notes, saved on-device ----------
+// ---------- My Notes: data model is {id, title, body, folder, tags[], pinned, revisionStatus,
+// reviewDateAD, createdAt, updatedAt, deletedAt}. Old notes ({subject,chapter,title,body,date})
+// are migrated automatically on first read so nothing existing breaks. ----------
+function migrateOldNote(n){
+  if(n.id) return n; // already new-format
+  return {
+    id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+    title: n.title || 'Untitled Note',
+    body: n.body || '',
+    folder: n.subject || 'General',
+    tags: n.chapter ? [n.chapter] : [],
+    pinned: false,
+    revisionStatus: null,
+    reviewDateAD: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    deletedAt: null,
+  };
+}
 function getNotes(){
-  try{ return JSON.parse(localStorage.getItem('hl_notes') || '[]'); }
-  catch(e){ return []; }
+  try{
+    const raw = JSON.parse(localStorage.getItem('hl_notes') || '[]');
+    const migrated = raw.map(migrateOldNote);
+    saveNotes(migrated); // persist the migration so it only happens once
+    return migrated;
+  }catch(e){ return []; }
 }
 function saveNotes(list){
   try{ localStorage.setItem('hl_notes', JSON.stringify(list)); }catch(e){}
 }
-function renderNotes(){
-  const wrap = document.getElementById('notesListContent');
-  const notes = getNotes();
+function getActiveNotes(){ return getNotes().filter(n => !n.deletedAt); }
+function getTrashedNotes(){ return getNotes().filter(n => n.deletedAt); }
 
-  if(notes.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No notes yet — tap "+ Add New Note" to write your first one.</p>`;
-    return;
-  }
+let notesViewMode = 'grid';
+let notesSelectedFolder = null; // null = All
+let notesSearchQuery = '';
+let currentEditingNoteId = null;
+let noteAutoSaveTimeout = null;
 
-  wrap.innerHTML = notes.map((n, i) => `
-    <div class="note-item">
-      <div class="ni-header">
-        <div>
-          <div class="ni-title">${n.title || 'Untitled Note'}</div>
-          <div class="ni-meta">${n.subject || 'General'}${n.chapter ? ' · ' + n.chapter : ''} · ${n.date || ''}</div>
-        </div>
-      </div>
-      <div class="ni-body">${n.body || ''}</div>
-      <div class="ni-actions">
-        <button style="color:var(--navy);" data-edit="${i}">✏️ Edit</button>
-        <button style="color:var(--wrong);" data-delete="${i}">🗑️ Delete</button>
-      </div>
-    </div>
+function renderFolderChips(){
+  const notes = getActiveNotes();
+  const folders = ['All', ...new Set(notes.map(n => n.folder || 'General'))];
+  document.getElementById('notesFolderChips').innerHTML = folders.map(f => `
+    <button class="note-folder-chip ${(f === 'All' && !notesSelectedFolder) || f === notesSelectedFolder ? 'active' : ''}" data-folder="${f}">${f}</button>
   `).join('');
-
-  document.querySelectorAll('[data-delete]').forEach(btn => {
+  document.querySelectorAll('.note-folder-chip').forEach(btn => {
     btn.addEventListener('click', () => {
-      if(!confirm('Delete this note?')) return;
-      const idx = parseInt(btn.dataset.delete, 10);
-      const notes = getNotes();
-      notes.splice(idx, 1);
-      saveNotes(notes);
+      notesSelectedFolder = btn.dataset.folder === 'All' ? null : btn.dataset.folder;
       renderNotes();
     });
   });
-  document.querySelectorAll('[data-edit]').forEach(btn => {
+}
+
+function noteMatchesSearch(n, q){
+  if(!q) return true;
+  const hay = `${n.title} ${n.body} ${(n.tags||[]).join(' ')} ${n.folder}`.toLowerCase();
+  return hay.includes(q.toLowerCase());
+}
+
+function renderNoteCard(n){
+  const dotColor = n.revisionStatus === 'red' ? 'var(--wrong)' : n.revisionStatus === 'yellow' ? 'var(--gold)' : n.revisionStatus === 'green' ? 'var(--correct)' : 'transparent';
+  const bodyPreview = (n.body || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').slice(0, notesViewMode === 'grid' ? 60 : 140);
+  return `
+    <div class="note-item" data-note-id="${n.id}">
+      ${n.pinned ? '<div class="ni-pin">📌</div>' : ''}
+      <div class="ni-header">
+        <div>
+          <div class="ni-title">${n.revisionStatus ? `<span class="ni-revision-dot" style="background:${dotColor};"></span>` : ''}${n.title || 'Untitled Note'}</div>
+          <div class="ni-meta">${n.folder || 'General'} · ${new Date(n.updatedAt || Date.now()).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>
+        </div>
+      </div>
+      <div class="ni-body">${bodyPreview}${bodyPreview.length >= (notesViewMode === 'grid' ? 60 : 140) ? '…' : ''}</div>
+      ${(n.tags && n.tags.length) ? `<div class="ni-tags">${n.tags.map(t => `<span class="ni-tag">#${t}</span>`).join('')}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderNotes(){
+  renderFolderChips();
+  const allActive = getActiveNotes();
+  const filtered = allActive.filter(n =>
+    (!notesSelectedFolder || n.folder === notesSelectedFolder) && noteMatchesSearch(n, notesSearchQuery)
+  );
+  const pinned = filtered.filter(n => n.pinned);
+  const unpinned = filtered.filter(n => !n.pinned).sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+  const pinnedWrap = document.getElementById('notesPinnedSection');
+  if(pinned.length > 0){
+    pinnedWrap.innerHTML = `<div style="font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;">📌 Pinned</div>
+      <div class="${notesViewMode === 'grid' ? 'notes-grid' : ''}">${pinned.map(renderNoteCard).join('')}</div>`;
+  } else {
+    pinnedWrap.innerHTML = '';
+  }
+
+  const wrap = document.getElementById('notesListContent');
+  if(unpinned.length === 0 && pinned.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center; padding:20px 0;">${notesSearchQuery ? 'No notes match your search.' : 'No notes yet — tap ＋ to write your first one.'}</p>`;
+    return;
+  }
+  wrap.innerHTML = notesViewMode === 'grid'
+    ? `<div class="notes-grid">${unpinned.map(renderNoteCard).join('')}</div>`
+    : unpinned.map(renderNoteCard).join('');
+
+  document.querySelectorAll('.note-item').forEach(card => {
+    card.addEventListener('click', () => openNoteEditor(card.dataset.noteId));
+  });
+}
+
+document.getElementById('notesSearchInput').addEventListener('input', (e) => {
+  notesSearchQuery = e.target.value;
+  renderNotes();
+});
+document.getElementById('notesViewGridBtn').addEventListener('click', () => {
+  notesViewMode = 'grid';
+  document.getElementById('notesViewGridBtn').style.background = 'var(--crimson)';
+  document.getElementById('notesViewGridBtn').style.color = '#fff';
+  document.getElementById('notesViewGridBtn').style.border = 'none';
+  document.getElementById('notesViewListBtn').style.background = 'var(--panel)';
+  document.getElementById('notesViewListBtn').style.color = 'var(--ink)';
+  document.getElementById('notesViewListBtn').style.border = '1.5px solid var(--line)';
+  renderNotes();
+});
+document.getElementById('notesViewListBtn').addEventListener('click', () => {
+  notesViewMode = 'list';
+  document.getElementById('notesViewListBtn').style.background = 'var(--crimson)';
+  document.getElementById('notesViewListBtn').style.color = '#fff';
+  document.getElementById('notesViewListBtn').style.border = 'none';
+  document.getElementById('notesViewGridBtn').style.background = 'var(--panel)';
+  document.getElementById('notesViewGridBtn').style.color = 'var(--ink)';
+  document.getElementById('notesViewGridBtn').style.border = '1.5px solid var(--line)';
+  renderNotes();
+});
+document.getElementById('notesTrashBtn').addEventListener('click', () => {
+  showScreen(noteTrashScreen);
+  renderNoteTrash();
+});
+
+// ---------- Note Editor ----------
+function openNoteEditor(noteId){
+  const notes = getNotes();
+  let note = noteId ? notes.find(n => n.id === noteId) : null;
+  if(!note){
+    note = {
+      id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+      title: '', body: '', folder: 'General', tags: [], pinned: false,
+      revisionStatus: null, reviewDateAD: null,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), deletedAt: null,
+    };
+    notes.unshift(note);
+    saveNotes(notes);
+  }
+  currentEditingNoteId = note.id;
+  document.getElementById('noteTitleInput').value = note.title;
+  document.getElementById('noteBodyInput').value = note.body;
+  document.getElementById('noteFolderSelect').value = note.folder || 'General';
+  document.getElementById('noteTagsInput').value = (note.tags || []).join(', ');
+  document.getElementById('notePinnedCheckbox').checked = !!note.pinned;
+  document.getElementById('noteReviewDateInput').value = note.reviewDateAD || '';
+  document.querySelectorAll('.note-revision-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === note.revisionStatus);
+  });
+  document.getElementById('noteAutoSaveStatus').textContent = note.title || note.body ? `Last edited: ${new Date(note.updatedAt).toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})}` : '';
+  updateNoteReviewDateDual();
+  showScreen(noteEditorScreen);
+}
+function updateNoteReviewDateDual(){
+  const val = document.getElementById('noteReviewDateInput').value;
+  document.getElementById('noteReviewDateDual').textContent = val ? formatDualDate(val) : '';
+}
+document.getElementById('noteReviewDateInput').addEventListener('change', updateNoteReviewDateDual);
+
+function autoSaveCurrentNote(){
+  if(!currentEditingNoteId) return;
+  const notes = getNotes();
+  const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+  if(idx === -1) return;
+  const tagsRaw = document.getElementById('noteTagsInput').value;
+  notes[idx] = {
+    ...notes[idx],
+    title: document.getElementById('noteTitleInput').value,
+    body: document.getElementById('noteBodyInput').value,
+    folder: document.getElementById('noteFolderSelect').value,
+    tags: tagsRaw.split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean),
+    pinned: document.getElementById('notePinnedCheckbox').checked,
+    reviewDateAD: document.getElementById('noteReviewDateInput').value || null,
+    updatedAt: new Date().toISOString(),
+  };
+  saveNotes(notes);
+  const statusEl = document.getElementById('noteAutoSaveStatus');
+  statusEl.textContent = '✓ Saved';
+  setTimeout(() => {
+    statusEl.textContent = `Last edited: ${new Date().toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})}`;
+  }, 1500);
+}
+function scheduleAutoSave(){
+  document.getElementById('noteAutoSaveStatus').textContent = 'Saving…';
+  clearTimeout(noteAutoSaveTimeout);
+  noteAutoSaveTimeout = setTimeout(autoSaveCurrentNote, 800);
+}
+['noteTitleInput','noteBodyInput','noteTagsInput'].forEach(id => {
+  document.getElementById(id).addEventListener('input', scheduleAutoSave);
+});
+['noteFolderSelect','notePinnedCheckbox','noteReviewDateInput'].forEach(id => {
+  document.getElementById(id).addEventListener('change', scheduleAutoSave);
+});
+document.getElementById('noteFolderSelect').addEventListener('change', (e) => {
+  if(e.target.value === '__new__'){
+    const name = prompt('New folder name:');
+    if(name && name.trim()){
+      const opt = document.createElement('option');
+      opt.value = name.trim();
+      opt.textContent = name.trim();
+      e.target.insertBefore(opt, e.target.lastElementChild);
+      e.target.value = name.trim();
+    } else {
+      e.target.value = 'General';
+    }
+  }
+});
+document.querySelectorAll('.note-revision-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const notes = getNotes();
+    const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+    if(idx === -1) return;
+    const isActive = btn.classList.contains('active');
+    document.querySelectorAll('.note-revision-btn').forEach(b => b.classList.remove('active'));
+    notes[idx].revisionStatus = isActive ? null : btn.dataset.status;
+    if(!isActive) btn.classList.add('active');
+    notes[idx].updatedAt = new Date().toISOString();
+    saveNotes(notes);
+  });
+});
+
+// ---------- Formatting toolbar: inserts simple markdown-style tokens at the cursor ----------
+document.querySelectorAll('.note-fmt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const textarea = document.getElementById('noteBodyInput');
+    const start = textarea.selectionStart, end = textarea.selectionEnd;
+    const selected = textarea.value.slice(start, end);
+    let insertion = '';
+    switch(btn.dataset.fmt){
+      case 'bold': insertion = `**${selected || 'bold text'}**`; break;
+      case 'italic': insertion = `*${selected || 'italic text'}*`; break;
+      case 'bullet': insertion = `\n- ${selected || 'item'}`; break;
+      case 'numbered': insertion = `\n1. ${selected || 'item'}`; break;
+      case 'checklist': insertion = `\n[ ] ${selected || 'task'}`; break;
+      case 'heading': insertion = `\n## ${selected || 'Heading'}`; break;
+    }
+    textarea.value = textarea.value.slice(0, start) + insertion + textarea.value.slice(end);
+    textarea.focus();
+    scheduleAutoSave();
+  });
+});
+
+// ---------- Delete (soft) / Trash / Restore / Permanent delete ----------
+document.getElementById('noteDeleteBtn').addEventListener('click', () => {
+  if(!confirm('Move this note to Trash?')) return;
+  const notes = getNotes();
+  const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+  if(idx === -1) return;
+  notes[idx].deletedAt = new Date().toISOString();
+  saveNotes(notes);
+  showScreen(notesScreen);
+  renderNotes();
+});
+function renderNoteTrash(){
+  const trashed = getTrashedNotes();
+  const wrap = document.getElementById('noteTrashContent');
+  if(trashed.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center; padding:20px 0;">Trash is empty.</p>`;
+    return;
+  }
+  wrap.innerHTML = trashed.map(n => `
+    <div class="note-item">
+      <div class="ni-title">${n.title || 'Untitled Note'}</div>
+      <div class="ni-meta">${n.folder || 'General'} · Deleted ${new Date(n.deletedAt).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>
+      <div class="ni-actions">
+        <button style="color:var(--navy);" data-restore="${n.id}">↩️ Restore</button>
+        <button style="color:var(--wrong);" data-purge="${n.id}">🗑️ Delete Forever</button>
+      </div>
+    </div>
+  `).join('');
+  document.querySelectorAll('[data-restore]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.edit, 10);
-      openNoteEditor(idx);
+      const notes = getNotes();
+      const idx = notes.findIndex(n => n.id === btn.dataset.restore);
+      if(idx !== -1){ notes[idx].deletedAt = null; saveNotes(notes); }
+      renderNoteTrash();
+    });
+  });
+  document.querySelectorAll('[data-purge]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(!confirm('Permanently delete this note? This cannot be undone.')) return;
+      let notes = getNotes();
+      notes = notes.filter(n => n.id !== btn.dataset.purge);
+      saveNotes(notes);
+      renderNoteTrash();
     });
   });
 }
-function openNoteEditor(existingIndex){
-  const notes = getNotes();
-  const existing = existingIndex !== undefined ? notes[existingIndex] : null;
 
-  const subject = prompt('Subject (e.g. Health Planning and Management):', existing ? existing.subject : '');
-  if(subject === null) return; // cancelled
-  const chapter = prompt('Chapter (optional):', existing ? existing.chapter : '') || '';
-  const title = prompt('Note title:', existing ? existing.title : '') || 'Untitled Note';
-  const body = prompt('Your note:', existing ? existing.body : '');
-  if(body === null) return;
-
-  const noteData = {
-    subject: subject.trim(), chapter: chapter.trim(), title: title.trim(), body: body.trim(),
-    date: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
-  };
-
-  if(existing){
-    notes[existingIndex] = noteData;
-  } else {
-    notes.unshift(noteData);
-  }
-  saveNotes(notes);
-  renderNotes();
+// ---------- Export ----------
+function downloadTextFile(filename, content){
+  const blob = new Blob([content], { type:'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
+document.getElementById('noteExportTxtBtn').addEventListener('click', () => {
+  const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
+  const body = document.getElementById('noteBodyInput').value;
+  downloadTextFile(`${title}.txt`, `${title}\n\n${body}`);
+});
+document.getElementById('noteExportMdBtn').addEventListener('click', () => {
+  const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
+  const body = document.getElementById('noteBodyInput').value;
+  downloadTextFile(`${title}.md`, `# ${title}\n\n${body}`);
+});
+
 document.getElementById('addNoteBtn').addEventListener('click', () => openNoteEditor());
 
 function renderProgressScreen(){
