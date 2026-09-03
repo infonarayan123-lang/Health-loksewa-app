@@ -2692,6 +2692,7 @@
         <button class="calc-btn" id="fcCreateCardBtn" style="margin:0; flex:1; font-size:12.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">➕ Create Card</button>
         <button class="calc-btn" id="fcAiGenerateBtn" style="margin:0; flex:1; font-size:12.5px;">🤖 Generate with AI</button>
       </div>
+      <button class="calc-btn" id="fcCommunityDecksBtn" style="margin-top:8px; font-size:12.5px;">🌐 Community Decks</button>
       <button class="calc-btn" id="fcProgressBtn" style="margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📊 Progress</button>
       </div>
     </div>
@@ -2704,6 +2705,7 @@
       <div id="fcDeckDetailStats" style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;"></div>
       <button class="start-btn" id="fcStudyThisDeckBtn" style="margin-bottom:16px;">Study This Deck</button>
       <button class="calc-btn" id="fcAddCardToDeckBtn" style="margin-bottom:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">＋ Add Card</button>
+      <button class="calc-btn" id="fcPublishDeckBtn" style="margin-bottom:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📤 Publish to Community</button>
       <div id="fcDeckCardList"></div>
     </div>
   </div>
@@ -2807,6 +2809,15 @@
         <div id="fcAiResultsList"></div>
         <button class="calc-btn" id="fcAiSaveSelectedBtn" style="margin-top:10px;">✓ Save Selected Cards</button>
       </div>
+    </div>
+  </div>
+
+  <div class="screen" id="fcCommunityScreen">
+    <div class="back-link" data-back="flashcards">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🌐 Community Decks</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:16px;">Decks shared by other Health Loksewa students. Tap Download to copy one into your own decks.</p>
+      <div id="fcCommunityList"><p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading…</p></div>
     </div>
   </div>
 
@@ -5632,7 +5643,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyt2wO3xAEJLfZ5l4O8giJGU3o9YeC1-wrSJQWSOswt3Z6iACVDbO5LilPsM5FW6TrtVg/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw966a7er_NNvRMoflVieRiAxBKEc5dnuz2T0yFN9id_zAPSiomtrRjOOK4iVjpYG4ZPA/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -5683,6 +5694,7 @@ const fcCardEditScreen = document.getElementById('fcCardEditScreen');
 const fcStudyScreen = document.getElementById('fcStudyScreen');
 const fcProgressScreen = document.getElementById('fcProgressScreen');
 const fcAiGenerateScreen = document.getElementById('fcAiGenerateScreen');
+const fcCommunityScreen = document.getElementById('fcCommunityScreen');
 const healthGuideScreen = document.getElementById('healthGuideScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const battleScreen = document.getElementById('battleScreen');
@@ -5772,7 +5784,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -5932,7 +5944,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -15712,6 +15724,100 @@ document.getElementById('fcAiSaveSelectedBtn').addEventListener('click', () => {
   renderFlashcardsHome();
   alert(`Saved ${included.length} card${included.length === 1 ? '' : 's'}.`);
 });
+
+// ---------- Community Decks: publish sends this deck's cards to the shared PublicDecks Sheet
+// tab; browse reads what's there; download copies a public deck's cards into the person's own
+// local decks (same "copy once, then it's yours" pattern as everything else Sheet-driven in
+// this app — not a live sync). No real moderation/permission system exists, so this is
+// genuinely open publishing, not verified/curated content. ----------
+document.getElementById('fcPublishDeckBtn').addEventListener('click', async () => {
+  const deck = getFcDecks().find(d => d.id === fcCurrentDeckId);
+  const cards = getFcCards().filter(c => c.deckId === fcCurrentDeckId);
+  if(!deck || cards.length === 0){ alert('This deck has no cards to publish yet.'); return; }
+  const creatorName = prompt('Your name (shown as the creator of this deck):', '');
+  if(creatorName === null) return; // cancelled
+  const btn = document.getElementById('fcPublishDeckBtn');
+  btn.textContent = 'Publishing…';
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'publishDeck',
+        deckName: deck.name,
+        creatorName: creatorName.trim() || 'Anonymous',
+        cards: cards.map(c => ({ front: c.front, back: c.back, example: c.example, mnemonic: c.mnemonic })),
+      })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert(`"${deck.name}" published! Other students can now find it under Community Decks.`);
+    } else {
+      alert('Could not publish this deck — please try again.');
+    }
+  }catch(err){
+    alert('Could not publish this deck — check your connection and try again.');
+  }
+  btn.textContent = '📤 Publish to Community';
+});
+document.getElementById('fcCommunityDecksBtn').addEventListener('click', () => {
+  showScreen(fcCommunityScreen);
+  renderCommunityDecks();
+});
+async function renderCommunityDecks(){
+  const listEl = document.getElementById('fcCommunityList');
+  listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=communityDecks`);
+    const decks = await res.json();
+    if(!decks || decks.length === 0){
+      listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">No decks published yet — be the first! Publish one from any of your decks.</p>`;
+      return;
+    }
+    listEl.innerHTML = decks.map(d => `
+      <div class="note-item" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="ni-title">${d.deckName}</div>
+          <div class="ni-meta">by ${d.creatorName} · ${d.cardCount} card${d.cardCount === 1 ? '' : 's'}</div>
+        </div>
+        <button class="calc-btn fc-download-deck-btn" data-publish-id="${d.publishId}" data-deck-name="${d.deckName.replace(/"/g, '&quot;')}" style="margin:0; width:auto; padding:8px 14px; font-size:11.5px;">Download</button>
+      </div>
+    `).join('');
+    document.querySelectorAll('.fc-download-deck-btn').forEach(btn => {
+      btn.addEventListener('click', () => downloadCommunityDeck(btn.dataset.publishId, btn.dataset.deckName, btn));
+    });
+  }catch(err){
+    listEl.innerHTML = `<p style="color:var(--wrong); font-size:13px; text-align:center; padding:20px 0;">Could not load community decks — check your connection.</p>`;
+  }
+}
+async function downloadCommunityDeck(publishId, deckName, btn){
+  btn.textContent = 'Downloading…';
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=downloadDeck&publishId=${encodeURIComponent(publishId)}`);
+    const cardsData = await res.json();
+    if(!cardsData || cardsData.length === 0){ alert('This deck has no cards.'); btn.textContent = 'Download'; return; }
+    const decks = getFcDecks();
+    const newDeck = { id: 'deck_' + Date.now(), name: deckName, createdAt: new Date().toISOString() };
+    decks.push(newDeck);
+    saveFcDecks(decks);
+    const cards = getFcCards();
+    cardsData.forEach(c => {
+      cards.push({
+        id: 'card_' + Date.now() + Math.random().toString(36).slice(2,7),
+        deckId: newDeck.id, front: c.front, back: c.back,
+        example: c.example || '', mnemonic: c.mnemonic || '', tags: [], favorite: false,
+        status: 'new', repetitions: 0, easeFactor: 2.5, interval: 0, nextReviewDate: null, lastReviewedAt: null,
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      });
+    });
+    saveFcCards(cards);
+    btn.textContent = '✓ Downloaded';
+    alert(`"${deckName}" added to your decks!`);
+  }catch(err){
+    alert('Could not download this deck — please try again.');
+    btn.textContent = 'Download';
+  }
+}
 
 
 // ---------- Battle Challenge: asynchronous — not truly live/simultaneous, but same
