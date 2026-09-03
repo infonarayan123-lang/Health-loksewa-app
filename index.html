@@ -732,11 +732,20 @@
     border:none; border-bottom:1px solid var(--line); color:var(--ink); font-size:13px; cursor:pointer;
   }
   .note-create-option:last-child{ border-bottom:none; }
+  .note-drawer-item{
+    display:block; width:100%; text-align:left; padding:13px 18px; background:none;
+    border:none; color:var(--ink); font-size:13.5px; cursor:pointer;
+  }
+  .note-drawer-item:active{ background:rgba(255,255,255,0.06); }
   .hw-tool-btn.active{ background:var(--crimson); color:#fff; border:none; }
   .hw-color-btn{
     width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0;
   }
   .hw-color-btn.active{ border-color:var(--ink); }
+  .sticky-color-btn{
+    width:32px; height:32px; border-radius:8px; border:2px solid transparent; cursor:pointer; padding:0;
+  }
+  .sticky-color-btn.active{ border-color:var(--ink); }
 
   /* ---------- Detailed Results: subject-wise breakdown (Mock Test) ---------- */
   .breakdown-wrap{
@@ -2658,9 +2667,138 @@
   <div class="screen" id="flashcardsScreen">
     <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
-      <div class="section-title">🧩 Flashcards</div>
-      <div id="flashcardsWrap">
-        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      <div class="section-title">🧠 Flash Cards</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;">Learn faster. Remember longer.</p>
+
+      <div class="calc-card" id="fcDueCard" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff;">
+        <div style="font-size:12px; opacity:0.9;">🔥 Due for Review</div>
+        <div id="fcDueCount" style="font-size:32px; font-weight:800; margin:6px 0;">0 cards</div>
+        <button class="calc-btn" id="fcStartReviewBtn" style="margin:0; background:#fff; color:var(--crimson);">Start Review</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:18px 0 10px;">
+        <div class="section-title" style="margin:0;">📚 My Decks</div>
+        <button class="calc-btn" id="fcCreateDeckBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px;">＋ New Deck</button>
+      </div>
+      <div id="fcDeckList"></div>
+
+      <div style="display:flex; gap:8px; margin-top:18px;">
+        <button class="calc-btn" id="fcCreateCardBtn" style="margin:0; flex:1; font-size:12.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">➕ Create Card</button>
+        <button class="calc-btn" id="fcAiGenerateBtn" style="margin:0; flex:1; font-size:12.5px;">🤖 Generate with AI</button>
+      </div>
+      <button class="calc-btn" id="fcProgressBtn" style="margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📊 Progress</button>
+    </div>
+  </div>
+
+  <div class="screen" id="fcDeckDetailScreen">
+    <div class="back-link" data-back="flashcards">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="fcDeckDetailTitle">Deck</div>
+      <div id="fcDeckDetailStats" style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;"></div>
+      <button class="start-btn" id="fcStudyThisDeckBtn" style="margin-bottom:16px;">Study This Deck</button>
+      <button class="calc-btn" id="fcAddCardToDeckBtn" style="margin-bottom:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">＋ Add Card</button>
+      <div id="fcDeckCardList"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="fcCardEditScreen">
+    <div class="back-link" data-back="flashcards">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="fcCardEditTitle">➕ Create Card</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Card Type</label>
+          <div style="display:flex; gap:8px;">
+            <button class="note-revision-btn fc-type-btn active" data-type="basic" style="flex:1;">Basic Q&amp;A</button>
+            <button class="note-revision-btn fc-type-btn" data-type="cloze" style="flex:1;">Cloze (fill-in-blank)</button>
+          </div>
+        </div>
+        <div class="calc-field"><label>Deck</label>
+          <select id="fcCardDeckSelect" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;"></select>
+        </div>
+        <div class="calc-field"><label id="fcCardFrontLabel">Front</label><textarea id="fcCardFrontInput" placeholder="What is incidence?" style="width:100%; min-height:60px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></textarea></div>
+        <p id="fcClozeHint" style="display:none; font-size:10.5px; color:var(--ink-soft); margin-top:-10px; margin-bottom:10px;">Use ___ (three underscores) where the blank should be — e.g. "Incidence measures ___ cases."</p>
+        <div class="calc-field"><label id="fcCardBackLabel">Back (Answer)</label><textarea id="fcCardBackInput" placeholder="Number of new cases..." style="width:100%; min-height:60px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></textarea></div>
+        <div class="calc-field"><label>Example (optional)</label><input type="text" id="fcCardExampleInput" placeholder="20 new TB cases in 1 year"></div>
+        <div class="calc-field"><label>Memory Tip (optional)</label><input type="text" id="fcCardMnemonicInput" placeholder="Incidence = NEW cases"></div>
+        <div class="calc-field"><label>Tags (comma-separated)</label><input type="text" id="fcCardTagsInput" placeholder="Loksewa, PHO, Formula"></div>
+        <div class="calc-field"><label>Image (optional)</label>
+          <div id="fcCardImagePreviewWrap" style="display:none; margin-bottom:8px;">
+            <img id="fcCardImagePreview" style="width:100%; max-height:160px; object-fit:contain; border-radius:8px; border:1px solid var(--line);">
+            <button class="calc-btn" id="fcCardRemoveImageBtn" style="margin-top:6px; font-size:11px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Remove Image</button>
+          </div>
+          <input type="file" id="fcCardImageFileInput" accept="image/*" style="display:none;">
+          <button class="calc-btn" id="fcCardAddImageBtn" style="font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🖼️ Add Image</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; margin:10px 0;">
+          <input type="checkbox" id="fcCardFavoriteCheckbox">
+          <label for="fcCardFavoriteCheckbox" style="font-size:12.5px; color:var(--ink-soft);">⭐ Favorite</label>
+        </div>
+        <button class="calc-btn" id="fcSaveCardBtn">✓ Save Card</button>
+        <button class="calc-btn" id="fcDeleteCardBtn" style="display:none; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">🗑️ Delete Card</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="fcStudyScreen">
+    <div class="back-link" data-back="flashcards">← Back</div>
+    <div class="home-body" id="flashcardsWrap">
+      <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+    </div>
+  </div>
+
+  <div class="screen" id="fcProgressScreen">
+    <div class="back-link" data-back="flashcards">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🧠 Flash Card Progress</div>
+      <div class="calc-card">
+        <div style="display:flex; justify-content:space-between; padding:6px 0;"><span style="color:var(--ink-soft); font-size:13px;">Cards Learned</span><span id="fcStatLearned" style="font-weight:700; color:var(--ink);">0</span></div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft); font-size:13px;">Cards Mastered</span><span id="fcStatMastered" style="font-weight:700; color:var(--ink);">0</span></div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft); font-size:13px;">Due Today</span><span id="fcStatDue" style="font-weight:700; color:var(--gold);">0</span></div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft); font-size:13px;">Overall Mastery</span><span id="fcStatMastery" style="font-weight:700; color:var(--correct);">0%</span></div>
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft); font-size:13px;">🔥 Current Streak</span><span id="fcStatStreak" style="font-weight:700; color:var(--ink);">0 days</span></div>
+      </div>
+      <div class="calc-card" style="margin-top:12px;">
+        <h4>By Deck</h4>
+        <div id="fcProgressByDeck"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="fcAiGenerateScreen">
+    <div class="back-link" data-back="flashcards">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🤖 Generate Flash Cards with AI</div>
+      <div class="calc-card" id="fcAiSetupCard">
+        <div class="calc-field"><label>Source</label>
+          <select id="fcAiSourceSelect" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="topic">A Topic</option>
+            <option value="wrongmcqs">My Wrong MCQs</option>
+          </select>
+        </div>
+        <div class="calc-field" id="fcAiTopicField"><label>Topic</label><input type="text" id="fcAiTopicInput" placeholder="e.g. Incidence and Prevalence"></div>
+        <div class="calc-field"><label>Number of Cards</label>
+          <div style="display:flex; gap:8px;">
+            <button class="note-revision-btn fc-ai-num-btn active" data-num="10" style="flex:1;">10</button>
+            <button class="note-revision-btn fc-ai-num-btn" data-num="20" style="flex:1;">20</button>
+            <button class="note-revision-btn fc-ai-num-btn" data-num="50" style="flex:1;">50</button>
+          </div>
+        </div>
+        <div class="calc-field"><label>Difficulty</label>
+          <div style="display:flex; gap:8px;">
+            <button class="note-revision-btn fc-ai-diff-btn" data-diff="Easy" style="flex:1;">Easy</button>
+            <button class="note-revision-btn fc-ai-diff-btn active" data-diff="Medium" style="flex:1;">Medium</button>
+            <button class="note-revision-btn fc-ai-diff-btn" data-diff="Hard" style="flex:1;">Hard</button>
+          </div>
+        </div>
+        <div class="calc-field"><label>Save Into Deck</label>
+          <select id="fcAiDeckSelect" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;"></select>
+        </div>
+        <button class="calc-btn" id="fcAiGenerateSubmitBtn">✨ Generate</button>
+      </div>
+      <div id="fcAiResultsWrap" style="display:none;">
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:12px 0;">Review and edit before saving — uncheck any card you don't want.</p>
+        <div id="fcAiResultsList"></div>
+        <button class="calc-btn" id="fcAiSaveSelectedBtn" style="margin-top:10px;">✓ Save Selected Cards</button>
       </div>
     </div>
   </div>
@@ -4196,8 +4334,8 @@
 
       <div id="noteCreateMenu" style="display:none; position:fixed; bottom:155px; right:20px; z-index:51; background:var(--panel-elevated); border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,0.35); overflow:hidden; min-width:180px;">
         <button class="note-create-option" id="createTextNoteBtn">📝 Text Note</button>
-        <button class="note-create-option" id="createHandwrittenNoteBtn">✍️ Handwritten Note</button>
         <button class="note-create-option" id="createScanNoteBtn">📷 Scan Document</button>
+        <button class="note-create-option" id="createPdfNoteBtn">📄 Annotate PDF</button>
       </div>
     </div>
   </div>
@@ -4211,6 +4349,10 @@
         <video id="scanVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
         <canvas id="scanCaptureCanvas" style="width:100%; height:100%; object-fit:cover; display:none;"></canvas>
         <p id="scanStatusText" style="color:#fff; font-size:12.5px; text-align:center; padding:40% 20px 0;">Tap "Start Camera" below to begin.</p>
+        <div id="scanCropOverlay" style="display:none; position:absolute; border:2px solid #0D9488; background:rgba(13,148,136,0.15);">
+          <div class="scan-crop-handle" data-corner="tl" style="position:absolute; top:-10px; left:-10px; width:24px; height:24px; background:#0D9488; border-radius:50%; touch-action:none;"></div>
+          <div class="scan-crop-handle" data-corner="br" style="position:absolute; bottom:-10px; right:-10px; width:24px; height:24px; background:#0D9488; border-radius:50%; touch-action:none;"></div>
+        </div>
       </div>
 
       <div style="display:flex; gap:8px; margin-top:12px;">
@@ -4220,9 +4362,63 @@
       </div>
 
       <div id="scanAfterCaptureActions" style="display:none; margin-top:10px;">
+        <div style="display:flex; gap:6px; margin-bottom:10px; overflow-x:auto; padding-bottom:4px;">
+          <button class="note-fmt-btn" id="scanRotateBtn" title="Rotate 90°">↻ Rotate</button>
+          <button class="note-fmt-btn" id="scanCropToggleBtn" title="Crop" style="width:auto; padding:0 12px;">⬜ Crop</button>
+        </div>
+        <div id="scanCropControls" style="display:none; margin-bottom:10px;">
+          <p style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">Drag the corners to select the area to keep.</p>
+          <button class="calc-btn" id="scanApplyCropBtn" style="margin:0; font-size:12px;">✓ Apply Crop</button>
+        </div>
+        <div class="calc-field"><label>Brightness</label><input type="range" id="scanBrightnessSlider" min="60" max="160" value="100"></div>
+        <div class="calc-field"><label>Contrast</label><input type="range" id="scanContrastSlider" min="60" max="160" value="100"></div>
         <button class="calc-btn" id="scanExtractTextBtn" style="margin:0; margin-bottom:8px; font-size:12.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔍 Extract Text (OCR)</button>
         <div id="scanOcrResult" style="margin-bottom:8px;"></div>
         <button class="calc-btn" id="scanSaveBtn" style="margin:0; font-size:12.5px;">✓ Save to My Notes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="pdfAnnotateScreen">
+    <div class="back-link" data-back="notes">← Back</div>
+    <div class="home-body" style="padding-bottom:10px;">
+      <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:10px;">📄 Annotate PDF</div>
+
+      <div id="pdfImportWrap">
+        <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none;">
+        <button class="calc-btn" id="pdfImportBtn">📄 Import PDF</button>
+        <p style="font-size:11px; color:var(--ink-soft); margin-top:8px;">Draw on each page, then save it as an image into a note — pages you save are added to one running note for this PDF, in order.</p>
+      </div>
+
+      <div id="pdfViewerWrap" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <button class="calc-btn" id="pdfPrevPageBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← Prev</button>
+          <span id="pdfPageIndicator" style="font-size:12.5px; color:var(--ink-soft);">Page 1 / 1</span>
+          <button class="calc-btn" id="pdfNextPageBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Next →</button>
+        </div>
+
+        <div style="position:relative; width:100%; background:#fff; border-radius:10px; overflow:hidden;">
+          <canvas id="pdfRenderCanvas" style="width:100%; display:block;"></canvas>
+          <canvas id="pdfAnnotationCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; touch-action:none;"></canvas>
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:10px; overflow-x:auto; padding-bottom:4px;">
+          <button class="note-fmt-btn pdf-tool-btn active" data-tool="pen" title="Pen">✏️</button>
+          <button class="note-fmt-btn pdf-tool-btn" data-tool="highlighter" title="Highlighter">🖍️</button>
+          <button class="note-fmt-btn pdf-tool-btn" data-tool="eraser" title="Eraser">🧹</button>
+          <button class="note-fmt-btn" id="pdfUndoBtn" title="Undo">↩️</button>
+          <button class="note-fmt-btn" id="pdfClearBtn" title="Clear annotations on this page">🗑️</button>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:8px; align-items:center;">
+          <span style="font-size:11px; color:var(--ink-soft);">Color:</span>
+          <button class="hw-color-btn pdf-color-btn active" data-color="#d32f2f" style="background:#d32f2f;"></button>
+          <button class="hw-color-btn pdf-color-btn" data-color="#1976d2" style="background:#1976d2;"></button>
+          <button class="hw-color-btn pdf-color-btn" data-color="#388e3c" style="background:#388e3c;"></button>
+          <button class="hw-color-btn pdf-color-btn" data-color="#1a1a1a" style="background:#1a1a1a;"></button>
+        </div>
+
+        <button class="calc-btn" id="pdfSavePageBtn" style="margin-top:12px;">✓ Save This Page to Note</button>
+        <button class="calc-btn" id="pdfFinishBtn" style="margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Finish &amp; Go to My Notes</button>
       </div>
     </div>
   </div>
@@ -4261,7 +4457,10 @@
     <div class="home-body">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
         <div id="noteAutoSaveStatus" style="font-size:11.5px; color:var(--ink-soft);"></div>
-        <button class="calc-btn" id="noteDeleteBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">🗑️ Delete</button>
+        <div style="display:flex; gap:8px;">
+          <button class="calc-btn" id="noteMoreBtn" style="margin:0; width:36px; padding:7px 0; font-size:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⋮</button>
+          <button class="calc-btn" id="noteDeleteBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">🗑️ Delete</button>
+        </div>
       </div>
       <input type="text" id="noteTitleInput" placeholder="Title" style="width:100%; border:none; background:none; font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); padding:6px 0; margin-bottom:8px;">
 
@@ -4273,8 +4472,39 @@
         <button class="note-fmt-btn" data-fmt="checklist" title="Checklist">☑️</button>
         <button class="note-fmt-btn" data-fmt="heading" title="Heading">H</button>
         <button class="note-fmt-btn" id="noteAiBtn" title="AI actions" style="background:var(--crimson); color:#fff; border:none; width:auto; padding:0 12px;">✨ AI</button>
+        <button class="note-fmt-btn" id="noteDrawToggleBtn" title="Finger Drawing" style="width:auto; padding:0 12px;">☝️ Drawing: OFF</button>
       </div>
       <textarea id="noteBodyInput" placeholder="Start writing..." style="width:100%; min-height:220px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:14px; padding:12px; resize:vertical; line-height:1.6;"></textarea>
+
+      <div id="noteDrawingArea" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <button class="calc-btn" id="noteDrawPrevPageBtn" style="margin:0; width:auto; padding:6px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← Prev</button>
+          <span id="noteDrawPageIndicator" style="font-size:12px; color:var(--ink-soft);">Page 1 / 1</span>
+          <button class="calc-btn" id="noteDrawNextPageBtn" style="margin:0; width:auto; padding:6px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Next →</button>
+        </div>
+        <div style="position:relative; width:100%; aspect-ratio:4/3; background:#fff; border-radius:10px; overflow:hidden; margin-bottom:10px;">
+          <canvas id="noteDrawCanvas" style="width:100%; height:100%; touch-action:none; display:block;"></canvas>
+        </div>
+        <div style="display:flex; gap:6px; margin-bottom:8px; overflow-x:auto; padding-bottom:4px;">
+          <button class="note-fmt-btn note-draw-tool-btn active" data-tool="pen" title="Pen">✏️</button>
+          <button class="note-fmt-btn note-draw-tool-btn" data-tool="highlighter" title="Highlighter">🖍️</button>
+          <button class="note-fmt-btn note-draw-tool-btn" data-tool="eraser" title="Eraser">🧹</button>
+          <button class="note-fmt-btn" id="noteDrawUndoBtn" title="Undo">↩️</button>
+          <button class="note-fmt-btn" id="noteDrawRedoBtn" title="Redo">↪️</button>
+          <button class="note-fmt-btn" id="noteDrawClearBtn" title="Clear this page">🗑️</button>
+          <button class="note-fmt-btn" id="noteDrawAddPageBtn" title="Add page" style="width:auto; padding:0 12px;">＋ Page</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; color:var(--ink-soft);">Color:</span>
+          <input type="color" id="noteDrawColorWheel" value="#1a1a1a" style="width:32px; height:28px; border:none; border-radius:6px; padding:0; background:none;">
+          <button class="hw-color-btn note-draw-color-btn active" data-color="#1a1a1a" style="background:#1a1a1a;"></button>
+          <button class="hw-color-btn note-draw-color-btn" data-color="#d32f2f" style="background:#d32f2f;"></button>
+          <button class="hw-color-btn note-draw-color-btn" data-color="#1976d2" style="background:#1976d2;"></button>
+          <button class="hw-color-btn note-draw-color-btn" data-color="#388e3c" style="background:#388e3c;"></button>
+          <span style="font-size:11px; color:var(--ink-soft); margin-left:6px;">Width:</span>
+          <input type="range" id="noteDrawWidthSlider" min="2" max="20" value="4" style="flex:1;">
+        </div>
+      </div>
 
       <div id="noteAiPanel" style="display:none; margin-top:10px;" class="calc-card">
         <div id="noteAiActionButtons" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
@@ -4288,7 +4518,7 @@
         <div id="noteAiResult"></div>
       </div>
 
-      <div class="calc-card" style="margin-top:10px;">
+      <div class="calc-card" id="noteImagesCard" style="margin-top:10px; display:none;">
         <h4>🖼️ Images</h4>
         <div id="noteImagesGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px;"></div>
         <input type="file" id="noteImageFileInput" accept="image/*" style="display:none;">
@@ -4329,7 +4559,7 @@
         <div id="noteReviewDateDual" style="font-size:11px; color:var(--ink-soft);"></div>
       </div>
 
-      <div class="calc-card" style="margin-top:12px;">
+      <div class="calc-card" id="noteExportCard" style="margin-top:12px; display:none;">
         <h4>📤 Export</h4>
         <div style="display:flex; gap:8px;">
           <button class="calc-btn" id="noteExportTxtBtn" style="margin:0; flex:1; font-size:12px;">Export TXT</button>
@@ -4337,6 +4567,143 @@
           <button class="calc-btn" id="noteExportPdfBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export PDF</button>
         </div>
       </div>
+
+      <input type="file" id="noteAttachFileInput" style="display:none;">
+    </div>
+
+    <div id="noteMoreDrawerBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:60;"></div>
+    <div id="noteMoreDrawer" style="display:none; position:fixed; top:0; right:0; bottom:0; width:78%; max-width:300px; background:var(--panel-elevated); z-index:61; padding:20px 0; overflow-y:auto; box-shadow:-4px 0 18px rgba(0,0,0,0.35);">
+      <div style="font-size:13px; font-weight:700; color:var(--ink-soft); padding:0 18px 14px;">NOTE OPTIONS</div>
+      <button class="note-drawer-item" id="drawerReaderViewBtn">👓 Reader View</button>
+      <button class="note-drawer-item" id="drawerShareBtn">📤 Share Note</button>
+      <button class="note-drawer-item" id="drawerAttachFileBtn">📎 Attach File</button>
+      <button class="note-drawer-item" id="drawerAddImageBtn">🖼️ Add Image</button>
+      <button class="note-drawer-item" id="drawerAddLinkBtn">🔗 Add Link</button>
+      <button class="note-drawer-item" id="drawerTableBtn">▦ Table</button>
+      <button class="note-drawer-item" id="drawerStickyNoteBtn">🟨 Sticky Note</button>
+      <button class="note-drawer-item" id="drawerVoiceRecordBtn">🎙️ Voice Recording</button>
+      <button class="note-drawer-item" id="drawerLockNoteBtn">🔒 Lock Note</button>
+      <button class="note-drawer-item" id="drawerExportBtn">📄 Export</button>
+      <button class="note-drawer-item" id="drawerPrintBtn">🖨️ Print</button>
+    </div>
+  </div>
+
+  <div class="screen" id="noteReaderScreen">
+    <div class="back-link" data-back="noteEditor">← Back</div>
+    <div class="home-body" id="noteReaderBody" style="padding-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div style="font-size:13px; font-weight:700; color:var(--ink-soft);">👓 Reader View</div>
+        <button class="calc-btn" id="readerSettingsBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Aa Settings</button>
+      </div>
+
+      <div id="readerSettingsPanel" style="display:none;" class="calc-card">
+        <div class="calc-field"><label>Font Size</label>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button class="note-fmt-btn" id="readerFontDownBtn" style="width:auto; padding:0 12px;">A−</button>
+            <input type="range" id="readerFontSlider" min="14" max="26" value="17" style="flex:1;">
+            <button class="note-fmt-btn" id="readerFontUpBtn" style="width:auto; padding:0 12px;">A+</button>
+          </div>
+        </div>
+        <div class="calc-field"><label>Line Spacing</label><input type="range" id="readerLineSpacingSlider" min="130" max="220" value="170"></div>
+        <div class="calc-field"><label>Brightness</label><input type="range" id="readerBrightnessSlider" min="40" max="100" value="100"></div>
+        <div class="calc-field"><label>Theme</label>
+          <div style="display:flex; gap:8px;">
+            <button class="note-revision-btn reader-theme-btn active" data-theme="dark" style="flex:1;">🌙 Dark</button>
+            <button class="note-revision-btn reader-theme-btn" data-theme="light" style="flex:1;">☀️ Light</button>
+            <button class="note-revision-btn reader-theme-btn" data-theme="sepia" style="flex:1;">📜 Sepia</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="readerContent" style="padding:4px 2px;">
+        <h1 id="readerTitle" style="font-family:'Tinos',serif; font-weight:800; margin-bottom:16px;"></h1>
+        <div id="readerBodyContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice Recording modal (overlays the note editor) -->
+  <div id="voiceRecordBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
+  <div id="voiceRecordModal" style="display:none; position:fixed; left:5%; right:5%; top:20%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:71;">
+    <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:14px;">🎙️ Voice Recording</div>
+    <div id="voiceRecordStatus" style="text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:16px;">Tap record to start</div>
+    <div style="text-align:center; margin-bottom:16px;">
+      <span id="voiceRecordTimer" style="font-family:'Tinos',serif; font-size:28px; color:var(--ink); font-weight:700;">00:00</span>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:center; margin-bottom:16px;">
+      <button class="calc-btn" id="voiceRecordStartBtn" style="margin:0; width:auto; padding:10px 20px;">🎙️ Record</button>
+      <button class="calc-btn" id="voiceRecordPauseBtn" style="margin:0; width:auto; padding:10px 20px; display:none; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⏸️ Pause</button>
+      <button class="calc-btn" id="voiceRecordStopBtn" style="margin:0; width:auto; padding:10px 20px; display:none; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">⏹️ Stop</button>
+    </div>
+    <div id="voiceRecordPreview" style="display:none; margin-bottom:14px;">
+      <audio id="voiceRecordAudioPreview" controls style="width:100%;"></audio>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="calc-btn" id="voiceRecordSaveBtn" style="margin:0; flex:1; display:none; font-size:12.5px;">✓ Save to Note</button>
+      <button class="calc-btn" id="voiceRecordCancelBtn" style="margin:0; flex:1; font-size:12.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Lock Note modal (overlays the note editor / and used to prompt on open) -->
+  <div id="lockNoteBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
+  <div id="lockNoteModal" style="display:none; position:fixed; left:8%; right:8%; top:25%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:71;">
+    <div id="lockNoteModalTitle" style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:6px;">🔒 Set a PIN for this note</div>
+    <p id="lockNoteModalSub" style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">This is a PIN lock, not device biometrics — a true fingerprint/Face ID lock needs infrastructure this app doesn't have yet.</p>
+    <input type="password" id="lockNotePinInput" inputmode="numeric" maxlength="6" placeholder="4–6 digit PIN" style="width:100%; padding:12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:18px; text-align:center; letter-spacing:6px; margin-bottom:14px;">
+    <div id="lockNoteError" style="color:var(--wrong); font-size:11.5px; text-align:center; margin-bottom:10px; min-height:14px;"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="calc-btn" id="lockNoteConfirmBtn" style="margin:0; flex:1;">Confirm</button>
+      <button class="calc-btn" id="lockNoteCancelBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Table Builder modal -->
+  <div id="tableBuilderBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
+  <div id="tableBuilderModal" style="display:none; position:fixed; left:4%; right:4%; top:8%; bottom:8%; background:var(--panel-elevated); border-radius:16px; padding:20px; z-index:71; overflow-y:auto;">
+    <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:14px;">▦ Insert Table</div>
+
+    <div id="tableSizePicker">
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">Choose a size to start:</p>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button class="calc-btn table-size-preset" data-rows="2" data-cols="2" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">2 × 2</button>
+        <button class="calc-btn table-size-preset" data-rows="3" data-cols="3" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">3 × 3</button>
+        <button class="calc-btn table-size-preset" data-rows="4" data-cols="4" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">4 × 4</button>
+      </div>
+    </div>
+
+    <div id="tableEditorWrap" style="display:none;">
+      <div style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;">
+        <button class="calc-btn" id="tableAddRowBtn" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">＋ Row</button>
+        <button class="calc-btn" id="tableRemoveRowBtn" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">− Row</button>
+        <button class="calc-btn" id="tableAddColBtn" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">＋ Column</button>
+        <button class="calc-btn" id="tableRemoveColBtn" style="margin:0; width:auto; padding:7px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">− Column</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="tableEditorGrid" style="border-collapse:collapse; width:100%;"></table>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:16px;">
+      <button class="calc-btn" id="tableInsertBtn" style="margin:0; flex:1; display:none;">✓ Insert into Note</button>
+      <button class="calc-btn" id="tableCancelBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Sticky Note modal -->
+  <div id="stickyNoteBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
+  <div id="stickyNoteModal" style="display:none; position:fixed; left:8%; right:8%; top:22%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:71;">
+    <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:14px;">🟨 Add Sticky Note</div>
+    <textarea id="stickyNoteTextInput" placeholder="Remember this before exam!" style="width:100%; min-height:80px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px; margin-bottom:12px;"></textarea>
+    <p style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">Color:</p>
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+      <button class="sticky-color-btn active" data-color="yellow" style="background:#F5D547;"></button>
+      <button class="sticky-color-btn" data-color="pink" style="background:#F5A9C0;"></button>
+      <button class="sticky-color-btn" data-color="blue" style="background:#A9D4F5;"></button>
+      <button class="sticky-color-btn" data-color="green" style="background:#B8E6B0;"></button>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="calc-btn" id="stickyNoteInsertBtn" style="margin:0; flex:1;">✓ Insert into Note</button>
+      <button class="calc-btn" id="stickyNoteCancelBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Cancel</button>
     </div>
   </div>
 
@@ -5228,6 +5595,15 @@
   });
 </script>
 
+<!-- PDF.js (Mozilla's own PDF rendering library) — current versions ship as an ES module, so
+     this small module script imports it and exposes it as window.pdfjsLib for the main
+     (non-module) app script to use, powering the PDF Annotation feature. -->
+<script type="module">
+  import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs';
+  window.pdfjsLib = pdfjsLib;
+</script>
+
 <!-- Nepali (Bikram Sambat) date converter — shows today's Nepali date with day on the home
      screen, and powers the central BS↔AD date service used throughout the app. Loaded with
      `defer` so a slow/unreachable CDN can never block the app itself from loading — the date
@@ -5295,6 +5671,11 @@ const learnScreen = document.getElementById('learnScreen');
 const practiceScreen = document.getElementById('practiceScreen');
 const mistakeBookScreen = document.getElementById('mistakeBookScreen');
 const flashcardsScreen = document.getElementById('flashcardsScreen');
+const fcDeckDetailScreen = document.getElementById('fcDeckDetailScreen');
+const fcCardEditScreen = document.getElementById('fcCardEditScreen');
+const fcStudyScreen = document.getElementById('fcStudyScreen');
+const fcProgressScreen = document.getElementById('fcProgressScreen');
+const fcAiGenerateScreen = document.getElementById('fcAiGenerateScreen');
 const healthGuideScreen = document.getElementById('healthGuideScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const battleScreen = document.getElementById('battleScreen');
@@ -5367,8 +5748,10 @@ const groupDetailScreen = document.getElementById('groupDetailScreen');
 const notesScreen = document.getElementById('notesScreen');
 const noteEditorScreen = document.getElementById('noteEditorScreen');
 const noteTrashScreen = document.getElementById('noteTrashScreen');
+const noteReaderScreen = document.getElementById('noteReaderScreen');
 const handwrittenNoteScreen = document.getElementById('handwrittenNoteScreen');
 const scanNoteScreen = document.getElementById('scanNoteScreen');
+const pdfAnnotateScreen = document.getElementById('pdfAnnotateScreen');
 const reminderScreen = document.getElementById('reminderScreen');
 const revisionScreen = document.getElementById('revisionScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
@@ -5382,13 +5765,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, handwrittenNoteScreen, scanNoteScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -5469,7 +5852,7 @@ const SCREEN_REFRESH_MAP = {
   reminderScreen: () => renderReminderSettings(),
   revisionScreen: () => renderRevisionSummary(),
   mistakeBookScreen: () => renderMistakeBook(),
-  flashcardsScreen: () => startFlashcards(),
+  flashcardsScreen: () => renderFlashcardsHome(),
   notificationsScreen: () => loadNotifications(),
   studyGroupsScreen: () => renderMyGroups(),
   tournamentPostScreen: () => renderTournamentPosts(),
@@ -5542,7 +5925,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -5624,7 +6007,8 @@ document.getElementById('goToMistakeBookFromPractice').addEventListener('click',
 });
 document.getElementById('goToFlashcardsFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
-  startFlashcards();
+  showScreen(flashcardsScreen);
+  renderFlashcardsHome();
 });
 document.getElementById('goToAnswerCheckerFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
@@ -9473,6 +9857,7 @@ function migrateOldNote(n){
     revisionStatus: null,
     reviewDateAD: null,
     imageIds: [],
+    attachmentIds: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     deletedAt: null,
@@ -9520,18 +9905,19 @@ function noteMatchesSearch(n, q){
 
 function renderNoteCard(n){
   const dotColor = n.revisionStatus === 'red' ? 'var(--wrong)' : n.revisionStatus === 'yellow' ? 'var(--gold)' : n.revisionStatus === 'green' ? 'var(--correct)' : 'transparent';
-  const bodyPreview = (n.body || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').slice(0, notesViewMode === 'grid' ? 60 : 140);
+  const isLocked = !!n.lockedPinHash;
+  const bodyPreview = isLocked ? '' : (n.body || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').slice(0, notesViewMode === 'grid' ? 60 : 140);
   return `
     <div class="note-item" data-note-id="${n.id}">
       ${n.pinned ? '<div class="ni-pin">📌</div>' : ''}
       <div class="ni-header">
         <div>
-          <div class="ni-title">${n.revisionStatus ? `<span class="ni-revision-dot" style="background:${dotColor};"></span>` : ''}${n.title || 'Untitled Note'}</div>
+          <div class="ni-title">${n.revisionStatus ? `<span class="ni-revision-dot" style="background:${dotColor};"></span>` : ''}${isLocked ? '🔒 ' : ''}${n.title || 'Untitled Note'}</div>
           <div class="ni-meta">${n.folder || 'General'} · ${new Date(n.updatedAt || Date.now()).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>
         </div>
       </div>
-      <div class="ni-body">${bodyPreview}${bodyPreview.length >= (notesViewMode === 'grid' ? 60 : 140) ? '…' : ''}</div>
-      ${(n.tags && n.tags.length) ? `<div class="ni-tags">${n.tags.map(t => `<span class="ni-tag">#${t}</span>`).join('')}</div>` : ''}
+      <div class="ni-body">${isLocked ? '🔒 PIN-locked — tap to unlock' : bodyPreview + (bodyPreview.length >= (notesViewMode === 'grid' ? 60 : 140) ? '…' : '')}</div>
+      ${(!isLocked && n.tags && n.tags.length) ? `<div class="ni-tags">${n.tags.map(t => `<span class="ni-tag">#${t}</span>`).join('')}</div>` : ''}
     </div>
   `;
 }
@@ -9597,18 +9983,22 @@ document.getElementById('notesTrashBtn').addEventListener('click', () => {
 });
 
 // ---------- Note Editor ----------
-function openNoteEditor(noteId){
+async function openNoteEditor(noteId){
   const notes = getNotes();
   let note = noteId ? notes.find(n => n.id === noteId) : null;
   if(!note){
     note = {
       id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
       title: '', body: '', folder: 'General', tags: [], pinned: false,
-      revisionStatus: null, reviewDateAD: null, imageIds: [],
+      revisionStatus: null, reviewDateAD: null, imageIds: [], attachmentIds: [],
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), deletedAt: null,
     };
     notes.unshift(note);
     saveNotes(notes);
+  }
+  if(note.lockedPinHash){
+    const unlocked = await requireNotePinUnlock(note.lockedPinHash);
+    if(!unlocked) return; // user cancelled — already sent back to the notes list
   }
   currentEditingNoteId = note.id;
   document.getElementById('noteTitleInput').value = note.title;
@@ -9625,16 +10015,21 @@ function openNoteEditor(noteId){
   document.getElementById('noteAiPanel').style.display = 'none';
   document.getElementById('noteAiResult').innerHTML = '';
   renderNoteImages(note);
+  renderNoteAttachments(note);
+  resetNoteDrawingToggle();
   showScreen(noteEditorScreen);
 }
 async function renderNoteImages(note){
   const grid = document.getElementById('noteImagesGrid');
+  const card = document.getElementById('noteImagesCard');
   const imageIds = note.imageIds || [];
   if(imageIds.length === 0){
     grid.innerHTML = '';
     document.getElementById('noteImageStorageNote').textContent = '';
+    card.style.display = 'none'; // nothing to show — keep the editor uncluttered, matches ⋮ More menu design
     return;
   }
+  card.style.display = 'block'; // has real content — never hide existing photos from view
   grid.innerHTML = `<p style="grid-column:1/-1; font-size:11px; color:var(--ink-soft);">Loading images…</p>`;
   const thumbs = await Promise.all(imageIds.map(async (imgId) => {
     const dataUrl = await getNoteImage(imgId).catch(() => null);
@@ -9662,6 +10057,885 @@ async function renderNoteImages(note){
     });
   });
 }
+
+// ---------- Finger Drawing toggle inside the Text Note editor: OFF = normal typing, ON = the
+// textarea is replaced by a canvas and drawing tools appear. Supports up to 20 pages per note
+// (Prev/Next navigation — not swipe-on-canvas, since a swipe gesture on the same surface used
+// for drawing would be indistinguishable from a pen stroke). Turning Drawing back OFF merges
+// every non-blank page into images, in page order, and adds them to THIS note (via the same
+// IndexedDB layer as every other note image) — drawing is a mode of one note, not a separate
+// note type. ----------
+const NOTE_DRAW_MAX_PAGES = 20;
+let noteDrawingOn = false;
+let noteDrawCanvasEl, noteDrawCtx;
+let noteDrawing = false;
+let noteDrawTool = 'pen';
+let noteDrawColor = '#1a1a1a';
+let noteDrawWidth = 4;
+let noteDrawLastX = 0, noteDrawLastY = 0;
+let noteDrawHistory = [];
+let noteDrawHistoryIndex = -1;
+let noteDrawPages = [null]; // one entry per page — null means that page is still blank
+let noteDrawPageIndex = 0;
+
+function resetNoteDrawingToggle(){
+  noteDrawingOn = false;
+  document.getElementById('noteDrawingArea').style.display = 'none';
+  document.getElementById('noteBodyInput').style.display = 'block';
+  document.getElementById('noteDrawToggleBtn').textContent = '☝️ Drawing: OFF';
+  document.getElementById('noteDrawToggleBtn').classList.remove('active');
+  noteDrawPages = [null];
+  noteDrawPageIndex = 0;
+}
+function noteDrawUpdatePageIndicator(){
+  document.getElementById('noteDrawPageIndicator').textContent = `Page ${noteDrawPageIndex + 1} / ${noteDrawPages.length}`;
+  document.getElementById('noteDrawPrevPageBtn').disabled = noteDrawPageIndex === 0;
+  document.getElementById('noteDrawNextPageBtn').disabled = noteDrawPageIndex === noteDrawPages.length - 1;
+}
+function noteDrawSaveCurrentPageToArray(){
+  if(!noteDrawCanvasEl) return;
+  // Only store a snapshot if the page actually has something on it — keeps blank pages as
+  // null rather than a full blank-canvas image, so "merge on save" can skip them cheaply.
+  noteDrawPages[noteDrawPageIndex] = noteDrawHistoryIndex > 0 ? noteDrawCanvasEl.toDataURL() : null;
+}
+function noteDrawLoadPageIntoCanvas(index){
+  const rect = noteDrawCanvasEl.getBoundingClientRect();
+  const pageData = noteDrawPages[index];
+  noteDrawCtx.clearRect(0, 0, rect.width, rect.height);
+  noteDrawCtx.globalCompositeOperation = 'source-over';
+  noteDrawCtx.globalAlpha = 1;
+  noteDrawCtx.fillStyle = '#fff';
+  noteDrawCtx.fillRect(0, 0, rect.width, rect.height);
+  if(pageData){
+    const img = new Image();
+    img.onload = () => {
+      noteDrawCtx.drawImage(img, 0, 0, rect.width, rect.height);
+      noteDrawHistory = [noteDrawCanvasEl.toDataURL()];
+      noteDrawHistoryIndex = 0;
+      // The freshly-loaded page becomes the new undo baseline for itself
+      noteDrawHistory = [pageData];
+      noteDrawHistoryIndex = 0;
+    };
+    img.src = pageData;
+  } else {
+    noteDrawHistory = [noteDrawCanvasEl.toDataURL()];
+    noteDrawHistoryIndex = 0;
+  }
+}
+function noteDrawGoToPage(index){
+  noteDrawSaveCurrentPageToArray();
+  noteDrawPageIndex = index;
+  noteDrawLoadPageIntoCanvas(index);
+  noteDrawUpdatePageIndicator();
+}
+function noteDrawSetupCanvas(){
+  noteDrawCanvasEl = document.getElementById('noteDrawCanvas');
+  const rect = noteDrawCanvasEl.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  noteDrawCanvasEl.width = rect.width * dpr;
+  noteDrawCanvasEl.height = rect.height * dpr;
+  noteDrawCtx = noteDrawCanvasEl.getContext('2d');
+  noteDrawCtx.scale(dpr, dpr);
+  noteDrawCtx.fillStyle = '#fff';
+  noteDrawCtx.fillRect(0, 0, rect.width, rect.height);
+  noteDrawCtx.lineCap = 'round';
+  noteDrawCtx.lineJoin = 'round';
+  noteDrawPages = [null];
+  noteDrawPageIndex = 0;
+  noteDrawHistory = [noteDrawCanvasEl.toDataURL()];
+  noteDrawHistoryIndex = 0;
+  noteDrawUpdatePageIndicator();
+  if(!noteDrawCanvasEl.dataset.listenersAttached){
+    noteDrawCanvasEl.addEventListener('pointerdown', noteDrawStart);
+    noteDrawCanvasEl.addEventListener('pointermove', noteDrawMove);
+    noteDrawCanvasEl.addEventListener('pointerup', noteDrawEnd);
+    noteDrawCanvasEl.addEventListener('pointerleave', noteDrawEnd);
+    noteDrawCanvasEl.dataset.listenersAttached = '1';
+  }
+}
+function noteDrawGetPos(e){
+  const rect = noteDrawCanvasEl.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+function noteDrawStart(e){
+  e.preventDefault();
+  noteDrawing = true;
+  const pos = noteDrawGetPos(e);
+  noteDrawLastX = pos.x; noteDrawLastY = pos.y;
+}
+function noteDrawMove(e){
+  if(!noteDrawing) return;
+  e.preventDefault();
+  const pos = noteDrawGetPos(e);
+  noteDrawCtx.beginPath();
+  noteDrawCtx.moveTo(noteDrawLastX, noteDrawLastY);
+  noteDrawCtx.lineTo(pos.x, pos.y);
+  if(noteDrawTool === 'eraser'){
+    noteDrawCtx.globalCompositeOperation = 'destination-out';
+    noteDrawCtx.globalAlpha = 1;
+    noteDrawCtx.lineWidth = noteDrawWidth * 3;
+  } else if(noteDrawTool === 'highlighter'){
+    noteDrawCtx.globalCompositeOperation = 'source-over';
+    noteDrawCtx.globalAlpha = 0.35;
+    noteDrawCtx.lineWidth = noteDrawWidth * 3;
+    noteDrawCtx.strokeStyle = noteDrawColor;
+  } else {
+    noteDrawCtx.globalCompositeOperation = 'source-over';
+    noteDrawCtx.globalAlpha = 1;
+    noteDrawCtx.lineWidth = noteDrawWidth;
+    noteDrawCtx.strokeStyle = noteDrawColor;
+  }
+  noteDrawCtx.stroke();
+  noteDrawLastX = pos.x; noteDrawLastY = pos.y;
+}
+function noteDrawEnd(){
+  if(!noteDrawing) return;
+  noteDrawing = false;
+  noteDrawHistory = noteDrawHistory.slice(0, noteDrawHistoryIndex + 1);
+  noteDrawHistory.push(noteDrawCanvasEl.toDataURL());
+  noteDrawHistoryIndex = noteDrawHistory.length - 1;
+}
+function noteDrawRestoreFromHistory(){
+  const img = new Image();
+  img.onload = () => {
+    const rect = noteDrawCanvasEl.getBoundingClientRect();
+    noteDrawCtx.clearRect(0, 0, rect.width, rect.height);
+    noteDrawCtx.globalCompositeOperation = 'source-over';
+    noteDrawCtx.globalAlpha = 1;
+    noteDrawCtx.drawImage(img, 0, 0, rect.width, rect.height);
+  };
+  img.src = noteDrawHistory[noteDrawHistoryIndex];
+}
+document.getElementById('noteDrawPrevPageBtn').addEventListener('click', () => {
+  if(noteDrawPageIndex > 0) noteDrawGoToPage(noteDrawPageIndex - 1);
+});
+document.getElementById('noteDrawNextPageBtn').addEventListener('click', () => {
+  if(noteDrawPageIndex < noteDrawPages.length - 1) noteDrawGoToPage(noteDrawPageIndex + 1);
+});
+document.getElementById('noteDrawAddPageBtn').addEventListener('click', () => {
+  if(noteDrawPages.length >= NOTE_DRAW_MAX_PAGES){
+    alert(`A handwritten note can hold up to ${NOTE_DRAW_MAX_PAGES} pages.`);
+    return;
+  }
+  noteDrawSaveCurrentPageToArray();
+  noteDrawPages.push(null);
+  noteDrawGoToPage(noteDrawPages.length - 1);
+});
+document.getElementById('noteDrawToggleBtn').addEventListener('click', async () => {
+  if(!noteDrawingOn){
+    // Turning ON — hide the textarea, show the canvas
+    noteDrawingOn = true;
+    document.getElementById('noteBodyInput').style.display = 'none';
+    document.getElementById('noteDrawingArea').style.display = 'block';
+    document.getElementById('noteDrawToggleBtn').textContent = '☝️ Drawing: ON';
+    document.getElementById('noteDrawToggleBtn').classList.add('active');
+    noteDrawSetupCanvas();
+  } else {
+    // Turning OFF — save every non-blank page as an image, in order, then go back to text
+    noteDrawSaveCurrentPageToArray();
+    const nonBlankPages = noteDrawPages.filter(p => p !== null);
+    if(nonBlankPages.length > 0){
+      const btn = document.getElementById('noteDrawToggleBtn');
+      btn.textContent = `Saving ${nonBlankPages.length} page${nonBlankPages.length > 1 ? 's' : ''}…`;
+      try{
+        const notes = getNotes();
+        const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+        for(const pageDataUrl of nonBlankPages){
+          const resized = await downscaleImage(pageDataUrl, 1400);
+          const imgId = 'img' + Date.now() + Math.random().toString(36).slice(2,7);
+          await saveNoteImage(imgId, resized);
+          if(idx !== -1) notes[idx].imageIds = [...(notes[idx].imageIds || []), imgId];
+        }
+        if(idx !== -1){
+          notes[idx].updatedAt = new Date().toISOString();
+          saveNotes(notes);
+          renderNoteImages(notes[idx]);
+        }
+      }catch(err){
+        alert('Could not save the drawing — please try again.');
+      }
+    }
+    resetNoteDrawingToggle();
+  }
+});
+document.querySelectorAll('.note-draw-tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    noteDrawTool = btn.dataset.tool;
+    document.querySelectorAll('.note-draw-tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.querySelectorAll('.note-draw-color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    noteDrawColor = btn.dataset.color;
+    document.getElementById('noteDrawColorWheel').value = btn.dataset.color;
+    document.querySelectorAll('.note-draw-color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+// Full color wheel — the browser's native color input gives a genuine full-spectrum picker
+// (hue/saturation/brightness/custom) without building a custom color-wheel component.
+document.getElementById('noteDrawColorWheel').addEventListener('input', (e) => {
+  noteDrawColor = e.target.value;
+  document.querySelectorAll('.note-draw-color-btn').forEach(b => b.classList.remove('active'));
+});
+document.getElementById('noteDrawWidthSlider').addEventListener('input', (e) => {
+  noteDrawWidth = parseInt(e.target.value, 10);
+});
+document.getElementById('noteDrawUndoBtn').addEventListener('click', () => {
+  if(noteDrawHistoryIndex > 0){ noteDrawHistoryIndex--; noteDrawRestoreFromHistory(); }
+});
+document.getElementById('noteDrawRedoBtn').addEventListener('click', () => {
+  if(noteDrawHistoryIndex < noteDrawHistory.length - 1){ noteDrawHistoryIndex++; noteDrawRestoreFromHistory(); }
+});
+document.getElementById('noteDrawClearBtn').addEventListener('click', () => {
+  if(!confirm('Clear this drawing?')) return;
+  const rect = noteDrawCanvasEl.getBoundingClientRect();
+  noteDrawCtx.globalCompositeOperation = 'source-over';
+  noteDrawCtx.globalAlpha = 1;
+  noteDrawCtx.fillStyle = '#fff';
+  noteDrawCtx.fillRect(0, 0, rect.width, rect.height);
+  noteDrawHistory = noteDrawHistory.slice(0, noteDrawHistoryIndex + 1);
+  noteDrawHistory.push(noteDrawCanvasEl.toDataURL());
+  noteDrawHistoryIndex = noteDrawHistory.length - 1;
+});
+
+// ---------- ⋮ More drawer: consolidates less-frequent note actions (Share, Attach File, Add
+// Image, Add Link, Export, Print) behind one menu, instead of permanently cluttering the main
+// editor — matching the architecture document's "keep advanced tools hidden until requested". ----------
+function openNoteMoreDrawer(){
+  document.getElementById('noteMoreDrawerBackdrop').style.display = 'block';
+  document.getElementById('noteMoreDrawer').style.display = 'block';
+}
+function closeNoteMoreDrawer(){
+  document.getElementById('noteMoreDrawerBackdrop').style.display = 'none';
+  document.getElementById('noteMoreDrawer').style.display = 'none';
+}
+document.getElementById('noteMoreBtn').addEventListener('click', openNoteMoreDrawer);
+document.getElementById('noteMoreDrawerBackdrop').addEventListener('click', closeNoteMoreDrawer);
+
+document.getElementById('drawerShareBtn').addEventListener('click', async () => {
+  closeNoteMoreDrawer();
+  const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
+  const body = document.getElementById('noteBodyInput').value;
+  const shareText = `${title}\n\n${body}`;
+  if(navigator.share){
+    try{ await navigator.share({ title, text: shareText }); }catch(e){}
+  } else {
+    try{
+      await navigator.clipboard.writeText(shareText);
+      alert('Note copied — paste it anywhere to share.');
+    }catch(e){}
+  }
+});
+document.getElementById('drawerAddImageBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  document.getElementById('noteImageFileInput').click();
+});
+document.getElementById('drawerExportBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  const card = document.getElementById('noteExportCard');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior:'smooth', block:'center' });
+});
+document.getElementById('drawerAddLinkBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  const url = prompt('Paste a link to add to this note:');
+  if(!url || !url.trim()) return;
+  const textarea = document.getElementById('noteBodyInput');
+  textarea.value = textarea.value + (textarea.value ? '\n' : '') + url.trim();
+  scheduleAutoSave();
+});
+document.getElementById('drawerPrintBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
+  const body = document.getElementById('noteBodyInput').value;
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html><head><title>${title}</title>
+    <style>body{font-family:sans-serif; padding:30px; line-height:1.6; white-space:pre-wrap;} h1{font-size:20px;}</style>
+    </head><body><h1>${title}</h1><div>${body.replace(/</g, '&lt;')}</div></body></html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => printWindow.print(), 300);
+});
+
+// ---------- Reader View: a separate reading MODE of the current note (not a duplicate copy) —
+// renders the same markdown-style tokens the formatting toolbar writes (**bold**, *italic*,
+// - bullets, 1. numbered, [ ] checklist, ## heading) into real formatting, with adjustable
+// font size, line spacing, brightness and theme. Settings persist across sessions. ----------
+function escapeHtmlForReader(text){
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function renderMarkdownTable(tableLines){
+  const rows = tableLines.filter((line, i) => i !== 1); // drop the |---|---| separator line
+  const cellsOf = (line) => line.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+  const headerCells = cellsOf(rows[0]);
+  const bodyRows = rows.slice(1).map(cellsOf);
+  let html = '<table style="border-collapse:collapse; width:100%; margin:10px 0;"><thead><tr>';
+  headerCells.forEach(c => { html += `<th style="border:1px solid currentColor; opacity:0.9; padding:8px; text-align:left; font-size:0.95em;">${c}</th>`; });
+  html += '</tr></thead><tbody>';
+  bodyRows.forEach(row => {
+    html += '<tr>';
+    row.forEach(c => { html += `<td style="border:1px solid currentColor; opacity:0.75; padding:8px; font-size:0.95em;">${c}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+const STICKY_NOTE_COLORS = { yellow:'#F5D547', pink:'#F5A9C0', blue:'#A9D4F5', green:'#B8E6B0' };
+function renderMarkdownToHtml(text){
+  const escaped = escapeHtmlForReader(text || '');
+
+  // Pre-pass: pull out multi-line blocks (sticky notes, tables) that the line-by-line pass
+  // below can't handle on its own, replacing each with a placeholder token to splice the
+  // pre-rendered HTML back in afterward.
+  const blockPlaceholders = [];
+  let withPlaceholders = escaped.replace(/\[STICKY:(\w+)\]([\s\S]*?)\[\/STICKY\]/g, (match, color, stickyText) => {
+    const bg = STICKY_NOTE_COLORS[color] || STICKY_NOTE_COLORS.yellow;
+    const html = `<div style="background:${bg}; color:#2A2420; border-radius:8px; padding:12px 14px; margin:10px 0; box-shadow:0 2px 6px rgba(0,0,0,0.15); white-space:pre-wrap;">${stickyText.trim()}</div>`;
+    blockPlaceholders.push(html);
+    return `\n@@BLOCK${blockPlaceholders.length - 1}@@\n`;
+  });
+  const rawLines = withPlaceholders.split('\n');
+  const processedLines = [];
+  for(let i = 0; i < rawLines.length; i++){
+    // A markdown table: a "| ... |" line immediately followed by a "|---|---|" separator line
+    if(/^\|.+\|$/.test(rawLines[i].trim()) && rawLines[i+1] && /^\|[\s:-]+\|$/.test(rawLines[i+1].trim())){
+      const tableLines = [rawLines[i], rawLines[i+1]];
+      let j = i + 2;
+      while(rawLines[j] && /^\|.+\|$/.test(rawLines[j].trim())){ tableLines.push(rawLines[j]); j++; }
+      blockPlaceholders.push(renderMarkdownTable(tableLines));
+      processedLines.push(`@@BLOCK${blockPlaceholders.length - 1}@@`);
+      i = j - 1;
+    } else {
+      processedLines.push(rawLines[i]);
+    }
+  }
+
+  let html = '';
+  let inList = null; // 'ul' | 'ol' | null
+  processedLines.forEach(line => {
+    let content = line;
+    let matched = false;
+    const blockToken = content.trim().match(/^@@BLOCK(\d+)@@$/);
+    const heading = content.match(/^##\s+(.*)/);
+    const bullet = content.match(/^-\s+(.*)/);
+    const numbered = content.match(/^\d+\.\s+(.*)/);
+    const checklist = content.match(/^\[([ xX])\]\s+(.*)/);
+    if(blockToken){
+      if(inList){ html += `</${inList}>`; inList = null; }
+      html += blockPlaceholders[parseInt(blockToken[1], 10)];
+      matched = true;
+    } else if(heading){
+      if(inList){ html += `</${inList}>`; inList = null; }
+      html += `<h3 style="margin:14px 0 6px;">${heading[1]}</h3>`;
+      matched = true;
+    } else if(checklist){
+      if(inList !== 'ul'){ if(inList) html += `</${inList}>`; html += '<ul style="margin:6px 0; padding-left:22px;">'; inList = 'ul'; }
+      const checked = checklist[1].toLowerCase() === 'x';
+      html += `<li style="list-style:none; margin-left:-22px;">${checked ? '☑' : '☐'} ${checklist[2]}</li>`;
+      matched = true;
+    } else if(bullet){
+      if(inList !== 'ul'){ if(inList) html += `</${inList}>`; html += '<ul style="margin:6px 0; padding-left:22px;">'; inList = 'ul'; }
+      html += `<li>${bullet[1]}</li>`;
+      matched = true;
+    } else if(numbered){
+      if(inList !== 'ol'){ if(inList) html += `</${inList}>`; html += '<ol style="margin:6px 0; padding-left:22px;">'; inList = 'ol'; }
+      html += `<li>${numbered[1]}</li>`;
+      matched = true;
+    }
+    if(!matched){
+      if(inList){ html += `</${inList}>`; inList = null; }
+      if(content.trim() === ''){
+        html += '<br>';
+      } else {
+        content = content.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>');
+        html += `<p style="margin:0 0 4px;">${content}</p>`;
+      }
+    }
+  });
+  if(inList) html += `</${inList}>`;
+  return html || '<p style="opacity:0.6;">(empty note)</p>';
+}
+function getReaderSettings(){
+  try{ return JSON.parse(localStorage.getItem('hl_reader_settings') || 'null') || { fontSize:17, lineSpacing:170, brightness:100, theme:'dark' }; }
+  catch(e){ return { fontSize:17, lineSpacing:170, brightness:100, theme:'dark' }; }
+}
+function saveReaderSettings(settings){
+  try{ localStorage.setItem('hl_reader_settings', JSON.stringify(settings)); }catch(e){}
+}
+const READER_THEMES = {
+  dark:  { bg:'var(--bg)', text:'var(--ink)' },
+  light: { bg:'#F7F5F0', text:'#2A2420' },
+  sepia: { bg:'#F4ECD8', text:'#3B2F1E' },
+};
+function applyReaderSettings(settings){
+  const contentEl = document.getElementById('readerContent');
+  const bodyWrap = document.getElementById('noteReaderBody');
+  const theme = READER_THEMES[settings.theme] || READER_THEMES.dark;
+  bodyWrap.style.background = theme.bg;
+  contentEl.style.color = theme.text;
+  document.getElementById('readerTitle').style.color = theme.text;
+  contentEl.style.fontSize = settings.fontSize + 'px';
+  contentEl.style.lineHeight = (settings.lineSpacing / 100);
+  contentEl.style.filter = `brightness(${settings.brightness}%)`;
+  document.getElementById('readerFontSlider').value = settings.fontSize;
+  document.getElementById('readerLineSpacingSlider').value = settings.lineSpacing;
+  document.getElementById('readerBrightnessSlider').value = settings.brightness;
+  document.querySelectorAll('.reader-theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === settings.theme);
+  });
+}
+document.getElementById('drawerReaderViewBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  document.getElementById('readerTitle').textContent = document.getElementById('noteTitleInput').value || 'Untitled Note';
+  document.getElementById('readerBodyContent').innerHTML = renderMarkdownToHtml(document.getElementById('noteBodyInput').value);
+  document.getElementById('readerSettingsPanel').style.display = 'none';
+  applyReaderSettings(getReaderSettings());
+  showScreen(noteReaderScreen);
+});
+document.getElementById('readerSettingsBtn').addEventListener('click', () => {
+  const panel = document.getElementById('readerSettingsPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
+function updateReaderSetting(key, value){
+  const settings = getReaderSettings();
+  settings[key] = value;
+  saveReaderSettings(settings);
+  applyReaderSettings(settings);
+}
+document.getElementById('readerFontSlider').addEventListener('input', (e) => updateReaderSetting('fontSize', parseInt(e.target.value, 10)));
+document.getElementById('readerFontDownBtn').addEventListener('click', () => {
+  const s = getReaderSettings();
+  updateReaderSetting('fontSize', Math.max(14, s.fontSize - 1));
+});
+document.getElementById('readerFontUpBtn').addEventListener('click', () => {
+  const s = getReaderSettings();
+  updateReaderSetting('fontSize', Math.min(26, s.fontSize + 1));
+});
+document.getElementById('readerLineSpacingSlider').addEventListener('input', (e) => updateReaderSetting('lineSpacing', parseInt(e.target.value, 10)));
+document.getElementById('readerBrightnessSlider').addEventListener('input', (e) => updateReaderSetting('brightness', parseInt(e.target.value, 10)));
+document.querySelectorAll('.reader-theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => updateReaderSetting('theme', btn.dataset.theme));
+});
+
+// ---------- Voice Recording: MediaRecorder API, stored via the same generic IndexedDB store
+// used for attachments (an audio recording is just an attachment with an audio type) — no
+// separate storage system. Microphone permission is only requested when recording actually
+// starts, matching the architecture document's stated rule. ----------
+let voiceMediaRecorder = null;
+let voiceRecordedChunks = [];
+let voiceRecordedBlob = null;
+let voiceRecordTimerInterval = null;
+let voiceRecordSeconds = 0;
+let voiceRecordPaused = false;
+
+function voiceRecordFormatTime(totalSeconds){
+  const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const s = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+function openVoiceRecordModal(){
+  document.getElementById('voiceRecordBackdrop').style.display = 'block';
+  document.getElementById('voiceRecordModal').style.display = 'block';
+  document.getElementById('voiceRecordStatus').textContent = 'Tap record to start';
+  document.getElementById('voiceRecordTimer').textContent = '00:00';
+  document.getElementById('voiceRecordStartBtn').style.display = 'inline-block';
+  document.getElementById('voiceRecordPauseBtn').style.display = 'none';
+  document.getElementById('voiceRecordStopBtn').style.display = 'none';
+  document.getElementById('voiceRecordPreview').style.display = 'none';
+  document.getElementById('voiceRecordSaveBtn').style.display = 'none';
+  voiceRecordedChunks = [];
+  voiceRecordedBlob = null;
+  voiceRecordSeconds = 0;
+}
+function closeVoiceRecordModal(){
+  document.getElementById('voiceRecordBackdrop').style.display = 'none';
+  document.getElementById('voiceRecordModal').style.display = 'none';
+  clearInterval(voiceRecordTimerInterval);
+  if(voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive'){
+    voiceMediaRecorder.stop();
+  }
+}
+document.getElementById('drawerVoiceRecordBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  openVoiceRecordModal();
+});
+document.getElementById('voiceRecordCancelBtn').addEventListener('click', closeVoiceRecordModal);
+document.getElementById('voiceRecordBackdrop').addEventListener('click', closeVoiceRecordModal);
+document.getElementById('voiceRecordStartBtn').addEventListener('click', async () => {
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    document.getElementById('voiceRecordStatus').textContent = 'Microphone access isn\'t available on this device/browser.';
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    voiceMediaRecorder = new MediaRecorder(stream);
+    voiceRecordedChunks = [];
+    voiceMediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) voiceRecordedChunks.push(e.data); };
+    voiceMediaRecorder.onstop = () => {
+      voiceRecordedBlob = new Blob(voiceRecordedChunks, { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(voiceRecordedBlob);
+      document.getElementById('voiceRecordAudioPreview').src = audioUrl;
+      document.getElementById('voiceRecordPreview').style.display = 'block';
+      document.getElementById('voiceRecordSaveBtn').style.display = 'block';
+      stream.getTracks().forEach(track => track.stop());
+    };
+    voiceMediaRecorder.start();
+    voiceRecordSeconds = 0;
+    voiceRecordPaused = false;
+    document.getElementById('voiceRecordStatus').textContent = '🔴 Recording…';
+    document.getElementById('voiceRecordStartBtn').style.display = 'none';
+    document.getElementById('voiceRecordPauseBtn').style.display = 'inline-block';
+    document.getElementById('voiceRecordStopBtn').style.display = 'inline-block';
+    voiceRecordTimerInterval = setInterval(() => {
+      if(!voiceRecordPaused){
+        voiceRecordSeconds++;
+        document.getElementById('voiceRecordTimer').textContent = voiceRecordFormatTime(voiceRecordSeconds);
+      }
+    }, 1000);
+  }catch(err){
+    document.getElementById('voiceRecordStatus').textContent = 'Could not access the microphone — check permissions.';
+  }
+});
+document.getElementById('voiceRecordPauseBtn').addEventListener('click', () => {
+  if(!voiceMediaRecorder) return;
+  if(voiceMediaRecorder.state === 'recording'){
+    voiceMediaRecorder.pause();
+    voiceRecordPaused = true;
+    document.getElementById('voiceRecordPauseBtn').textContent = '▶️ Resume';
+    document.getElementById('voiceRecordStatus').textContent = 'Paused';
+  } else {
+    voiceMediaRecorder.resume();
+    voiceRecordPaused = false;
+    document.getElementById('voiceRecordPauseBtn').textContent = '⏸️ Pause';
+    document.getElementById('voiceRecordStatus').textContent = '🔴 Recording…';
+  }
+});
+document.getElementById('voiceRecordStopBtn').addEventListener('click', () => {
+  if(voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') voiceMediaRecorder.stop();
+  clearInterval(voiceRecordTimerInterval);
+  document.getElementById('voiceRecordStatus').textContent = 'Recording ready';
+  document.getElementById('voiceRecordPauseBtn').style.display = 'none';
+  document.getElementById('voiceRecordStopBtn').style.display = 'none';
+});
+document.getElementById('voiceRecordSaveBtn').addEventListener('click', async () => {
+  if(!voiceRecordedBlob) return;
+  const btn = document.getElementById('voiceRecordSaveBtn');
+  btn.textContent = 'Saving…';
+  try{
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result;
+      const attachId = 'att' + Date.now() + Math.random().toString(36).slice(2,7);
+      const name = `Voice ${new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'})} — ${voiceRecordFormatTime(voiceRecordSeconds)}.webm`;
+      await saveNoteImage(attachId, JSON.stringify({ name, type: 'audio/webm', dataUrl }));
+      const notes = getNotes();
+      const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+      if(idx !== -1){
+        notes[idx].attachmentIds = [...(notes[idx].attachmentIds || []), attachId];
+        notes[idx].updatedAt = new Date().toISOString();
+        saveNotes(notes);
+        renderNoteAttachments(notes[idx]);
+      }
+      closeVoiceRecordModal();
+    };
+    reader.readAsDataURL(voiceRecordedBlob);
+  }catch(err){
+    alert('Could not save this recording — please try again.');
+    btn.textContent = '✓ Save to Note';
+  }
+});
+
+// ---------- Lock Note: a genuine PIN lock, not fake biometrics. True device biometric
+// (Face ID/fingerprint) via WebAuthn needs a server to store and verify credentials, which
+// this app's backend doesn't provide — building a "fingerprint" UI without that would be
+// exactly the fake system the architecture document said not to build. A PIN is a real,
+// working privacy layer within those honest limits. ----------
+function simplePinHash(pin){
+  let hash = 0;
+  for(let i = 0; i < pin.length; i++){
+    hash = ((hash << 5) - hash + pin.charCodeAt(i)) | 0;
+  }
+  return String(hash);
+}
+let lockNoteMode = 'set'; // 'set' or 'unlock'
+function openLockNoteModal(mode){
+  lockNoteMode = mode;
+  document.getElementById('lockNoteModalTitle').textContent = mode === 'set' ? '🔒 Set a PIN for this note' : '🔒 Enter PIN to unlock';
+  document.getElementById('lockNoteModalSub').style.display = mode === 'set' ? 'block' : 'none';
+  document.getElementById('lockNotePinInput').value = '';
+  document.getElementById('lockNoteError').textContent = '';
+  document.getElementById('lockNoteBackdrop').style.display = 'block';
+  document.getElementById('lockNoteModal').style.display = 'block';
+}
+function closeLockNoteModal(){
+  document.getElementById('lockNoteBackdrop').style.display = 'none';
+  document.getElementById('lockNoteModal').style.display = 'none';
+}
+document.getElementById('drawerLockNoteBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  const notes = getNotes();
+  const note = notes.find(n => n.id === currentEditingNoteId);
+  if(note && note.lockedPinHash){
+    if(!confirm('Remove the PIN lock from this note?')) return;
+    note.lockedPinHash = null;
+    saveNotes(notes);
+    alert('PIN lock removed.');
+  } else {
+    openLockNoteModal('set');
+  }
+});
+document.getElementById('lockNoteCancelBtn').addEventListener('click', closeLockNoteModal);
+document.getElementById('lockNoteBackdrop').addEventListener('click', closeLockNoteModal);
+document.getElementById('lockNoteConfirmBtn').addEventListener('click', () => {
+  const pin = document.getElementById('lockNotePinInput').value;
+  const errorEl = document.getElementById('lockNoteError');
+  if(pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)){
+    errorEl.textContent = 'PIN must be 4–6 digits.';
+    return;
+  }
+  if(lockNoteMode === 'set'){
+    const notes = getNotes();
+    const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+    if(idx !== -1){
+      notes[idx].lockedPinHash = simplePinHash(pin);
+      saveNotes(notes);
+    }
+    closeLockNoteModal();
+    alert('This note is now PIN-locked.');
+  } else {
+    // Unlock mode — checked by the caller via a promise-style callback set on window
+    if(window.__lockNoteUnlockCallback){
+      const success = window.__lockNoteUnlockCallback(pin);
+      if(success){
+        closeLockNoteModal();
+      } else {
+        errorEl.textContent = 'Incorrect PIN.';
+      }
+    }
+  }
+});
+// Called from openNoteEditor when a locked note is opened — returns a Promise that resolves
+// once the correct PIN is entered (or the user cancels, going back to the notes list).
+function requireNotePinUnlock(pinHash){
+  return new Promise((resolve) => {
+    openLockNoteModal('unlock');
+    window.__lockNoteUnlockCallback = (enteredPin) => {
+      if(simplePinHash(enteredPin) === pinHash){
+        window.__lockNoteUnlockCallback = null;
+        resolve(true);
+        return true;
+      }
+      return false;
+    };
+    document.getElementById('lockNoteCancelBtn').onclick = () => {
+      window.__lockNoteUnlockCallback = null;
+      closeLockNoteModal();
+      showScreen(notesScreen);
+      renderNotes();
+      resolve(false);
+    };
+  });
+}
+
+// ---------- Table: a small builder modal (add/remove rows/columns, edit cells) that inserts
+// a real markdown table into the note body — genuinely editable while building it, stored as
+// plain text so it stays compatible with the textarea editor, search, and export. ----------
+let tableData = [];
+function renderTableEditorGrid(){
+  const grid = document.getElementById('tableEditorGrid');
+  grid.innerHTML = tableData.map((row, r) => `
+    <tr>${row.map((cell, c) => `
+      <td style="border:1px solid var(--line); padding:2px;">
+        <input type="text" value="${cell.replace(/"/g, '&quot;')}" data-row="${r}" data-col="${c}"
+          style="width:80px; padding:6px; border:none; background:${r === 0 ? 'var(--panel-elevated)' : 'var(--panel)'}; color:var(--ink); font-size:12px; font-weight:${r === 0 ? '700' : '400'};">
+      </td>`).join('')}</tr>
+  `).join('');
+  grid.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      tableData[parseInt(e.target.dataset.row, 10)][parseInt(e.target.dataset.col, 10)] = e.target.value;
+    });
+  });
+}
+document.getElementById('drawerTableBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  document.getElementById('tableSizePicker').style.display = 'block';
+  document.getElementById('tableEditorWrap').style.display = 'none';
+  document.getElementById('tableInsertBtn').style.display = 'none';
+  document.getElementById('tableBuilderBackdrop').style.display = 'block';
+  document.getElementById('tableBuilderModal').style.display = 'block';
+});
+document.getElementById('tableBuilderBackdrop').addEventListener('click', () => {
+  document.getElementById('tableBuilderBackdrop').style.display = 'none';
+  document.getElementById('tableBuilderModal').style.display = 'none';
+});
+document.getElementById('tableCancelBtn').addEventListener('click', () => {
+  document.getElementById('tableBuilderBackdrop').style.display = 'none';
+  document.getElementById('tableBuilderModal').style.display = 'none';
+});
+document.querySelectorAll('.table-size-preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const rows = parseInt(btn.dataset.rows, 10);
+    const cols = parseInt(btn.dataset.cols, 10);
+    tableData = Array.from({length: rows}, (_, r) =>
+      Array.from({length: cols}, (_, c) => r === 0 ? `Header ${c + 1}` : '')
+    );
+    document.getElementById('tableSizePicker').style.display = 'none';
+    document.getElementById('tableEditorWrap').style.display = 'block';
+    document.getElementById('tableInsertBtn').style.display = 'block';
+    renderTableEditorGrid();
+  });
+});
+document.getElementById('tableAddRowBtn').addEventListener('click', () => {
+  tableData.push(tableData[0].map(() => ''));
+  renderTableEditorGrid();
+});
+document.getElementById('tableRemoveRowBtn').addEventListener('click', () => {
+  if(tableData.length > 1) tableData.pop();
+  renderTableEditorGrid();
+});
+document.getElementById('tableAddColBtn').addEventListener('click', () => {
+  tableData.forEach(row => row.push(''));
+  renderTableEditorGrid();
+});
+document.getElementById('tableRemoveColBtn').addEventListener('click', () => {
+  if(tableData[0].length > 1) tableData.forEach(row => row.pop());
+  renderTableEditorGrid();
+});
+document.getElementById('tableInsertBtn').addEventListener('click', () => {
+  const header = '| ' + tableData[0].join(' | ') + ' |';
+  const separator = '| ' + tableData[0].map(() => '---').join(' | ') + ' |';
+  const rows = tableData.slice(1).map(row => '| ' + row.join(' | ') + ' |').join('\n');
+  const markdownTable = `\n${header}\n${separator}\n${rows}\n`;
+  const textarea = document.getElementById('noteBodyInput');
+  textarea.value = textarea.value + markdownTable;
+  scheduleAutoSave();
+  document.getElementById('tableBuilderBackdrop').style.display = 'none';
+  document.getElementById('tableBuilderModal').style.display = 'none';
+});
+
+// ---------- Sticky Note: inserted as a [STICKY:color]...[/STICKY] marker in the note's plain
+// text, rendered as an actual colored sticky-note box in Reader View. Move/resize aren't
+// possible within a plain textarea, so this is a real distinct visual element, not a draggable
+// one — an honest scope-down from a full freeform sticky-note canvas. ----------
+let stickyNoteColor = 'yellow';
+document.getElementById('drawerStickyNoteBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  document.getElementById('stickyNoteTextInput').value = '';
+  document.getElementById('stickyNoteBackdrop').style.display = 'block';
+  document.getElementById('stickyNoteModal').style.display = 'block';
+});
+document.getElementById('stickyNoteBackdrop').addEventListener('click', () => {
+  document.getElementById('stickyNoteBackdrop').style.display = 'none';
+  document.getElementById('stickyNoteModal').style.display = 'none';
+});
+document.getElementById('stickyNoteCancelBtn').addEventListener('click', () => {
+  document.getElementById('stickyNoteBackdrop').style.display = 'none';
+  document.getElementById('stickyNoteModal').style.display = 'none';
+});
+document.querySelectorAll('.sticky-color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    stickyNoteColor = btn.dataset.color;
+    document.querySelectorAll('.sticky-color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.getElementById('stickyNoteInsertBtn').addEventListener('click', () => {
+  const text = document.getElementById('stickyNoteTextInput').value.trim();
+  if(!text) return;
+  const textarea = document.getElementById('noteBodyInput');
+  textarea.value = textarea.value + `\n[STICKY:${stickyNoteColor}]${text}[/STICKY]\n`;
+  scheduleAutoSave();
+  document.getElementById('stickyNoteBackdrop').style.display = 'none';
+  document.getElementById('stickyNoteModal').style.display = 'none';
+});
+
+// ---------- Attach File: reuses the same generic key-value IndexedDB store built for images —
+// it doesn't care what string it stores, so a JSON blob of {name, type, dataUrl} works the same
+// way an image dataUrl does. Tracked as note.attachmentIds, separate from note.imageIds. ----------
+async function renderNoteAttachments(note){
+  const attachIds = note.attachmentIds || [];
+  let card = document.getElementById('noteAttachmentsCard');
+  if(!card){
+    card = document.createElement('div');
+    card.className = 'calc-card';
+    card.id = 'noteAttachmentsCard';
+    card.style.marginTop = '10px';
+    document.getElementById('noteImagesCard').insertAdjacentElement('afterend', card);
+  }
+  if(attachIds.length === 0){
+    card.style.display = 'none';
+    card.innerHTML = '';
+    return;
+  }
+  card.style.display = 'block';
+  card.innerHTML = `<h4>📎 Attachments</h4><div id="noteAttachmentsList"></div>`;
+  const listEl = document.getElementById('noteAttachmentsList');
+  const items = await Promise.all(attachIds.map(async (attachId) => {
+    const raw = await getNoteImage(attachId).catch(() => null);
+    if(!raw) return null;
+    try{ return { attachId, ...JSON.parse(raw) }; }catch(e){ return null; }
+  }));
+  listEl.innerHTML = items.filter(Boolean).map(item => `
+    <div style="padding:8px 0; border-bottom:1px solid var(--line);">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        ${item.type && item.type.startsWith('audio/')
+          ? `<span style="font-size:12.5px; color:var(--ink);">🎙️ ${item.name}</span>`
+          : `<a href="${item.dataUrl}" download="${item.name}" style="font-size:12.5px; color:var(--ink); text-decoration:none;">📄 ${item.name}</a>`}
+        <button class="note-attachment-remove-btn" data-attach-id="${item.attachId}" style="background:none; border:none; color:var(--wrong); font-size:12px; cursor:pointer;">✕</button>
+      </div>
+      ${item.type && item.type.startsWith('audio/') ? `<audio controls src="${item.dataUrl}" style="width:100%; margin-top:6px; height:32px;"></audio>` : ''}
+    </div>
+  `).join('');
+  document.querySelectorAll('.note-attachment-remove-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const attachId = btn.dataset.attachId;
+      await deleteNoteImage(attachId).catch(() => {});
+      const notes = getNotes();
+      const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+      if(idx !== -1){
+        notes[idx].attachmentIds = (notes[idx].attachmentIds || []).filter(id => id !== attachId);
+        notes[idx].updatedAt = new Date().toISOString();
+        saveNotes(notes);
+        renderNoteAttachments(notes[idx]);
+      }
+    });
+  });
+}
+document.getElementById('drawerAttachFileBtn').addEventListener('click', () => {
+  closeNoteMoreDrawer();
+  document.getElementById('noteAttachFileInput').click();
+});
+document.getElementById('noteAttachFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  if(file.size > 5 * 1024 * 1024){
+    alert('This file is larger than 5MB — please attach a smaller file.');
+    return;
+  }
+  try{
+    const dataUrl = await fileToDataUrl(file);
+    const attachId = 'att' + Date.now() + Math.random().toString(36).slice(2,7);
+    await saveNoteImage(attachId, JSON.stringify({ name: file.name, type: file.type, dataUrl }));
+    const notes = getNotes();
+    const idx = notes.findIndex(n => n.id === currentEditingNoteId);
+    if(idx !== -1){
+      notes[idx].attachmentIds = [...(notes[idx].attachmentIds || []), attachId];
+      notes[idx].updatedAt = new Date().toISOString();
+      saveNotes(notes);
+      renderNoteAttachments(notes[idx]);
+    }
+  }catch(err){
+    alert('Could not attach this file — please try again.');
+  }
+});
+
 document.getElementById('noteAddImageBtn').addEventListener('click', () => {
   document.getElementById('noteImageFileInput').click();
 });
@@ -9873,6 +11147,9 @@ function renderNoteTrash(){
       if(noteToDelete && noteToDelete.imageIds && noteToDelete.imageIds.length){
         await Promise.all(noteToDelete.imageIds.map(imgId => deleteNoteImage(imgId).catch(() => {})));
       }
+      if(noteToDelete && noteToDelete.attachmentIds && noteToDelete.attachmentIds.length){
+        await Promise.all(noteToDelete.attachmentIds.map(attachId => deleteNoteImage(attachId).catch(() => {})));
+      }
       notes = notes.filter(n => n.id !== btn.dataset.purge);
       saveNotes(notes);
       renderNoteTrash();
@@ -9935,10 +11212,6 @@ document.getElementById('addNoteBtn').addEventListener('click', () => {
 document.getElementById('createTextNoteBtn').addEventListener('click', () => {
   document.getElementById('noteCreateMenu').style.display = 'none';
   openNoteEditor();
-});
-document.getElementById('createHandwrittenNoteBtn').addEventListener('click', () => {
-  document.getElementById('noteCreateMenu').style.display = 'none';
-  openHandwrittenNoteScreen();
 });
 
 // ---------- Handwritten Notes: HTML5 Canvas drawing, saved as an image via the same
@@ -10121,6 +11394,7 @@ document.getElementById('createScanNoteBtn').addEventListener('click', () => {
 function openScanNoteScreen(){
   showScreen(scanNoteScreen);
   scanCapturedDataUrl = null;
+  scanOriginalDataUrl = null;
   document.getElementById('scanVideo').style.display = 'none';
   document.getElementById('scanCaptureCanvas').style.display = 'none';
   document.getElementById('scanStatusText').style.display = 'block';
@@ -10129,6 +11403,8 @@ function openScanNoteScreen(){
   document.getElementById('scanCaptureBtn').style.display = 'none';
   document.getElementById('scanRetakeBtn').style.display = 'none';
   document.getElementById('scanAfterCaptureActions').style.display = 'none';
+  document.getElementById('scanCropControls').style.display = 'none';
+  document.getElementById('scanCropOverlay').style.display = 'none';
   document.getElementById('scanOcrResult').innerHTML = '';
 }
 function stopScanCamera(){
@@ -10162,6 +11438,9 @@ document.getElementById('scanCaptureBtn').addEventListener('click', () => {
   canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
   scanCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  scanOriginalDataUrl = scanCapturedDataUrl;
+  document.getElementById('scanBrightnessSlider').value = 100;
+  document.getElementById('scanContrastSlider').value = 100;
   video.style.display = 'none';
   canvas.style.display = 'block';
   stopScanCamera();
@@ -10172,6 +11451,129 @@ document.getElementById('scanCaptureBtn').addEventListener('click', () => {
 document.getElementById('scanRetakeBtn').addEventListener('click', () => {
   openScanNoteScreen();
 });
+
+// ---------- Scan edit tools: Rotate, Brightness/Contrast, and a 2-handle rectangular Crop.
+// True perspective correction (4 freely adjustable corners warping a skewed photo into a flat
+// rectangle) is a genuinely harder computer-vision problem — this is an honest rectangular
+// crop instead, not the full corner-warp the reference document showed. ----------
+let scanOriginalDataUrl = null;
+document.getElementById('scanRotateBtn').addEventListener('click', () => {
+  const canvas = document.getElementById('scanCaptureCanvas');
+  const img = new Image();
+  img.onload = () => {
+    const newCanvas = document.createElement('canvas');
+    newCanvas.width = img.height;
+    newCanvas.height = img.width;
+    const ctx = newCanvas.getContext('2d');
+    ctx.translate(newCanvas.width / 2, newCanvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    canvas.width = newCanvas.width;
+    canvas.height = newCanvas.height;
+    canvas.getContext('2d').drawImage(newCanvas, 0, 0);
+    scanCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    scanOriginalDataUrl = scanCapturedDataUrl;
+    document.getElementById('scanBrightnessSlider').value = 100;
+    document.getElementById('scanContrastSlider').value = 100;
+  };
+  img.src = scanCapturedDataUrl;
+});
+function scanApplyBrightnessContrast(){
+  const canvas = document.getElementById('scanCaptureCanvas');
+  const brightness = document.getElementById('scanBrightnessSlider').value;
+  const contrast = document.getElementById('scanContrastSlider').value;
+  const img = new Image();
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+    ctx.drawImage(img, 0, 0);
+    ctx.filter = 'none';
+    scanCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  };
+  img.src = scanOriginalDataUrl; // always re-apply from the unmodified original, not cumulatively
+}
+document.getElementById('scanBrightnessSlider').addEventListener('input', scanApplyBrightnessContrast);
+document.getElementById('scanContrastSlider').addEventListener('input', scanApplyBrightnessContrast);
+
+// ---- Crop: a draggable rectangle with 2 corner handles over the captured image ----
+let scanCropDraggingCorner = null;
+document.getElementById('scanCropToggleBtn').addEventListener('click', () => {
+  const controls = document.getElementById('scanCropControls');
+  const overlay = document.getElementById('scanCropOverlay');
+  const isOpen = controls.style.display !== 'none';
+  if(isOpen){
+    controls.style.display = 'none';
+    overlay.style.display = 'none';
+  } else {
+    controls.style.display = 'block';
+    overlay.style.display = 'block';
+    const wrapRect = document.getElementById('scanCameraWrap').getBoundingClientRect();
+    overlay.style.left = (wrapRect.width * 0.1) + 'px';
+    overlay.style.top = (wrapRect.height * 0.1) + 'px';
+    overlay.style.width = (wrapRect.width * 0.8) + 'px';
+    overlay.style.height = (wrapRect.height * 0.8) + 'px';
+  }
+});
+document.querySelectorAll('.scan-crop-handle').forEach(handle => {
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    scanCropDraggingCorner = handle.dataset.corner;
+  });
+});
+document.addEventListener('pointermove', (e) => {
+  if(!scanCropDraggingCorner) return;
+  const overlay = document.getElementById('scanCropOverlay');
+  const wrap = document.getElementById('scanCameraWrap');
+  const wrapRect = wrap.getBoundingClientRect();
+  const x = Math.max(0, Math.min(wrapRect.width, e.clientX - wrapRect.left));
+  const y = Math.max(0, Math.min(wrapRect.height, e.clientY - wrapRect.top));
+  const curLeft = parseFloat(overlay.style.left);
+  const curTop = parseFloat(overlay.style.top);
+  const curRight = curLeft + parseFloat(overlay.style.width);
+  const curBottom = curTop + parseFloat(overlay.style.height);
+  if(scanCropDraggingCorner === 'tl'){
+    overlay.style.left = Math.min(x, curRight - 30) + 'px';
+    overlay.style.top = Math.min(y, curBottom - 30) + 'px';
+    overlay.style.width = (curRight - Math.min(x, curRight - 30)) + 'px';
+    overlay.style.height = (curBottom - Math.min(y, curBottom - 30)) + 'px';
+  } else {
+    overlay.style.width = (Math.max(x, curLeft + 30) - curLeft) + 'px';
+    overlay.style.height = (Math.max(y, curTop + 30) - curTop) + 'px';
+  }
+});
+document.addEventListener('pointerup', () => { scanCropDraggingCorner = null; });
+document.getElementById('scanApplyCropBtn').addEventListener('click', () => {
+  const canvas = document.getElementById('scanCaptureCanvas');
+  const overlay = document.getElementById('scanCropOverlay');
+  const wrapRect = document.getElementById('scanCameraWrap').getBoundingClientRect();
+  // Convert the overlay's on-screen rectangle into actual canvas pixel coordinates
+  const scaleX = canvas.width / wrapRect.width;
+  const scaleY = canvas.height / wrapRect.height;
+  const cropX = parseFloat(overlay.style.left) * scaleX;
+  const cropY = parseFloat(overlay.style.top) * scaleY;
+  const cropW = parseFloat(overlay.style.width) * scaleX;
+  const cropH = parseFloat(overlay.style.height) * scaleY;
+  const img = new Image();
+  img.onload = () => {
+    const newCanvas = document.createElement('canvas');
+    newCanvas.width = cropW;
+    newCanvas.height = cropH;
+    newCanvas.getContext('2d').drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+    canvas.width = cropW;
+    canvas.height = cropH;
+    canvas.getContext('2d').drawImage(newCanvas, 0, 0);
+    scanCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    scanOriginalDataUrl = scanCapturedDataUrl;
+    document.getElementById('scanBrightnessSlider').value = 100;
+    document.getElementById('scanContrastSlider').value = 100;
+    document.getElementById('scanCropControls').style.display = 'none';
+    overlay.style.display = 'none';
+  };
+  img.src = scanCapturedDataUrl;
+});
+
 document.getElementById('scanExtractTextBtn').addEventListener('click', async () => {
   const resultEl = document.getElementById('scanOcrResult');
   if(typeof Tesseract === 'undefined'){
@@ -10229,6 +11631,228 @@ document.getElementById('scanSaveBtn').addEventListener('click', async () => {
 });
 // Stop the camera if the user backs out mid-capture, so it doesn't keep running in the background
 document.getElementById('scanBackLink').addEventListener('click', stopScanCamera);
+
+// ---------- PDF Annotation: PDF.js renders each page onto a canvas; a second transparent
+// canvas on top handles drawing (same pen/highlighter/eraser pattern as Handwritten Notes).
+// Saving a page merges both canvases into one image and adds it to a single running note for
+// that PDF import — so a multi-page PDF becomes one note with multiple page-images, in order,
+// rather than a separate note per page. Real per-page persistent annotation state (so you can
+// navigate away and back with drawings intact) is NOT built — each page's markup exists only
+// until you save or move to another page, keeping this a "mark up and save" workflow rather
+// than a full persistent annotation system. ----------
+let pdfCurrentDoc = null;
+let pdfCurrentPageNum = 1;
+let pdfTotalPages = 1;
+let pdfRenderCtx, pdfAnnotationCtx, pdfAnnotationCanvasEl;
+let pdfDrawing = false;
+let pdfCurrentTool = 'pen';
+let pdfCurrentColor = '#d32f2f';
+let pdfLastX = 0, pdfLastY = 0;
+let pdfAnnotationHistory = [];
+let pdfAnnotationHistoryIndex = -1;
+let pdfNoteId = null; // the one running note this PDF's saved pages accumulate into
+
+document.getElementById('createPdfNoteBtn').addEventListener('click', () => {
+  document.getElementById('noteCreateMenu').style.display = 'none';
+  openPdfAnnotateScreen();
+});
+function openPdfAnnotateScreen(){
+  showScreen(pdfAnnotateScreen);
+  document.getElementById('pdfImportWrap').style.display = 'block';
+  document.getElementById('pdfViewerWrap').style.display = 'none';
+  pdfCurrentDoc = null;
+  pdfNoteId = null;
+}
+document.getElementById('pdfImportBtn').addEventListener('click', () => {
+  document.getElementById('pdfFileInput').click();
+});
+document.getElementById('pdfFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  if(typeof window.pdfjsLib === 'undefined'){
+    alert('PDF tool is still loading — please try again in a moment.');
+    return;
+  }
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    pdfCurrentDoc = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    pdfTotalPages = pdfCurrentDoc.numPages;
+    pdfCurrentPageNum = 1;
+    document.getElementById('pdfImportWrap').style.display = 'none';
+    document.getElementById('pdfViewerWrap').style.display = 'block';
+    await pdfRenderCurrentPage();
+  }catch(err){
+    alert('Could not open this PDF — please try a different file.');
+  }
+});
+async function pdfRenderCurrentPage(){
+  const page = await pdfCurrentDoc.getPage(pdfCurrentPageNum);
+  const viewport = page.getViewport({ scale: 1.3 });
+  const renderCanvas = document.getElementById('pdfRenderCanvas');
+  renderCanvas.width = viewport.width;
+  renderCanvas.height = viewport.height;
+  pdfRenderCtx = renderCanvas.getContext('2d');
+  await page.render({ canvasContext: pdfRenderCtx, viewport }).promise;
+
+  pdfAnnotationCanvasEl = document.getElementById('pdfAnnotationCanvas');
+  pdfAnnotationCanvasEl.width = viewport.width;
+  pdfAnnotationCanvasEl.height = viewport.height;
+  pdfAnnotationCtx = pdfAnnotationCanvasEl.getContext('2d');
+  pdfAnnotationCtx.lineCap = 'round';
+  pdfAnnotationCtx.lineJoin = 'round';
+  pdfAnnotationHistory = [pdfAnnotationCanvasEl.toDataURL()];
+  pdfAnnotationHistoryIndex = 0;
+  if(!pdfAnnotationCanvasEl.dataset.listenersAttached){
+    pdfAnnotationCanvasEl.addEventListener('pointerdown', pdfStartDraw);
+    pdfAnnotationCanvasEl.addEventListener('pointermove', pdfDraw);
+    pdfAnnotationCanvasEl.addEventListener('pointerup', pdfEndDraw);
+    pdfAnnotationCanvasEl.addEventListener('pointerleave', pdfEndDraw);
+    pdfAnnotationCanvasEl.dataset.listenersAttached = '1';
+  }
+
+  document.getElementById('pdfPageIndicator').textContent = `Page ${pdfCurrentPageNum} / ${pdfTotalPages}`;
+  document.getElementById('pdfPrevPageBtn').disabled = pdfCurrentPageNum === 1;
+  document.getElementById('pdfNextPageBtn').disabled = pdfCurrentPageNum === pdfTotalPages;
+}
+function pdfGetPos(e){
+  const rect = pdfAnnotationCanvasEl.getBoundingClientRect();
+  const scaleX = pdfAnnotationCanvasEl.width / rect.width;
+  const scaleY = pdfAnnotationCanvasEl.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+function pdfStartDraw(e){
+  e.preventDefault();
+  pdfDrawing = true;
+  const pos = pdfGetPos(e);
+  pdfLastX = pos.x; pdfLastY = pos.y;
+}
+function pdfDraw(e){
+  if(!pdfDrawing) return;
+  e.preventDefault();
+  const pos = pdfGetPos(e);
+  pdfAnnotationCtx.beginPath();
+  pdfAnnotationCtx.moveTo(pdfLastX, pdfLastY);
+  pdfAnnotationCtx.lineTo(pos.x, pos.y);
+  if(pdfCurrentTool === 'eraser'){
+    pdfAnnotationCtx.globalCompositeOperation = 'destination-out';
+    pdfAnnotationCtx.globalAlpha = 1;
+    pdfAnnotationCtx.lineWidth = 24;
+  } else if(pdfCurrentTool === 'highlighter'){
+    pdfAnnotationCtx.globalCompositeOperation = 'source-over';
+    pdfAnnotationCtx.globalAlpha = 0.35;
+    pdfAnnotationCtx.lineWidth = 16;
+    pdfAnnotationCtx.strokeStyle = pdfCurrentColor;
+  } else {
+    pdfAnnotationCtx.globalCompositeOperation = 'source-over';
+    pdfAnnotationCtx.globalAlpha = 1;
+    pdfAnnotationCtx.lineWidth = 3;
+    pdfAnnotationCtx.strokeStyle = pdfCurrentColor;
+  }
+  pdfAnnotationCtx.stroke();
+  pdfLastX = pos.x; pdfLastY = pos.y;
+}
+function pdfEndDraw(){
+  if(!pdfDrawing) return;
+  pdfDrawing = false;
+  pdfAnnotationHistory = pdfAnnotationHistory.slice(0, pdfAnnotationHistoryIndex + 1);
+  pdfAnnotationHistory.push(pdfAnnotationCanvasEl.toDataURL());
+  pdfAnnotationHistoryIndex = pdfAnnotationHistory.length - 1;
+}
+document.querySelectorAll('.pdf-tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    pdfCurrentTool = btn.dataset.tool;
+    document.querySelectorAll('.pdf-tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.querySelectorAll('.pdf-color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    pdfCurrentColor = btn.dataset.color;
+    document.querySelectorAll('.pdf-color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.getElementById('pdfUndoBtn').addEventListener('click', () => {
+  if(pdfAnnotationHistoryIndex > 0){
+    pdfAnnotationHistoryIndex--;
+    const img = new Image();
+    img.onload = () => {
+      pdfAnnotationCtx.clearRect(0, 0, pdfAnnotationCanvasEl.width, pdfAnnotationCanvasEl.height);
+      pdfAnnotationCtx.globalCompositeOperation = 'source-over';
+      pdfAnnotationCtx.globalAlpha = 1;
+      pdfAnnotationCtx.drawImage(img, 0, 0);
+    };
+    img.src = pdfAnnotationHistory[pdfAnnotationHistoryIndex];
+  }
+});
+document.getElementById('pdfClearBtn').addEventListener('click', () => {
+  pdfAnnotationCtx.clearRect(0, 0, pdfAnnotationCanvasEl.width, pdfAnnotationCanvasEl.height);
+  pdfAnnotationHistory = pdfAnnotationHistory.slice(0, pdfAnnotationHistoryIndex + 1);
+  pdfAnnotationHistory.push(pdfAnnotationCanvasEl.toDataURL());
+  pdfAnnotationHistoryIndex = pdfAnnotationHistory.length - 1;
+});
+document.getElementById('pdfPrevPageBtn').addEventListener('click', async () => {
+  if(pdfCurrentPageNum > 1){ pdfCurrentPageNum--; await pdfRenderCurrentPage(); }
+});
+document.getElementById('pdfNextPageBtn').addEventListener('click', async () => {
+  if(pdfCurrentPageNum < pdfTotalPages){ pdfCurrentPageNum++; await pdfRenderCurrentPage(); }
+});
+document.getElementById('pdfSavePageBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('pdfSavePageBtn');
+  btn.textContent = 'Saving…';
+  try{
+    // Merge the rendered page + annotation overlay into one flat image
+    const mergeCanvas = document.createElement('canvas');
+    mergeCanvas.width = pdfAnnotationCanvasEl.width;
+    mergeCanvas.height = pdfAnnotationCanvasEl.height;
+    const mergeCtx = mergeCanvas.getContext('2d');
+    mergeCtx.drawImage(document.getElementById('pdfRenderCanvas'), 0, 0);
+    mergeCtx.drawImage(pdfAnnotationCanvasEl, 0, 0);
+    const dataUrl = mergeCanvas.toDataURL('image/jpeg', 0.85);
+    const resized = await downscaleImage(dataUrl, 1400);
+    const imgId = 'img' + Date.now() + Math.random().toString(36).slice(2,7);
+    await saveNoteImage(imgId, resized);
+
+    const notes = getNotes();
+    if(!pdfNoteId){
+      const newNote = {
+        id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+        title: 'PDF Annotations — ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}),
+        body: '',
+        folder: 'PDF Annotations',
+        tags: [],
+        pinned: false,
+        revisionStatus: null,
+        reviewDateAD: null,
+        imageIds: [imgId],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+      };
+      notes.unshift(newNote);
+      pdfNoteId = newNote.id;
+    } else {
+      const idx = notes.findIndex(n => n.id === pdfNoteId);
+      if(idx !== -1){
+        notes[idx].imageIds = [...(notes[idx].imageIds || []), imgId];
+        notes[idx].updatedAt = new Date().toISOString();
+      }
+    }
+    saveNotes(notes);
+    btn.textContent = '✓ Page Saved';
+    setTimeout(() => { btn.textContent = '✓ Save This Page to Note'; }, 1500);
+  }catch(err){
+    alert('Could not save this page — please try again.');
+    btn.textContent = '✓ Save This Page to Note';
+  }
+});
+document.getElementById('pdfFinishBtn').addEventListener('click', () => {
+  showScreen(notesScreen);
+  renderNotes();
+});
 
 
 function renderProgressScreen(){
@@ -13480,67 +15104,366 @@ async function startSpeedChallenge(){
   }
 }
 
-// ---------- Flashcards: flip-card active recall, built entirely from existing MCQ data —
-// front = the question, back = the correct answer + explanation. No new content needed. ----------
+// ---------- Flash Cards: real spaced-repetition system. Decks and Cards are separate data
+// structures (hl_fc_decks, hl_fc_cards in localStorage) so a deck can hold many cards without
+// duplicating deck info on every card. Scheduling uses a simplified SM-2-style algorithm —
+// genuine spaced repetition with real due-dates, not cosmetic rating buttons. ----------
+function getFcDecks(){
+  try{ return JSON.parse(localStorage.getItem('hl_fc_decks') || '[]'); }catch(e){ return []; }
+}
+function saveFcDecks(decks){
+  try{ localStorage.setItem('hl_fc_decks', JSON.stringify(decks)); }catch(e){}
+}
+function getFcCards(){
+  try{ return JSON.parse(localStorage.getItem('hl_fc_cards') || '[]'); }catch(e){ return []; }
+}
+function saveFcCards(cards){
+  try{ localStorage.setItem('hl_fc_cards', JSON.stringify(cards)); }catch(e){}
+}
+function todayDateOnly(){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+function ensureDefaultFcDeck(){
+  let decks = getFcDecks();
+  if(decks.length === 0){
+    decks = [{ id: 'deck_default', name: 'General', createdAt: new Date().toISOString() }];
+    saveFcDecks(decks);
+  }
+  return decks;
+}
+
+// ---- Spaced repetition: Again/Difficult/Good/Easy, simplified SM-2 ----
+function fcApplyRating(card, rating){
+  const reps = card.repetitions || 0;
+  let interval = card.interval || 0;
+  let ease = card.easeFactor || 2.5;
+  if(rating === 'again'){
+    card.repetitions = 0;
+    card.interval = 0; // due again today
+    card.easeFactor = Math.max(1.3, ease - 0.2);
+  } else {
+    if(rating === 'difficult'){
+      card.easeFactor = Math.max(1.3, ease - 0.15);
+      interval = reps === 0 ? 1 : Math.max(1, Math.round(interval * 1.2));
+    } else if(rating === 'good'){
+      interval = reps === 0 ? 3 : (reps === 1 ? 6 : Math.round(interval * card.easeFactor));
+    } else if(rating === 'easy'){
+      card.easeFactor = ease + 0.15;
+      interval = reps === 0 ? 7 : Math.round(interval * card.easeFactor * 1.3);
+    }
+    card.repetitions = reps + 1;
+    card.interval = interval;
+  }
+  const nextDate = todayDateOnly();
+  nextDate.setDate(nextDate.getDate() + card.interval);
+  card.nextReviewDate = nextDate.toISOString().split('T')[0];
+  card.lastReviewedAt = new Date().toISOString();
+  // Mastery status auto-derived — students never manage this manually
+  if(card.repetitions === 0) card.status = 'new';
+  else if(card.interval < 7) card.status = 'learning';
+  else if(card.interval < 21) card.status = 'familiar';
+  else card.status = 'mastered';
+  card.updatedAt = new Date().toISOString();
+  return card;
+}
+function fcCardsDueToday(cards){
+  const today = todayDateOnly();
+  return cards.filter(c => {
+    if(!c.nextReviewDate) return true; // never reviewed — due immediately
+    const due = new Date(c.nextReviewDate + 'T00:00:00');
+    return due <= today;
+  });
+}
+
+// ---- Home screen ----
+function renderFlashcardsHome(){
+  const decks = ensureDefaultFcDeck();
+  const cards = getFcCards();
+  const dueCards = fcCardsDueToday(cards);
+  document.getElementById('fcDueCount').textContent = `${dueCards.length} card${dueCards.length === 1 ? '' : 's'}`;
+
+  document.getElementById('fcCardDeckSelect').innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+  const wrap = document.getElementById('fcDeckList');
+  if(decks.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No decks yet.</p>`;
+    return;
+  }
+  wrap.innerHTML = decks.map(deck => {
+    const deckCards = cards.filter(c => c.deckId === deck.id);
+    const deckDue = fcCardsDueToday(deckCards).length;
+    return `
+      <button class="note-item fc-deck-row" data-deck-id="${deck.id}" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center; border:none; cursor:pointer;">
+        <div>
+          <div class="ni-title">${deck.name}</div>
+          <div class="ni-meta">${deckCards.length} card${deckCards.length === 1 ? '' : 's'}${deckDue > 0 ? ` · ${deckDue} due` : ''}</div>
+        </div>
+        <span style="color:var(--ink-soft);">→</span>
+      </button>
+    `;
+  }).join('');
+  document.querySelectorAll('.fc-deck-row').forEach(btn => {
+    btn.addEventListener('click', () => openFcDeckDetail(btn.dataset.deckId));
+  });
+}
+document.getElementById('fcStartReviewBtn').addEventListener('click', () => {
+  const dueCards = fcCardsDueToday(getFcCards());
+  if(dueCards.length === 0){
+    alert('No cards due right now — nice work! Check back later or study a specific deck.');
+    return;
+  }
+  startFlashcardStudy(dueCards);
+});
+document.getElementById('fcCreateDeckBtn').addEventListener('click', () => {
+  const name = prompt('New deck name:');
+  if(!name || !name.trim()) return;
+  const decks = getFcDecks();
+  decks.push({ id: 'deck_' + Date.now(), name: name.trim(), createdAt: new Date().toISOString() });
+  saveFcDecks(decks);
+  renderFlashcardsHome();
+});
+document.getElementById('fcCreateCardBtn').addEventListener('click', () => openFcCardEdit(null));
+document.getElementById('fcProgressBtn').addEventListener('click', () => {
+  showScreen(fcProgressScreen);
+  renderFcProgress();
+});
+
+// ---- Deck detail ----
+let fcCurrentDeckId = null;
+function openFcDeckDetail(deckId){
+  fcCurrentDeckId = deckId;
+  const decks = getFcDecks();
+  const deck = decks.find(d => d.id === deckId);
+  if(!deck) return;
+  document.getElementById('fcDeckDetailTitle').textContent = `📚 ${deck.name}`;
+  const cards = getFcCards().filter(c => c.deckId === deckId);
+  const due = fcCardsDueToday(cards).length;
+  const mastered = cards.filter(c => c.status === 'mastered').length;
+  const masteryPct = cards.length ? Math.round((mastered / cards.length) * 100) : 0;
+  document.getElementById('fcDeckDetailStats').textContent = `${cards.length} cards · ${due} due · ${masteryPct}% mastery`;
+  const listEl = document.getElementById('fcDeckCardList');
+  if(cards.length === 0){
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No cards in this deck yet.</p>`;
+  } else {
+    const statusDot = { new:'var(--wrong)', learning:'var(--gold)', familiar:'#1976d2', mastered:'var(--correct)' };
+    listEl.innerHTML = cards.map(c => `
+      <button class="note-item fc-card-row" data-card-id="${c.id}" style="width:100%; text-align:left; border:none; cursor:pointer;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:${statusDot[c.status] || statusDot.new}; flex-shrink:0;"></span>
+          <span class="ni-title" style="font-size:13px;">${c.favorite ? '⭐ ' : ''}${c.front}</span>
+        </div>
+      </button>
+    `).join('');
+    document.querySelectorAll('.fc-card-row').forEach(btn => {
+      btn.addEventListener('click', () => openFcCardEdit(btn.dataset.cardId));
+    });
+  }
+  showScreen(fcDeckDetailScreen);
+}
+document.getElementById('fcStudyThisDeckBtn').addEventListener('click', () => {
+  const cards = getFcCards().filter(c => c.deckId === fcCurrentDeckId);
+  if(cards.length === 0){ alert('Add some cards to this deck first.'); return; }
+  startFlashcardStudy(cards);
+});
+document.getElementById('fcAddCardToDeckBtn').addEventListener('click', () => openFcCardEdit(null, fcCurrentDeckId));
+
+// ---- Create/Edit card ----
+let fcEditingCardId = null;
+let fcEditingCardImageId = null;
+function fcSetCardType(type){
+  document.querySelectorAll('.fc-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  document.getElementById('fcClozeHint').style.display = type === 'cloze' ? 'block' : 'none';
+  document.getElementById('fcCardFrontLabel').textContent = type === 'cloze' ? 'Text with blank' : 'Front';
+  document.getElementById('fcCardBackLabel').textContent = type === 'cloze' ? 'Answer for the blank' : 'Back (Answer)';
+}
+document.querySelectorAll('.fc-type-btn').forEach(btn => {
+  btn.addEventListener('click', () => fcSetCardType(btn.dataset.type));
+});
+async function fcShowCardImagePreview(imageId){
+  if(!imageId){
+    document.getElementById('fcCardImagePreviewWrap').style.display = 'none';
+    return;
+  }
+  const dataUrl = await getNoteImage(imageId).catch(() => null);
+  if(dataUrl){
+    document.getElementById('fcCardImagePreview').src = dataUrl;
+    document.getElementById('fcCardImagePreviewWrap').style.display = 'block';
+  }
+}
+document.getElementById('fcCardAddImageBtn').addEventListener('click', () => {
+  document.getElementById('fcCardImageFileInput').click();
+});
+document.getElementById('fcCardImageFileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  try{
+    const rawDataUrl = await fileToDataUrl(file);
+    const resized = await downscaleImage(rawDataUrl, 1000);
+    const imageId = 'img' + Date.now() + Math.random().toString(36).slice(2,7);
+    await saveNoteImage(imageId, resized);
+    fcEditingCardImageId = imageId;
+    fcShowCardImagePreview(imageId);
+  }catch(err){
+    alert('Could not add this image — please try again.');
+  }
+});
+document.getElementById('fcCardRemoveImageBtn').addEventListener('click', () => {
+  fcEditingCardImageId = null;
+  document.getElementById('fcCardImagePreviewWrap').style.display = 'none';
+});
+function openFcCardEdit(cardId, presetDeckId){
+  fcEditingCardId = cardId;
+  fcEditingCardImageId = null;
+  const decks = ensureDefaultFcDeck();
+  document.getElementById('fcCardDeckSelect').innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  if(cardId){
+    const card = getFcCards().find(c => c.id === cardId);
+    document.getElementById('fcCardEditTitle').textContent = '✏️ Edit Card';
+    document.getElementById('fcCardDeckSelect').value = card.deckId;
+    document.getElementById('fcCardFrontInput').value = card.front;
+    document.getElementById('fcCardBackInput').value = card.back;
+    document.getElementById('fcCardExampleInput').value = card.example || '';
+    document.getElementById('fcCardMnemonicInput').value = card.mnemonic || '';
+    document.getElementById('fcCardTagsInput').value = (card.tags || []).join(', ');
+    document.getElementById('fcCardFavoriteCheckbox').checked = !!card.favorite;
+    document.getElementById('fcDeleteCardBtn').style.display = 'block';
+    fcSetCardType(card.cardType || 'basic');
+    fcEditingCardImageId = card.imageId || null;
+    fcShowCardImagePreview(fcEditingCardImageId);
+  } else {
+    document.getElementById('fcCardEditTitle').textContent = '➕ Create Card';
+    document.getElementById('fcCardDeckSelect').value = presetDeckId || decks[0].id;
+    document.getElementById('fcCardFrontInput').value = '';
+    document.getElementById('fcCardBackInput').value = '';
+    document.getElementById('fcCardExampleInput').value = '';
+    document.getElementById('fcCardMnemonicInput').value = '';
+    document.getElementById('fcCardTagsInput').value = '';
+    document.getElementById('fcCardFavoriteCheckbox').checked = false;
+    document.getElementById('fcDeleteCardBtn').style.display = 'none';
+    fcSetCardType('basic');
+    document.getElementById('fcCardImagePreviewWrap').style.display = 'none';
+  }
+  showScreen(fcCardEditScreen);
+}
+document.getElementById('fcSaveCardBtn').addEventListener('click', () => {
+  const front = document.getElementById('fcCardFrontInput').value.trim();
+  const back = document.getElementById('fcCardBackInput').value.trim();
+  if(!front || !back){ alert('Please fill in both the front and back of the card.'); return; }
+  const cardType = document.querySelector('.fc-type-btn.active').dataset.type;
+  const cards = getFcCards();
+  const tagsRaw = document.getElementById('fcCardTagsInput').value;
+  const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+  if(fcEditingCardId){
+    const idx = cards.findIndex(c => c.id === fcEditingCardId);
+    if(idx !== -1){
+      cards[idx] = {
+        ...cards[idx],
+        deckId: document.getElementById('fcCardDeckSelect').value,
+        front, back, cardType, imageId: fcEditingCardImageId,
+        example: document.getElementById('fcCardExampleInput').value.trim(),
+        mnemonic: document.getElementById('fcCardMnemonicInput').value.trim(),
+        tags, favorite: document.getElementById('fcCardFavoriteCheckbox').checked,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+  } else {
+    cards.push({
+      id: 'card_' + Date.now() + Math.random().toString(36).slice(2,7),
+      deckId: document.getElementById('fcCardDeckSelect').value,
+      front, back, cardType, imageId: fcEditingCardImageId,
+      example: document.getElementById('fcCardExampleInput').value.trim(),
+      mnemonic: document.getElementById('fcCardMnemonicInput').value.trim(),
+      tags, favorite: document.getElementById('fcCardFavoriteCheckbox').checked,
+      status: 'new', repetitions: 0, easeFactor: 2.5, interval: 0, nextReviewDate: null, lastReviewedAt: null,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    });
+  }
+  saveFcCards(cards);
+  showScreen(flashcardsScreen);
+  renderFlashcardsHome();
+});
+document.getElementById('fcDeleteCardBtn').addEventListener('click', () => {
+  if(!confirm('Delete this card?')) return;
+  let cards = getFcCards();
+  cards = cards.filter(c => c.id !== fcEditingCardId);
+  saveFcCards(cards);
+  showScreen(flashcardsScreen);
+  renderFlashcardsHome();
+});
+
+// ---- Study session (flip card, 4-button rating) ----
 let flashcardsPool = [];
 let flashcardsIndex = 0;
 let flashcardsRevealed = false;
-
-async function startFlashcards(){
-  showScreen(flashcardsScreen);
-  document.getElementById('flashcardsWrap').innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
-  try{
-    const res = await fetch(`${SHEET_API_URL}?action=random&count=20&post=${currentMcqPost}`);
-    const pool = await res.json();
-    if(!pool || pool.length === 0){
-      document.getElementById('flashcardsWrap').innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No questions available yet.</p>`;
-      return;
-    }
-    flashcardsPool = pool;
-    flashcardsIndex = 0;
-    flashcardsRevealed = false;
-    renderFlashcard();
-  }catch(err){
-    document.getElementById('flashcardsWrap').innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load flashcards. Check your connection and try again.</p>`;
-  }
+let fcSessionStats = { mastered:0, familiar:0, learning:0 };
+function startFlashcardStudy(cardsToStudy){
+  flashcardsPool = cardsToStudy;
+  flashcardsIndex = 0;
+  flashcardsRevealed = false;
+  fcSessionStats = { mastered:0, familiar:0, learning:0 };
+  showScreen(fcStudyScreen);
+  renderFlashcard();
 }
-
 function renderFlashcard(){
   const wrap = document.getElementById('flashcardsWrap');
   if(flashcardsIndex >= flashcardsPool.length){
     wrap.innerHTML = `
       <div class="content-card" style="text-align:center;">
-        <h4 style="margin-bottom:8px;">🎉 Done!</h4>
-        <p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:14px;">You went through ${flashcardsPool.length} flashcard${flashcardsPool.length !== 1 ? 's' : ''}.</p>
-        <button class="start-btn" id="flashcardsRestartBtn" style="margin-top:0;">Start Another Batch</button>
+        <h4 style="margin-bottom:8px;">🎉 Session Complete</h4>
+        <p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:14px;">${flashcardsPool.length} card${flashcardsPool.length !== 1 ? 's' : ''} reviewed</p>
+        <div style="display:flex; justify-content:center; gap:16px; margin-bottom:16px; font-size:12.5px;">
+          <span>🟢 ${fcSessionStats.mastered}</span>
+          <span>🟡 ${fcSessionStats.familiar}</span>
+          <span>🟠 ${fcSessionStats.learning}</span>
+        </div>
+        <button class="start-btn" id="flashcardsDoneBtn" style="margin-top:0;">Done</button>
       </div>
     `;
-    document.getElementById('flashcardsRestartBtn').addEventListener('click', startFlashcards);
+    document.getElementById('flashcardsDoneBtn').addEventListener('click', () => {
+      showScreen(flashcardsScreen);
+      renderFlashcardsHome();
+    });
     return;
   }
 
   const q = flashcardsPool[flashcardsIndex];
-  const correctLetter = (q.CorrectAnswer || '').trim().toUpperCase();
-  const correctText = q['Option' + correctLetter] || '';
-
+  const isCloze = q.cardType === 'cloze';
+  const frontDisplay = isCloze ? q.front.replace(/___/g, '<span style="text-decoration:underline; opacity:0.6;">_____</span>') : q.front;
+  const backDisplay = isCloze ? q.front.replace(/___/g, `<b style="color:var(--correct);">${q.back}</b>`) : `<p style="font-weight:700; color:var(--correct); margin-bottom:8px;">${q.back}</p>`;
   wrap.innerHTML = `
-    <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-bottom:10px;">${flashcardsIndex + 1} of ${flashcardsPool.length}</p>
+    <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-bottom:10px;">Card ${flashcardsIndex + 1} of ${flashcardsPool.length}</p>
     <div class="flashcard" id="flashcardEl">
       <div class="flashcard-front">
-        <p>${q.Question}</p>
+        ${q.imageId ? `<img id="fcStudyFrontImg" style="width:100%; max-height:140px; object-fit:contain; border-radius:8px; margin-bottom:10px; display:none;">` : ''}
+        <p>${frontDisplay}</p>
         <p style="font-size:11.5px; color:var(--ink-soft); margin-top:14px;">Tap to reveal answer</p>
       </div>
       <div class="flashcard-back" style="display:none;">
-        <p style="font-weight:700; color:var(--correct); margin-bottom:8px;">✅ ${correctText}</p>
-        ${q.Explanation ? `<p style="font-size:12.5px; color:var(--ink-soft);">${q.Explanation}</p>` : ''}
+        ${q.imageId ? `<img id="fcStudyBackImg" style="width:100%; max-height:140px; object-fit:contain; border-radius:8px; margin-bottom:10px; display:none;">` : ''}
+        ${isCloze ? `<p style="font-weight:700; margin-bottom:8px;">${backDisplay}</p>` : backDisplay}
+        ${q.example ? `<p style="font-size:12px; color:var(--ink-soft); margin-bottom:6px;">💡 ${q.example}</p>` : ''}
+        ${q.mnemonic ? `<p style="font-size:12px; color:var(--gold);">🧠 ${q.mnemonic}</p>` : ''}
       </div>
     </div>
-    <div class="flashcard-rate-row" id="flashcardRatingRow" style="display:none;">
-      <button class="flashcard-rate-btn forgot" id="fcForgot">❌ Forgot</button>
-      <button class="flashcard-rate-btn difficult" id="fcDifficult">😐 Difficult</button>
-      <button class="flashcard-rate-btn easy" id="fcEasy">✅ Easy</button>
+    <div class="flashcard-rate-row" id="flashcardRatingRow" style="display:none; flex-wrap:wrap; gap:8px;">
+      <button class="flashcard-rate-btn forgot" id="fcAgain" style="flex:1;">😟 Again</button>
+      <button class="flashcard-rate-btn difficult" id="fcDifficultBtn" style="flex:1;">😐 Difficult</button>
+      <button class="flashcard-rate-btn" id="fcGood" style="flex:1; background:var(--panel-elevated); color:var(--ink); border:1.5px solid var(--line);">🙂 Good</button>
+      <button class="flashcard-rate-btn easy" id="fcEasyBtn" style="flex:1;">😎 Easy</button>
     </div>
   `;
+  if(q.imageId){
+    getNoteImage(q.imageId).then(dataUrl => {
+      if(!dataUrl) return;
+      const frontImg = document.getElementById('fcStudyFrontImg');
+      const backImg = document.getElementById('fcStudyBackImg');
+      if(frontImg){ frontImg.src = dataUrl; frontImg.style.display = 'block'; }
+      if(backImg){ backImg.src = dataUrl; backImg.style.display = 'block'; }
+    }).catch(() => {});
+  }
 
   document.getElementById('flashcardEl').addEventListener('click', () => {
     if(flashcardsRevealed) return;
@@ -13549,23 +15472,181 @@ function renderFlashcard(){
     document.querySelector('#flashcardEl .flashcard-back').style.display = 'block';
     document.getElementById('flashcardRatingRow').style.display = 'flex';
   });
-  document.getElementById('fcForgot').addEventListener('click', () => {
-    addToWrongQuestions(q); // feeds Revision Mode / Mistake Book, same as a wrong MCQ answer
+  const rate = (rating) => {
+    const cards = getFcCards();
+    const idx = cards.findIndex(c => c.id === q.id);
+    if(idx !== -1){
+      fcApplyRating(cards[idx], rating);
+      saveFcCards(cards);
+      const status = cards[idx].status;
+      if(status === 'mastered') fcSessionStats.mastered++;
+      else if(status === 'familiar') fcSessionStats.familiar++;
+      else fcSessionStats.learning++;
+    }
     nextFlashcard();
-  });
-  document.getElementById('fcDifficult').addEventListener('click', () => {
-    nextFlashcard(); // self-assessment only, no schedule change
-  });
-  document.getElementById('fcEasy').addEventListener('click', () => {
-    removeFromWrongQuestions(q); // if it was previously a mistake, mark it resolved
-    nextFlashcard();
-  });
+  };
+  document.getElementById('fcAgain').addEventListener('click', () => rate('again'));
+  document.getElementById('fcDifficultBtn').addEventListener('click', () => rate('difficult'));
+  document.getElementById('fcGood').addEventListener('click', () => rate('good'));
+  document.getElementById('fcEasyBtn').addEventListener('click', () => rate('easy'));
 }
 function nextFlashcard(){
   flashcardsIndex++;
   flashcardsRevealed = false;
   renderFlashcard();
 }
+
+// ---- Progress dashboard ----
+function renderFcProgress(){
+  const decks = getFcDecks();
+  const cards = getFcCards();
+  const learned = cards.filter(c => c.repetitions > 0).length;
+  const mastered = cards.filter(c => c.status === 'mastered').length;
+  const due = fcCardsDueToday(cards).length;
+  const overallMastery = cards.length ? Math.round((mastered / cards.length) * 100) : 0;
+  document.getElementById('fcStatLearned').textContent = learned;
+  document.getElementById('fcStatMastered').textContent = mastered;
+  document.getElementById('fcStatDue').textContent = due;
+  document.getElementById('fcStatMastery').textContent = overallMastery + '%';
+  document.getElementById('fcStatStreak').textContent = (typeof getStudyStreak === 'function' ? getStudyStreak() : 0) + ' days';
+
+  const byDeckEl = document.getElementById('fcProgressByDeck');
+  if(decks.length === 0){
+    byDeckEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">No decks yet.</p>`;
+    return;
+  }
+  byDeckEl.innerHTML = decks.map(deck => {
+    const deckCards = cards.filter(c => c.deckId === deck.id);
+    const deckMastered = deckCards.filter(c => c.status === 'mastered').length;
+    const pct = deckCards.length ? Math.round((deckMastered / deckCards.length) * 100) : 0;
+    return `<div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line); font-size:13px;"><span style="color:var(--ink-soft);">${deck.name}</span><span style="font-weight:700; color:var(--ink);">${pct}%</span></div>`;
+  }).join('');
+}
+document.getElementById('fcAiGenerateBtn').addEventListener('click', () => {
+  const decks = ensureDefaultFcDeck();
+  document.getElementById('fcAiDeckSelect').innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('fcAiSetupCard').style.display = 'block';
+  document.getElementById('fcAiResultsWrap').style.display = 'none';
+  showScreen(fcAiGenerateScreen);
+});
+document.getElementById('fcAiSourceSelect').addEventListener('change', (e) => {
+  document.getElementById('fcAiTopicField').style.display = e.target.value === 'topic' ? 'block' : 'none';
+});
+document.querySelectorAll('.fc-ai-num-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fc-ai-num-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+document.querySelectorAll('.fc-ai-diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fc-ai-diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+// ---------- AI-generated cards: reuses the exact same chat backend as AI Assistant and
+// AI-in-Notes — not a separate AI system. Asks for strict JSON so results become real,
+// individually editable card drafts, not a wall of text the user has to copy-paste. ----------
+let fcGeneratedDrafts = [];
+document.getElementById('fcAiGenerateSubmitBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('fcAiGenerateSubmitBtn');
+  const source = document.getElementById('fcAiSourceSelect').value;
+  const num = parseInt(document.querySelector('.fc-ai-num-btn.active').dataset.num, 10);
+  const difficulty = document.querySelector('.fc-ai-diff-btn.active').dataset.diff;
+
+  if(source === 'wrongmcqs'){
+    const wrongQs = getWrongQuestions().slice(0, num);
+    if(wrongQs.length === 0){
+      alert('No wrong MCQs found yet — answer some questions first, or generate from a Topic instead.');
+      return;
+    }
+    fcGeneratedDrafts = wrongQs.map(q => {
+      const correctLetter = (q.CorrectAnswer || '').trim().toUpperCase();
+      return {
+        front: q.Question,
+        back: q['Option' + correctLetter] || '',
+        example: q.Explanation || '',
+        mnemonic: '',
+      };
+    });
+    renderFcAiResults();
+    return;
+  }
+
+  const topic = document.getElementById('fcAiTopicInput').value.trim();
+  if(!topic){ alert('Please enter a topic.'); return; }
+  btn.textContent = '✨ Generating…';
+  btn.disabled = true;
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'chat',
+        message: `Generate exactly ${num} flashcards about "${topic}" at ${difficulty} difficulty, for a Nepal health Loksewa exam candidate. Respond with ONLY a JSON array, no other text, no markdown formatting, in this exact shape: [{"front":"question text","back":"answer text"}]`,
+        history: []
+      })
+    });
+    const data = await res.json();
+    const reply = data.reply || '';
+    const jsonMatch = reply.match(/\[[\s\S]*\]/);
+    if(!jsonMatch) throw new Error('No JSON found in response');
+    const parsed = JSON.parse(jsonMatch[0]);
+    fcGeneratedDrafts = parsed.filter(c => c.front && c.back).map(c => ({ front: c.front, back: c.back, example: '', mnemonic: '' }));
+    if(fcGeneratedDrafts.length === 0) throw new Error('No valid cards parsed');
+    renderFcAiResults();
+  }catch(err){
+    alert('Could not generate cards right now — please try again, or try a more specific topic.');
+  }finally{
+    btn.textContent = '✨ Generate';
+    btn.disabled = false;
+  }
+});
+function renderFcAiResults(){
+  document.getElementById('fcAiSetupCard').style.display = 'none';
+  document.getElementById('fcAiResultsWrap').style.display = 'block';
+  document.getElementById('fcAiResultsList').innerHTML = fcGeneratedDrafts.map((c, i) => `
+    <div class="calc-card" style="margin-bottom:10px;">
+      <div style="display:flex; align-items:flex-start; gap:8px;">
+        <input type="checkbox" class="fc-ai-include-checkbox" data-idx="${i}" checked style="margin-top:4px;">
+        <div style="flex:1;">
+          <input type="text" class="fc-ai-front-input" data-idx="${i}" value="${c.front.replace(/"/g, '&quot;')}" style="width:100%; padding:6px; border:1.5px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); font-size:12.5px; font-weight:700; margin-bottom:6px;">
+          <textarea class="fc-ai-back-input" data-idx="${i}" style="width:100%; min-height:44px; padding:6px; border:1.5px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); font-size:12px;">${c.back}</textarea>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.fc-ai-front-input').forEach(input => {
+    input.addEventListener('input', (e) => { fcGeneratedDrafts[parseInt(e.target.dataset.idx, 10)].front = e.target.value; });
+  });
+  document.querySelectorAll('.fc-ai-back-input').forEach(input => {
+    input.addEventListener('input', (e) => { fcGeneratedDrafts[parseInt(e.target.dataset.idx, 10)].back = e.target.value; });
+  });
+}
+document.getElementById('fcAiSaveSelectedBtn').addEventListener('click', () => {
+  const deckId = document.getElementById('fcAiDeckSelect').value;
+  const included = [];
+  document.querySelectorAll('.fc-ai-include-checkbox').forEach(cb => {
+    if(cb.checked) included.push(fcGeneratedDrafts[parseInt(cb.dataset.idx, 10)]);
+  });
+  if(included.length === 0){ alert('Select at least one card to save.'); return; }
+  const cards = getFcCards();
+  included.forEach(draft => {
+    cards.push({
+      id: 'card_' + Date.now() + Math.random().toString(36).slice(2,7),
+      deckId, front: draft.front, back: draft.back,
+      example: draft.example || '', mnemonic: draft.mnemonic || '', tags: [], favorite: false,
+      status: 'new', repetitions: 0, easeFactor: 2.5, interval: 0, nextReviewDate: null, lastReviewedAt: null,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    });
+  });
+  saveFcCards(cards);
+  fcGeneratedDrafts = [];
+  showScreen(flashcardsScreen);
+  renderFlashcardsHome();
+  alert(`Saved ${included.length} card${included.length === 1 ? '' : 's'}.`);
+});
+
 
 // ---------- Battle Challenge: asynchronous — not truly live/simultaneous, but same
 // competitive spirit. One person creates a challenge (10 random questions), gets a share
