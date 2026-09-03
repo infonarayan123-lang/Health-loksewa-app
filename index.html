@@ -2668,12 +2668,18 @@
     <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div class="section-title">🧠 Flash Cards</div>
-      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;">Learn faster. Remember longer.</p>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;">Learn faster. Remember longer.</p>
+      <div class="calc-field"><input type="text" id="fcSearchInput" placeholder="🔍 Search cards..." style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></div>
+      <div id="fcSearchResults" style="display:none; margin-bottom:16px;"></div>
 
+      <div id="fcHomeMainContent">
       <div class="calc-card" id="fcDueCard" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff;">
         <div style="font-size:12px; opacity:0.9;">🔥 Due for Review</div>
         <div id="fcDueCount" style="font-size:32px; font-weight:800; margin:6px 0;">0 cards</div>
-        <button class="calc-btn" id="fcStartReviewBtn" style="margin:0; background:#fff; color:var(--crimson);">Start Review</button>
+        <div style="display:flex; gap:8px;">
+          <button class="calc-btn" id="fcStartReviewBtn" style="margin:0; flex:1; background:#fff; color:var(--crimson);">Start Review</button>
+          <button class="calc-btn" id="fcSmartReviewBtn" style="margin:0; flex:1; background:rgba(255,255,255,0.2); color:#fff; border:1.5px solid rgba(255,255,255,0.5);">🎯 Smart Review</button>
+        </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin:18px 0 10px;">
@@ -2687,6 +2693,7 @@
         <button class="calc-btn" id="fcAiGenerateBtn" style="margin:0; flex:1; font-size:12.5px;">🤖 Generate with AI</button>
       </div>
       <button class="calc-btn" id="fcProgressBtn" style="margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📊 Progress</button>
+      </div>
     </div>
   </div>
 
@@ -15215,6 +15222,65 @@ document.getElementById('fcStartReviewBtn').addEventListener('click', () => {
     return;
   }
   startFlashcardStudy(dueCards);
+});
+// ---------- Smart Review: automatically builds one mixed session instead of the student
+// having to decide what to study — 40% due, 30% weak (low ease-factor, struggled before),
+// 20% from recently-wrong MCQs, 10% favorited/important, per the document's suggested split.
+// Falls back to plain due-cards if there aren't enough cards to fill every category. ----------
+document.getElementById('fcSmartReviewBtn').addEventListener('click', () => {
+  const allCards = getFcCards();
+  if(allCards.length === 0){ alert('Create some cards first.'); return; }
+  const dueCards = fcCardsDueToday(allCards);
+  const weakCards = allCards.filter(c => (c.easeFactor || 2.5) < 2.0 && c.repetitions > 0);
+  const favoriteCards = allCards.filter(c => c.favorite);
+  const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+  const targetSize = Math.max(10, Math.min(30, dueCards.length || allCards.length));
+  const picked = new Set();
+  const takeFrom = (pool, count) => {
+    shuffle(pool).forEach(c => { if(picked.size < targetSize && !picked.has(c.id)) picked.add(c.id); });
+  };
+  takeFrom(dueCards, Math.round(targetSize * 0.4));
+  takeFrom(weakCards, Math.round(targetSize * 0.3));
+  takeFrom(favoriteCards, Math.round(targetSize * 0.1));
+  // Fill any remaining slots with more due cards, then any cards at all, so a session never
+  // comes up short just because one category was empty
+  if(picked.size < targetSize) takeFrom(dueCards, targetSize - picked.size);
+  if(picked.size < targetSize) takeFrom(allCards, targetSize - picked.size);
+  const session = allCards.filter(c => picked.has(c.id));
+  if(session.length === 0){ alert('No cards available for Smart Review yet.'); return; }
+  startFlashcardStudy(shuffle(session));
+});
+// ---------- Search: filters across front/back/tags, live as you type ----------
+document.getElementById('fcSearchInput').addEventListener('input', (e) => {
+  const query = e.target.value.trim().toLowerCase();
+  const mainContent = document.getElementById('fcHomeMainContent');
+  const resultsWrap = document.getElementById('fcSearchResults');
+  if(!query){
+    mainContent.style.display = 'block';
+    resultsWrap.style.display = 'none';
+    return;
+  }
+  mainContent.style.display = 'none';
+  resultsWrap.style.display = 'block';
+  const matches = getFcCards().filter(c =>
+    c.front.toLowerCase().includes(query) ||
+    c.back.toLowerCase().includes(query) ||
+    (c.tags || []).some(t => t.toLowerCase().includes(query))
+  );
+  if(matches.length === 0){
+    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No cards match "${e.target.value}".</p>`;
+    return;
+  }
+  resultsWrap.innerHTML = matches.map(c => `
+    <button class="note-item fc-search-result-row" data-card-id="${c.id}" style="width:100%; text-align:left; border:none; cursor:pointer;">
+      <div class="ni-title" style="font-size:13px;">${c.favorite ? '⭐ ' : ''}${c.front}</div>
+      <div class="ni-meta">${c.back.slice(0, 60)}${c.back.length > 60 ? '…' : ''}</div>
+      ${(c.tags && c.tags.length) ? `<div class="ni-tags">${c.tags.map(t => `<span class="ni-tag">#${t}</span>`).join('')}</div>` : ''}
+    </button>
+  `).join('');
+  document.querySelectorAll('.fc-search-result-row').forEach(btn => {
+    btn.addEventListener('click', () => openFcCardEdit(btn.dataset.cardId));
+  });
 });
 document.getElementById('fcCreateDeckBtn').addEventListener('click', () => {
   const name = prompt('New deck name:');
