@@ -2900,6 +2900,16 @@
           <div style="font-size:22px; font-weight:800; color:var(--gold); line-height:1;" id="cprCompressionCount">0</div>
           <div style="font-size:9.5px; color:var(--ink-soft); margin-top:2px;">compressions · <span id="cprCompressionRate">100–120</span>/min</div>
         </div>
+        <div id="cprCycleHud" style="display:none; position:absolute; top:12px; left:12px; background:rgba(11,21,38,0.85); border-radius:10px; padding:10px; align-items:center; gap:10px;">
+          <svg width="56" height="56" viewBox="0 0 72 72" style="transform:rotate(-90deg);">
+            <circle cx="36" cy="36" r="30" fill="none" stroke="#243854" stroke-width="7"/>
+            <circle id="cprCycleRing" cx="36" cy="36" r="30" fill="none" stroke="#C9A227" stroke-width="7" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"/>
+          </svg>
+          <div>
+            <div style="font-size:12.5px; font-weight:800; color:var(--ink);" id="cprCyclePhaseLabel">30 COMPRESSIONS</div>
+            <div style="font-size:10px; color:var(--ink-soft); margin-top:1px;" id="cprCycleProgressLabel">0 / 30</div>
+          </div>
+        </div>
         <div style="position:absolute; bottom:8px; left:0; right:0; text-align:center; font-size:10.5px; color:rgba(255,255,255,0.5); pointer-events:none;">Drag to rotate · Pinch/scroll to zoom</div>
       </div>
 
@@ -9708,7 +9718,9 @@ function cprResetRescuerPose(){
   if(!cprRescuerGroup) return;
   cprCompressionActive = false;
   clearInterval(cprCompressionInterval);
+  cprCycleActive = false;
   document.getElementById('cprCompressionHud').style.display = 'none';
+  document.getElementById('cprCycleHud').style.display = 'none';
   cprRescuerGroup.position.set(0, 0, 0);
   cprRescuerGroup.scale.set(1, 1, 1);
   const arms = cprRescuerGroup.getObjectByName('arms');
@@ -9779,6 +9791,88 @@ function cprRestartCompressions(){
   const torso = cprRescuerGroup.getObjectByName('torso');
   if(arms) arms.position.y = 0.85;
   if(torso) torso.rotation.x = Math.PI / 1.9;
+}
+
+// ---------- 30:2 Automatic Cycle: links compressions and breaths into one real repeating loop.
+// Deliberately does NOT reuse cprRunOneCompression/cprCompressionCount — those belong to Step 4's
+// own standalone HUD, and sharing them here would mean the two steps' counters silently fight
+// each other if a user switches between them. This cycle keeps its own fully separate counter and
+// visual ring. Every delayed step uses the cprStepGeneration guard from Phase 6, applied from the
+// start this time (not retrofitted) — a 30-beat-plus-breaths loop repeating indefinitely is
+// exactly the highest-risk case for a stray callback firing after the user has navigated away. ----------
+let cprCycleActive = false;
+const CPR_CYCLE_RING_CIRCUMFERENCE = 188.5; // 2 * PI * 30, matching the SVG ring's radius
+function cprUpdateCycleRing(current, max, phaseLabel){
+  const ring = document.getElementById('cprCycleRing');
+  const frac = Math.max(0, Math.min(1, current / max));
+  ring.setAttribute('stroke-dashoffset', CPR_CYCLE_RING_CIRCUMFERENCE * (1 - frac));
+  document.getElementById('cprCyclePhaseLabel').textContent = phaseLabel;
+  document.getElementById('cprCycleProgressLabel').textContent = `${current} / ${max}`;
+}
+function cprCycleCompressionBeat(myGen, count){
+  if(!cprCycleActive || cprStepGeneration !== myGen) return;
+  const arms = cprRescuerGroup.getObjectByName('arms');
+  const torso = cprRescuerGroup.getObjectByName('torso');
+  cprPlayBeep();
+  cprTween(160, t => {
+    if(cprStepGeneration !== myGen) return;
+    const offset = Math.sin(t * Math.PI) * 0.16;
+    if(arms) arms.position.y = 0.85 - offset;
+    if(torso) torso.rotation.x = (Math.PI / 1.9) + offset * 0.4;
+  }, () => {
+    if(cprStepGeneration !== myGen || !cprCycleActive) return;
+    cprUpdateCycleRing(count, 30, '30 COMPRESSIONS');
+    if(count < 30){
+      setTimeout(() => cprCycleCompressionBeat(myGen, count + 1), 385);
+    } else {
+      setTimeout(() => cprCycleGiveBreaths(myGen, 1), 400);
+    }
+  });
+}
+function cprCycleGiveBreaths(myGen, breathNum){
+  if(!cprCycleActive || cprStepGeneration !== myGen) return;
+  const head = cprRescuerGroup.getObjectByName('head');
+  const torso = cprRescuerGroup.getObjectByName('torso');
+  const patientTorso = cprPatientGroup.getObjectByName('patientTorso');
+  cprUpdateCycleRing(breathNum - 1, 2, '2 BREATHS');
+  cprTween(500, t => {
+    if(cprStepGeneration !== myGen) return;
+    if(torso) torso.rotation.x = (Math.PI / 1.9) + ((Math.PI / 1.75) - (Math.PI / 1.9)) * t;
+    if(head) head.position.y = 0.85 + (1.35 - 0.85) * t;
+  }, () => {
+    if(cprStepGeneration !== myGen || !cprCycleActive) return;
+    cprTween(450, t => {
+      if(cprStepGeneration !== myGen) return;
+      if(patientTorso){ const s = 1 + 0.05 * Math.sin(t * Math.PI); patientTorso.scale.set(1, s, 1); }
+    }, () => {
+      if(cprStepGeneration !== myGen || !cprCycleActive) return;
+      cprUpdateCycleRing(breathNum, 2, '2 BREATHS');
+      if(breathNum < 2){
+        setTimeout(() => cprCycleGiveBreaths(myGen, breathNum + 1), 400);
+      } else {
+        // Loop back to compressions — repeat indefinitely until the user stops the cycle
+        setTimeout(() => {
+          if(cprStepGeneration !== myGen || !cprCycleActive) return;
+          const arms = cprRescuerGroup.getObjectByName('arms');
+          cprTween(400, t => {
+            if(cprStepGeneration !== myGen) return;
+            if(torso) torso.rotation.x = (Math.PI / 1.75) + ((Math.PI / 1.9) - (Math.PI / 1.75)) * t;
+            if(head) head.position.y = 1.35 + (0.85 - 1.35) * t;
+          }, () => cprCycleCompressionBeat(myGen, 1));
+        }, 500);
+      }
+    });
+  });
+}
+function cprStartCycle(){
+  if(cprCycleActive) return;
+  cprCycleActive = true;
+  document.getElementById('cprPlayBtn').textContent = '⏸ Stop Cycle';
+  cprCycleCompressionBeat(cprStepGeneration, 1);
+}
+function cprStopCycle(){
+  cprCycleActive = false;
+  document.getElementById('cprPlayBtn').textContent = '▶ Play';
 }
 
 const cprSteps = [
@@ -9961,7 +10055,21 @@ const cprSteps = [
       }
     }
   },
-  { label: '30:2 CYCLE', text: '30 compressions, then 2 breaths — repeat until help arrives.' },
+  {
+    label: '30:2 CYCLE',
+    text: '30 compressions, then 2 breaths — repeat until help arrives. Tap ▶ Play to start the cycle.',
+    play: function(){
+      const arms = cprRescuerGroup.getObjectByName('arms');
+      const torso = cprRescuerGroup.getObjectByName('torso');
+      cprTween(600, t => {
+        if(arms) arms.position.y = 1.55 + (0.85 - 1.55) * t;
+        if(torso) torso.rotation.x = (Math.PI / 2.6) + ((Math.PI / 1.9) - (Math.PI / 2.6)) * t;
+      }, () => {
+        document.getElementById('cprCycleHud').style.display = 'flex';
+        cprUpdateCycleRing(0, 30, '30 COMPRESSIONS');
+      });
+    }
+  },
   { label: 'AED', text: 'Turn on the AED, attach the pads as shown, and follow its voice instructions.' },
 ];
 let cprCurrentStep = 0;
@@ -9979,11 +10087,15 @@ function cprGoToStep(index){
 document.getElementById('cprPrevBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep - 1));
 document.getElementById('cprNextBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep + 1));
 document.getElementById('cprPlayBtn').addEventListener('click', () => {
-  // Compressions are a continuous loop — Play becomes a real play/pause toggle for it, once the
-  // step has actually settled into position (HUD visible). Every other step just replays.
+  // Compressions and the 30:2 cycle are continuous loops — Play becomes a real play/pause
+  // toggle for them, once the step has actually settled into position (HUD visible). Every
+  // other step just replays.
   const compressionsReady = cprCurrentStep === 3 && document.getElementById('cprCompressionHud').style.display === 'block';
+  const cycleReady = cprCurrentStep === 5 && document.getElementById('cprCycleHud').style.display === 'flex';
   if(compressionsReady){
     cprCompressionActive ? cprPauseCompressions() : cprStartCompressions();
+  } else if(cycleReady){
+    cprCycleActive ? cprStopCycle() : cprStartCycle();
   } else {
     cprGoToStep(cprCurrentStep);
   }
@@ -9991,6 +10103,9 @@ document.getElementById('cprPlayBtn').addEventListener('click', () => {
 document.getElementById('cprReplayBtn').addEventListener('click', () => {
   if(cprCurrentStep === 3 && document.getElementById('cprCompressionHud').style.display === 'block'){
     cprRestartCompressions();
+  } else if(cprCurrentStep === 5 && document.getElementById('cprCycleHud').style.display === 'flex'){
+    cprStopCycle();
+    cprUpdateCycleRing(0, 30, '30 COMPRESSIONS');
   } else {
     cprGoToStep(cprCurrentStep);
   }
