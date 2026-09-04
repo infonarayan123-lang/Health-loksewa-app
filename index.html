@@ -9486,6 +9486,7 @@ let cprCompressionCount = 0;
 let cprCompressionInterval = null;
 let cprSlowMotion = false;
 let cprAudioCtx = null;
+let cprStepGeneration = 0;
 let cprAnimFrameId = null;
 
 function cprLimbMesh(radiusTop, radiusBottom, length, color){
@@ -9901,13 +9902,72 @@ const cprSteps = [
       });
     }
   },
-  { label: 'RESCUE BREATHS', text: 'After 30 compressions, give 2 rescue breaths if trained and willing.' },
+  {
+    label: 'RESCUE BREATHS',
+    text: 'After 30 compressions, give 2 rescue breaths if trained and willing.',
+    play: function(){
+      // Guards every delayed callback below against firing after the user has already
+      // navigated to a different step — without this, a queued setTimeout from this step's
+      // multi-second breath sequence could still land and silently pose the WRONG step's
+      // figure a moment later. Caught this risk while building this step, not after it shipped.
+      const myGen = cprStepGeneration;
+      const stillHere = () => cprStepGeneration === myGen;
+
+      const arms = cprRescuerGroup.getObjectByName('arms');
+      const torso = cprRescuerGroup.getObjectByName('torso');
+      const head = cprRescuerGroup.getObjectByName('head');
+      if(arms) arms.visible = false; // hands leave the chest to reposition at the head
+
+      // Lean in toward the patient's head/airway — same properties Step 3 already uses and
+      // resets, just different target values for this closer, lower position
+      cprTween(700, t => {
+        if(!stillHere()) return;
+        if(torso) torso.rotation.x = (Math.PI / 2.6) + ((Math.PI / 1.75) - (Math.PI / 2.6)) * t;
+        if(head){
+          head.position.x = 1.1 + (0.05 - 1.1) * t;
+          head.position.y = 2.05 + (1.35 - 2.05) * t;
+        }
+      }, () => {
+        if(!stillHere()) return;
+        cprShowSpeechBubble('Tilt head, lift chin — open the airway.', 1800);
+        setTimeout(() => { if(stillHere()) giveBreath(1); }, 1900);
+      });
+
+      function giveBreath(count){
+        if(!stillHere()) return;
+        const patientTorso = cprPatientGroup.getObjectByName('patientTorso');
+        cprShowSpeechBubble(`Breath ${count} of 2`, 1300);
+        cprTween(500, t => {
+          if(!stillHere()) return;
+          if(head) head.position.y = 1.35 - 0.1 * Math.sin(t * Math.PI);
+        }, () => {
+          if(!stillHere()) return;
+          cprTween(450, t => {
+            if(!stillHere()) return;
+            if(patientTorso){
+              const s = 1 + 0.05 * Math.sin(t * Math.PI);
+              patientTorso.scale.set(1, s, 1);
+            }
+          }, () => {
+            if(!stillHere()) return;
+            if(count < 2) setTimeout(() => { if(stillHere()) giveBreath(count + 1); }, 400);
+            else{
+              setTimeout(() => {
+                if(stillHere()) cprShowSpeechBubble('Not trained or not comfortable? Continue hands-only compressions instead.', 3200);
+              }, 400);
+            }
+          });
+        });
+      }
+    }
+  },
   { label: '30:2 CYCLE', text: '30 compressions, then 2 breaths — repeat until help arrives.' },
   { label: 'AED', text: 'Turn on the AED, attach the pads as shown, and follow its voice instructions.' },
 ];
 let cprCurrentStep = 0;
 function cprGoToStep(index){
   cprCurrentStep = Math.max(0, Math.min(cprSteps.length - 1, index));
+  cprStepGeneration++; // any in-flight delayed callback from a previous step checks this and no-ops
   const step = cprSteps[cprCurrentStep];
   document.getElementById('cprStepCounter').textContent = `Step ${cprCurrentStep + 1} of ${cprSteps.length}`;
   document.getElementById('cprStepLabel').textContent = step.label;
