@@ -6013,6 +6013,13 @@ function showScreen(el){
     navHistoryStack.push(currentActive);
     if(navHistoryStack.length > 30) navHistoryStack.shift(); // cap — avoid unbounded growth over a long session
   }
+  // Leaving the CPR 3D Demo — stop its WebGL render loop rather than let it keep rendering an
+  // invisible canvas forever in the background (real battery/CPU drain on Android otherwise;
+  // requestAnimationFrame has no automatic "screen not visible" awareness on its own).
+  if(currentActive === cprDemoScreen && el !== cprDemoScreen && cprAnimFrameId !== null){
+    cancelAnimationFrame(cprAnimFrameId);
+    cprAnimFrameId = null;
+  }
   suppressHistoryPush = false;
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
   el.classList.add('active');
@@ -9647,6 +9654,19 @@ function cprAnimate(){
   cprUpdateCamera();
   cprRenderer.render(cprScene, cprCamera);
 }
+// Pause the render loop when the browser tab itself is backgrounded (e.g. switching apps on
+// Android) while the CPR Demo is the active screen — the showScreen() cleanup above only
+// catches navigating to a different screen within the app, not the OS putting the whole tab in
+// the background, which still leaves requestAnimationFrame running otherwise. Registered once
+// at the top level, not per screen-visit, to avoid stacking duplicate listeners.
+document.addEventListener('visibilitychange', () => {
+  if(!cprInitialized || !cprDemoScreen.classList.contains('active')) return;
+  if(document.hidden){
+    if(cprAnimFrameId !== null){ cancelAnimationFrame(cprAnimFrameId); cprAnimFrameId = null; }
+  } else {
+    if(cprAnimFrameId === null) cprAnimate();
+  }
+});
 function cprInitScene(){
   if(cprInitialized) return; // build once — reused every time the screen reopens
   const canvas = document.getElementById('cprCanvas3d');
@@ -9669,7 +9689,9 @@ function cprInitScene(){
   const key = new THREE.DirectionalLight(0xffffff, 1.1);
   key.position.set(4, 8, 5);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(512, 512); // 1024 was heavier than this simple scene needs — real
+  // shadow-pass cost scales with resolution squared, so this is a genuine 4x reduction in that
+  // work for a scene this basic, with no visible quality loss given the low-poly geometry itself
   cprScene.add(key);
   const rim = new THREE.DirectionalLight(0x14B8A6, 0.4);
   rim.position.set(-5, 3, -4);
@@ -10211,6 +10233,11 @@ function openCprDemoScreen(){
   const tryInit = () => {
     if(typeof THREE !== 'undefined'){
       cprInitScene();
+      // cprInitScene() only calls cprAnimate() on the very first build — on a repeat visit it
+      // early-returns entirely (correctly, to avoid rebuilding the scene), which would otherwise
+      // leave the render loop permanently stopped after showScreen()'s cleanup above, freezing
+      // the scene on every visit after the first. Explicitly restart it here if it's not running.
+      if(cprAnimFrameId === null) cprAnimate();
       loadingMsg.style.display = 'none';
       cprGoToStep(0);
       return;
