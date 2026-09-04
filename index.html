@@ -9606,6 +9606,36 @@ function cprBuildRescuer(){
 
   cprScene.add(cprRescuerGroup);
 }
+function cprBuildAed(){
+  // AED case sits beside the patient's hip, closed by default — visible throughout every step
+  // (a real AED would already be on scene), matching real placement rather than teleporting in
+  // only during Step 7.
+  const aedGroup = new THREE.Group();
+  const caseMat = new THREE.MeshStandardMaterial({ color: 0xC9A227, roughness: 0.4 });
+  const caseBody = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.09, 0.4), caseMat);
+  caseBody.castShadow = true; caseBody.receiveShadow = true;
+  aedGroup.add(caseBody);
+  const screen = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.01, 0.12),
+    new THREE.MeshStandardMaterial({ color: 0x14B8A6, emissive: 0x0D9488, emissiveIntensity: 0 }));
+  screen.position.set(0, 0.05, 0);
+  screen.name = 'aedScreen';
+  aedGroup.add(screen);
+  aedGroup.position.set(1.55, 0.05, 1.75);
+  aedGroup.name = 'aed';
+  cprScene.add(aedGroup);
+
+  // Two pads, stored flat on the case until Step 7 moves them onto the patient's chest —
+  // positions match real AED placement: upper-right below the collarbone, lower-left ribs
+  const padMat = new THREE.MeshStandardMaterial({ color: 0xE8E4D8, roughness: 0.6 });
+  const padUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.015, 16), padMat);
+  padUpper.position.set(1.55, 0.1, 1.6);
+  padUpper.name = 'aedPadUpper';
+  cprScene.add(padUpper);
+  const padLower = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.015, 16), padMat.clone());
+  padLower.position.set(1.55, 0.1, 1.9);
+  padLower.name = 'aedPadLower';
+  cprScene.add(padLower);
+}
 function cprUpdateCamera(){
   cprCamera.position.x = cprDist * Math.sin(cprRotY) * Math.cos(cprRotX);
   cprCamera.position.y = cprDist * Math.sin(-cprRotX) + 1.5;
@@ -9653,6 +9683,7 @@ function cprInitScene(){
 
   cprBuildPatient();
   cprBuildRescuer();
+  cprBuildAed();
   cprAnimate();
 
   // Drag/touch to orbit, wheel to zoom
@@ -9737,6 +9768,12 @@ function cprResetRescuerPose(){
     const highlight = cprPatientGroup.getObjectByName('chestHighlight');
     if(highlight) highlight.material.opacity = 0;
   }
+  const aedScreen = cprScene.getObjectByName('aedScreen');
+  if(aedScreen) aedScreen.material.emissiveIntensity = 0;
+  const padUpper = cprScene.getObjectByName('aedPadUpper');
+  if(padUpper) padUpper.position.set(1.55, 0.1, 1.6);
+  const padLower = cprScene.getObjectByName('aedPadLower');
+  if(padLower) padLower.position.set(1.55, 0.1, 1.9);
 }
 
 // ---------- Chest Compressions: the one continuous, user-controlled loop among the steps
@@ -10070,7 +10107,47 @@ const cprSteps = [
       });
     }
   },
-  { label: 'AED', text: 'Turn on the AED, attach the pads as shown, and follow its voice instructions.' },
+  {
+    label: 'AED',
+    text: 'Turn on the AED, attach the pads as shown, and follow its voice instructions.',
+    play: function(){
+      const myGen = cprStepGeneration;
+      const stillHere = () => cprStepGeneration === myGen;
+      const arms = cprRescuerGroup.getObjectByName('arms');
+      const aedScreen = cprScene.getObjectByName('aedScreen');
+      const padUpper = cprScene.getObjectByName('aedPadUpper');
+      const padLower = cprScene.getObjectByName('aedPadLower');
+      if(arms) arms.visible = false;
+
+      cprShowSpeechBubble('Turning on the AED…', 1400);
+      cprTween(500, t => {
+        if(!stillHere() || !aedScreen) return;
+        aedScreen.material.emissiveIntensity = t;
+      }, () => {
+        if(!stillHere()) return;
+        setTimeout(() => {
+          if(!stillHere()) return;
+          cprShowSpeechBubble('Attaching pads…', 1600);
+          const upperStart = padUpper.position.clone(), upperEnd = new THREE.Vector3(0.65, 1.15, 0.85);
+          const lowerStart = padLower.position.clone(), lowerEnd = new THREE.Vector3(-0.15, 1.05, 1.55);
+          cprTween(900, t => {
+            if(!stillHere()) return;
+            if(padUpper) padUpper.position.lerpVectors(upperStart, upperEnd, t);
+            if(padLower) padLower.position.lerpVectors(lowerStart, lowerEnd, t);
+          }, () => {
+            if(!stillHere()) return;
+            setTimeout(() => {
+              if(!stillHere()) return;
+              cprShowSpeechBubble('Follow the AED\'s voice instructions.', 2400);
+              setTimeout(() => {
+                if(stillHere()) cprShowSpeechBubble('⚠️ Stand clear — do not touch the patient during analysis or shock.', 3400);
+              }, 2500);
+            }, 400);
+          });
+        }, 300);
+      });
+    }
+  },
 ];
 let cprCurrentStep = 0;
 function cprGoToStep(index){
