@@ -990,21 +990,24 @@
   }
   .font-size-btn.active{ border-color:var(--navy); background:var(--navy); color:#fff; }
   .exam-type-btn{
-    display:flex; align-items:center; gap:10px;
-    width:100%; padding:11px 12px; margin-bottom:7px;
+    display:flex; align-items:center; gap:8px;
+    padding:10px 10px; margin-bottom:0;
     border:1.5px solid var(--line); border-radius:9px;
     background:var(--panel); color:var(--ink);
-    font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
     text-align:left;
+  }
+  #examTypeRow, #postGateRow{
+    display:grid; grid-template-columns:1fr 1fr; gap:8px;
   }
   .exam-type-btn.active{ border-color:var(--navy); background:var(--correct-bg); }
   .exam-type-btn .radio-dot{
-    width:16px; height:16px; border-radius:50%; border:2px solid var(--line);
+    width:15px; height:15px; border-radius:50%; border:2px solid var(--line);
     flex-shrink:0; display:flex; align-items:center; justify-content:center;
   }
   .exam-type-btn.active .radio-dot{ border-color:var(--navy); }
   .exam-type-btn.active .radio-dot::after{
-    content:''; width:8px; height:8px; border-radius:50%; background:var(--navy);
+    content:''; width:7px; height:7px; border-radius:50%; background:var(--navy);
   }
   .password-field-wrap{ position:relative; }
   .password-field-wrap input{
@@ -2009,6 +2012,15 @@
       <div class="countdown-banner" id="countdownBanner"></div>
       <div class="countdown-dots" id="countdownDots"></div>
 
+      <div id="homeHealthDayCard" style="display:none; margin:0 16px 16px; padding:14px 16px; border-radius:12px; background:var(--panel); border:1px solid var(--line); cursor:pointer;">
+        <div style="font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">📅 HEALTH DAY</div>
+        <div id="homeHealthDayTitle" style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:2px;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span id="homeHealthDayCountdown" style="font-size:12px; color:var(--gold); font-weight:600;"></span>
+          <span style="font-size:12px; color:var(--navy); font-weight:700;">Explore →</span>
+        </div>
+      </div>
+
       <div id="homePromoBanner" style="display:none; margin:16px 16px 16px;"></div>
 
       <div class="section-title" style="padding:0 16px; margin:4px 0 10px; color:var(--ink); font-size:14px; font-weight:700;">🌐 Web Portal</div>
@@ -2293,6 +2305,40 @@
     </div>
   </div>
 
+  <!-- Shared Premium Lock modal — replaces the old hardcoded "NPR 200/month" confirm() dialogs
+       scattered across locked features. Always shows the REAL current price from pricingPlansList
+       (same data source as the actual Upgrade screen), with a genuine strikethrough original price
+       and discount badge when a discount is active — not static text that goes stale. -->
+  <div id="premiumLockBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
+  <div id="premiumLockModal" style="display:none; position:fixed; left:8%; right:8%; top:25%; background:var(--panel-elevated); border-radius:16px; padding:24px; z-index:81; text-align:center;">
+    <div id="premiumLockMessage" style="font-size:13.5px; color:var(--ink); margin-bottom:16px; line-height:1.5;"></div>
+    <div id="premiumLockPriceWrap" style="margin-bottom:18px;">
+      <span id="premiumLockBasePrice" style="display:none; font-size:13px; color:var(--ink-soft); text-decoration:line-through; margin-right:8px;"></span>
+      <span id="premiumLockFinalPrice" style="font-size:20px; font-weight:800; color:var(--ink);"></span>
+      <span id="premiumLockDiscountBadge" style="display:none; margin-left:6px; font-size:11px; font-weight:700; color:#fff; background:var(--crimson); padding:2px 8px; border-radius:10px;"></span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="calc-btn" id="premiumLockUpgradeBtn" style="margin:0; flex:1;">See Premium Plans</button>
+      <button class="calc-btn" id="premiumLockCancelBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Not Now</button>
+    </div>
+  </div>
+
+  <!-- Health Day startup card — a small once-per-day prompt shown on the way into Home when a
+       health day is within 7 days, not a full screen/big popup (matching the architecture
+       document's explicit "keep it professional, not annoying" guidance). -->
+  <div id="healthDayStartupBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
+  <div id="healthDayStartupCard" style="display:none; position:fixed; left:8%; right:8%; top:28%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:81; text-align:center;">
+    <div id="hdStartupIcon" style="font-size:32px; margin-bottom:8px;">📅</div>
+    <div id="hdStartupBadge" style="font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;">Upcoming Health Day</div>
+    <div id="hdStartupTitle" style="font-size:16px; font-weight:700; color:var(--ink); margin-bottom:4px;"></div>
+    <div id="hdStartupCountdown" style="font-size:13px; color:var(--gold); font-weight:700; margin-bottom:12px;"></div>
+    <p id="hdStartupDesc" style="font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin-bottom:18px;"></p>
+    <div style="display:flex; gap:8px;">
+      <button class="calc-btn" id="hdStartupLearnMoreBtn" style="margin:0; flex:1;">Learn More</button>
+      <button class="calc-btn" id="hdStartupSkipBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Skip</button>
+    </div>
+  </div>
+
   <!-- PREMIUM UPGRADE SCREEN — payment methods only, no feature list/table here (see Profile > Account Status for that) -->
   <div class="screen" id="upgradeScreen">
     <div class="back-link" data-back="premiumBack">← Back</div>
@@ -2526,13 +2572,8 @@
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToStudyResourcesFromLearn">
         <div class="dc-icon">📚</div>
-        <div class="dc-label">Study Resources</div>
+        <div class="dc-label">Handbook</div>
         <div class="dc-sub">Notes &amp; references</div>
-      </a>
-      <a class="dash-card hub-tile t5" href="#" id="goToResourcesFromLearn">
-        <div class="dc-icon">🌐</div>
-        <div class="dc-label">Resources &amp; News</div>
-        <div class="dc-sub">Notices &amp; e-papers</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToSmartToolsFromLearn">
         <div class="dc-icon">🧮</div>
@@ -2826,8 +2867,62 @@
     <div class="home-body">
       <div class="section-title">🩺 Health Guide</div>
       <p style="font-size:12px; color:var(--ink-soft); margin-bottom:16px;">Basic health education — general information only, not medical advice or diagnosis.</p>
+
+      <a href="#" id="goToCprDemoBtn" class="content-card" style="display:block; text-decoration:none; margin-bottom:16px; background:linear-gradient(135deg,#0D9488,#14B8A6);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:11px; font-weight:700; color:rgba(255,255,255,0.85); margin-bottom:4px;">INTERACTIVE 3D DEMO</div>
+            <div style="font-size:16px; font-weight:800; color:#fff;">🫀 CPR — Save a Life</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.85); margin-top:3px;">Step-by-step practical demonstration</div>
+          </div>
+          <span style="color:#fff; font-size:20px;">→</span>
+        </div>
+      </a>
+
       <div id="healthGuideContent">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="cprDemoScreen">
+    <div class="back-link" data-back="healthGuide">← Back</div>
+    <div class="home-body" style="padding-bottom:10px;">
+      <div style="text-align:center; margin-bottom:4px;">
+        <div style="font-family:'Tinos',serif; font-size:19px; font-weight:800; color:var(--ink);">CPR — SAVE A LIFE</div>
+      </div>
+
+      <div id="cprStageWrap" style="background:linear-gradient(180deg,#1a2842,#0e1729); border-radius:16px; aspect-ratio:4/3; position:relative; overflow:hidden; margin:12px 0;">
+        <canvas id="cprCanvas3d" style="width:100%; height:100%; display:block; touch-action:none;"></canvas>
+        <div id="cprLoadingMsg" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:12px;">Loading 3D scene…</div>
+        <div id="cprSpeechBubble" style="display:none; position:absolute; top:14px; right:14px; max-width:65%; background:#fff; color:#1a1a1a; padding:8px 12px; border-radius:12px 12px 2px 12px; font-size:12.5px; font-weight:600; box-shadow:0 4px 10px rgba(0,0,0,0.3);"></div>
+        <div id="cprCompressionHud" style="display:none; position:absolute; top:12px; left:12px; background:rgba(11,21,38,0.85); border-radius:10px; padding:8px 12px;">
+          <div style="font-size:22px; font-weight:800; color:var(--gold); line-height:1;" id="cprCompressionCount">0</div>
+          <div style="font-size:9.5px; color:var(--ink-soft); margin-top:2px;">compressions · <span id="cprCompressionRate">100–120</span>/min</div>
+        </div>
+        <div style="position:absolute; bottom:8px; left:0; right:0; text-align:center; font-size:10.5px; color:rgba(255,255,255,0.5); pointer-events:none;">Drag to rotate · Pinch/scroll to zoom</div>
+      </div>
+
+      <div style="text-align:center; font-size:12px; color:var(--ink-soft); margin-bottom:10px;" id="cprStepCounter">Step 1 of 7</div>
+
+      <div class="calc-card" style="margin-bottom:12px;">
+        <div style="font-size:11px; font-weight:700; color:var(--teal-soft); margin-bottom:6px;" id="cprStepLabel">CHECK RESPONSE</div>
+        <p style="font-size:14px; line-height:1.55; color:var(--ink); margin:0;" id="cprStepText">Tap the shoulders and shout "Are you OK?" Check for normal breathing for no more than 10 seconds.</p>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <button class="calc-btn" id="cprPrevBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">← Previous</button>
+        <button class="calc-btn" id="cprPlayBtn" style="margin:0; flex:1; font-size:12.5px;">▶ Play</button>
+        <button class="calc-btn" id="cprNextBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">Next →</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;">
+        <button class="calc-btn" id="cprReplayBtn" style="margin:0; width:auto; padding:8px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔄 Replay</button>
+        <button class="calc-btn" id="cprSlowMoBtn" style="margin:0; width:auto; padding:8px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Slow Motion</button>
+        <button class="calc-btn" id="cprFullscreenBtn" style="margin:0; width:auto; padding:8px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⛶ Fullscreen</button>
+      </div>
+
+      <div style="background:rgba(229,72,77,0.08); border:1px solid rgba(229,72,77,0.35); border-radius:10px; padding:11px 13px; font-size:11px; line-height:1.6; color:var(--ink-soft);">
+        This educational demonstration does not replace certified first-aid/CPR training. Follow local emergency-service instructions. Content follows the 2025 American Heart Association Guidelines for CPR &amp; ECC.
       </div>
     </div>
   </div>
@@ -2856,7 +2951,7 @@
   <div class="screen" id="studyResourcesScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
     <div class="home-body">
-      <div class="section-title">📚 Study Resources</div>
+      <div class="section-title">📚 Handbook</div>
       <div class="dash-grid">
       <a class="dash-card hub-tile t1" href="#" id="goToFormulaFromHub">
         <div class="dc-icon">🔢</div>
@@ -2901,9 +2996,65 @@
   <div class="screen" id="healthDaysScreen">
     <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
-      <div class="section-title">📅 Health Days</div>
-      <input type="text" class="formula-search-box" id="healthDaysSearchBox" placeholder="Search… e.g. TB, AIDS, immunization">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="section-title" style="margin:0;">📅 Health Days</div>
+        <button class="calc-btn" id="healthDaysCalendarBtn" style="margin:0; width:auto; padding:7px 12px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🗓️ Calendar</button>
+      </div>
+      <input type="text" class="formula-search-box" id="healthDaysSearchBox" placeholder="Search… e.g. TB, AIDS, immunization" style="margin-top:10px;">
       <div id="healthDaysListContent"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="healthDayCalendarScreen">
+    <div class="back-link" data-back="healthDays">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="hdCalendarYearTitle">🗓️ 2026</div>
+      <div id="hdCalendarMonthGrid" style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:16px;"></div>
+      <div id="hdCalendarMonthDetail" style="display:none;">
+        <button class="calc-btn" id="hdCalendarBackToGridBtn" style="margin-bottom:12px; width:auto; padding:7px 12px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">← All Months</button>
+        <div class="section-title" id="hdCalendarMonthTitle" style="font-size:15px;"></div>
+        <div id="hdCalendarMonthList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="healthDayDetailScreen">
+    <div class="back-link" data-back="healthDays">← Back</div>
+    <div class="home-body">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+        <div class="section-title" id="hdDetailTitle" style="margin:0;">Health Day</div>
+        <div style="display:flex; gap:6px;">
+          <button class="calc-btn" id="hdNotifyBtn" style="margin:0; width:auto; padding:7px 12px; font-size:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔕</button>
+          <button class="calc-btn" id="hdBookmarkBtn" style="margin:0; width:auto; padding:7px 12px; font-size:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔖</button>
+        </div>
+      </div>
+      <div id="hdExamImportantBadge" style="display:none; font-size:11px; font-weight:700; color:#fff; background:var(--crimson); padding:3px 10px; border-radius:10px; margin-bottom:8px; width:fit-content;">📌 EXAM IMPORTANT</div>
+      <p id="hdDetailDate" style="font-size:13px; color:var(--ink-soft); margin-bottom:16px;"></p>
+
+      <div class="calc-card">
+        <h4>📖 About</h4>
+        <p id="hdDetailAbout" style="font-size:13.5px; color:var(--ink); line-height:1.6;"></p>
+      </div>
+
+      <div class="calc-card" id="hdKeyMessageCard" style="margin-top:12px; display:none;">
+        <h4>🎯 Key Message</h4>
+        <p id="hdDetailKeyMessage" style="font-size:13.5px; color:var(--ink); line-height:1.6;"></p>
+      </div>
+
+      <div class="calc-card" id="hdExamPointCard" style="margin-top:12px; display:none;">
+        <h4>📌 Exam Point</h4>
+        <p id="hdDetailExamPoint" style="font-size:13.5px; color:var(--ink); line-height:1.6;"></p>
+      </div>
+
+      <div class="calc-card" id="hdThemeCard" style="margin-top:12px; display:none;">
+        <h4>🏷️ Theme</h4>
+        <p id="hdDetailTheme" style="font-size:13.5px; color:var(--gold); font-weight:700;"></p>
+      </div>
+
+      <div style="display:flex; gap:8px; margin:16px 0;">
+        <button class="calc-btn" id="hdShareBtn" style="margin:0; flex:1; font-size:12.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📤 Share</button>
+        <button class="calc-btn" id="hdExploreGoogleBtn" style="margin:0; flex:1; font-size:12.5px;">🔎 Explore on Google</button>
+      </div>
     </div>
   </div>
 
@@ -2912,6 +3063,18 @@
     <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
       <div class="section-title">📚 Health Dictionary</div>
+      <input type="text" id="dictionarySearchBox" placeholder="🔍 Search a term..." style="width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:9px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13.5px; margin-bottom:8px;">
+      <div id="dictionaryRecentChips" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:8px;"></div>
+      <div id="dictionaryTermsList" style="margin-bottom:16px;"></div>
+      <div id="dictionaryExternalSearch" style="display:none; margin-bottom:16px;">
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:8px;">Not in the Health Dictionary? Search with:</p>
+        <div style="display:flex; gap:8px;">
+          <button class="calc-btn" id="dictionaryGoogleBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🌐 Google</button>
+          <button class="calc-btn" id="dictionaryGoogleBooksBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📚 Google Books</button>
+          <button class="calc-btn" id="dictionaryDotComBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📖 Dictionary.com</button>
+        </div>
+      </div>
+      <p style="font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;">📄 Dictionary PDFs</p>
       <div id="dictionaryPdfLinks"></div>
     </div>
   </div>
@@ -5638,12 +5801,17 @@
 <!-- QRCode.js — used for the Smart Tools QR Generator -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+<!-- Three.js r128 (pinned — same version already verified working in an earlier CPR demo build;
+     newer versions use CapsuleGeometry which r128 doesn't have) — powers the CPR 3D Demo.
+     Loaded with `defer` so a slow/unreachable CDN can never block the app itself from loading. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+
 <script>
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw966a7er_NNvRMoflVieRiAxBKEc5dnuz2T0yFN9id_zAPSiomtrRjOOK4iVjpYG4ZPA/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw5qEF_l8T2bEcb_cYWyRH7SvSJA8Vsh8j0y6bBvlyQ5YwOwHgo9yV2raV8dsjm2XEcWA/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -5696,6 +5864,7 @@ const fcProgressScreen = document.getElementById('fcProgressScreen');
 const fcAiGenerateScreen = document.getElementById('fcAiGenerateScreen');
 const fcCommunityScreen = document.getElementById('fcCommunityScreen');
 const healthGuideScreen = document.getElementById('healthGuideScreen');
+const cprDemoScreen = document.getElementById('cprDemoScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const battleScreen = document.getElementById('battleScreen');
 const rapidFireScreen = document.getElementById('rapidFireScreen');
@@ -5703,6 +5872,8 @@ const rapidFireSetupScreen = document.getElementById('rapidFireSetupScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
+const healthDayDetailScreen = document.getElementById('healthDayDetailScreen');
+const healthDayCalendarScreen = document.getElementById('healthDayCalendarScreen');
 const dictionaryScreen = document.getElementById('dictionaryScreen');
 const calculatorScreen = document.getElementById('calculatorScreen');
 const basicCalcScreen = document.getElementById('basicCalcScreen');
@@ -5784,13 +5955,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -5943,7 +6114,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -5975,11 +6146,6 @@ document.getElementById('goToVideoFromLearn').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(videoScreen);
   renderVideoLessons();
-});
-document.getElementById('goToResourcesFromLearn').addEventListener('click', (e) => {
-  e.preventDefault();
-  showScreen(resourcesScreen);
-  renderResources();
 });
 document.getElementById('goToStudyResourcesFromLearn').addEventListener('click', (e) => {
   e.preventDefault();
@@ -6349,6 +6515,226 @@ document.getElementById('goToHealthDaysFromHub').addEventListener('click', (e) =
 });
 // Populated from the "Health Days" Google Sheet tab — see loadStudyResourcesData() below
 let HEALTH_DAYS = [];
+// ---------- Health Day Engine: one shared set of date-calculation functions, used by the list,
+// the detail screen, and (in a later phase) the Home card and 7-day countdown — so "today's
+// health day" and "days remaining" are computed identically everywhere, not recalculated
+// separately in three places. Dates are stored without a year (annual observances), so this
+// works out the days-until using the current year, wrapping to next year if already passed. ----------
+function parseHealthDayDate(dateStr){
+  if(!dateStr) return null;
+  const currentYear = new Date().getFullYear();
+  let attempt = new Date(`${dateStr} ${currentYear}`);
+  if(isNaN(attempt.getTime())){
+    // Try swapping "25 January" -> "January 25" in case the Sheet stores day-first
+    const parts = dateStr.trim().split(/\s+/);
+    if(parts.length === 2) attempt = new Date(`${parts[1]} ${parts[0]} ${currentYear}`);
+  }
+  if(isNaN(attempt.getTime())) return null;
+  attempt.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  // If this year's date has already passed, the next occurrence is next year
+  if(attempt < today){
+    attempt.setFullYear(currentYear + 1);
+  }
+  return attempt;
+}
+function daysUntilHealthDay(dateStr){
+  const parsed = parseHealthDayDate(dateStr);
+  if(!parsed) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((parsed - today) / (1000 * 60 * 60 * 24));
+}
+function isHealthDayToday(dateStr){
+  return daysUntilHealthDay(dateStr) === 0;
+}
+// The single nearest health day (today or soonest upcoming) — used by both the startup card
+// and the Home screen card, so they never disagree with each other.
+function getNextUpcomingHealthDay(){
+  let nearest = null, nearestDays = Infinity;
+  HEALTH_DAYS.forEach(d => {
+    const days = daysUntilHealthDay(d.date);
+    if(days !== null && days < nearestDays){ nearest = d; nearestDays = days; }
+  });
+  return nearest ? { day: nearest, daysUntil: nearestDays } : null;
+}
+// Persistent Home screen card — same Engine data as the startup card, but always visible when
+// something is within 7 days (not gated behind "shown once today"), per the document's Home
+// Screen Integration section: one small dynamic card, not a separate feature.
+function renderHomeHealthDayCard(){
+  const card = document.getElementById('homeHealthDayCard');
+  if(!card) return;
+  const upcoming = getNextUpcomingHealthDay();
+  if(!upcoming || upcoming.daysUntil > 7){
+    card.style.display = 'none';
+    return;
+  }
+  document.getElementById('homeHealthDayTitle').textContent = upcoming.day.title;
+  document.getElementById('homeHealthDayCountdown').textContent = upcoming.daysUntil === 0 ? '🔴 Today' : `⏳ ${upcoming.daysUntil} day${upcoming.daysUntil === 1 ? '' : 's'} to go`;
+  card.style.display = 'block';
+  card.onclick = () => openHealthDayDetail(upcoming.day);
+}
+
+// ---------- Health Day startup card: shown once per specific health day per day (tracked as
+// {title, dateShown}), on the way into Home for a returning user — not a big popup on every
+// app open, matching the architecture document's explicit intent. Gracefully does nothing (just
+// proceeds straight to Home) if Health Days data hasn't finished loading yet, or nothing is
+// within the 7-day window, or today's card was already shown/skipped. ----------
+function getHealthDayStartupShown(){
+  try{ return JSON.parse(localStorage.getItem('hl_healthday_startup_shown') || 'null'); }catch(e){ return null; }
+}
+function markHealthDayStartupShown(title){
+  try{ localStorage.setItem('hl_healthday_startup_shown', JSON.stringify({ title, dateShown: todayISO() })); }catch(e){}
+}
+function checkAndShowHealthDayStartupCard(){
+  const upcoming = getNextUpcomingHealthDay();
+  if(!upcoming || upcoming.daysUntil > 7){
+    showScreen(homeScreen);
+    return;
+  }
+  const shown = getHealthDayStartupShown();
+  if(shown && shown.title === upcoming.day.title && shown.dateShown === todayISO()){
+    showScreen(homeScreen);
+    return;
+  }
+  // Fire a real notification here if the user opted in for this specific health day — this is
+  // the one moment the app reliably knows it's open, since there's no background push
+  // infrastructure to schedule one at an arbitrary later time.
+  if(isHealthDayNotifyEnabled(upcoming.day.title) && 'Notification' in window && Notification.permission === 'granted'){
+    try{
+      new Notification(`📅 ${upcoming.day.title}`, {
+        body: upcoming.daysUntil === 0 ? 'Today!' : `${upcoming.daysUntil} day${upcoming.daysUntil === 1 ? '' : 's'} remaining. Tap to learn more.`,
+      });
+    }catch(e){}
+  }
+  currentHealthDayDetail = upcoming.day;
+  document.getElementById('hdStartupBadge').textContent = upcoming.daysUntil === 0 ? '🔴 Today' : 'Upcoming Health Day';
+  document.getElementById('hdStartupTitle').textContent = upcoming.day.title;
+  document.getElementById('hdStartupCountdown').textContent = upcoming.daysUntil === 0 ? 'Today!' : `${upcoming.daysUntil} day${upcoming.daysUntil === 1 ? '' : 's'} to go`;
+  document.getElementById('hdStartupDesc').textContent = upcoming.day.desc || `Learn why ${upcoming.day.title} matters.`;
+  document.getElementById('healthDayStartupBackdrop').style.display = 'block';
+  document.getElementById('healthDayStartupCard').style.display = 'block';
+}
+document.getElementById('hdStartupSkipBtn').addEventListener('click', () => {
+  if(currentHealthDayDetail) markHealthDayStartupShown(currentHealthDayDetail.title);
+  document.getElementById('healthDayStartupBackdrop').style.display = 'none';
+  document.getElementById('healthDayStartupCard').style.display = 'none';
+  showScreen(homeScreen);
+});
+document.getElementById('hdStartupLearnMoreBtn').addEventListener('click', () => {
+  if(currentHealthDayDetail) markHealthDayStartupShown(currentHealthDayDetail.title);
+  document.getElementById('healthDayStartupBackdrop').style.display = 'none';
+  document.getElementById('healthDayStartupCard').style.display = 'none';
+  openHealthDayDetail(currentHealthDayDetail);
+});
+
+// ---------- Health Day bookmarks: a separate, dedicated store — the existing bookmark system
+// is shaped specifically for MCQs (Subject+Question keyed), so a parallel one here avoids
+// mixing shapes into it. ----------
+function getHealthDayBookmarks(){
+  try{ return JSON.parse(localStorage.getItem('hl_healthday_bookmarks') || '[]'); }catch(e){ return []; }
+}
+function isHealthDayBookmarked(title){
+  return getHealthDayBookmarks().includes(title);
+}
+function toggleHealthDayBookmark(title){
+  let list = getHealthDayBookmarks();
+  if(list.includes(title)) list = list.filter(t => t !== title);
+  else list.unshift(title);
+  try{ localStorage.setItem('hl_healthday_bookmarks', JSON.stringify(list)); }catch(e){}
+}
+
+// ---------- Health Day notifications: honest scope — this app has no server-push/background
+// scheduling infrastructure (the existing daily study reminder has the same limitation, openly
+// disclosed there). So rather than promise scheduled delivery this app can't actually provide,
+// "notify me" here fires a REAL browser Notification at the one moment this app reliably knows
+// it's open and checking: the same startup check built for Phase 2's countdown card. Genuinely
+// works, just only while/when the app is opened — not a background push. ----------
+function getHealthDayNotifyPrefs(){
+  try{ return JSON.parse(localStorage.getItem('hl_healthday_notify_prefs') || '[]'); }catch(e){ return []; }
+}
+function isHealthDayNotifyEnabled(title){
+  return getHealthDayNotifyPrefs().includes(title);
+}
+function toggleHealthDayNotify(title){
+  let list = getHealthDayNotifyPrefs();
+  if(list.includes(title)) list = list.filter(t => t !== title);
+  else list.unshift(title);
+  try{ localStorage.setItem('hl_healthday_notify_prefs', JSON.stringify(list)); }catch(e){}
+}
+
+let currentHealthDayDetail = null;
+function openHealthDayDetail(day){
+  currentHealthDayDetail = day;
+  document.getElementById('hdDetailTitle').textContent = day.title;
+  const days = daysUntilHealthDay(day.date);
+  document.getElementById('hdDetailDate').textContent = days === 0 ? `📅 ${day.date} — 🔴 Today` : `📅 ${day.date}${days !== null ? ` — ${days} day${days === 1 ? '' : 's'} to go` : ''}`;
+  document.getElementById('hdDetailAbout').textContent = day.desc || 'No description available yet.';
+
+  document.getElementById('hdExamImportantBadge').style.display = day.examRelevant ? 'inline-block' : 'none';
+
+  const kmCard = document.getElementById('hdKeyMessageCard');
+  if(day.keyMessage){ kmCard.style.display = 'block'; document.getElementById('hdDetailKeyMessage').textContent = day.keyMessage; }
+  else kmCard.style.display = 'none';
+
+  const epCard = document.getElementById('hdExamPointCard');
+  if(day.examPoint){ epCard.style.display = 'block'; document.getElementById('hdDetailExamPoint').textContent = day.examPoint; }
+  else epCard.style.display = 'none';
+
+  const themeCard = document.getElementById('hdThemeCard');
+  if(day.theme){ themeCard.style.display = 'block'; document.getElementById('hdDetailTheme').textContent = day.theme; }
+  else themeCard.style.display = 'none';
+
+  const bookmarkBtn = document.getElementById('hdBookmarkBtn');
+  bookmarkBtn.textContent = isHealthDayBookmarked(day.title) ? '🔖' : '🏷️';
+  bookmarkBtn.style.color = isHealthDayBookmarked(day.title) ? 'var(--gold)' : 'var(--ink)';
+
+  const notifyBtn = document.getElementById('hdNotifyBtn');
+  notifyBtn.textContent = isHealthDayNotifyEnabled(day.title) ? '🔔' : '🔕';
+  notifyBtn.style.color = isHealthDayNotifyEnabled(day.title) ? 'var(--gold)' : 'var(--ink)';
+
+  showScreen(healthDayDetailScreen);
+}
+document.getElementById('hdBookmarkBtn').addEventListener('click', () => {
+  if(!currentHealthDayDetail) return;
+  toggleHealthDayBookmark(currentHealthDayDetail.title);
+  const bookmarkBtn = document.getElementById('hdBookmarkBtn');
+  const nowBookmarked = isHealthDayBookmarked(currentHealthDayDetail.title);
+  bookmarkBtn.textContent = nowBookmarked ? '🔖' : '🏷️';
+  bookmarkBtn.style.color = nowBookmarked ? 'var(--gold)' : 'var(--ink)';
+});
+document.getElementById('hdNotifyBtn').addEventListener('click', async () => {
+  if(!currentHealthDayDetail) return;
+  const wasEnabled = isHealthDayNotifyEnabled(currentHealthDayDetail.title);
+  if(!wasEnabled && 'Notification' in window){
+    try{
+      const permission = await Notification.requestPermission();
+      if(permission !== 'granted'){
+        alert('Notifications are blocked for this app — enable them in your phone/browser settings first.');
+        return;
+      }
+    }catch(e){}
+  }
+  toggleHealthDayNotify(currentHealthDayDetail.title);
+  const notifyBtn = document.getElementById('hdNotifyBtn');
+  const nowEnabled = isHealthDayNotifyEnabled(currentHealthDayDetail.title);
+  notifyBtn.textContent = nowEnabled ? '🔔' : '🔕';
+  notifyBtn.style.color = nowEnabled ? 'var(--gold)' : 'var(--ink)';
+});
+document.getElementById('hdShareBtn').addEventListener('click', async () => {
+  if(!currentHealthDayDetail) return;
+  const shareText = `${currentHealthDayDetail.title} — ${currentHealthDayDetail.date}\n\n${currentHealthDayDetail.desc || ''}`;
+  if(navigator.share){
+    try{ await navigator.share({ title: currentHealthDayDetail.title, text: shareText }); }catch(e){}
+  } else {
+    try{ await navigator.clipboard.writeText(shareText); alert('Copied — paste it anywhere to share.'); }catch(e){}
+  }
+});
+document.getElementById('hdExploreGoogleBtn').addEventListener('click', () => {
+  if(!currentHealthDayDetail) return;
+  const query = currentHealthDayDetail.searchQuery || currentHealthDayDetail.title;
+  window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+});
+
 function renderHealthDays(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
   const filtered = term
@@ -6359,15 +6745,87 @@ function renderHealthDays(searchTerm){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No results for "${searchTerm}".</p>`;
     return;
   }
-  wrap.innerHTML = filtered.map(d => `
-    <div class="healthday-item">
+  wrap.innerHTML = filtered.map((d, i) => {
+    const days = daysUntilHealthDay(d.date);
+    const badge = days === 0 ? `<span style="color:var(--wrong); font-weight:700; font-size:11px;">🔴 TODAY</span>` :
+      (days !== null && days <= 7 ? `<span style="color:var(--gold); font-weight:700; font-size:11px;">⏳ ${days}d</span>` : '');
+    return `
+    <div class="healthday-item health-day-row" data-index="${i}" style="cursor:pointer;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="hd-date">📅 ${d.date}</div>
+        ${badge}
+      </div>
+      <div class="hd-title">${d.title}</div>
+      <div class="hd-desc">${d.desc}</div>
+    </div>
+  `;
+  }).join('');
+  document.querySelectorAll('.health-day-row').forEach(row => {
+    row.addEventListener('click', () => openHealthDayDetail(filtered[parseInt(row.dataset.index, 10)]));
+  });
+}
+document.getElementById('healthDaysSearchBox').addEventListener('input', (e) => renderHealthDays(e.target.value));
+
+// ---------- Year Calendar: the reference/browse layer — reuses the same HEALTH_DAYS data and
+// the Engine's date parsing, just grouped by month instead of filtered by search text or
+// days-until. Doesn't reuse parseHealthDayDate directly, since that function's "wrap to next
+// year if already passed" behavior is specifically for countdown math, not for "which month
+// does this fall in" grouping (a January health day should still show under January even in
+// December, not silently jump to next year here). ----------
+const HD_MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getHealthDayMonthIndex(dateStr){
+  if(!dateStr) return null;
+  let attempt = new Date(`${dateStr} 2024`); // any leap-safe reference year, year itself is discarded
+  if(isNaN(attempt.getTime())){
+    const parts = dateStr.trim().split(/\s+/);
+    if(parts.length === 2) attempt = new Date(`${parts[1]} ${parts[0]} 2024`);
+  }
+  return isNaN(attempt.getTime()) ? null : attempt.getMonth();
+}
+function renderHealthDayCalendarGrid(){
+  document.getElementById('hdCalendarYearTitle').textContent = `🗓️ ${new Date().getFullYear()}`;
+  document.getElementById('hdCalendarMonthDetail').style.display = 'none';
+  document.getElementById('hdCalendarMonthGrid').style.display = 'grid';
+  const gridEl = document.getElementById('hdCalendarMonthGrid');
+  gridEl.innerHTML = HD_MONTH_NAMES.map((name, i) => {
+    const count = HEALTH_DAYS.filter(d => getHealthDayMonthIndex(d.date) === i).length;
+    return `
+      <button class="note-revision-btn hd-month-tile" data-month="${i}" style="padding:14px 6px; display:flex; flex-direction:column; align-items:center; gap:2px;">
+        <span style="font-size:12px; font-weight:700;">${name.slice(0,3).toUpperCase()}</span>
+        <span style="font-size:10px; opacity:0.7;">${count} day${count === 1 ? '' : 's'}</span>
+      </button>
+    `;
+  }).join('');
+  document.querySelectorAll('.hd-month-tile').forEach(btn => {
+    btn.addEventListener('click', () => showHealthDayMonthList(parseInt(btn.dataset.month, 10)));
+  });
+}
+function showHealthDayMonthList(monthIndex){
+  document.getElementById('hdCalendarMonthGrid').style.display = 'none';
+  document.getElementById('hdCalendarMonthDetail').style.display = 'block';
+  document.getElementById('hdCalendarMonthTitle').textContent = HD_MONTH_NAMES[monthIndex];
+  const monthDays = HEALTH_DAYS.filter(d => getHealthDayMonthIndex(d.date) === monthIndex);
+  const listEl = document.getElementById('hdCalendarMonthList');
+  if(monthDays.length === 0){
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No health days recorded for ${HD_MONTH_NAMES[monthIndex]} yet.</p>`;
+    return;
+  }
+  listEl.innerHTML = monthDays.map((d, i) => `
+    <div class="healthday-item hd-calendar-row" data-index="${i}" style="cursor:pointer;">
       <div class="hd-date">📅 ${d.date}</div>
       <div class="hd-title">${d.title}</div>
       <div class="hd-desc">${d.desc}</div>
     </div>
   `).join('');
+  document.querySelectorAll('.hd-calendar-row').forEach(row => {
+    row.addEventListener('click', () => openHealthDayDetail(monthDays[parseInt(row.dataset.index, 10)]));
+  });
 }
-document.getElementById('healthDaysSearchBox').addEventListener('input', (e) => renderHealthDays(e.target.value));
+document.getElementById('healthDaysCalendarBtn').addEventListener('click', () => {
+  showScreen(healthDayCalendarScreen);
+  renderHealthDayCalendarGrid();
+});
+document.getElementById('hdCalendarBackToGridBtn').addEventListener('click', renderHealthDayCalendarGrid);
 
 // ---------- Health Dictionary ----------
 document.getElementById('goToDictionaryFromHub').addEventListener('click', (e) => {
@@ -8692,12 +9150,29 @@ let dictionaryPdfList = [];
 function applyStudyResourcesData(data){
   FORMULAS = (data.formulas || []).map(r => ({ name: r.Name || '', formula: r.Formula || '', note: r.Note || '' }));
   MNEMONICS = (data.mnemonics || []).map(r => ({ topic: r.Topic || '', trick: r.Trick || '', explain: r.Explain || '' }));
-  HEALTH_DAYS = (data.healthDays || []).map(r => ({ date: r.Date || '', title: r.Title || '', desc: r.Description || '' }));
+  HEALTH_DAYS = (data.healthDays || []).map(r => ({
+    date: r.Date || '', title: r.Title || '', desc: r.Description || '',
+    // Extended fields for the Health Day detail screen — assumed Sheet column names
+    // (Theme/Organization/KeyMessage/ExamPoint/SearchQuery/ExamRelevant), matching this app's
+    // Title-Case convention elsewhere. Confirm these against your actual "Health Days" tab; any
+    // that don't exist yet just show as blank/hidden, nothing breaks. ExamRelevant is a manually
+    // maintained Yes/No column (same pattern as Flash Cards' Verified badge) — no automated way
+    // to determine Loksewa relevance, so this is a curation step on your end, not code.
+    theme: r.Theme || '', organization: r.Organization || '',
+    keyMessage: r.KeyMessage || '', examPoint: r.ExamPoint || '', searchQuery: r.SearchQuery || '',
+    examRelevant: String(r.ExamRelevant || '').trim().toLowerCase() === 'yes',
+  }));
   FAQS = (data.faqs || []).map(r => ({ q: r.Question || '', a: r.Answer || '' }));
+  // Sheet columns assumed as "Term" / "Definition", matching this app's Title-Case convention
+  // elsewhere (Name/Formula/Note, Topic/Trick/Explain, etc.) — confirm your actual "Dictionary"
+  // tab uses these exact column headers; rename here if it uses different ones.
+  DICTIONARY = (data.dictionary || []).map(r => ({ term: r.Term || '', definition: r.Definition || '' })).filter(d => d.term);
   dictionaryPdfList = (data.dictionaryPdfs || [])
     .map(r => ({ name: r.Name || '', link: r.Link || '' }))
     .filter(p => p.name && p.link);
 
+  renderDictionaryTerms();
+  renderHomeHealthDayCard();
   const wrap = document.getElementById('dictionaryPdfLinks');
   if(dictionaryPdfList.length === 0){
     wrap.innerHTML = '';
@@ -8745,6 +9220,86 @@ async function loadStudyResourcesData(){
     }
   }catch(err){ /* keep showing cached data if any — no error shown to user */ }
 }
+
+// ---------- Health Dictionary: searchable term/definition lookup, populated from the
+// "Dictionary" Sheet tab (was fetched but never rendered before). Also offers Google and
+// Google Books as explicit external searches — not embedded/scraped results (Google doesn't
+// allow that), just a genuine link-out with the same query, opened in a new tab. Recent
+// searches are stored locally so a repeat lookup is one tap instead of retyping. ----------
+let DICTIONARY = [];
+function getDictionaryRecentSearches(){
+  try{ return JSON.parse(localStorage.getItem('hl_dictionary_recent') || '[]'); }catch(e){ return []; }
+}
+function addDictionaryRecentSearch(term){
+  let recent = getDictionaryRecentSearches().filter(t => t.toLowerCase() !== term.toLowerCase());
+  recent.unshift(term);
+  recent = recent.slice(0, 8);
+  try{ localStorage.setItem('hl_dictionary_recent', JSON.stringify(recent)); }catch(e){}
+}
+function renderDictionaryRecentChips(){
+  const wrap = document.getElementById('dictionaryRecentChips');
+  const recent = getDictionaryRecentSearches();
+  if(recent.length === 0){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = recent.map(t => `<button class="note-folder-chip dictionary-recent-chip" data-term="${t.replace(/"/g, '&quot;')}">${t}</button>`).join('');
+  document.querySelectorAll('.dictionary-recent-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('dictionarySearchBox').value = chip.dataset.term;
+      renderDictionaryTerms(chip.dataset.term);
+    });
+  });
+}
+function renderDictionaryTerms(searchTerm){
+  const query = (searchTerm || document.getElementById('dictionarySearchBox')?.value || '').trim();
+  const q = query.toLowerCase();
+  const listEl = document.getElementById('dictionaryTermsList');
+  const externalWrap = document.getElementById('dictionaryExternalSearch');
+  renderDictionaryRecentChips();
+
+  if(!listEl) return; // screen not yet in the DOM on very first data load
+
+  if(!q){
+    listEl.innerHTML = '';
+    externalWrap.style.display = 'none';
+    return;
+  }
+
+  const matches = DICTIONARY.filter(d => d.term.toLowerCase().includes(q) || d.definition.toLowerCase().includes(q));
+  if(matches.length === 0){
+    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:14px 0;">No match in the Health Dictionary yet.</p>`;
+  } else {
+    listEl.innerHTML = matches.map(d => `
+      <div class="content-card" style="margin-bottom:8px;">
+        <h4 style="margin-bottom:4px;">${d.term}</h4>
+        <p style="font-size:13px; color:var(--ink-soft);">${d.definition}</p>
+      </div>
+    `).join('');
+  }
+  externalWrap.style.display = 'block';
+}
+document.getElementById('dictionarySearchBox').addEventListener('input', (e) => {
+  renderDictionaryTerms(e.target.value);
+});
+document.getElementById('dictionarySearchBox').addEventListener('change', (e) => {
+  if(e.target.value.trim()) addDictionaryRecentSearch(e.target.value.trim());
+});
+document.getElementById('dictionaryGoogleBtn').addEventListener('click', () => {
+  const query = document.getElementById('dictionarySearchBox').value.trim();
+  if(!query) return;
+  addDictionaryRecentSearch(query);
+  window.open(`https://www.google.com/search?q=${encodeURIComponent(query + ' health loksewa nepal')}`, '_blank');
+});
+document.getElementById('dictionaryGoogleBooksBtn').addEventListener('click', () => {
+  const query = document.getElementById('dictionarySearchBox').value.trim();
+  if(!query) return;
+  addDictionaryRecentSearch(query);
+  window.open(`https://www.google.com/search?tbm=bks&q=${encodeURIComponent(query)}`, '_blank');
+});
+document.getElementById('dictionaryDotComBtn').addEventListener('click', () => {
+  const query = document.getElementById('dictionarySearchBox').value.trim();
+  if(!query) return;
+  addDictionaryRecentSearch(query);
+  window.open(`https://www.dictionary.com/browse/${encodeURIComponent(query)}`, '_blank');
+});
 
 function renderFaqs(){
   const wrap = document.getElementById('faqsListContent');
@@ -8823,8 +9378,8 @@ function renderMnemonics(searchTerm){
 
   document.querySelectorAll('[data-locked-mnemonic]').forEach(item => {
     item.style.cursor = 'pointer';
-    item.addEventListener('click', () => {
-      if(confirm('🧩 The first 4 Mnemonics are free. Upgrade to Premium (NPR 200/month) to unlock the rest?')){
+    item.addEventListener('click', async () => {
+      if(await showPremiumLockModal('🧩 The first 4 Mnemonics are free. Upgrade to Premium to unlock the rest?')){
         premiumBackTarget = mnemonicsScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -8914,6 +9469,514 @@ async function renderHealthGuide(){
   }
 }
 
+// ==========================================================================
+// CPR 3D DEMO — Phase 1: base scene only (floor, patient, rescuer, camera,
+// lighting, rotate/zoom). Step-by-step animations (check response, calling for
+// help, compressions, breaths, 30:2 cycle, AED) are later phases, built on top
+// of this scene without needing to rebuild it. Uses the exact geometry approach
+// already verified working in the earlier standalone sample: Three.js r128
+// (loaded via CDN with `defer`, so it can never block the app itself), and
+// cylinder+sphere-cap limbs instead of CapsuleGeometry, which r128 doesn't have.
+// ==========================================================================
+let cprScene, cprCamera, cprRenderer, cprPatientGroup, cprRescuerGroup;
+let cprRotY = 0.4, cprRotX = -0.3, cprDragging = false, cprLastX = 0, cprLastY = 0, cprDist = 9;
+let cprInitialized = false;
+let cprCompressionActive = false;
+let cprCompressionCount = 0;
+let cprCompressionInterval = null;
+let cprSlowMotion = false;
+let cprAudioCtx = null;
+let cprAnimFrameId = null;
+
+function cprLimbMesh(radiusTop, radiusBottom, length, color){
+  const group = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05 });
+  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, length, 12), mat);
+  cyl.castShadow = true; cyl.receiveShadow = true;
+  group.add(cyl);
+  const capTop = new THREE.Mesh(new THREE.SphereGeometry(radiusTop, 10, 8), mat);
+  capTop.position.y = length / 2; capTop.castShadow = true;
+  group.add(capTop);
+  const capBottom = new THREE.Mesh(new THREE.SphereGeometry(radiusBottom, 10, 8), mat);
+  capBottom.position.y = -length / 2; capBottom.castShadow = true;
+  group.add(capBottom);
+  return group;
+}
+function cprBuildPatient(){
+  cprPatientGroup = new THREE.Group();
+  const skin = 0xC9A88A;
+  const torso = cprLimbMesh(0.55, 0.55, 1.6, skin);
+  torso.rotation.z = Math.PI / 2;
+  torso.position.set(0, 0.55, 0);
+  torso.name = 'patientTorso';
+  cprPatientGroup.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 16), new THREE.MeshStandardMaterial({ color: skin, roughness: 0.5 }));
+  head.position.set(-1.5, 0.55, 0);
+  head.castShadow = true;
+  cprPatientGroup.add(head);
+  [-1, 1].forEach(side => {
+    const leg = cprLimbMesh(0.28, 0.28, 1.5, 0x2A3550);
+    leg.rotation.z = Math.PI / 2;
+    leg.position.set(1.9, 0.3, side * 0.3);
+    cprPatientGroup.add(leg);
+    const arm = cprLimbMesh(0.18, 0.18, 0.9, skin);
+    arm.rotation.z = Math.PI / 2;
+    arm.position.set(-0.3, 0.35, side * 0.75);
+    cprPatientGroup.add(arm);
+  });
+
+  // Hand-position highlight — a pulsing ring shown briefly at the start of the compressions
+  // step to teach correct hand placement, before compressions actually begin
+  const highlight = new THREE.Mesh(
+    new THREE.RingGeometry(0.14, 0.2, 24),
+    new THREE.MeshBasicMaterial({ color: 0xC9A227, transparent: true, opacity: 0, side: THREE.DoubleSide })
+  );
+  highlight.rotation.x = -Math.PI / 2;
+  highlight.position.set(0.15, 1.12, 0);
+  highlight.name = 'chestHighlight';
+  cprPatientGroup.add(highlight);
+
+  cprPatientGroup.position.set(0, 0, 1.2);
+  cprScene.add(cprPatientGroup);
+}
+function cprBuildRescuer(){
+  cprRescuerGroup = new THREE.Group();
+  const shirt = 0x0D9488;
+  const skin = 0xC9A88A;
+  [-1, 1].forEach(side => {
+    const thigh = cprLimbMesh(0.22, 0.22, 0.9, 0x1B2F52);
+    thigh.rotation.x = Math.PI / 2;
+    thigh.position.set(0, 0.35, side * 0.3 - 1.3);
+    cprRescuerGroup.add(thigh);
+    const shin = cprLimbMesh(0.2, 0.2, 0.8, 0x1B2F52);
+    shin.position.set(-0.35, 0.15, side * 0.3 - 1.3);
+    cprRescuerGroup.add(shin);
+  });
+  const torso = cprLimbMesh(0.42, 0.42, 1.1, shirt);
+  torso.rotation.x = Math.PI / 2.6;
+  torso.position.set(0.55, 1.3, -0.2);
+  torso.name = 'torso';
+  cprRescuerGroup.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), new THREE.MeshStandardMaterial({ color: skin, roughness: 0.5 }));
+  head.position.set(1.1, 2.05, -0.2);
+  head.castShadow = true;
+  head.name = 'head';
+  cprRescuerGroup.add(head);
+  const armGroup = new THREE.Group();
+  [-1, 1].forEach(side => {
+    const arm = cprLimbMesh(0.13, 0.13, 1.0, skin);
+    arm.rotation.x = Math.PI / 2.3;
+    arm.position.set(-0.15, 0, side * 0.14);
+    armGroup.add(arm);
+  });
+  const handsBlock = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.22), new THREE.MeshStandardMaterial({ color: skin, roughness: 0.5 }));
+  handsBlock.position.set(-0.75, -0.35, 0);
+  handsBlock.castShadow = true;
+  armGroup.add(handsBlock);
+  armGroup.position.set(0.9, 1.55, -0.2);
+  armGroup.name = 'arms';
+  cprRescuerGroup.add(armGroup);
+
+  // Separate single-arm "phone to ear" pose for Step 2 — kept independent from the two-handed
+  // compression arms above rather than trying to reuse/rewrig that group, so Step 4's
+  // compression pose (already working) can't be affected by anything built for this step.
+  const phoneArmGroup = new THREE.Group();
+  const phoneArm = cprLimbMesh(0.13, 0.13, 0.85, skin);
+  phoneArm.rotation.z = Math.PI / 5;
+  phoneArmGroup.add(phoneArm);
+  const phone = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.32, 0.06), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3 }));
+  phone.position.set(0.18, 0.5, 0);
+  phone.castShadow = true;
+  phoneArmGroup.add(phone);
+  phoneArmGroup.position.set(1.35, 1.75, -0.3);
+  phoneArmGroup.name = 'phoneArm';
+  phoneArmGroup.visible = false;
+  cprRescuerGroup.add(phoneArmGroup);
+
+  cprScene.add(cprRescuerGroup);
+}
+function cprUpdateCamera(){
+  cprCamera.position.x = cprDist * Math.sin(cprRotY) * Math.cos(cprRotX);
+  cprCamera.position.y = cprDist * Math.sin(-cprRotX) + 1.5;
+  cprCamera.position.z = cprDist * Math.cos(cprRotY) * Math.cos(cprRotX);
+  cprCamera.lookAt(0.3, 0.7, 0.4);
+}
+function cprAnimate(){
+  cprAnimFrameId = requestAnimationFrame(cprAnimate);
+  cprUpdateCamera();
+  cprRenderer.render(cprScene, cprCamera);
+}
+function cprInitScene(){
+  if(cprInitialized) return; // build once — reused every time the screen reopens
+  const canvas = document.getElementById('cprCanvas3d');
+  const wrap = canvas.parentElement;
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+
+  cprScene = new THREE.Scene();
+  cprScene.background = new THREE.Color(0x0e1729);
+  cprScene.fog = new THREE.Fog(0x0e1729, 10, 22);
+
+  cprCamera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
+
+  cprRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  cprRenderer.setSize(w, h);
+  cprRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  cprRenderer.shadowMap.enabled = true;
+
+  const hemi = new THREE.HemisphereLight(0xbfd4ff, 0x1a1a2e, 0.7);
+  cprScene.add(hemi);
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(4, 8, 5);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  cprScene.add(key);
+  const rim = new THREE.DirectionalLight(0x14B8A6, 0.4);
+  rim.position.set(-5, 3, -4);
+  cprScene.add(rim);
+
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x18263f, roughness: 0.9 });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  cprScene.add(floor);
+
+  cprBuildPatient();
+  cprBuildRescuer();
+  cprAnimate();
+
+  // Drag/touch to orbit, wheel to zoom
+  function pointerDown(x, y){ cprDragging = true; cprLastX = x; cprLastY = y; }
+  function pointerMove(x, y){
+    if(!cprDragging) return;
+    cprRotY += (x - cprLastX) * 0.01;
+    cprRotX = Math.max(-0.7, Math.min(0.4, cprRotX + (y - cprLastY) * 0.01));
+    cprLastX = x; cprLastY = y;
+  }
+  canvas.addEventListener('mousedown', e => pointerDown(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => pointerMove(e.clientX, e.clientY));
+  window.addEventListener('mouseup', () => cprDragging = false);
+  canvas.addEventListener('touchstart', e => pointerDown(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+  canvas.addEventListener('touchmove', e => pointerMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+  canvas.addEventListener('touchend', () => cprDragging = false);
+  canvas.addEventListener('wheel', e => { cprDist = Math.max(5, Math.min(16, cprDist + e.deltaY * 0.01)); }, { passive: true });
+  window.addEventListener('resize', () => {
+    if(!cprInitialized) return;
+    const wr = canvas.parentElement;
+    cprCamera.aspect = wr.clientWidth / wr.clientHeight;
+    cprCamera.updateProjectionMatrix();
+    cprRenderer.setSize(wr.clientWidth, wr.clientHeight);
+  });
+
+  cprInitialized = true;
+}
+
+// ---------- CPR Step Framework: reusable across every phase, not rebuilt per-step. A step
+// config can define a play() animation; steps without one yet (later phases) just show their
+// text with the rescuer in its resting kneeling pose — an honest "not built yet" rather than a
+// broken/silent Next button. cprTween is a small requestAnimationFrame-based interpolator, built
+// once here so every future step (compressions, breaths, AED) reuses it rather than hand-rolling
+// timing logic per step. ----------
+function cprTween(duration, onUpdate, onComplete){
+  const start = performance.now();
+  function frame(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // ease-in-out
+    onUpdate(eased);
+    if(t < 1) requestAnimationFrame(frame);
+    else if(onComplete) onComplete();
+  }
+  requestAnimationFrame(frame);
+}
+function cprShowSpeechBubble(text, duration){
+  const bubble = document.getElementById('cprSpeechBubble');
+  bubble.textContent = text;
+  bubble.style.display = 'block';
+  bubble.style.opacity = '0';
+  cprTween(250, t => { bubble.style.opacity = t; });
+  if(duration){
+    setTimeout(() => {
+      cprTween(250, t => { bubble.style.opacity = 1 - t; }, () => { bubble.style.display = 'none'; });
+    }, duration);
+  }
+}
+function cprResetRescuerPose(){
+  // The resting kneeling pose built in cprBuildRescuer — every step starts from here.
+  // Must cover every property any step's play() touches, or a pose from one step silently
+  // bleeds into the next (caught exactly this happening with Step 3's lean-in before shipping —
+  // applying that lesson proactively here for Step 4's arm-position changes too).
+  if(!cprRescuerGroup) return;
+  cprCompressionActive = false;
+  clearInterval(cprCompressionInterval);
+  document.getElementById('cprCompressionHud').style.display = 'none';
+  cprRescuerGroup.position.set(0, 0, 0);
+  cprRescuerGroup.scale.set(1, 1, 1);
+  const arms = cprRescuerGroup.getObjectByName('arms');
+  if(arms){ arms.rotation.set(0, 0, 0); arms.position.set(0.9, 1.55, -0.2); arms.visible = true; }
+  const phoneArm = cprRescuerGroup.getObjectByName('phoneArm');
+  if(phoneArm){ phoneArm.rotation.set(0, 0, 0); phoneArm.visible = false; }
+  const head = cprRescuerGroup.getObjectByName('head');
+  if(head){ head.rotation.set(0, 0, 0); head.position.set(1.1, 2.05, -0.2); }
+  const torso = cprRescuerGroup.getObjectByName('torso');
+  if(torso) torso.rotation.set(Math.PI / 2.6, 0, 0);
+  if(cprPatientGroup){
+    const patientTorso = cprPatientGroup.getObjectByName('patientTorso');
+    if(patientTorso) patientTorso.scale.set(1, 1, 1);
+    const highlight = cprPatientGroup.getObjectByName('chestHighlight');
+    if(highlight) highlight.material.opacity = 0;
+  }
+}
+
+// ---------- Chest Compressions: the one continuous, user-controlled loop among the steps
+// (every other step is a one-shot animation). Metronome uses the real Web Audio API — a plain
+// oscillator beep, no audio file needed. Rate is pinned to 110/min (midpoint of the real
+// 100-120/min guideline range) at normal speed, halved when Slow Motion is on. ----------
+function cprPlayBeep(){
+  try{
+    if(!cprAudioCtx) cprAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = cprAudioCtx.createOscillator();
+    const gain = cprAudioCtx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, cprAudioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, cprAudioCtx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(cprAudioCtx.destination);
+    osc.start();
+    osc.stop(cprAudioCtx.currentTime + 0.08);
+  }catch(e){}
+}
+function cprRunOneCompression(){
+  const arms = cprRescuerGroup.getObjectByName('arms');
+  const torso = cprRescuerGroup.getObjectByName('torso');
+  cprPlayBeep();
+  cprTween(160, t => {
+    const offset = Math.sin(t * Math.PI) * 0.16; // down-stroke — visible compression depth
+    if(arms) arms.position.y = 0.85 - offset;
+    if(torso) torso.rotation.x = (Math.PI / 1.9) + offset * 0.4;
+  }, () => {
+    cprCompressionCount++;
+    document.getElementById('cprCompressionCount').textContent = cprCompressionCount;
+  });
+}
+function cprStartCompressions(){
+  if(cprCompressionActive) return;
+  cprCompressionActive = true;
+  document.getElementById('cprPlayBtn').textContent = '⏸ Pause';
+  const cycleMs = (cprSlowMotion ? 1090 : 545); // 545ms ≈ 110/min; doubled when slow motion is on
+  cprRunOneCompression();
+  cprCompressionInterval = setInterval(cprRunOneCompression, cycleMs);
+}
+function cprPauseCompressions(){
+  cprCompressionActive = false;
+  clearInterval(cprCompressionInterval);
+  document.getElementById('cprPlayBtn').textContent = '▶ Play';
+}
+function cprRestartCompressions(){
+  cprPauseCompressions();
+  cprCompressionCount = 0;
+  document.getElementById('cprCompressionCount').textContent = '0';
+  const arms = cprRescuerGroup.getObjectByName('arms');
+  const torso = cprRescuerGroup.getObjectByName('torso');
+  if(arms) arms.position.y = 0.85;
+  if(torso) torso.rotation.x = Math.PI / 1.9;
+}
+
+const cprSteps = [
+  {
+    label: 'CHECK RESPONSE',
+    text: 'Tap the shoulders and shout "Are you OK?" Check for normal breathing for no more than 10 seconds.',
+    play: function(){
+      // "Approaching and kneeling": with a rigid (non-skeletal) rig, a true stand-then-kneel
+      // leg animation isn't achievable cleanly — this honestly approximates it as the whole
+      // figure descending into position, not a walking animation.
+      cprRescuerGroup.position.set(0.6, 1.4, -0.9);
+      cprRescuerGroup.scale.set(0.85, 0.85, 0.85);
+      cprTween(900, t => {
+        cprRescuerGroup.position.lerpVectors(
+          new THREE.Vector3(0.6, 1.4, -0.9), new THREE.Vector3(0, 0, 0), t
+        );
+        const s = 0.85 + 0.15 * t;
+        cprRescuerGroup.scale.set(s, s, s);
+      }, () => {
+        // Tap gesture: one arm dips toward the patient's shoulder, twice
+        const arms = cprRescuerGroup.getObjectByName('arms');
+        let taps = 0;
+        function doTap(){
+          cprTween(260, t => { if(arms) arms.rotation.z = -0.35 * Math.sin(t * Math.PI); }, () => {
+            taps++;
+            if(taps < 2) setTimeout(doTap, 150);
+            else cprShowSpeechBubble('"Are you OK?"', 2200);
+          });
+        }
+        doTap();
+      });
+    }
+  },
+  {
+    label: 'CALL FOR HELP',
+    text: 'Call emergency services and ask someone to get an AED if available.',
+    play: function(){
+      const arms = cprRescuerGroup.getObjectByName('arms');
+      const phoneArm = cprRescuerGroup.getObjectByName('phoneArm');
+      const head = cprRescuerGroup.getObjectByName('head');
+      if(arms) arms.visible = false;
+      if(phoneArm) phoneArm.visible = true;
+
+      // Look around briefly before reaching for the phone
+      let looks = 0;
+      function doLook(){
+        cprTween(300, t => { if(head) head.rotation.y = 0.35 * Math.sin(t * Math.PI) * (looks % 2 === 0 ? 1 : -1); }, () => {
+          looks++;
+          if(looks < 2) setTimeout(doLook, 80);
+          else raisePhone();
+        });
+      }
+      function raisePhone(){
+        if(!phoneArm) return;
+        cprTween(500, t => { phoneArm.rotation.z = (Math.PI / 5) * (1 - t) + (Math.PI / 1.15) * t; }, () => {
+          cprShowSpeechBubble('📞 Calling emergency services…', 2600);
+        });
+      }
+      doLook();
+    }
+  },
+  {
+    label: 'CHECK BREATHING',
+    text: 'Look, listen, and feel for normal breathing while maintaining an open airway.',
+    play: function(){
+      const torso = cprRescuerGroup.getObjectByName('torso');
+      const head = cprRescuerGroup.getObjectByName('head');
+      const startTorsoRot = Math.PI / 2.6, leanTorsoRot = Math.PI / 1.9;
+      const startHeadY = 2.05, leanHeadY = 1.55;
+      const startHeadX = 1.1, leanHeadX = 0.35;
+
+      cprTween(700, t => {
+        if(torso) torso.rotation.x = startTorsoRot + (leanTorsoRot - startTorsoRot) * t;
+        if(head){
+          head.position.y = startHeadY + (leanHeadY - startHeadY) * t;
+          head.position.x = startHeadX + (leanHeadX - startHeadX) * t;
+        }
+      }, () => {
+        cprShowSpeechBubble('Looking, listening, feeling…', 2400);
+        // Patient's chest rises and falls gently — 3 breathing pulses, to show what a rescuer
+        // would be watching for (or the absence of it, in a real cardiac arrest)
+        const patientTorso = cprPatientGroup.getObjectByName('patientTorso');
+        let pulses = 0;
+        function doPulse(){
+          cprTween(500, t => {
+            if(patientTorso){
+              const s = 1 + 0.06 * Math.sin(t * Math.PI);
+              patientTorso.scale.set(1, s, 1);
+            }
+          }, () => {
+            pulses++;
+            if(pulses < 3) setTimeout(doPulse, 150);
+          });
+        }
+        doPulse();
+      });
+    }
+  },
+  {
+    label: 'CHEST COMPRESSIONS',
+    text: 'Place hands in the center of the chest and push hard and fast, 100–120 compressions per minute. Tap ▶ Play to start.',
+    play: function(){
+      const arms = cprRescuerGroup.getObjectByName('arms');
+      const torso = cprRescuerGroup.getObjectByName('torso');
+      // Position over the patient's chest and settle into the pre-compression stance
+      cprTween(600, t => {
+        if(arms) arms.position.y = 1.55 + (0.85 - 1.55) * t;
+        if(torso) torso.rotation.x = (Math.PI / 2.6) + ((Math.PI / 1.9) - (Math.PI / 2.6)) * t;
+      }, () => {
+        // Briefly highlight correct hand placement before compressions begin
+        const highlight = cprPatientGroup.getObjectByName('chestHighlight');
+        if(highlight){
+          cprTween(400, t => { highlight.material.opacity = 0.85 * Math.sin(t * Math.PI); });
+          setTimeout(() => {
+            cprTween(400, t => { highlight.material.opacity = 0.85 * Math.sin((1 - t) * Math.PI); }, () => {
+              cprShowSpeechBubble('Push hard and fast.', 2200);
+              document.getElementById('cprCompressionHud').style.display = 'block';
+            });
+          }, 500);
+        }
+      });
+    }
+  },
+  { label: 'RESCUE BREATHS', text: 'After 30 compressions, give 2 rescue breaths if trained and willing.' },
+  { label: '30:2 CYCLE', text: '30 compressions, then 2 breaths — repeat until help arrives.' },
+  { label: 'AED', text: 'Turn on the AED, attach the pads as shown, and follow its voice instructions.' },
+];
+let cprCurrentStep = 0;
+function cprGoToStep(index){
+  cprCurrentStep = Math.max(0, Math.min(cprSteps.length - 1, index));
+  const step = cprSteps[cprCurrentStep];
+  document.getElementById('cprStepCounter').textContent = `Step ${cprCurrentStep + 1} of ${cprSteps.length}`;
+  document.getElementById('cprStepLabel').textContent = step.label;
+  document.getElementById('cprStepText').textContent = step.text;
+  document.getElementById('cprSpeechBubble').style.display = 'none';
+  cprResetRescuerPose();
+  if(cprInitialized && step.play) step.play();
+}
+document.getElementById('cprPrevBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep - 1));
+document.getElementById('cprNextBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep + 1));
+document.getElementById('cprPlayBtn').addEventListener('click', () => {
+  // Compressions are a continuous loop — Play becomes a real play/pause toggle for it, once the
+  // step has actually settled into position (HUD visible). Every other step just replays.
+  const compressionsReady = cprCurrentStep === 3 && document.getElementById('cprCompressionHud').style.display === 'block';
+  if(compressionsReady){
+    cprCompressionActive ? cprPauseCompressions() : cprStartCompressions();
+  } else {
+    cprGoToStep(cprCurrentStep);
+  }
+});
+document.getElementById('cprReplayBtn').addEventListener('click', () => {
+  if(cprCurrentStep === 3 && document.getElementById('cprCompressionHud').style.display === 'block'){
+    cprRestartCompressions();
+  } else {
+    cprGoToStep(cprCurrentStep);
+  }
+});
+document.getElementById('cprSlowMoBtn').addEventListener('click', (e) => {
+  cprSlowMotion = !cprSlowMotion;
+  e.target.classList.toggle('active-slow', cprSlowMotion);
+  e.target.style.background = cprSlowMotion ? 'var(--teal)' : 'var(--panel)';
+  e.target.style.color = cprSlowMotion ? '#fff' : 'var(--ink)';
+  // If compressions are already running, apply the new rate immediately rather than waiting
+  // for the next Play tap
+  if(cprCompressionActive){
+    cprPauseCompressions();
+    cprStartCompressions();
+  }
+});
+
+// Three.js is loaded with `defer`, so it may not be ready the instant this screen first opens —
+// poll briefly rather than fail, since a moment's wait is normal and expected here.
+function openCprDemoScreen(){
+  showScreen(cprDemoScreen);
+  const loadingMsg = document.getElementById('cprLoadingMsg');
+  loadingMsg.style.display = 'flex';
+  loadingMsg.textContent = 'Loading 3D scene…';
+  let attempts = 0;
+  const tryInit = () => {
+    if(typeof THREE !== 'undefined'){
+      cprInitScene();
+      loadingMsg.style.display = 'none';
+      cprGoToStep(0);
+      return;
+    }
+    attempts++;
+    if(attempts > 40){ // ~10 seconds
+      loadingMsg.textContent = 'Could not load the 3D engine — check your connection and reopen this page.';
+      return;
+    }
+    setTimeout(tryInit, 250);
+  };
+  tryInit();
+}
+document.getElementById('goToCprDemoBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  openCprDemoScreen();
+});
+
 // ---------- Immunization Schedule: Sheet-driven, grouped by category, shows Source +
 // Last Updated per row so the content stays honestly attributable rather than presented
 // as unconditionally authoritative. ----------
@@ -8969,7 +10032,7 @@ document.getElementById('goToRevision').addEventListener('click', async (e) => {
   if(window.checkRevisionAccess){
     const access = await window.checkRevisionAccess();
     if(!access.allowed){
-      if(confirm('🔄 Your 7-day free trial of Revision Mode has ended. Upgrade to Premium (NPR 200/month) to keep using it?')){
+      if(await showPremiumLockModal('🔄 Your 7-day free trial of Revision Mode has ended. Upgrade to Premium to keep using it?')){
         premiumBackTarget = progressScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -12196,6 +13259,22 @@ let pricingPlansList = [];
 let selectedPricingPlan = null;
 const FALLBACK_PRICING_PLAN = { planKey: 'monthly', label: 'Monthly', months: 1, basePrice: 299, discountPercent: 0, finalPrice: 299 };
 
+// Used by the premium lock modal only — caches within the session so every locked feature
+// doesn't refetch on every tap. Deliberately separate from loadPricingPlans() below, which
+// always fetches fresh (that one backs the actual purchase screen, where stale pricing matters
+// far more than it does for a quick "here's the price" prompt).
+async function ensurePricingPlansLoaded(){
+  if(pricingPlansList.length > 0) return pricingPlansList;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=pricingPlans`);
+    const rows = await res.json();
+    pricingPlansList = (Array.isArray(rows) && rows.length > 0) ? rows : [FALLBACK_PRICING_PLAN];
+  }catch(e){
+    pricingPlansList = [FALLBACK_PRICING_PLAN];
+  }
+  return pricingPlansList;
+}
+
 async function loadPricingPlans(){
   const wrap = document.getElementById('pricingPlansWrap');
   const offerBadge = document.getElementById('pricingOfferBadge');
@@ -12251,6 +13330,49 @@ function selectPricingPlan(index){
   document.getElementById('esewaManualAmount').textContent = amountLabel;
   document.getElementById('khaltiManualAmount').textContent = amountLabel;
   document.getElementById('esewaPayBtnLabel').textContent = `Pay Automatically with eSewa — ${amountLabel}`;
+}
+
+// ---------- Shared premium lock modal — every locked-feature prompt in the app routes through
+// this, showing the REAL current monthly price (with genuine strikethrough + discount badge
+// when a discount is active), instead of the old hardcoded "NPR 200/month" text that couldn't
+// reflect price or discount changes. ----------
+async function showPremiumLockModal(message){
+  document.getElementById('premiumLockMessage').textContent = message;
+  await ensurePricingPlansLoaded();
+  const monthlyPlan = pricingPlansList.find(p => Number(p.months) === 1) || pricingPlansList[0] || FALLBACK_PRICING_PLAN;
+  const basePriceEl = document.getElementById('premiumLockBasePrice');
+  const finalPriceEl = document.getElementById('premiumLockFinalPrice');
+  const discountBadgeEl = document.getElementById('premiumLockDiscountBadge');
+  const discountPercent = Number(monthlyPlan.discountPercent) || 0;
+  if(discountPercent > 0){
+    basePriceEl.textContent = `NPR ${monthlyPlan.basePrice}`;
+    basePriceEl.style.display = 'inline';
+    discountBadgeEl.textContent = `${discountPercent}% OFF`;
+    discountBadgeEl.style.display = 'inline';
+  } else {
+    basePriceEl.style.display = 'none';
+    discountBadgeEl.style.display = 'none';
+  }
+  finalPriceEl.textContent = `NPR ${monthlyPlan.finalPrice} / month`;
+  document.getElementById('premiumLockBackdrop').style.display = 'block';
+  document.getElementById('premiumLockModal').style.display = 'block';
+  return new Promise((resolve) => {
+    document.getElementById('premiumLockUpgradeBtn').onclick = () => {
+      document.getElementById('premiumLockBackdrop').style.display = 'none';
+      document.getElementById('premiumLockModal').style.display = 'none';
+      resolve(true);
+    };
+    document.getElementById('premiumLockCancelBtn').onclick = () => {
+      document.getElementById('premiumLockBackdrop').style.display = 'none';
+      document.getElementById('premiumLockModal').style.display = 'none';
+      resolve(false);
+    };
+    document.getElementById('premiumLockBackdrop').onclick = () => {
+      document.getElementById('premiumLockBackdrop').style.display = 'none';
+      document.getElementById('premiumLockModal').style.display = 'none';
+      resolve(false);
+    };
+  });
 }
 
 // ---------- eSewa Payment: fully automatic (currently on test/sandbox credentials) ----------
@@ -12604,6 +13726,7 @@ function renderPostPickerInto(containerId){
       renderPostPickerInto('postGateRow');
       const summaryEl = document.getElementById('examTypeSummary');
       if(summaryEl) summaryEl.textContent = summarizeSelectedPosts();
+      if(typeof renderMyPreparationCard === 'function') renderMyPreparationCard();
       if(typeof computeUpcomingExams === 'function'){
         computeUpcomingExams();
         examSlideIndex = 0;
@@ -12677,7 +13800,7 @@ document.getElementById('postGateContinueBtn').addEventListener('click', () => {
   let onboardingDone = false;
   try{ onboardingDone = localStorage.getItem('hl_onboarding_done') === '1'; }catch(e){}
   if(onboardingDone){
-    showScreen(homeScreen);
+    checkAndShowHealthDayStartupCard();
   } else {
     startOnboardingWizard();
   }
@@ -13173,7 +14296,7 @@ async function loadExamDates(){
 }
 loadExamDates();
 // Recompute days-remaining hourly (covers the app staying open across midnight) without refetching the Sheet
-setInterval(() => { computeUpcomingExams(); paintExamSlide(); }, 60 * 60 * 1000);
+setInterval(() => { computeUpcomingExams(); paintExamSlide(); renderHomeHealthDayCard(); }, 60 * 60 * 1000);
 
 // ---------- Notifications: self-managing feed (Sheet-driven) + auto Question-of-Day entry ----------
 function getTodaysQotdEntry(){
@@ -14402,7 +15525,7 @@ async function startMockTest(post){
   if(window.checkAndIncrementMockTestUsage){
     const usage = await window.checkAndIncrementMockTestUsage();
     if(!usage.allowed){
-      if(confirm('🏆 You\'ve used your free Mock Test for this week. Upgrade to Premium (NPR 200/month) for unlimited Mock Tests?')){
+      if(await showPremiumLockModal('🏆 You\'ve used your free Mock Test for this week. Upgrade to Premium for unlimited Mock Tests?')){
         premiumBackTarget = mockPostScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -14535,7 +15658,7 @@ async function startPastQuestionPaper(paperName){
   if(window.checkAndRecordPastQuestionAccess){
     const usage = await window.checkAndRecordPastQuestionAccess(paperName);
     if(!usage.allowed){
-      if(confirm('📜 You\'ve used your 2 free Past Question papers. Upgrade to Premium (NPR 200/month) for unlimited access?')){
+      if(await showPremiumLockModal('📜 You\'ve used your 2 free Past Question papers. Upgrade to Premium for unlimited access?')){
         premiumBackTarget = pastQuestionsYearScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
@@ -14838,7 +15961,7 @@ function renderSetList(totalSets, exactCount){
       if(setNum > 2){
         const isPremium = await refreshPremiumStatus();
         if(!isPremium){
-          if(confirm('🔒 Sets 1-2 of each subject are free. Upgrade to Premium (NPR 200/month) to unlock every Set?')){
+          if(await showPremiumLockModal('🔒 Sets 1-2 of each subject are free. Upgrade to Premium to unlock every Set?')){
             premiumBackTarget = setSelectScreen;
             showScreen(upgradeScreen);
             renderPremiumStatus();
@@ -14877,7 +16000,7 @@ function renderSetList(totalSets, exactCount){
 async function downloadSetAsPdf(subject, setNumber){
   const isPremium = await refreshPremiumStatus();
   if(!isPremium){
-    if(confirm('📄 Downloading Sets as PDF is a Premium feature (NPR 200/month). Want to see Premium plans?')){
+    if(await showPremiumLockModal('📄 Downloading Sets as PDF is a Premium feature. Want to see Premium plans?')){
       premiumBackTarget = setSelectScreen;
       showScreen(upgradeScreen);
       renderPremiumStatus();
@@ -15775,19 +16898,51 @@ async function renderCommunityDecks(){
       return;
     }
     listEl.innerHTML = decks.map(d => `
-      <div class="note-item" style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div class="ni-title">${d.deckName}</div>
-          <div class="ni-meta">by ${d.creatorName} · ${d.cardCount} card${d.cardCount === 1 ? '' : 's'}</div>
+      <div class="note-item">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="ni-title">${d.verified ? '✓ ' : ''}${d.deckName}</div>
+            <div class="ni-meta">by ${d.creatorName} · ${d.cardCount} card${d.cardCount === 1 ? '' : 's'}</div>
+            ${d.verified ? `<div style="font-size:10.5px; color:var(--gold); margin-top:3px;">✓ Health Loksewa Verified</div>` : ''}
+            <div style="font-size:11px; color:var(--ink-soft); margin-top:4px;">${d.avgRating ? `⭐ ${d.avgRating} (${d.ratingCount} rating${d.ratingCount === 1 ? '' : 's'})` : 'No ratings yet'}</div>
+          </div>
+          <button class="calc-btn fc-download-deck-btn" data-publish-id="${d.publishId}" data-deck-name="${d.deckName.replace(/"/g, '&quot;')}" style="margin:0; width:auto; padding:8px 14px; font-size:11.5px;">Download</button>
         </div>
-        <button class="calc-btn fc-download-deck-btn" data-publish-id="${d.publishId}" data-deck-name="${d.deckName.replace(/"/g, '&quot;')}" style="margin:0; width:auto; padding:8px 14px; font-size:11.5px;">Download</button>
+        <button class="fc-rate-deck-btn" data-publish-id="${d.publishId}" style="margin-top:8px; background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">Rate this deck</button>
       </div>
     `).join('');
     document.querySelectorAll('.fc-download-deck-btn').forEach(btn => {
       btn.addEventListener('click', () => downloadCommunityDeck(btn.dataset.publishId, btn.dataset.deckName, btn));
     });
+    document.querySelectorAll('.fc-rate-deck-btn').forEach(btn => {
+      btn.addEventListener('click', () => rateCommunityDeck(btn.dataset.publishId));
+    });
   }catch(err){
     listEl.innerHTML = `<p style="color:var(--wrong); font-size:13px; text-align:center; padding:20px 0;">Could not load community decks — check your connection.</p>`;
+  }
+}
+async function rateCommunityDeck(publishId){
+  const starsInput = prompt('Rate this deck 1-5 stars:');
+  const stars = parseInt(starsInput, 10);
+  if(!starsInput || isNaN(stars) || stars < 1 || stars > 5){
+    if(starsInput !== null) alert('Please enter a number from 1 to 5.');
+    return;
+  }
+  try{
+    const res = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'rateDeck', publishId, stars })
+    });
+    const data = await res.json();
+    if(data.success){
+      alert('Thanks for rating!');
+      renderCommunityDecks();
+    } else {
+      alert('Could not save your rating — please try again.');
+    }
+  }catch(err){
+    alert('Could not save your rating — check your connection.');
   }
 }
 async function downloadCommunityDeck(publishId, deckName, btn){
@@ -16159,13 +17314,11 @@ function runGlobalSearch(query){
   const mnemonicMatches = MNEMONICS.filter(m => m.topic.toLowerCase().includes(q) || m.trick.toLowerCase().includes(q));
   const healthDayMatches = HEALTH_DAYS.filter(h => h.title.toLowerCase().includes(q));
   const faqMatches = FAQS.filter(f => f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q));
-  const totalMatches = formulaMatches.length + mnemonicMatches.length + healthDayMatches.length + faqMatches.length;
+  const dictionaryMatches = DICTIONARY.filter(d => d.term.toLowerCase().includes(q) || d.definition.toLowerCase().includes(q));
+  const totalMatches = formulaMatches.length + mnemonicMatches.length + healthDayMatches.length + faqMatches.length + dictionaryMatches.length;
 
   resultsWrap.style.display = 'block';
-  if(totalMatches === 0){
-    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No matches found in Formulas, Mnemonics, Health Days, or FAQs.</p>`;
-    return;
-  }
+  addDictionaryRecentSearch(query.trim());
 
   const section = (icon, title, items, renderItem) => items.length === 0 ? '' : `
     <div class="content-card" style="margin-bottom:12px;">
@@ -16174,14 +17327,63 @@ function runGlobalSearch(query){
     </div>
   `;
 
-  resultsWrap.innerHTML =
-    section('🔢', 'Formulas', formulaMatches, f => `<div class="search-result-item"><b>${f.name}</b><p>${f.formula}</p></div>`) +
-    section('🧩', 'Mnemonics', mnemonicMatches, m => `<div class="search-result-item"><b>${m.topic}</b><p>${m.trick}</p></div>`) +
-    section('📅', 'Health Days', healthDayMatches, h => `<div class="search-result-item"><b>${h.title}</b><p>${h.date}</p></div>`) +
-    section('❓', 'FAQs', faqMatches, f => `<div class="search-result-item"><b>${f.q}</b><p>${f.a}</p></div>`);
+  const localResultsHtml = totalMatches === 0
+    ? `<p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:12px;">No matches found in Health Loksewa's own content.</p>`
+    : section('🩺', 'Health Dictionary', dictionaryMatches, d => `<div class="search-result-item"><b>${d.term}</b><p>${d.definition}</p></div>`) +
+      section('🔢', 'Formulas', formulaMatches, f => `<div class="search-result-item"><b>${f.name}</b><p>${f.formula}</p></div>`) +
+      section('🧩', 'Mnemonics', mnemonicMatches, m => `<div class="search-result-item"><b>${m.topic}</b><p>${m.trick}</p></div>`) +
+      section('📅', 'Health Days', healthDayMatches, h => `<div class="search-result-item"><b>${h.title}</b><p>${h.date}</p></div>`) +
+      section('❓', 'FAQs', faqMatches, f => `<div class="search-result-item"><b>${f.q}</b><p>${f.a}</p></div>`);
+
+  // Google/Google Books are always offered alongside local results, not just when local search
+  // comes up empty — a genuine external link-out with the same query, not embedded/scraped
+  // results (Google's terms don't allow repackaging their results pages inside another app).
+  const externalHtml = `
+    <div class="content-card">
+      <h4 style="margin-bottom:10px;">🔎 Search with</h4>
+      <div style="display:flex; gap:8px;">
+        <button class="calc-btn" id="globalSearchGoogleBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🌐 Google</button>
+        <button class="calc-btn" id="globalSearchGoogleBooksBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📚 Google Books</button>
+        <button class="calc-btn" id="globalSearchDotComBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📖 Dictionary.com</button>
+      </div>
+    </div>
+  `;
+
+  resultsWrap.innerHTML = localResultsHtml + externalHtml;
+  document.getElementById('globalSearchGoogleBtn').addEventListener('click', () => {
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim() + ' health loksewa nepal')}`, '_blank');
+  });
+  document.getElementById('globalSearchGoogleBooksBtn').addEventListener('click', () => {
+    window.open(`https://www.google.com/search?tbm=bks&q=${encodeURIComponent(query.trim())}`, '_blank');
+  });
+  document.getElementById('globalSearchDotComBtn').addEventListener('click', () => {
+    window.open(`https://www.dictionary.com/browse/${encodeURIComponent(query.trim())}`, '_blank');
+  });
 }
 document.getElementById('globalSearchInput').addEventListener('input', (e) => {
   runGlobalSearch(e.target.value);
+});
+document.getElementById('globalSearchInput').addEventListener('focus', () => {
+  if(document.getElementById('globalSearchInput').value.trim()) return; // already searching
+  const recent = getDictionaryRecentSearches();
+  if(recent.length === 0) return;
+  const resultsWrap = document.getElementById('globalSearchResults');
+  resultsWrap.style.display = 'block';
+  document.getElementById('learnLinkCardsWrap').style.display = 'none';
+  resultsWrap.innerHTML = `
+    <div class="content-card">
+      <h4 style="margin-bottom:10px;">🕘 Recent Searches</h4>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        ${recent.map(t => `<button class="note-folder-chip global-search-recent-chip" data-term="${t.replace(/"/g, '&quot;')}">${t}</button>`).join('')}
+      </div>
+    </div>
+  `;
+  document.querySelectorAll('.global-search-recent-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.getElementById('globalSearchInput').value = chip.dataset.term;
+      runGlobalSearch(chip.dataset.term);
+    });
+  });
 });
 
 // Subject counts now load on demand (see cardQuiz click handler above) — not at app startup,
