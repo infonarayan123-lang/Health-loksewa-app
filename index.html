@@ -2896,10 +2896,6 @@
         <canvas id="cprCanvas3d" style="width:100%; height:100%; display:block; touch-action:none;"></canvas>
         <div id="cprLoadingMsg" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:12px;">Loading 3D scene…</div>
         <div id="cprSpeechBubble" style="display:none; position:absolute; top:14px; right:14px; max-width:65%; background:#fff; color:#1a1a1a; padding:8px 12px; border-radius:12px 12px 2px 12px; font-size:12.5px; font-weight:600; box-shadow:0 4px 10px rgba(0,0,0,0.3);"></div>
-        <div id="cprCompressionHud" style="display:none; position:absolute; top:12px; left:12px; background:rgba(11,21,38,0.85); border-radius:10px; padding:8px 12px;">
-          <div style="font-size:22px; font-weight:800; color:var(--gold); line-height:1;" id="cprCompressionCount">0</div>
-          <div style="font-size:9.5px; color:var(--ink-soft); margin-top:2px;">compressions · <span id="cprCompressionRate">100–120</span>/min</div>
-        </div>
         <div style="position:absolute; bottom:8px; left:0; right:0; text-align:center; font-size:10.5px; color:rgba(255,255,255,0.5); pointer-events:none;">Drag to rotate · Pinch/scroll to zoom</div>
       </div>
 
@@ -5811,7 +5807,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw5qEF_l8T2bEcb_cYWyRH7SvSJA8Vsh8j0y6bBvlyQ5YwOwHgo9yV2raV8dsjm2XEcWA/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw966a7er_NNvRMoflVieRiAxBKEc5dnuz2T0yFN9id_zAPSiomtrRjOOK4iVjpYG4ZPA/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -9481,11 +9477,6 @@ async function renderHealthGuide(){
 let cprScene, cprCamera, cprRenderer, cprPatientGroup, cprRescuerGroup;
 let cprRotY = 0.4, cprRotX = -0.3, cprDragging = false, cprLastX = 0, cprLastY = 0, cprDist = 9;
 let cprInitialized = false;
-let cprCompressionActive = false;
-let cprCompressionCount = 0;
-let cprCompressionInterval = null;
-let cprSlowMotion = false;
-let cprAudioCtx = null;
 let cprAnimFrameId = null;
 
 function cprLimbMesh(radiusTop, radiusBottom, length, color){
@@ -9524,18 +9515,6 @@ function cprBuildPatient(){
     arm.position.set(-0.3, 0.35, side * 0.75);
     cprPatientGroup.add(arm);
   });
-
-  // Hand-position highlight — a pulsing ring shown briefly at the start of the compressions
-  // step to teach correct hand placement, before compressions actually begin
-  const highlight = new THREE.Mesh(
-    new THREE.RingGeometry(0.14, 0.2, 24),
-    new THREE.MeshBasicMaterial({ color: 0xC9A227, transparent: true, opacity: 0, side: THREE.DoubleSide })
-  );
-  highlight.rotation.x = -Math.PI / 2;
-  highlight.position.set(0.15, 1.12, 0);
-  highlight.name = 'chestHighlight';
-  cprPatientGroup.add(highlight);
-
   cprPatientGroup.position.set(0, 0, 1.2);
   cprScene.add(cprPatientGroup);
 }
@@ -9702,16 +9681,12 @@ function cprShowSpeechBubble(text, duration){
 function cprResetRescuerPose(){
   // The resting kneeling pose built in cprBuildRescuer — every step starts from here.
   // Must cover every property any step's play() touches, or a pose from one step silently
-  // bleeds into the next (caught exactly this happening with Step 3's lean-in before shipping —
-  // applying that lesson proactively here for Step 4's arm-position changes too).
+  // bleeds into the next (caught exactly this happening with Step 3's lean-in before shipping).
   if(!cprRescuerGroup) return;
-  cprCompressionActive = false;
-  clearInterval(cprCompressionInterval);
-  document.getElementById('cprCompressionHud').style.display = 'none';
   cprRescuerGroup.position.set(0, 0, 0);
   cprRescuerGroup.scale.set(1, 1, 1);
   const arms = cprRescuerGroup.getObjectByName('arms');
-  if(arms){ arms.rotation.set(0, 0, 0); arms.position.set(0.9, 1.55, -0.2); arms.visible = true; }
+  if(arms){ arms.rotation.set(0, 0, 0); arms.visible = true; }
   const phoneArm = cprRescuerGroup.getObjectByName('phoneArm');
   if(phoneArm){ phoneArm.rotation.set(0, 0, 0); phoneArm.visible = false; }
   const head = cprRescuerGroup.getObjectByName('head');
@@ -9721,63 +9696,7 @@ function cprResetRescuerPose(){
   if(cprPatientGroup){
     const patientTorso = cprPatientGroup.getObjectByName('patientTorso');
     if(patientTorso) patientTorso.scale.set(1, 1, 1);
-    const highlight = cprPatientGroup.getObjectByName('chestHighlight');
-    if(highlight) highlight.material.opacity = 0;
   }
-}
-
-// ---------- Chest Compressions: the one continuous, user-controlled loop among the steps
-// (every other step is a one-shot animation). Metronome uses the real Web Audio API — a plain
-// oscillator beep, no audio file needed. Rate is pinned to 110/min (midpoint of the real
-// 100-120/min guideline range) at normal speed, halved when Slow Motion is on. ----------
-function cprPlayBeep(){
-  try{
-    if(!cprAudioCtx) cprAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = cprAudioCtx.createOscillator();
-    const gain = cprAudioCtx.createGain();
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.15, cprAudioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, cprAudioCtx.currentTime + 0.08);
-    osc.connect(gain);
-    gain.connect(cprAudioCtx.destination);
-    osc.start();
-    osc.stop(cprAudioCtx.currentTime + 0.08);
-  }catch(e){}
-}
-function cprRunOneCompression(){
-  const arms = cprRescuerGroup.getObjectByName('arms');
-  const torso = cprRescuerGroup.getObjectByName('torso');
-  cprPlayBeep();
-  cprTween(160, t => {
-    const offset = Math.sin(t * Math.PI) * 0.16; // down-stroke — visible compression depth
-    if(arms) arms.position.y = 0.85 - offset;
-    if(torso) torso.rotation.x = (Math.PI / 1.9) + offset * 0.4;
-  }, () => {
-    cprCompressionCount++;
-    document.getElementById('cprCompressionCount').textContent = cprCompressionCount;
-  });
-}
-function cprStartCompressions(){
-  if(cprCompressionActive) return;
-  cprCompressionActive = true;
-  document.getElementById('cprPlayBtn').textContent = '⏸ Pause';
-  const cycleMs = (cprSlowMotion ? 1090 : 545); // 545ms ≈ 110/min; doubled when slow motion is on
-  cprRunOneCompression();
-  cprCompressionInterval = setInterval(cprRunOneCompression, cycleMs);
-}
-function cprPauseCompressions(){
-  cprCompressionActive = false;
-  clearInterval(cprCompressionInterval);
-  document.getElementById('cprPlayBtn').textContent = '▶ Play';
-}
-function cprRestartCompressions(){
-  cprPauseCompressions();
-  cprCompressionCount = 0;
-  document.getElementById('cprCompressionCount').textContent = '0';
-  const arms = cprRescuerGroup.getObjectByName('arms');
-  const torso = cprRescuerGroup.getObjectByName('torso');
-  if(arms) arms.position.y = 0.85;
-  if(torso) torso.rotation.x = Math.PI / 1.9;
 }
 
 const cprSteps = [
@@ -9876,31 +9795,7 @@ const cprSteps = [
       });
     }
   },
-  {
-    label: 'CHEST COMPRESSIONS',
-    text: 'Place hands in the center of the chest and push hard and fast, 100–120 compressions per minute. Tap ▶ Play to start.',
-    play: function(){
-      const arms = cprRescuerGroup.getObjectByName('arms');
-      const torso = cprRescuerGroup.getObjectByName('torso');
-      // Position over the patient's chest and settle into the pre-compression stance
-      cprTween(600, t => {
-        if(arms) arms.position.y = 1.55 + (0.85 - 1.55) * t;
-        if(torso) torso.rotation.x = (Math.PI / 2.6) + ((Math.PI / 1.9) - (Math.PI / 2.6)) * t;
-      }, () => {
-        // Briefly highlight correct hand placement before compressions begin
-        const highlight = cprPatientGroup.getObjectByName('chestHighlight');
-        if(highlight){
-          cprTween(400, t => { highlight.material.opacity = 0.85 * Math.sin(t * Math.PI); });
-          setTimeout(() => {
-            cprTween(400, t => { highlight.material.opacity = 0.85 * Math.sin((1 - t) * Math.PI); }, () => {
-              cprShowSpeechBubble('Push hard and fast.', 2200);
-              document.getElementById('cprCompressionHud').style.display = 'block';
-            });
-          }, 500);
-        }
-      });
-    }
-  },
+  { label: 'CHEST COMPRESSIONS', text: 'Place hands in the center of the chest and push hard and fast, 100–120 compressions per minute.' },
   { label: 'RESCUE BREATHS', text: 'After 30 compressions, give 2 rescue breaths if trained and willing.' },
   { label: '30:2 CYCLE', text: '30 compressions, then 2 breaths — repeat until help arrives.' },
   { label: 'AED', text: 'Turn on the AED, attach the pads as shown, and follow its voice instructions.' },
@@ -9918,35 +9813,8 @@ function cprGoToStep(index){
 }
 document.getElementById('cprPrevBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep - 1));
 document.getElementById('cprNextBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep + 1));
-document.getElementById('cprPlayBtn').addEventListener('click', () => {
-  // Compressions are a continuous loop — Play becomes a real play/pause toggle for it, once the
-  // step has actually settled into position (HUD visible). Every other step just replays.
-  const compressionsReady = cprCurrentStep === 3 && document.getElementById('cprCompressionHud').style.display === 'block';
-  if(compressionsReady){
-    cprCompressionActive ? cprPauseCompressions() : cprStartCompressions();
-  } else {
-    cprGoToStep(cprCurrentStep);
-  }
-});
-document.getElementById('cprReplayBtn').addEventListener('click', () => {
-  if(cprCurrentStep === 3 && document.getElementById('cprCompressionHud').style.display === 'block'){
-    cprRestartCompressions();
-  } else {
-    cprGoToStep(cprCurrentStep);
-  }
-});
-document.getElementById('cprSlowMoBtn').addEventListener('click', (e) => {
-  cprSlowMotion = !cprSlowMotion;
-  e.target.classList.toggle('active-slow', cprSlowMotion);
-  e.target.style.background = cprSlowMotion ? 'var(--teal)' : 'var(--panel)';
-  e.target.style.color = cprSlowMotion ? '#fff' : 'var(--ink)';
-  // If compressions are already running, apply the new rate immediately rather than waiting
-  // for the next Play tap
-  if(cprCompressionActive){
-    cprPauseCompressions();
-    cprStartCompressions();
-  }
-});
+document.getElementById('cprPlayBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep));
+document.getElementById('cprReplayBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep));
 
 // Three.js is loaded with `defer`, so it may not be ready the instant this screen first opens —
 // poll briefly rather than fail, since a moment's wait is normal and expected here.
