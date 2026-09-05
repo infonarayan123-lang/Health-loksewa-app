@@ -2530,9 +2530,35 @@
   <div class="screen" id="formulaScreen">
     <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
-      <div class="section-title">🔢 Quick Reference</div>
+      <div class="section-title">🔢 Formulas</div>
       <input type="text" class="formula-search-box" id="formulaSearchBox" placeholder="Search formulas… e.g. IMR, MMR, TFR">
       <div id="formulaListContent"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="quickRefScreen">
+    <div class="back-link" data-back="studyResources">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚡ Quick References</div>
+      <input type="text" class="formula-search-box" id="quickRefSearchBox" placeholder="Search quick reference…">
+      <div id="quickRefSearchResults" style="display:none;"></div>
+      <div id="quickRefCategoryWrap"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="quickRefDetailScreen">
+    <div class="back-link" data-back="quickRef">← Back</div>
+    <div class="home-body">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+        <div class="section-title" id="qrDetailTitle" style="margin:0;">Reference</div>
+        <button class="calc-btn" id="qrBookmarkBtn" style="margin:0; width:auto; padding:7px 12px; font-size:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔖</button>
+      </div>
+      <div class="calc-card" id="qrDetailContent"></div>
+      <div class="calc-card" id="qrExamTipCard" style="margin-top:12px; display:none;">
+        <h4>📌 Exam Tip</h4>
+        <p style="font-size:13px; color:var(--gold); line-height:1.6;" id="qrExamTip"></p>
+      </div>
+      <button class="calc-btn" id="qrCopyBtn" style="margin-top:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📋 Copy</button>
     </div>
   </div>
 
@@ -2965,8 +2991,13 @@
       <div class="dash-grid">
       <a class="dash-card hub-tile t1" href="#" id="goToFormulaFromHub">
         <div class="dc-icon">🔢</div>
-        <div class="dc-label">Quick Reference</div>
-        <div class="dc-sub">Formulas &amp; key facts</div>
+        <div class="dc-label">Formulas</div>
+        <div class="dc-sub">Key formulas &amp; facts</div>
+      </a>
+      <a class="dash-card hub-tile t6" href="#" id="goToQuickRefFromHub">
+        <div class="dc-icon">⚡</div>
+        <div class="dc-label">Quick References</div>
+        <div class="dc-sub">Instant facts &amp; tables</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToMnemonicsFromHub">
         <div class="dc-icon">🧩</div>
@@ -2996,9 +3027,85 @@
   <div class="screen" id="mnemonicsScreen">
     <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
-      <div class="section-title">🧩 Mnemonics Library</div>
-      <input type="text" class="formula-search-box" id="mnemonicsSearchBox" placeholder="Search… e.g. prevention, iceberg">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="section-title" style="margin:0;">🧠 Mnemonics</div>
+        <div style="display:flex; gap:6px;">
+          <button class="calc-btn" id="mnPracticeBtn" style="margin:0; width:auto; padding:7px 12px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">▶ Practice</button>
+          <button class="calc-btn" id="mnCreateBtn" style="margin:0; width:auto; padding:7px 12px; font-size:12px;">➕ Create</button>
+        </div>
+      </div>
+      <input type="text" class="formula-search-box" id="mnemonicsSearchBox" placeholder="Search topic, keyword, subject…" style="margin-top:10px;">
+
+      <div style="display:flex; gap:8px; margin:10px 0; overflow-x:auto;">
+        <button class="calc-btn mnemonic-filter-btn active" data-filter="all" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap;">All</button>
+        <button class="calc-btn mnemonic-filter-btn" data-filter="saved" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⭐ My Saved</button>
+        <button class="calc-btn mnemonic-filter-btn" data-filter="mine" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">✍️ Created by Me</button>
+        <button class="calc-btn mnemonic-filter-btn" data-filter="popular" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔥 Popular</button>
+        <button class="calc-btn mnemonic-filter-btn" data-filter="recent" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🆕 Recent</button>
+      </div>
+
+      <p style="font-size:11px; font-weight:700; color:var(--ink-soft); margin:12px 0 6px;">📚 Categories</p>
+      <div id="mnemonicsCategoryRow" style="display:flex; gap:6px; margin-bottom:14px; overflow-x:auto;"></div>
+
       <div id="mnemonicsListContent"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="mnemonicCreateScreen">
+    <div class="back-link" data-back="mnemonics">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="mnCreateTitle">➕ Create Mnemonic</div>
+      <div class="calc-card">
+        <div class="calc-field"><label>Topic</label><input type="text" id="mnCreateTopic" placeholder="e.g. Levels of Prevention"></div>
+        <div class="calc-field"><label>What to Remember</label><textarea id="mnCreateWhatToRemember" placeholder="The list or concept you're trying to memorize" style="width:100%; min-height:50px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></textarea></div>
+        <div class="calc-field"><label>Mnemonic</label><input type="text" id="mnCreateTrick" placeholder="e.g. P S T R"></div>
+        <div class="calc-field"><label>Explanation</label><textarea id="mnCreateExplain" placeholder="What each letter/word stands for" style="width:100%; min-height:60px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></textarea></div>
+        <div class="calc-field"><label>Subject</label>
+          <select id="mnCreateCategory" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;"></select>
+        </div>
+        <button class="calc-btn" id="mnCreateSaveBtn">✓ Save</button>
+        <button class="calc-btn" id="mnCreateDeleteBtn" style="display:none; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">🗑️ Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="mnemonicPracticeScreen">
+    <div class="back-link" data-back="mnemonics">← Back</div>
+    <div class="home-body" id="mnPracticeWrap">
+      <p style="color:var(--ink-soft); font-size:13.5px; text-align:center; padding:20px 0;">Loading…</p>
+    </div>
+  </div>
+
+  <div class="screen" id="mnemonicDetailScreen">
+    <div class="back-link" data-back="mnemonics">← Back</div>
+    <div class="home-body">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="section-title" id="mnDetailTopic" style="margin-bottom:4px;">Topic</div>
+        <button class="calc-btn" id="mnDetailEditBtn" style="display:none; margin:0; width:auto; padding:6px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">✏️ Edit</button>
+      </div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:14px;" id="mnDetailCategory"></p>
+
+      <div class="calc-card" id="mnDetailWhatCard" style="display:none;">
+        <h4>📝 What to Remember</h4>
+        <p style="font-size:13px; color:var(--ink); line-height:1.6;" id="mnDetailWhat"></p>
+      </div>
+
+      <div class="calc-card">
+        <h4>🧠 Mnemonic</h4>
+        <p style="font-size:16px; font-weight:800; color:var(--gold); letter-spacing:0.5px;" id="mnDetailTrick"></p>
+      </div>
+      <div class="calc-card" style="margin-top:12px;">
+        <h4>💡 Memory Tip</h4>
+        <p style="font-size:13.5px; color:var(--ink); line-height:1.6;" id="mnDetailExplain"></p>
+      </div>
+
+      <div style="display:flex; gap:8px; margin:16px 0;">
+        <button class="calc-btn" id="mnSaveBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔖 Save</button>
+        <button class="calc-btn" id="mnHelpfulBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">👍 Helpful</button>
+        <button class="calc-btn" id="mnCopyBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📋 Copy</button>
+      </div>
+      <button class="calc-btn" id="mnToFlashcardBtn">🧩 Convert to Flash Card</button>
+      <button class="calc-btn" id="mnSaveToNotesBtn" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📝 Save to Notes</button>
     </div>
   </div>
 
@@ -5821,7 +5928,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw5qEF_l8T2bEcb_cYWyRH7SvSJA8Vsh8j0y6bBvlyQ5YwOwHgo9yV2raV8dsjm2XEcWA/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyn4T7Szxg0NxDqidzisEl4UrZBi6KXUQzCpixfNd6GsKaoOGmI2xcEwerHvT0iJ_QGpA/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -5862,6 +5969,8 @@ const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
 const formulaScreen = document.getElementById('formulaScreen');
+const quickRefScreen = document.getElementById('quickRefScreen');
+const quickRefDetailScreen = document.getElementById('quickRefDetailScreen');
 const videoScreen = document.getElementById('videoScreen');
 const learnScreen = document.getElementById('learnScreen');
 const practiceScreen = document.getElementById('practiceScreen');
@@ -5881,6 +5990,9 @@ const rapidFireScreen = document.getElementById('rapidFireScreen');
 const rapidFireSetupScreen = document.getElementById('rapidFireSetupScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
 const mnemonicsScreen = document.getElementById('mnemonicsScreen');
+const mnemonicDetailScreen = document.getElementById('mnemonicDetailScreen');
+const mnemonicCreateScreen = document.getElementById('mnemonicCreateScreen');
+const mnemonicPracticeScreen = document.getElementById('mnemonicPracticeScreen');
 const healthDaysScreen = document.getElementById('healthDaysScreen');
 const healthDayDetailScreen = document.getElementById('healthDayDetailScreen');
 const healthDayCalendarScreen = document.getElementById('healthDayCalendarScreen');
@@ -5965,13 +6077,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -6131,7 +6243,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, mnemonicsScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -9167,7 +9279,21 @@ let dictionaryPdfList = [];
 
 function applyStudyResourcesData(data){
   FORMULAS = (data.formulas || []).map(r => ({ name: r.Name || '', formula: r.Formula || '', note: r.Note || '' }));
-  MNEMONICS = (data.mnemonics || []).map(r => ({ topic: r.Topic || '', trick: r.Trick || '', explain: r.Explain || '' }));
+  // Category assumed as a "Category" Sheet column (Title-Case, matching this app's convention
+  // elsewhere) — confirm against your actual "Mnemonics" tab; defaults to "General" if absent,
+  // nothing breaks either way. id is a stable slug generated from the topic, used for
+  // bookmarks/helpful-votes/Flash Card conversion so they survive a Sheet row reorder.
+  MNEMONICS = (data.mnemonics || []).map(r => {
+    const topic = r.Topic || '';
+    return {
+      id: 'mn_' + topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      topic, trick: r.Trick || '', explain: r.Explain || '',
+      category: r.Category || 'General',
+    };
+  });
+  MNEMONIC_HELPFUL_COUNTS = data.mnemonicHelpfulCounts || {};
+  renderMnemonicCategories();
+  renderMnemonics();
   HEALTH_DAYS = (data.healthDays || []).map(r => ({
     date: r.Date || '', title: r.Title || '', desc: r.Description || '',
     // Extended fields for the Health Day detail screen — assumed Sheet column names
@@ -9339,21 +9465,108 @@ function renderFaqs(){
 
 // Populated from the "Mnemonics" Google Sheet tab — see loadStudyResourcesData() below
 let MNEMONICS = [];
+let MNEMONIC_HELPFUL_COUNTS = {};
 // Cached once per screen-open (not per keystroke) — see goToMnemonicsFromHub click handler
 let mnemonicsUserIsPremium = false;
-function renderMnemonics(searchTerm){
+
+const MNEMONIC_CATEGORIES = ['Anatomy', 'Physiology', 'Epidemiology', 'Biostatistics', 'Community Health', 'Nutrition', 'MCH', 'Health Programs', 'Pharmacology', 'Microbiology', 'Health Administration'];
+let mnemonicActiveCategory = null; // null = all categories
+let mnemonicActiveFilter = 'all'; // all | saved | popular | recent
+
+function getMnemonicBookmarks(){
+  try{ return JSON.parse(localStorage.getItem('hl_mnemonic_bookmarks') || '[]'); }catch(e){ return []; }
+}
+function isMnemonicBookmarked(id){ return getMnemonicBookmarks().includes(id); }
+function toggleMnemonicBookmark(id){
+  let list = getMnemonicBookmarks();
+  if(list.includes(id)) list = list.filter(x => x !== id);
+  else list.unshift(id);
+  try{ localStorage.setItem('hl_mnemonic_bookmarks', JSON.stringify(list)); }catch(e){}
+}
+function getMnemonicHelpfulVoted(){
+  try{ return JSON.parse(localStorage.getItem('hl_mnemonic_helpful_voted') || '[]'); }catch(e){ return []; }
+}
+function markMnemonicHelpfulVoted(id){
+  const list = getMnemonicHelpfulVoted();
+  if(!list.includes(id)){
+    list.push(id);
+    try{ localStorage.setItem('hl_mnemonic_helpful_voted', JSON.stringify(list)); }catch(e){}
+  }
+}
+// ---------- User-created mnemonics: stored locally (not submitted to the shared Sheet — these
+// are personal, not published content), merged into the same list/search/category/filter system
+// as the official ones rather than living in a separate parallel screen. ----------
+function getCustomMnemonics(){
+  try{ return JSON.parse(localStorage.getItem('hl_custom_mnemonics') || '[]'); }catch(e){ return []; }
+}
+function saveCustomMnemonics(list){
+  try{ localStorage.setItem('hl_custom_mnemonics', JSON.stringify(list)); }catch(e){}
+}
+function getAllMnemonics(){
+  return [...MNEMONICS, ...getCustomMnemonics()];
+}
+
+function renderMnemonicCategories(){
+  const wrap = document.getElementById('mnemonicsCategoryRow');
+  if(!wrap) return;
+  const chip = (label, value) => `<button class="note-folder-chip mnemonic-cat-chip ${mnemonicActiveCategory === value ? 'active' : ''}" data-cat="${value || ''}" style="white-space:nowrap;">${label}</button>`;
+  wrap.innerHTML = chip('All', null) + MNEMONIC_CATEGORIES.map(c => chip(c, c)).join('');
+  document.querySelectorAll('.mnemonic-cat-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mnemonicActiveCategory = btn.dataset.cat || null;
+      renderMnemonicCategories();
+      renderMnemonics(document.getElementById('mnemonicsSearchBox').value);
+    });
+  });
+}
+document.querySelectorAll('.mnemonic-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    mnemonicActiveFilter = btn.dataset.filter;
+    document.querySelectorAll('.mnemonic-filter-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderMnemonics(document.getElementById('mnemonicsSearchBox').value);
+  });
+});
+
+// Shared by the list view and Practice Mode, so filtering logic lives in exactly one place
+function getFilteredMnemonics(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
-  const filtered = term
-    ? MNEMONICS.filter(m => m.topic.toLowerCase().includes(term) || m.explain.toLowerCase().includes(term))
-    : MNEMONICS;
+  let list = getAllMnemonics();
+
+  if(term){
+    list = list.filter(m => m.topic.toLowerCase().includes(term) || m.explain.toLowerCase().includes(term) ||
+      m.trick.toLowerCase().includes(term) || m.category.toLowerCase().includes(term));
+  }
+  if(mnemonicActiveCategory) list = list.filter(m => m.category === mnemonicActiveCategory);
+
+  if(mnemonicActiveFilter === 'saved'){
+    const saved = getMnemonicBookmarks();
+    list = list.filter(m => saved.includes(m.id));
+  } else if(mnemonicActiveFilter === 'mine'){
+    list = list.filter(m => m.isCustom);
+  } else if(mnemonicActiveFilter === 'popular'){
+    list = [...list].sort((a, b) => (MNEMONIC_HELPFUL_COUNTS[b.id] || 0) - (MNEMONIC_HELPFUL_COUNTS[a.id] || 0));
+  } else if(mnemonicActiveFilter === 'recent'){
+    list = [...list].reverse(); // Sheet row order — newest admin-added rows are last
+  }
+  return list;
+}
+function renderMnemonics(searchTerm){
+  const list = getFilteredMnemonics(searchTerm);
 
   const wrap = document.getElementById('mnemonicsListContent');
-  if(filtered.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No mnemonics match "${searchTerm}".</p>`;
+  if(list.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center; padding:20px 0;">${mnemonicActiveFilter === 'saved' ? "You haven't saved any mnemonics yet." : 'No mnemonics match.'}</p>`;
     return;
   }
-  wrap.innerHTML = filtered.map((m, i) => {
-    const locked = !mnemonicsUserIsPremium && i >= 4;
+  wrap.innerHTML = list.map((m, i) => {
+    // Never lock a user's own created mnemonics behind Premium — only the official Sheet ones
+    const locked = !mnemonicsUserIsPremium && i >= 4 && !m.isCustom;
     if(locked){
       return `
         <div class="mnemonic-item mnemonic-locked" data-locked-mnemonic="1">
@@ -9363,37 +9576,16 @@ function renderMnemonics(searchTerm){
         </div>`;
     }
     return `
-      <div class="mnemonic-item">
-        <div class="mi-topic">${m.topic}</div>
+      <div class="mnemonic-item mnemonic-row" data-mnemonic-id="${m.id}" style="cursor:pointer;">
+        <div class="mi-topic">${isMnemonicBookmarked(m.id) ? '⭐ ' : ''}${m.isCustom ? '✍️ ' : ''}${m.topic}</div>
         <div class="mi-trick">💡 ${m.trick}</div>
-        <div class="mi-explain">${m.explain}</div>
-        <button class="chat-save-btn" data-mnemonic-idx="${i}" style="display:block; margin-top:6px;" title="Save to My Notes">🔖 Save</button>
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-top:2px;">${m.category}</div>
       </div>`;
   }).join('');
 
-  document.querySelectorAll('[data-mnemonic-idx]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const m = filtered[parseInt(btn.dataset.mnemonicIdx, 10)];
-      const notes = getNotes();
-      const newNote = {
-        id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
-        title: m.topic,
-        body: `${m.trick}\n\n${m.explain}`,
-        folder: 'Mnemonics',
-        tags: ['Mnemonic'],
-        pinned: false,
-        revisionStatus: null,
-        reviewDateAD: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        deletedAt: null,
-      };
-      notes.unshift(newNote);
-      saveNotes(notes);
-      btn.textContent = '✓ Saved';
-    });
+  document.querySelectorAll('.mnemonic-row').forEach(row => {
+    row.addEventListener('click', () => openMnemonicDetail(list.find(m => m.id === row.dataset.mnemonicId)));
   });
-
   document.querySelectorAll('[data-locked-mnemonic]').forEach(item => {
     item.style.cursor = 'pointer';
     item.addEventListener('click', async () => {
@@ -9408,6 +9600,208 @@ function renderMnemonics(searchTerm){
 document.getElementById('mnemonicsSearchBox').addEventListener('input', (e) => {
   renderMnemonics(e.target.value);
 });
+
+// ---------- Mnemonic Detail screen ----------
+let currentMnemonicDetail = null;
+function openMnemonicDetail(m){
+  if(!m) return;
+  currentMnemonicDetail = m;
+  document.getElementById('mnDetailTopic').textContent = m.topic;
+  document.getElementById('mnDetailCategory').textContent = m.category;
+  document.getElementById('mnDetailTrick').textContent = m.trick;
+  document.getElementById('mnDetailExplain').textContent = m.explain;
+  const whatCard = document.getElementById('mnDetailWhatCard');
+  if(m.whatToRemember){ whatCard.style.display = 'block'; document.getElementById('mnDetailWhat').textContent = m.whatToRemember; }
+  else whatCard.style.display = 'none';
+  document.getElementById('mnDetailEditBtn').style.display = m.isCustom ? 'block' : 'none';
+  const saveBtn = document.getElementById('mnSaveBtn');
+  saveBtn.textContent = isMnemonicBookmarked(m.id) ? '⭐ Saved' : '🔖 Save';
+  const helpfulBtn = document.getElementById('mnHelpfulBtn');
+  const voted = getMnemonicHelpfulVoted().includes(m.id);
+  const count = MNEMONIC_HELPFUL_COUNTS[m.id] || 0;
+  helpfulBtn.textContent = voted ? `👍 Helpful (${count})` : `👍 Helpful${count ? ' (' + count + ')' : ''}`;
+  helpfulBtn.disabled = voted;
+  showScreen(mnemonicDetailScreen);
+}
+document.getElementById('mnDetailEditBtn').addEventListener('click', () => {
+  if(currentMnemonicDetail) openMnemonicCreate(currentMnemonicDetail);
+});
+document.getElementById('mnSaveBtn').addEventListener('click', () => {
+  if(!currentMnemonicDetail) return;
+  toggleMnemonicBookmark(currentMnemonicDetail.id);
+  document.getElementById('mnSaveBtn').textContent = isMnemonicBookmarked(currentMnemonicDetail.id) ? '⭐ Saved' : '🔖 Save';
+});
+document.getElementById('mnHelpfulBtn').addEventListener('click', async () => {
+  if(!currentMnemonicDetail || getMnemonicHelpfulVoted().includes(currentMnemonicDetail.id)) return;
+  markMnemonicHelpfulVoted(currentMnemonicDetail.id);
+  MNEMONIC_HELPFUL_COUNTS[currentMnemonicDetail.id] = (MNEMONIC_HELPFUL_COUNTS[currentMnemonicDetail.id] || 0) + 1;
+  const helpfulBtn = document.getElementById('mnHelpfulBtn');
+  helpfulBtn.textContent = `👍 Helpful (${MNEMONIC_HELPFUL_COUNTS[currentMnemonicDetail.id]})`;
+  helpfulBtn.disabled = true;
+  try{
+    await fetch(SHEET_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'markMnemonicHelpful', mnemonicId: currentMnemonicDetail.id })
+    });
+  }catch(e){}
+});
+document.getElementById('mnCopyBtn').addEventListener('click', async () => {
+  if(!currentMnemonicDetail) return;
+  const text = `${currentMnemonicDetail.topic}\n${currentMnemonicDetail.trick}\n${currentMnemonicDetail.explain}`;
+  try{ await navigator.clipboard.writeText(text); alert('Copied!'); }catch(e){}
+});
+document.getElementById('mnToFlashcardBtn').addEventListener('click', () => {
+  if(!currentMnemonicDetail) return;
+  const decks = ensureDefaultFcDeck();
+  const cards = getFcCards();
+  cards.push({
+    id: 'card_' + Date.now() + Math.random().toString(36).slice(2,7),
+    deckId: decks[0].id, front: currentMnemonicDetail.topic, back: currentMnemonicDetail.trick,
+    example: currentMnemonicDetail.explain, mnemonic: '', tags: ['Mnemonic'], favorite: false,
+    status: 'new', repetitions: 0, easeFactor: 2.5, interval: 0, nextReviewDate: null, lastReviewedAt: null,
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  });
+  saveFcCards(cards);
+  alert(`Added to Flash Cards → "${decks[0].name}" deck.`);
+});
+document.getElementById('mnSaveToNotesBtn').addEventListener('click', () => {
+  if(!currentMnemonicDetail) return;
+  const m = currentMnemonicDetail;
+  const notes = getNotes();
+  notes.unshift({
+    id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+    title: m.topic, body: `${m.trick}\n\n${m.explain}`,
+    folder: 'Mnemonics', tags: ['Mnemonic'], pinned: false,
+    revisionStatus: null, reviewDateAD: null,
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), deletedAt: null,
+  });
+  saveNotes(notes);
+  document.getElementById('mnSaveToNotesBtn').textContent = '✓ Saved to Notes';
+});
+
+// ---------- Create Mnemonic: custom mnemonics only, kept separate from the official Sheet-driven
+// ones (never submitted anywhere — purely personal), reusing the same detail/list/search system
+// rather than a parallel screen. ----------
+let mnemonicEditingId = null;
+function openMnemonicCreate(existing){
+  mnemonicEditingId = existing ? existing.id : null;
+  document.getElementById('mnCreateCategory').innerHTML = MNEMONIC_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+  if(existing){
+    document.getElementById('mnCreateTitle').textContent = '✏️ Edit Mnemonic';
+    document.getElementById('mnCreateTopic').value = existing.topic;
+    document.getElementById('mnCreateWhatToRemember').value = existing.whatToRemember || '';
+    document.getElementById('mnCreateTrick').value = existing.trick;
+    document.getElementById('mnCreateExplain').value = existing.explain;
+    document.getElementById('mnCreateCategory').value = existing.category;
+    document.getElementById('mnCreateDeleteBtn').style.display = 'block';
+  } else {
+    document.getElementById('mnCreateTitle').textContent = '➕ Create Mnemonic';
+    document.getElementById('mnCreateTopic').value = '';
+    document.getElementById('mnCreateWhatToRemember').value = '';
+    document.getElementById('mnCreateTrick').value = '';
+    document.getElementById('mnCreateExplain').value = '';
+    document.getElementById('mnCreateDeleteBtn').style.display = 'none';
+  }
+  showScreen(mnemonicCreateScreen);
+}
+document.getElementById('mnCreateBtn').addEventListener('click', () => openMnemonicCreate(null));
+document.getElementById('mnCreateSaveBtn').addEventListener('click', () => {
+  const topic = document.getElementById('mnCreateTopic').value.trim();
+  const trick = document.getElementById('mnCreateTrick').value.trim();
+  if(!topic || !trick){ alert('Please fill in at least the Topic and the Mnemonic.'); return; }
+  const custom = getCustomMnemonics();
+  const fields = {
+    topic, trick,
+    whatToRemember: document.getElementById('mnCreateWhatToRemember').value.trim(),
+    explain: document.getElementById('mnCreateExplain').value.trim(),
+    category: document.getElementById('mnCreateCategory').value,
+    isCustom: true,
+  };
+  if(mnemonicEditingId){
+    const idx = custom.findIndex(m => m.id === mnemonicEditingId);
+    if(idx !== -1) custom[idx] = { ...custom[idx], ...fields };
+  } else {
+    custom.push({ id: 'mnc_' + Date.now() + Math.random().toString(36).slice(2,7), ...fields });
+  }
+  saveCustomMnemonics(custom);
+  showScreen(mnemonicsScreen);
+  renderMnemonics(document.getElementById('mnemonicsSearchBox').value);
+});
+document.getElementById('mnCreateDeleteBtn').addEventListener('click', () => {
+  if(!mnemonicEditingId || !confirm('Delete this mnemonic?')) return;
+  saveCustomMnemonics(getCustomMnemonics().filter(m => m.id !== mnemonicEditingId));
+  showScreen(mnemonicsScreen);
+  renderMnemonics(document.getElementById('mnemonicsSearchBox').value);
+});
+
+// ---------- Practice Mode: deliberately simple per the document's own instruction — hide/reveal
+// + a Yes/No self-check, no scores stored, no due-dates, no second scheduling system. Anyone who
+// wants real spaced repetition is pointed at the existing Flash Card conversion instead of this
+// growing a second version of it. Practices whatever's currently filtered/searched on the Home
+// screen — reuses getFilteredMnemonics so this can never drift from what the list shows. ----------
+let mnPracticePool = [];
+let mnPracticeIndex = 0;
+let mnPracticeResults = { yes: 0, no: 0 };
+document.getElementById('mnPracticeBtn').addEventListener('click', () => {
+  const filtered = getFilteredMnemonics(document.getElementById('mnemonicsSearchBox').value);
+  // Respect the same free-tier limit as the list view — position within THIS filtered set,
+  // not a separate unrelated query
+  const pool = filtered.filter((m, i) => mnemonicsUserIsPremium || m.isCustom || i < 4);
+  if(pool.length === 0){ alert('No mnemonics to practice in the current view.'); return; }
+  mnPracticePool = [...pool].sort(() => Math.random() - 0.5);
+  mnPracticeIndex = 0;
+  mnPracticeResults = { yes: 0, no: 0 };
+  showScreen(mnemonicPracticeScreen);
+  renderMnemonicPracticeCard();
+});
+function renderMnemonicPracticeCard(){
+  const wrap = document.getElementById('mnPracticeWrap');
+  if(mnPracticeIndex >= mnPracticePool.length){
+    wrap.innerHTML = `
+      <div class="content-card" style="text-align:center;">
+        <h4 style="margin-bottom:8px;">🎉 Practice Complete</h4>
+        <p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:14px;">${mnPracticePool.length} mnemonic${mnPracticePool.length === 1 ? '' : 's'} reviewed</p>
+        <div style="display:flex; justify-content:center; gap:16px; margin-bottom:16px; font-size:13px;">
+          <span>✅ ${mnPracticeResults.yes}</span>
+          <span>❌ ${mnPracticeResults.no}</span>
+        </div>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Want real spaced repetition on the ones you missed? Convert them to Flash Cards from their detail page.</p>
+        <button class="start-btn" id="mnPracticeDoneBtn" style="margin-top:0;">Done</button>
+      </div>`;
+    document.getElementById('mnPracticeDoneBtn').addEventListener('click', () => showScreen(mnemonicsScreen));
+    return;
+  }
+  const m = mnPracticePool[mnPracticeIndex];
+  wrap.innerHTML = `
+    <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-bottom:10px;">${mnPracticeIndex + 1} of ${mnPracticePool.length}</p>
+    <div class="content-card" style="text-align:center; min-height:140px; display:flex; flex-direction:column; justify-content:center;">
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">What mnemonic helps remember:</p>
+      <h4 style="font-size:17px;">${m.topic}</h4>
+      <div id="mnPracticeAnswer" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+        <p style="font-size:16px; font-weight:800; color:var(--gold); margin-bottom:8px;">${m.trick}</p>
+        <p style="font-size:12.5px; color:var(--ink-soft);">${m.explain}</p>
+      </div>
+    </div>
+    <button class="calc-btn" id="mnPracticeRevealBtn" style="margin-top:14px;">👁️ Reveal</button>
+    <div id="mnPracticeYesNoRow" style="display:none; gap:8px; margin-top:14px;">
+      <button class="calc-btn" id="mnPracticeNoBtn" style="margin:0; flex:1; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">❌ No</button>
+      <button class="calc-btn" id="mnPracticeYesBtn" style="margin:0; flex:1; background:var(--correct); color:#fff;">✅ Yes</button>
+    </div>
+  `;
+  document.getElementById('mnPracticeRevealBtn').addEventListener('click', () => {
+    document.getElementById('mnPracticeAnswer').style.display = 'block';
+    document.getElementById('mnPracticeRevealBtn').style.display = 'none';
+    const row = document.getElementById('mnPracticeYesNoRow');
+    row.style.display = 'flex';
+  });
+  const advance = (remembered) => {
+    if(remembered) mnPracticeResults.yes++; else mnPracticeResults.no++;
+    mnPracticeIndex++;
+    renderMnemonicPracticeCard();
+  };
+  document.getElementById('mnPracticeYesBtn').addEventListener('click', () => advance(true));
+  document.getElementById('mnPracticeNoBtn').addEventListener('click', () => advance(false));
+}
 
 function extractYouTubeId(url){
   if(!url) return '';
@@ -11823,6 +12217,131 @@ function renderMarkdownToHtml(text){
   if(inList) html += `</${inList}>`;
   return html || '<p style="opacity:0.6;">(empty note)</p>';
 }
+
+// ---------- Quick References: instant facts/tables, deliberately short and scannable (not
+// another notes/lesson system, per the design brief). Content is markdown, reusing the exact
+// same renderer built for My Notes (including its table support) — no new content format
+// invented. "Formulas" and "Immunization Schedule" subtopics deliberately link to those existing
+// screens instead of a new Sheet-driven page, so this doesn't duplicate content that's already
+// built and working elsewhere in the app. ----------
+const QUICK_REF_CATEGORIES = [
+  { name: 'Academic', icon: '📚', subtopics: ['Normal Values', 'Formulas', 'Epidemiological Measures', 'Biostatistics', 'Health Indicators'] },
+  { name: 'Clinical & Health', icon: '🏥', subtopics: ['BMI', 'GCS', 'Vital Signs', 'Immunization Schedule', 'ANC/PNC', 'First Aid'] },
+  { name: 'Nepal', icon: '🇳🇵', subtopics: ['Health Programs', 'Health Policies', 'Government Levels', 'Important Acts', 'MoHFS/DoHS Structure'] },
+  { name: 'Common References', icon: '💊', subtopics: ['Drug Abbreviations', 'Medical Abbreviations', 'Laboratory Terms', 'Units & Conversions'] },
+];
+// Subtopics that navigate to an existing screen instead of a Sheet-driven detail page
+const QUICK_REF_EXTERNAL_LINKS = {
+  'Formulas': () => { showScreen(formulaScreen); renderFormulas(); },
+  'Immunization Schedule': () => { showScreen(immunizationScreen); renderImmunization(); },
+};
+
+let QUICK_REFERENCES = [];
+let quickRefLoaded = false;
+function getQuickRefBookmarks(){
+  try{ return JSON.parse(localStorage.getItem('hl_quickref_bookmarks') || '[]'); }catch(e){ return []; }
+}
+function isQuickRefBookmarked(subtopic){ return getQuickRefBookmarks().includes(subtopic); }
+function toggleQuickRefBookmark(subtopic){
+  let list = getQuickRefBookmarks();
+  if(list.includes(subtopic)) list = list.filter(x => x !== subtopic);
+  else list.unshift(subtopic);
+  try{ localStorage.setItem('hl_quickref_bookmarks', JSON.stringify(list)); }catch(e){}
+}
+function renderQuickRefHub(){
+  const wrap = document.getElementById('quickRefCategoryWrap');
+  wrap.innerHTML = QUICK_REF_CATEGORIES.map(cat => `
+    <div class="content-card" style="margin-bottom:12px;">
+      <h4 style="margin-bottom:8px;">${cat.icon} ${cat.name}</h4>
+      ${cat.subtopics.map(sub => `
+        <button class="note-item quickref-row" data-subtopic="${sub.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+          <span class="ni-title" style="font-size:13px;">${isQuickRefBookmarked(sub) ? '🔖 ' : ''}${sub}</span>
+          <span style="color:var(--ink-soft);">→</span>
+        </button>
+      `).join('')}
+    </div>
+  `).join('');
+  document.querySelectorAll('.quickref-row').forEach(btn => {
+    btn.addEventListener('click', () => openQuickRefSubtopic(btn.dataset.subtopic));
+  });
+}
+function openQuickRefSubtopic(subtopic){
+  if(QUICK_REF_EXTERNAL_LINKS[subtopic]){ QUICK_REF_EXTERNAL_LINKS[subtopic](); return; }
+  const entry = QUICK_REFERENCES.find(r => r.Subtopic === subtopic);
+  document.getElementById('qrDetailTitle').textContent = subtopic;
+  const contentWrap = document.getElementById('qrDetailContent');
+  if(entry && entry.Content){
+    contentWrap.innerHTML = renderMarkdownToHtml(entry.Content);
+  } else {
+    contentWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Not added yet — check back soon.</p>`;
+  }
+  const tipCard = document.getElementById('qrExamTipCard');
+  if(entry && entry.ExamTip){ tipCard.style.display = 'block'; document.getElementById('qrExamTip').textContent = entry.ExamTip; }
+  else tipCard.style.display = 'none';
+  const bookmarkBtn = document.getElementById('qrBookmarkBtn');
+  bookmarkBtn.textContent = isQuickRefBookmarked(subtopic) ? '🔖' : '🏷️';
+  bookmarkBtn.style.color = isQuickRefBookmarked(subtopic) ? 'var(--gold)' : 'var(--ink)';
+  bookmarkBtn.dataset.subtopic = subtopic;
+  showScreen(quickRefDetailScreen);
+}
+document.getElementById('qrBookmarkBtn').addEventListener('click', (e) => {
+  const subtopic = e.currentTarget.dataset.subtopic;
+  if(!subtopic) return;
+  toggleQuickRefBookmark(subtopic);
+  e.currentTarget.textContent = isQuickRefBookmarked(subtopic) ? '🔖' : '🏷️';
+  e.currentTarget.style.color = isQuickRefBookmarked(subtopic) ? 'var(--gold)' : 'var(--ink)';
+});
+document.getElementById('qrCopyBtn').addEventListener('click', async () => {
+  const text = document.getElementById('qrDetailContent').innerText;
+  try{ await navigator.clipboard.writeText(text); alert('Copied!'); }catch(e){}
+});
+function renderQuickRefSearch(term){
+  const q = (term || '').toLowerCase().trim();
+  const resultsWrap = document.getElementById('quickRefSearchResults');
+  const catWrap = document.getElementById('quickRefCategoryWrap');
+  if(!q){
+    resultsWrap.style.display = 'none';
+    catWrap.style.display = 'block';
+    return;
+  }
+  catWrap.style.display = 'none';
+  resultsWrap.style.display = 'block';
+  const allSubtopics = QUICK_REF_CATEGORIES.flatMap(cat => cat.subtopics.map(sub => ({ sub, cat: cat.name })));
+  const matches = allSubtopics.filter(({ sub }) => {
+    if(sub.toLowerCase().includes(q)) return true;
+    const entry = QUICK_REFERENCES.find(r => r.Subtopic === sub);
+    return entry && (entry.Content || '').toLowerCase().includes(q);
+  });
+  if(matches.length === 0){
+    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No matches for "${term}".</p>`;
+    return;
+  }
+  resultsWrap.innerHTML = matches.map(({ sub, cat }) => `
+    <button class="note-item quickref-search-row" data-subtopic="${sub.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer;">
+      <div class="ni-title" style="font-size:13px;">${sub}</div>
+      <div class="ni-meta">${cat}</div>
+    </button>
+  `).join('');
+  document.querySelectorAll('.quickref-search-row').forEach(btn => {
+    btn.addEventListener('click', () => openQuickRefSubtopic(btn.dataset.subtopic));
+  });
+}
+document.getElementById('quickRefSearchBox').addEventListener('input', (e) => renderQuickRefSearch(e.target.value));
+async function openQuickRefScreen(){
+  showScreen(quickRefScreen);
+  renderQuickRefHub();
+  if(quickRefLoaded) return;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=quickReferences`);
+    QUICK_REFERENCES = await res.json();
+    quickRefLoaded = true;
+  }catch(e){}
+}
+document.getElementById('goToQuickRefFromHub').addEventListener('click', (e) => {
+  e.preventDefault();
+  openQuickRefScreen();
+});
+
 function getReaderSettings(){
   try{ return JSON.parse(localStorage.getItem('hl_reader_settings') || 'null') || { fontSize:17, lineSpacing:170, brightness:100, theme:'dark' }; }
   catch(e){ return { fontSize:17, lineSpacing:170, brightness:100, theme:'dark' }; }
