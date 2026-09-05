@@ -1999,6 +1999,11 @@
           <div class="dc-label">Rapid Fire</div>
           <div class="dc-sub">Fast-paced practice, 5 modes</div>
         </button>
+        <button class="dash-card c-video" id="cardHandbookHome">
+          <div class="dc-icon">📚</div>
+          <div class="dc-label">Handbook</div>
+          <div class="dc-sub">Formulas, Quick References &amp; more</div>
+        </button>
         <div class="dash-card c-qotd qotd-card" id="cardQotd">
           <div class="qotd-card-header">
             <div class="dc-icon">🎯</div>
@@ -6372,6 +6377,9 @@ document.getElementById('cardCurrent').addEventListener('click', () => {
 document.getElementById('cardRapidFire').addEventListener('click', () => {
   showScreen(rapidFireScreen);
   renderRapidFireModes();
+});
+document.getElementById('cardHandbookHome').addEventListener('click', () => {
+  showScreen(studyResourcesScreen);
 });
 document.getElementById('cardAi').addEventListener('click', () => {
   showScreen(aiChatScreen);
@@ -12225,14 +12233,13 @@ function renderMarkdownToHtml(text){
 // screens instead of a new Sheet-driven page, so this doesn't duplicate content that's already
 // built and working elsewhere in the app. ----------
 const QUICK_REF_CATEGORIES = [
-  { name: 'Academic', icon: '📚', subtopics: ['Normal Values', 'Formulas', 'Epidemiological Measures', 'Biostatistics', 'Health Indicators'] },
+  { name: 'Academic', icon: '📚', subtopics: ['Normal Values', 'Epidemiological Measures', 'Biostatistics', 'Health Indicators'] },
   { name: 'Clinical & Health', icon: '🏥', subtopics: ['BMI', 'GCS', 'Vital Signs', 'Immunization Schedule', 'ANC/PNC', 'First Aid'] },
   { name: 'Nepal', icon: '🇳🇵', subtopics: ['Health Programs', 'Health Policies', 'Government Levels', 'Important Acts', 'MoHFS/DoHS Structure'] },
   { name: 'Common References', icon: '💊', subtopics: ['Drug Abbreviations', 'Medical Abbreviations', 'Laboratory Terms', 'Units & Conversions'] },
 ];
 // Subtopics that navigate to an existing screen instead of a Sheet-driven detail page
 const QUICK_REF_EXTERNAL_LINKS = {
-  'Formulas': () => { showScreen(formulaScreen); renderFormulas(); },
   'Immunization Schedule': () => { showScreen(immunizationScreen); renderImmunization(); },
 };
 
