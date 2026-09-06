@@ -2748,15 +2748,86 @@
     <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div class="section-title">⚔️ Battle Challenge</div>
-      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:18px;">Take a 10-question quiz, get a share code, and challenge a friend to beat your score on the exact same questions.</p>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:18px;">Challenge a friend live — same questions, same time, real-time progress. Whoever scores higher wins.</p>
 
-      <button class="start-btn" id="createBattleBtn" style="margin-bottom:14px;">⚔️ Create a Challenge</button>
+      <button class="start-btn" id="createBattleBtn" style="margin-bottom:14px;">⚔️ Create a Live Battle</button>
 
       <div class="content-card">
         <h4 style="margin-bottom:10px;">Have a code?</h4>
         <input type="text" id="joinBattleCodeInput" placeholder="Enter Battle code" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink); text-transform:uppercase; margin-bottom:12px;">
-        <button class="start-btn" id="joinBattleBtn" style="margin-top:0;">Join Challenge</button>
+        <button class="start-btn" id="joinBattleBtn" style="margin-top:0;">Join Battle</button>
       </div>
+    </div>
+  </div>
+
+  <div class="screen" id="battleLobbyScreen">
+    <div class="back-link" id="battleLobbyBackLink" data-back="battle">← Leave Battle</div>
+    <div class="home-body">
+      <div class="section-title">🏆 Battle Lobby</div>
+      <div class="content-card" style="text-align:center; margin-bottom:12px;">
+        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:4px;">BATTLE CODE</div>
+        <div style="font-size:26px; font-weight:800; letter-spacing:0.1em; color:var(--crimson);" id="battleLobbyCode"></div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <div class="content-card" style="flex:1; text-align:center;">
+          <div style="font-size:11px; color:var(--ink-soft);">YOU</div>
+          <div style="font-size:14px; font-weight:700; color:var(--ink); margin:4px 0;" id="battleLobbyYouName">—</div>
+          <div style="font-size:11.5px;" id="battleLobbyYouStatus">Waiting…</div>
+        </div>
+        <div style="font-size:13px; font-weight:800; color:var(--ink-soft);">VS</div>
+        <div class="content-card" style="flex:1; text-align:center;">
+          <div style="font-size:11px; color:var(--ink-soft);">OPPONENT</div>
+          <div style="font-size:14px; font-weight:700; color:var(--ink); margin:4px 0;" id="battleLobbyOppName">Waiting for opponent…</div>
+          <div style="font-size:11.5px;" id="battleLobbyOppStatus"></div>
+        </div>
+      </div>
+
+      <div class="content-card" style="margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0;"><span style="color:var(--ink-soft);">📚 Subject</span><span id="battleLobbySubject" style="font-weight:700;"></span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">📝 Questions</span><span id="battleLobbyCount" style="font-weight:700;"></span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">✓ Rules</span><span style="font-weight:700;">Same questions, no negative marking</span></div>
+      </div>
+
+      <button class="start-btn" id="battleReadyBtn">I'm Ready</button>
+      <button class="calc-btn" id="battleCopyCodeBtn" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📋 Copy Code to Share</button>
+    </div>
+  </div>
+
+  <div class="screen" id="battleLiveScreen">
+    <div class="home-body" style="padding-top:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:12.5px; font-weight:700; color:var(--ink-soft);" id="battleLiveQNum">Q 1 / 10</span>
+        <span style="font-size:14px; font-weight:800; color:var(--crimson);" id="battleLiveTimer">04:32</span>
+      </div>
+
+      <div class="content-card" style="margin-bottom:14px;">
+        <p style="font-size:14.5px; color:var(--ink); line-height:1.5;" id="battleLiveQuestionText"></p>
+      </div>
+      <div id="battleLiveOptionsWrap"></div>
+
+      <div style="margin-top:16px;">
+        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">You</div>
+        <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden; margin-bottom:10px;"><div id="battleLiveYouBar" style="background:var(--teal); height:100%; width:0%; transition:width 0.3s;"></div></div>
+        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">Opponent</div>
+        <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden;"><div id="battleLiveOppBar" style="background:var(--gold); height:100%; width:0%; transition:width 0.3s;"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="battleResultScreen">
+    <div class="home-body" style="padding-top:20px; text-align:center;">
+      <div class="section-title" id="battleResultTitle" style="justify-content:center;">🏆 Result</div>
+      <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin:18px 0;">
+        <div><div style="font-size:30px; font-weight:800; color:var(--teal);" id="battleResultYouScore">0</div><div style="font-size:11px; color:var(--ink-soft);">YOU</div></div>
+        <div style="font-size:14px; color:var(--ink-soft);">vs</div>
+        <div><div style="font-size:30px; font-weight:800; color:var(--gold);" id="battleResultOppScore">0</div><div style="font-size:11px; color:var(--ink-soft);">OPPONENT</div></div>
+      </div>
+      <div class="content-card" style="text-align:left; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0;"><span style="color:var(--ink-soft);">Correct</span><span id="battleResultCorrect" style="font-weight:700; color:var(--correct);"></span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">Wrong</span><span id="battleResultWrong" style="font-weight:700; color:var(--wrong);"></span></div>
+      </div>
+      <button class="start-btn" id="battleResultDoneBtn">Done</button>
     </div>
   </div>
 
@@ -5291,7 +5362,7 @@
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
-    deleteDoc, serverTimestamp
+    deleteDoc, serverTimestamp, onSnapshot, updateDoc
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -5312,7 +5383,7 @@
   // Expose to the rest of the app (outside this module script) — used by Profile's
   // My Device, Change Password, and Delete Account features.
   window.hlFirestore = db;
-  window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp };
+  window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp, onSnapshot, updateDoc };
   window.hlSignOut = () => signOut(auth);
   window.hlSendPasswordReset = (email) => sendPasswordResetEmail(auth, email);
   // Change Password (in-app, with the current password required first) — used by the
@@ -6016,6 +6087,9 @@ const healthGuideScreen = document.getElementById('healthGuideScreen');
 const cprDemoScreen = document.getElementById('cprDemoScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const battleScreen = document.getElementById('battleScreen');
+const battleLobbyScreen = document.getElementById('battleLobbyScreen');
+const battleLiveScreen = document.getElementById('battleLiveScreen');
+const battleResultScreen = document.getElementById('battleResultScreen');
 const rapidFireScreen = document.getElementById('rapidFireScreen');
 const rapidFireSetupScreen = document.getElementById('rapidFireSetupScreen');
 const studyResourcesScreen = document.getElementById('studyResourcesScreen');
@@ -6107,13 +6181,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, battleLiveScreen, battleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -6161,6 +6235,14 @@ function showScreen(el){
   if(currentActive === cprDemoScreen && el !== cprDemoScreen && cprAnimFrameId !== null){
     cancelAnimationFrame(cprAnimFrameId);
     cprAnimFrameId = null;
+  }
+  // Leaving the Battle flow (Lobby/Live/Result) for anywhere outside it — detach the Firestore
+  // real-time listener. Same lesson as the CPR render loop above: an onSnapshot listener has no
+  // automatic "user navigated away" awareness, so it would otherwise keep running (and keep
+  // billing Firestore reads) indefinitely in the background.
+  const battleScreens = [battleLobbyScreen, battleLiveScreen, battleResultScreen];
+  if(battleScreens.includes(currentActive) && !battleScreens.includes(el)){
+    battleStopListening();
   }
   suppressHistoryPush = false;
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -6274,7 +6356,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, battleLiveScreen, battleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -17941,10 +18023,30 @@ async function downloadCommunityDeck(publishId, deckName, btn){
 // code; a friend enters the code and takes the EXACT same questions, then sees who won.
 // currentSetInfo stays null for both, matching Speed Challenge/Revision — these modes
 // must never pollute the Set-based progress/strongest-weakest subject stats. ----------
-let currentBattleMode = null; // 'create' | 'join' | null
-let currentBattleJoinData = null;
+// ---------- Battle Challenge (Live): two known players, no matchmaking queue — the most
+// tractable real-time piece to build first. Firestore already has proven write/read
+// infrastructure here (leaderboard, tournament entries), so this extends that rather than
+// inventing a new paradigm. Genuine server-side anti-cheat (server-authoritative scoring) is
+// NOT implemented — that needs actual backend code (Cloud Functions), which isn't part of this
+// stack. This is real-time state sync between two trusted opponents, not a tamper-proof
+// competitive system; honest about that scope. ----------
+let currentBattleCode = null;
+let currentBattleRole = null; // 'creator' | 'joiner'
+let battleUnsubscribe = null;
+let battleLiveIndex = 0;
+let battleLiveCorrect = 0;
+let battleLiveQuestions = [];
+let battleLiveTimerInterval = null;
 
+function battleStopListening(){
+  if(battleUnsubscribe){ battleUnsubscribe(); battleUnsubscribe = null; }
+  clearInterval(battleLiveTimerInterval);
+}
 async function createBattle(){
+  if(!window.hlFirestore || !window.hlFirestoreFns || !window.currentUser){
+    alert('Please log in to create a Battle Challenge.');
+    return;
+  }
   showQuizLoading('Preparing your Battle Challenge…');
   try{
     const res = await fetch(`${SHEET_API_URL}?action=random&count=10&post=${currentMcqPost}`);
@@ -17954,22 +18056,28 @@ async function createBattle(){
       alert('No questions available yet. Add MCQs to your Google Sheet first!');
       return;
     }
-    quizQuestions = pool;
-    currentIndex = 0;
-    answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = quizQuestions.length * 45;
-    currentMarksPerQuestion = 1;
-    currentSetInfo = null;
-    currentBattleMode = 'create';
-
-    buildOmrStrip();
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const { doc, setDoc, serverTimestamp } = window.hlFirestoreFns;
+    await setDoc(doc(window.hlFirestore, 'battles', code), {
+      status: 'waiting',
+      subject: pool[0]?.Subject || 'Mixed',
+      questions: pool,
+      totalQuestions: pool.length,
+      creatorUid: window.currentUser.uid,
+      creatorName: window.currentUser.displayName || 'You',
+      creatorReady: false, creatorIndex: 0, creatorCorrect: 0, creatorFinished: false,
+      joinerUid: null, joinerName: null,
+      joinerReady: false, joinerIndex: 0, joinerCorrect: 0, joinerFinished: false,
+      createdAt: serverTimestamp(),
+    });
     hideQuizLoading();
-    showScreen(quizScreen);
-    startTimer();
-    renderQuestion();
+    currentBattleCode = code;
+    currentBattleRole = 'creator';
+    showScreen(battleLobbyScreen);
+    battleSubscribeLobby(code, 'creator');
   }catch(err){
     hideQuizLoading();
-    alert('Could not start the Battle. Check your connection and try again.');
+    alert('Could not create the Battle. Check your connection and try again.');
   }
 }
 document.getElementById('createBattleBtn').addEventListener('click', createBattle);
@@ -17978,13 +18086,13 @@ async function joinBattle(){
   const codeInput = document.getElementById('joinBattleCodeInput');
   const code = codeInput.value.trim().toUpperCase();
   if(!code) return;
-  if(!window.hlFirestore || !window.hlFirestoreFns){
+  if(!window.hlFirestore || !window.hlFirestoreFns || !window.currentUser){
     alert('Please log in to join a Battle Challenge.');
     return;
   }
-  showQuizLoading('Loading Battle Challenge…');
+  showQuizLoading('Joining Battle…');
   try{
-    const { doc, getDoc } = window.hlFirestoreFns;
+    const { doc, getDoc, updateDoc } = window.hlFirestoreFns;
     const ref = doc(window.hlFirestore, 'battles', code);
     const snap = await getDoc(ref);
     if(!snap.exists()){
@@ -17993,77 +18101,156 @@ async function joinBattle(){
       return;
     }
     const battle = snap.data();
-    quizQuestions = battle.questions;
-    currentIndex = 0;
-    answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = quizQuestions.length * 45;
-    currentMarksPerQuestion = 1;
-    currentSetInfo = null;
-    currentBattleMode = 'join';
-    currentBattleJoinData = {
-      creatorName: battle.creatorName || 'A student',
-      creatorScore: battle.creatorCorrect || 0,
-      totalQuestions: battle.totalQuestions || quizQuestions.length
-    };
-
-    buildOmrStrip();
+    if(battle.status !== 'waiting' || battle.joinerUid){
+      hideQuizLoading();
+      alert('This Battle already has two players or has already started.');
+      return;
+    }
+    await updateDoc(ref, {
+      joinerUid: window.currentUser.uid,
+      joinerName: window.currentUser.displayName || 'Opponent',
+    });
     hideQuizLoading();
-    showScreen(quizScreen);
-    startTimer();
-    renderQuestion();
+    currentBattleCode = code;
+    currentBattleRole = 'joiner';
+    showScreen(battleLobbyScreen);
+    battleSubscribeLobby(code, 'joiner');
   }catch(err){
     hideQuizLoading();
-    alert('Could not load that Battle. Check your connection and try again.');
+    alert('Could not join that Battle. Check your connection and try again.');
   }
 }
 document.getElementById('joinBattleBtn').addEventListener('click', joinBattle);
 
-async function saveBattleChallenge(correct, total){
-  const box = document.getElementById('battleResultBox');
-  box.style.display = 'block';
-  if(!window.hlFirestore || !window.hlFirestoreFns || !window.currentUser){
-    box.innerHTML = `<p style="color:var(--wrong); font-size:13px;">Could not create a shareable Battle code — please make sure you're logged in.</p>`;
-    return;
+// ---- Lobby: a real-time listener renders both players' status live, and transitions to the
+// Live screen for BOTH sides the moment status flips to 'live' ----
+function battleSubscribeLobby(code, role){
+  battleStopListening();
+  const { doc, onSnapshot } = window.hlFirestoreFns;
+  document.getElementById('battleLobbyCode').textContent = code;
+  battleUnsubscribe = onSnapshot(doc(window.hlFirestore, 'battles', code), (snap) => {
+    if(!snap.exists()) return;
+    const b = snap.data();
+    document.getElementById('battleLobbySubject').textContent = b.subject || 'Mixed';
+    document.getElementById('battleLobbyCount').textContent = b.totalQuestions;
+    const youName = role === 'creator' ? b.creatorName : b.joinerName;
+    const oppName = role === 'creator' ? b.joinerName : b.creatorName;
+    const youReady = role === 'creator' ? b.creatorReady : b.joinerReady;
+    const oppReady = role === 'creator' ? b.joinerReady : b.creatorReady;
+    document.getElementById('battleLobbyYouName').textContent = youName || 'You';
+    document.getElementById('battleLobbyYouStatus').innerHTML = youReady ? '<span style="color:var(--correct);">✓ Ready</span>' : 'Waiting…';
+    document.getElementById('battleLobbyOppName').textContent = oppName || 'Waiting for opponent…';
+    document.getElementById('battleLobbyOppStatus').innerHTML = !oppName ? '' : (oppReady ? '<span style="color:var(--correct);">✓ Ready</span>' : 'Not ready yet');
+
+    if(b.status === 'live'){
+      battleStopListening();
+      startLiveBattle(code, role, b.questions);
+    }
+  });
+}
+document.getElementById('battleReadyBtn').addEventListener('click', async () => {
+  if(!currentBattleCode) return;
+  const { doc, getDoc, updateDoc } = window.hlFirestoreFns;
+  const ref = doc(window.hlFirestore, 'battles', currentBattleCode);
+  const field = currentBattleRole === 'creator' ? 'creatorReady' : 'joinerReady';
+  await updateDoc(ref, { [field]: true });
+  // Only the creator flips status to 'live' (avoids both sides racing to write it)
+  if(currentBattleRole === 'creator'){
+    const snap = await getDoc(ref);
+    const b = snap.data();
+    if(b.creatorReady && b.joinerReady && b.joinerUid){
+      await updateDoc(ref, { status: 'live', startedAt: window.hlFirestoreFns.serverTimestamp() });
+    }
+  } else {
+    // Joiner: re-check after marking ready, in case creator was already waiting
+    const snap = await getDoc(ref);
+    const b = snap.data();
+    if(b.creatorReady && b.joinerReady){
+      await updateDoc(ref, { status: 'live', startedAt: window.hlFirestoreFns.serverTimestamp() });
+    }
   }
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  try{
-    const { doc, setDoc, serverTimestamp } = window.hlFirestoreFns;
-    await setDoc(doc(window.hlFirestore, 'battles', code), {
-      questions: quizQuestions,
-      creatorUid: window.currentUser.uid,
-      creatorName: window.currentUser.displayName || 'A student',
-      creatorCorrect: correct,
-      totalQuestions: total,
-      createdAt: serverTimestamp()
-    });
-    box.innerHTML = `
-      <div class="content-card" style="border:1.5px solid var(--gold); text-align:center;">
-        <h4 style="margin-bottom:8px;">⚔️ Battle Challenge Created!</h4>
-        <p style="font-size:13px; color:var(--ink-soft); margin-bottom:10px;">You scored ${correct}/${total}. Share this code with a friend — can they beat you?</p>
-        <div style="font-size:26px; font-weight:800; letter-spacing:0.1em; color:var(--crimson);">${code}</div>
-      </div>
-    `;
-  }catch(err){
-    box.innerHTML = `<p style="color:var(--wrong); font-size:13px;">Could not save your Battle Challenge. Please try again.</p>`;
+});
+document.getElementById('battleCopyCodeBtn').addEventListener('click', async () => {
+  if(!currentBattleCode) return;
+  try{ await navigator.clipboard.writeText(currentBattleCode); alert('Code copied!'); }catch(e){}
+});
+
+// ---- Live battle: both sides answer the same questions; own progress is written after every
+// answer, opponent's progress bar updates from the same listener ----
+function startLiveBattle(code, role, questions){
+  battleLiveQuestions = questions;
+  battleLiveIndex = 0;
+  battleLiveCorrect = 0;
+  showScreen(battleLiveScreen);
+  renderBattleLiveQuestion();
+  battleSubscribeLive(code, role);
+}
+function renderBattleLiveQuestion(){
+  const q = battleLiveQuestions[battleLiveIndex];
+  document.getElementById('battleLiveQNum').textContent = `Q ${battleLiveIndex + 1} / ${battleLiveQuestions.length}`;
+  document.getElementById('battleLiveQuestionText').textContent = q.Question;
+  const optsWrap = document.getElementById('battleLiveOptionsWrap');
+  optsWrap.innerHTML = ['A','B','C','D'].map(letter => `
+    <button class="calc-btn battle-live-option" data-letter="${letter}" style="display:block; width:100%; text-align:left; margin-bottom:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:13px;">${letter}. ${q['Option' + letter] || ''}</button>
+  `).join('');
+  document.querySelectorAll('.battle-live-option').forEach(btn => {
+    btn.addEventListener('click', () => battleLiveAnswer(btn.dataset.letter));
+  });
+}
+async function battleLiveAnswer(letter){
+  const q = battleLiveQuestions[battleLiveIndex];
+  if(letter === q.CorrectAnswer) battleLiveCorrect++;
+  battleLiveIndex++;
+  const finished = battleLiveIndex >= battleLiveQuestions.length;
+  const { doc, updateDoc } = window.hlFirestoreFns;
+  const ref = doc(window.hlFirestore, 'battles', currentBattleCode);
+  const fields = currentBattleRole === 'creator'
+    ? { creatorIndex: battleLiveIndex, creatorCorrect: battleLiveCorrect, creatorFinished: finished }
+    : { joinerIndex: battleLiveIndex, joinerCorrect: battleLiveCorrect, joinerFinished: finished };
+  try{ await updateDoc(ref, fields); }catch(e){}
+
+  if(finished){
+    document.getElementById('battleLiveYouBar').style.width = '100%';
+  } else {
+    renderBattleLiveQuestion();
+    document.getElementById('battleLiveYouBar').style.width = `${Math.round((battleLiveIndex / battleLiveQuestions.length) * 100)}%`;
   }
 }
-function showBattleJoinResult(correct){
-  const box = document.getElementById('battleResultBox');
-  box.style.display = 'block';
-  const data = currentBattleJoinData;
-  if(!data) return;
-  let verdict;
-  if(correct > data.creatorScore) verdict = `🎉 You won! ${correct}/${data.totalQuestions} vs ${data.creatorName}'s ${data.creatorScore}/${data.totalQuestions}`;
-  else if(correct < data.creatorScore) verdict = `😅 ${data.creatorName} won this one — ${data.creatorScore}/${data.totalQuestions} vs your ${correct}/${data.totalQuestions}`;
-  else verdict = `🤝 It's a tie! Both scored ${correct}/${data.totalQuestions}`;
-  box.innerHTML = `
-    <div class="content-card" style="border:1.5px solid var(--gold); text-align:center;">
-      <h4 style="margin-bottom:8px;">⚔️ Battle Result</h4>
-      <p style="font-size:14px; color:var(--ink); font-weight:600;">${verdict}</p>
-    </div>
-  `;
-  currentBattleJoinData = null;
+function battleSubscribeLive(code, role){
+  battleStopListening();
+  const { doc, onSnapshot } = window.hlFirestoreFns;
+  battleUnsubscribe = onSnapshot(doc(window.hlFirestore, 'battles', code), (snap) => {
+    if(!snap.exists()) return;
+    const b = snap.data();
+    const oppIndex = role === 'creator' ? b.joinerIndex : b.creatorIndex;
+    const oppFinished = role === 'creator' ? b.joinerFinished : b.creatorFinished;
+    const youFinished = role === 'creator' ? b.creatorFinished : b.joinerFinished;
+    const total = b.totalQuestions || 1;
+    document.getElementById('battleLiveOppBar').style.width = `${Math.round(((oppIndex || 0) / total) * 100)}%`;
+
+    if(youFinished && oppFinished){
+      battleStopListening();
+      showBattleLiveResult(b, role);
+    }
+  });
 }
+function showBattleLiveResult(b, role){
+  const youScore = role === 'creator' ? b.creatorCorrect : b.joinerCorrect;
+  const oppScore = role === 'creator' ? b.joinerCorrect : b.creatorCorrect;
+  const total = b.totalQuestions;
+  document.getElementById('battleResultTitle').textContent = youScore > oppScore ? '🏆 You Won!' : (youScore < oppScore ? '😅 You Lost' : '🤝 It\'s a Tie!');
+  document.getElementById('battleResultYouScore').textContent = youScore;
+  document.getElementById('battleResultOppScore').textContent = oppScore;
+  document.getElementById('battleResultCorrect').textContent = `${youScore} / ${total}`;
+  document.getElementById('battleResultWrong').textContent = `${total - youScore} / ${total}`;
+  showScreen(battleResultScreen);
+}
+document.getElementById('battleResultDoneBtn').addEventListener('click', () => {
+  currentBattleCode = null;
+  currentBattleRole = null;
+  showScreen(practiceScreen);
+});
+
 
 // ---------- Rapid Fire: 9 modes, all sharing the same "pick your time, get a paced question
 // set" mechanic, using your verified official exam timings. Some modes (Mistake/Revision/
@@ -18663,13 +18850,8 @@ function finishQuiz(){
     nextBtn.style.display = 'none';
   }
 
-  // ---- Battle Challenge: save (Create) or compare (Join) ----
-  if(currentBattleMode === 'create'){
-    saveBattleChallenge(correct, quizQuestions.length);
-  } else if(currentBattleMode === 'join'){
-    showBattleJoinResult(correct);
-  }
-  currentBattleMode = null;
+  // ---- Battle Challenge (live) no longer routes through quiz results — it has its own
+  // dedicated Live screen and Firestore-driven scoring, not this shared quiz-completion path.
 
   // ---- Rapid Fire: pace summary, and streak update for Daily Fire ----
   if(currentRapidFireMode){
