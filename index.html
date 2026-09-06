@@ -2491,9 +2491,79 @@
     <div class="back-link" data-back="progress">← Back</div>
     <div class="home-body">
       <div class="section-title">🔄 Revision Mode</div>
-      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:16px;">Combines questions you got wrong and questions you've bookmarked — the ones most worth reviewing.</p>
+      <p style="color:var(--ink-soft); font-size:13px; margin-bottom:16px;">Revise what matters most today.</p>
+
       <div id="revisionSummary"></div>
-      <button class="start-btn" id="startRevisionBtn" style="margin-top:14px;">Start Revision Quiz</button>
+      <div style="display:flex; gap:8px; margin-top:14px;">
+        <button class="start-btn" id="startRevisionBtn" style="margin:0; flex:1;">🧠 Smart Revision</button>
+        <button class="calc-btn" id="startQuickRevisionBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⚡ Quick (10 items)</button>
+      </div>
+
+      <div id="revisionAttentionCard" style="margin-top:16px;"></div>
+
+      <p style="font-size:11px; font-weight:700; color:var(--ink-soft); margin:18px 0 8px;">📚 Revision Options</p>
+      <button class="calc-btn" id="startSubjectRevisionBtn" style="margin-bottom:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:13px;">📚 Subject Revision</button>
+      <button class="calc-btn" id="revisionCalendarBtn" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:13px; margin-bottom:8px;">🗓️ Revision Calendar &amp; Streak</button>
+      <button class="calc-btn" id="examRevisionBtn" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff; border:none; font-size:13px;">🎯 Exam Revision Mode</button>
+    </div>
+  </div>
+
+  <div class="screen" id="examRevisionScreen">
+    <div class="back-link" data-back="revision">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🎯 Exam Revision</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;" id="examRevisionExamLabel"></p>
+
+      <div class="content-card" id="examRevisionPlanCard"></div>
+
+      <button class="start-btn" id="examRevisionStartBtn" style="margin-top:16px;">Start Exam Revision</button>
+      <button class="calc-btn" id="sevenDayRevisionBtn" style="margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">🔥 Generate My 7-Day Revision Plan</button>
+    </div>
+  </div>
+
+  <div class="screen" id="sevenDayRevisionScreen">
+    <div class="back-link" data-back="examRevision">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔥 7-Day Exam Revision</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Built from your actual weak subjects — not the same plan for everyone.</p>
+      <div id="sevenDayList"></div>
+      <button class="calc-btn" id="sevenDayResetBtn" style="margin-top:14px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong); font-size:12px;">🔄 Regenerate Plan</button>
+    </div>
+  </div>
+
+  <div class="screen" id="revisionCalendarScreen">
+    <div class="back-link" data-back="revision">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🗓️ Revision Calendar</div>
+      <div class="content-card" id="revisionStreakCard" style="text-align:center; margin-bottom:16px;">
+        <div style="font-size:28px;" id="revisionStreakEmoji">🔥</div>
+        <div style="font-size:15px; font-weight:800; color:var(--ink);" id="revisionStreakText"></div>
+        <p style="font-size:11px; color:var(--ink-soft); margin-top:4px;">Miss a day? No penalty — just pick back up.</p>
+      </div>
+
+      <div id="revisionCalendarMonthLabel" style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:8px; text-align:center;"></div>
+      <div id="revisionCalendarGrid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:16px;"></div>
+
+      <div id="revisionCalendarDetail" class="content-card" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="revisionSubjectPickScreen">
+    <div class="back-link" data-back="revision">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📚 Choose a Subject</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;">Only subjects with something due are shown.</p>
+      <div id="revisionSubjectList"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="revisionTopicPickScreen">
+    <div class="back-link" data-back="revisionSubjectPick">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="revisionTopicPickTitle">🎯 Choose a Topic</div>
+      <button class="start-btn" id="revisionWholeSubjectBtn" style="margin-bottom:14px;">Revise Whole Subject</button>
+      <p style="font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;">Or pick a specific topic</p>
+      <div id="revisionTopicList"></div>
     </div>
   </div>
 
@@ -2557,8 +2627,19 @@
     <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div class="section-title">❌ My Mistakes</div>
-      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Every question you get wrong is saved here automatically, on a spaced schedule (1 → 3 → 7 → 15 → 30 days). Practicing here counts toward that schedule, same as Revision Mode.</p>
-      <button class="start-btn" id="practiceMistakesBtn" style="margin-bottom:18px;">Practice All Mistakes →</button>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;">Turn mistakes into strengths — every wrong answer is saved automatically on a spaced schedule (1 → 3 → 7 → 15 → 30 days).</p>
+
+      <div id="mistakeProgressCard" style="margin-bottom:14px;"></div>
+
+      <button class="start-btn" id="practiceMistakesBtn" style="margin-bottom:14px;">🔥 Start Review — Due Today</button>
+
+      <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;">
+        <button class="calc-btn mistake-filter-btn active" data-filter="all" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap;">All</button>
+        <button class="calc-btn mistake-filter-btn" data-filter="due" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔴 Due Today</button>
+        <button class="calc-btn mistake-filter-btn" data-filter="new" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🆕 New</button>
+        <button class="calc-btn mistake-filter-btn" data-filter="struggling" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⚠️ Struggling</button>
+      </div>
+
       <div id="mistakeBookContent">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
@@ -2751,6 +2832,7 @@
       </div>
 
       <button class="start-btn" id="rapidFireStartBtn">Start Rapid Fire</button>
+      <button class="calc-btn" id="rapidFireAllDueBtn" style="display:none; margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📋 Practice All Due Mistakes (no time limit)</button>
     </div>
   </div>
 
@@ -5354,6 +5436,7 @@
       </div>
       <div class="q-text" id="qText">Question text here</div>
       <div id="optionsWrap"></div>
+      <button class="calc-btn" id="idkBtn" style="display:none; margin-top:4px; background:var(--panel); color:var(--ink-soft); border:1.5px dashed var(--line); font-size:12.5px;">🤔 I Don't Know</button>
       <div class="feedback" id="feedbackBox"></div>
     </div>
     <div class="quiz-nav">
@@ -6087,6 +6170,8 @@ let currentIndex = 0;
 let selectedCount = 20;
 let selectedSubject = '__ALL__';
 let answers = []; // { correct: bool|null (null = skipped), chosen, correctAnswer }
+let revisionModeActive = false;
+let mistakeReviewActive = false;
 let timerInterval = null;
 let secondsLeft = 0;
 let currentSetInfo = null; // { subject, setNumber, totalSets } when running a locked Set; null otherwise
@@ -6224,6 +6309,11 @@ const scanNoteScreen = document.getElementById('scanNoteScreen');
 const pdfAnnotateScreen = document.getElementById('pdfAnnotateScreen');
 const reminderScreen = document.getElementById('reminderScreen');
 const revisionScreen = document.getElementById('revisionScreen');
+const revisionSubjectPickScreen = document.getElementById('revisionSubjectPickScreen');
+const revisionCalendarScreen = document.getElementById('revisionCalendarScreen');
+const examRevisionScreen = document.getElementById('examRevisionScreen');
+const sevenDayRevisionScreen = document.getElementById('sevenDayRevisionScreen');
+const revisionTopicPickScreen = document.getElementById('revisionTopicPickScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const pastQuestionsPostScreen = document.getElementById('pastQuestionsPostScreen');
@@ -6235,13 +6325,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen };
 let docViewerBackTarget = homeScreen;
 let currentDocViewerItem = null;
 let setSelectBackTarget = subjectPickScreen;
@@ -6420,7 +6510,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -11456,11 +11546,21 @@ function saveWrongQuestions(list){
   try{ localStorage.setItem('hl_wrong_questions', JSON.stringify(list.slice(0, 200))); }catch(e){} // cap to avoid unbounded growth
 }
 // Wrong answer (any session) — (re)starts the question at day-1 of the schedule
-function addToWrongQuestions(q){
+// Wrong answer (any session) — (re)starts the question at day-1 of the schedule, tracks how
+// many times it's been missed and what was chosen this time (shown during review per the
+// document's "your previous answer" requirement)
+function addToWrongQuestions(q, chosenLetter){
   const key = questionKey(q);
   let list = getWrongQuestions();
   const idx = list.findIndex(w => questionKey(w) === key);
-  const scheduled = { ...q, intervalIndex: 0, nextRevisionDate: addDaysISO(REVISION_INTERVALS_DAYS[0]) };
+  const priorWrongCount = idx !== -1 ? (list[idx].wrongCount || 0) : 0;
+  const scheduled = {
+    ...q, intervalIndex: 0, nextRevisionDate: addDaysISO(REVISION_INTERVALS_DAYS[0]),
+    wrongCount: priorWrongCount + 1,
+    correctReviews: idx !== -1 ? (list[idx].correctReviews || 0) : 0, // preserved across a reset — reflects lifetime reviews survived, not reset to 0
+    lastWrongAnswer: chosenLetter || null,
+    firstMistakeDate: idx !== -1 ? list[idx].firstMistakeDate : todayISO(),
+  };
   if(idx === -1){
     list.unshift(scheduled);
   } else {
@@ -11491,7 +11591,7 @@ function advanceRevisionSchedule(q){
       localStorage.setItem('hl_mistakes_mastered_count', String(mastered + 1));
     }catch(e){}
   } else {
-    list[idx] = { ...current, intervalIndex: nextIntervalIndex, nextRevisionDate: addDaysISO(REVISION_INTERVALS_DAYS[nextIntervalIndex]) };
+    list[idx] = { ...current, intervalIndex: nextIntervalIndex, nextRevisionDate: addDaysISO(REVISION_INTERVALS_DAYS[nextIntervalIndex]), correctReviews: (current.correctReviews || 0) + 1 };
   }
   saveWrongQuestions(list);
 }
@@ -11508,41 +11608,375 @@ function getRevisionPool(){
   });
   return combined;
 }
+// ---------- Smart Revision Engine: builds on the EXISTING wrong-question spaced-repetition
+// system (getWrongQuestions/nextRevisionDate, already advancing 1→3→7→15→30 days on correct
+// re-answers) and bookmarks — that engine is proven and untouched here. This adds the two things
+// missing from it per the document: Flash Cards due today mixed into the same session (as a
+// sequential block after MCQs, not truly interleaved — genuinely mixing two different question
+// UIs into one seamless flow would need a whole new unified runner; flagged as a simplification,
+// not hidden), and a "Needs Attention" view approximating weak subjects from mistake frequency
+// (a real per-topic mastery score, continuously tracked, is bigger infrastructure than this —
+// this is a reasonable approximation from data that already exists, not that). ----------
+function getDueFlashCardsForRevision(){
+  return fcCardsDueToday(getFcCards());
+}
+function getNeedsAttentionSubjects(){
+  const wrong = getWrongQuestions();
+  const counts = {};
+  wrong.forEach(w => {
+    const subj = w.Subject || 'General';
+    counts[subj] = (counts[subj] || 0) + 1;
+  });
+  return Object.keys(counts)
+    .map(subj => ({ subject: subj, count: counts[subj] }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 3);
+}
 function renderRevisionSummary(){
   const allWrong = getWrongQuestions();
   const today = todayISO();
   const pool = getRevisionPool();
+  const dueCards = getDueFlashCardsForRevision();
   const weakCount = allWrong.filter(w => (w.intervalIndex === undefined ? 0 : w.intervalIndex) <= 1).length;
   const dueCount = allWrong.filter(w => !w.nextRevisionDate || w.nextRevisionDate <= today).length;
   const strongCount = allWrong.filter(w => (w.intervalIndex || 0) >= 3).length;
   const startBtn = document.getElementById('startRevisionBtn');
-  if(pool.length === 0){
+  const quickBtn = document.getElementById('startQuickRevisionBtn');
+  const totalItems = pool.length + dueCards.length;
+
+  if(totalItems === 0){
     document.getElementById('revisionSummary').innerHTML = `
       <div class="content-card">
-        <p style="color:var(--ink-soft); font-size:13.5px;">Nothing due for revision right now — questions you get wrong come back on a spaced schedule (1 → 3 → 7 → 15 → 30 days), and anything you bookmark is always here.</p>
+        <p style="color:var(--ink-soft); font-size:13.5px;">Nothing due for revision right now — questions you get wrong come back on a spaced schedule (1 → 3 → 7 → 15 → 30 days), bookmarks are always here, and Flash Cards due today count too.</p>
       </div>
     `;
     startBtn.style.display = 'none';
+    quickBtn.style.display = 'none';
+    document.getElementById('revisionAttentionCard').innerHTML = '';
     return;
   }
   document.getElementById('revisionSummary').innerHTML = `
-    <div class="stats-grid">
+    <div class="content-card" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff;">
+      <div style="font-size:11px; font-weight:700; opacity:0.9;">🔥 TODAY'S REVISION</div>
+      <div style="font-size:24px; font-weight:800; margin:4px 0;">${totalItems} item${totalItems === 1 ? '' : 's'} due</div>
+      <div style="font-size:12px; opacity:0.9;">${pool.length} Question${pool.length === 1 ? '' : 's'} · ${dueCards.length} Flash Card${dueCards.length === 1 ? '' : 's'}</div>
+    </div>
+    <div class="stats-grid" style="margin-top:10px;">
       <div class="stat-tile"><div class="st-num">🔴 ${weakCount}</div><div class="st-label">Weak</div></div>
       <div class="stat-tile"><div class="st-num">🟡 ${dueCount}</div><div class="st-label">Due Today</div></div>
       <div class="stat-tile"><div class="st-num">🟢 ${strongCount}</div><div class="st-label">Strong</div></div>
     </div>
-    <p style="color:var(--ink-soft); font-size:12.5px; margin-top:6px;">${pool.length} question${pool.length !== 1 ? 's' : ''} ready for revision now (includes ${getBookmarks().length} bookmarked).</p>
   `;
   startBtn.style.display = 'block';
+  quickBtn.style.display = 'block';
+
+  const attention = getNeedsAttentionSubjects();
+  const attentionCard = document.getElementById('revisionAttentionCard');
+  if(attention.length === 0){
+    attentionCard.innerHTML = '';
+  } else {
+    attentionCard.innerHTML = `
+      <div class="content-card">
+        <h4 style="margin-bottom:8px;">⚠️ Needs Attention</h4>
+        ${attention.map(a => `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">${a.subject}</span><span style="font-weight:700; color:var(--wrong);">${a.count} mistake${a.count === 1 ? '' : 's'}</span></div>`).join('')}
+      </div>
+    `;
+  }
 }
-document.getElementById('startRevisionBtn').addEventListener('click', () => {
+let revisionPendingFlashCards = [];
+function startSmartRevision(quickMode){
   const pool = getRevisionPool();
+  const dueCards = getDueFlashCardsForRevision();
+  if(pool.length === 0 && dueCards.length === 0) return;
+
+  const mcqPool = quickMode ? shuffle([...pool]).slice(0, 10) : shuffle([...pool]);
+  revisionPendingFlashCards = quickMode ? dueCards.slice(0, Math.max(0, 10 - mcqPool.length)) : dueCards;
+  revisionModeActive = true;
+
+  if(mcqPool.length > 0){
+    currentSetInfo = null; // revision quizzes don't lock into the normal Set progression
+    launchQuiz(mcqPool, 'Revision', 0, 0);
+  } else {
+    // No MCQs due, only Flash Cards — skip straight to the Flash Cards block
+    revisionModeActive = false;
+    startFlashcardStudy(revisionPendingFlashCards);
+    revisionPendingFlashCards = [];
+  }
+}
+document.getElementById('startRevisionBtn').addEventListener('click', () => startSmartRevision(false));
+document.getElementById('startQuickRevisionBtn').addEventListener('click', () => startSmartRevision(true));
+
+// ---------- Subject & Topic Revision: scoped to the MCQ revision pool (mistakes + bookmarks)
+// specifically — Flash Cards don't share a Subject/Chapter concept with MCQs (they're organized
+// by Deck instead), so mixing them into a subject-scoped session would need an artificial
+// mapping that doesn't really exist. The full cross-content-type experience already lives in
+// Smart/Quick Revision from Phase 1; this is deliberately MCQ-only, matching every example in
+// the document itself (all of which are subject/topic-based MCQ scoping). ----------
+function getRevisionSubjects(){
+  const pool = getRevisionPool();
+  const counts = {};
+  pool.forEach(q => {
+    const subj = q.Subject || 'General';
+    counts[subj] = (counts[subj] || 0) + 1;
+  });
+  return Object.keys(counts).map(s => ({ subject: s, count: counts[s] })).sort((a, b) => b.count - a.count);
+}
+function renderRevisionSubjectPicker(){
+  const subjects = getRevisionSubjects();
+  const wrap = document.getElementById('revisionSubjectList');
+  if(subjects.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Nothing due for revision right now.</p>`;
+    return;
+  }
+  wrap.innerHTML = subjects.map(s => `
+    <button class="note-item revision-subject-row" data-subject="${s.subject.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+      <span class="ni-title" style="font-size:13px;">${s.subject}</span>
+      <span style="font-size:12px; color:var(--gold); font-weight:700;">${s.count}</span>
+    </button>
+  `).join('');
+  document.querySelectorAll('.revision-subject-row').forEach(btn => {
+    btn.addEventListener('click', () => openRevisionTopicPicker(btn.dataset.subject));
+  });
+}
+document.getElementById('startSubjectRevisionBtn').addEventListener('click', () => {
+  showScreen(revisionSubjectPickScreen);
+  renderRevisionSubjectPicker();
+});
+let revisionPickedSubject = null;
+function getRevisionTopicsForSubject(subject){
+  const pool = getRevisionPool().filter(q => (q.Subject || 'General') === subject);
+  const counts = {};
+  pool.forEach(q => {
+    const topic = q.Chapter || 'General';
+    counts[topic] = (counts[topic] || 0) + 1;
+  });
+  return Object.keys(counts).map(t => ({ topic: t, count: counts[t] })).sort((a, b) => b.count - a.count);
+}
+function openRevisionTopicPicker(subject){
+  revisionPickedSubject = subject;
+  document.getElementById('revisionTopicPickTitle').textContent = `🎯 ${subject}`;
+  const topics = getRevisionTopicsForSubject(subject);
+  const wrap = document.getElementById('revisionTopicList');
+  if(topics.length <= 1){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px; text-align:center; padding:10px 0;">Only one topic here — use "Revise Whole Subject" above.</p>`;
+  } else {
+    wrap.innerHTML = topics.map(t => `
+      <button class="note-item revision-topic-row" data-topic="${t.topic.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+        <span class="ni-title" style="font-size:13px;">${t.topic}</span>
+        <span style="font-size:12px; color:var(--gold); font-weight:700;">${t.count}</span>
+      </button>
+    `).join('');
+    document.querySelectorAll('.revision-topic-row').forEach(btn => {
+      btn.addEventListener('click', () => startTopicRevision(revisionPickedSubject, btn.dataset.topic));
+    });
+  }
+  showScreen(revisionTopicPickScreen);
+}
+function startSubjectRevision(subject){
+  const pool = shuffle(getRevisionPool().filter(q => (q.Subject || 'General') === subject));
   if(pool.length === 0) return;
-  currentSetInfo = null; // revision quizzes don't lock into the normal Set progression
-  launchQuiz(shuffle([...pool]), 'Revision', 0, 0);
+  currentSetInfo = null;
+  revisionModeActive = true;
+  revisionPendingFlashCards = [];
+  launchQuiz(pool, 'Revision', 0, 0);
+}
+function startTopicRevision(subject, topic){
+  const pool = shuffle(getRevisionPool().filter(q => (q.Subject || 'General') === subject && (q.Chapter || 'General') === topic));
+  if(pool.length === 0) return;
+  currentSetInfo = null;
+  revisionModeActive = true;
+  revisionPendingFlashCards = [];
+  launchQuiz(pool, 'Revision', 0, 0);
+}
+document.getElementById('revisionWholeSubjectBtn').addEventListener('click', () => {
+  if(revisionPickedSubject) startSubjectRevision(revisionPickedSubject);
+});
+
+// ---------- Revision Calendar: forward-looking workload view, computed live from real due-dates
+// already tracked on Flash Cards (nextReviewDate) and Mistake Book entries (nextRevisionDate) —
+// no new tracking needed. Deliberately does NOT show past dates as anything other than blank:
+// there's no tracked history of what was actually revised on a given past day, so showing
+// "completed" dots for history that isn't tracked would be dishonest rather than useful. Streak
+// reuses the app's existing general getStudyStreak() rather than a separate revision-only one. ----
+function getDueCountForDate(dateISO, isToday){
+  const cards = getFcCards();
+  const wrong = getWrongQuestions();
+  const cardCount = isToday
+    ? fcCardsDueToday(cards).length
+    : cards.filter(c => c.nextReviewDate === dateISO).length;
+  const mcqCount = isToday
+    ? getRevisionPool().length
+    : wrong.filter(w => w.nextRevisionDate === dateISO).length;
+  return { cardCount, mcqCount, total: cardCount + mcqCount };
+}
+function renderRevisionCalendar(){
+  const streak = typeof getStudyStreak === 'function' ? getStudyStreak() : 0;
+  document.getElementById('revisionStreakEmoji').textContent = streak > 0 ? '🔥' : '💤';
+  document.getElementById('revisionStreakText').textContent = `${streak} Day${streak === 1 ? '' : 's'} Streak`;
+
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  document.getElementById('revisionCalendarMonthLabel').textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startWeekday = firstDay.getDay(); // 0=Sun
+  const todayDate = now.getDate();
+
+  const grid = document.getElementById('revisionCalendarGrid');
+  let html = ['S','M','T','W','T','F','S'].map(d => `<div style="text-align:center; font-size:10px; color:var(--ink-soft); font-weight:700;">${d}</div>`).join('');
+  for(let i = 0; i < startWeekday; i++) html += '<div></div>';
+  for(let d = 1; d <= daysInMonth; d++){
+    const dateObj = new Date(year, month, d);
+    const dateISO = dateObj.toISOString().split('T')[0];
+    const isToday = d === todayDate;
+    const isPast = dateObj < new Date(year, month, todayDate);
+    let dot = '';
+    if(!isPast){
+      const { total } = getDueCountForDate(dateISO, isToday);
+      dot = total === 0 ? '' : (total >= 20 ? '🔴' : (total >= 8 ? '🟡' : '🟢'));
+    }
+    html += `
+      <button class="revision-cal-day" data-date="${dateISO}" data-today="${isToday}" style="aspect-ratio:1; border-radius:8px; border:${isToday ? '2px solid var(--teal)' : '1px solid var(--line)'}; background:var(--panel); color:var(--ink); font-size:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+        <span>${d}</span>
+        <span style="font-size:9px;">${dot}</span>
+      </button>`;
+  }
+  grid.innerHTML = html;
+  document.querySelectorAll('.revision-cal-day').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isToday = btn.dataset.today === 'true';
+      const { cardCount, mcqCount, total } = getDueCountForDate(btn.dataset.date, isToday);
+      const detail = document.getElementById('revisionCalendarDetail');
+      detail.style.display = 'block';
+      const label = new Date(btn.dataset.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      detail.innerHTML = total === 0
+        ? `<p style="font-size:12.5px; color:var(--ink-soft);"><b>${label}</b><br>Nothing scheduled for this day.</p>`
+        : `<p style="font-size:12.5px; color:var(--ink);"><b>${label}</b><br>${cardCount} Flash Card${cardCount === 1 ? '' : 's'} + ${mcqCount} MCQ${mcqCount === 1 ? '' : 's'} due</p>`;
+    });
+  });
+}
+document.getElementById('revisionCalendarBtn').addEventListener('click', () => {
+  showScreen(revisionCalendarScreen);
+  renderRevisionCalendar();
+});
+
+// ---------- Exam Revision Mode + 7-Day Plan: the exam context reuses the user's already-selected
+// exam post(s) (getSelectedPosts/summarizeSelectedPosts) rather than a new "select exam" picker —
+// that data already exists and already scopes which Sheet's questions are active, so a second
+// picker here would just be a redundant, disconnected copy of a choice already made in Profile.
+// The 7-day plan is genuinely personalized per the document's explicit requirement: generated
+// from the user's actual weakest subjects (via getRevisionSubjects, already sorted by mistake
+// frequency), not the same fixed schedule for everyone. Stored once so it stays stable across
+// the week rather than reshuffling as new mistakes come in mid-plan. ----------
+function renderExamRevisionPlan(){
+  document.getElementById('examRevisionExamLabel').textContent = `Preparing for: ${summarizeSelectedPosts()}`;
+  const subjects = getRevisionSubjects();
+  const mistakeCount = getWrongQuestions().length;
+  const planCard = document.getElementById('examRevisionPlanCard');
+  const weakTop = subjects.slice(0, 3);
+  planCard.innerHTML = `
+    <h4 style="margin-bottom:10px;">Exam Revision Plan</h4>
+    ${weakTop.length > 0 ? weakTop.map(s => `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--wrong);">🔴 ${s.subject}</span><span style="font-weight:700;">${s.count} due</span></div>`).join('') : `<p style="font-size:12.5px; color:var(--ink-soft);">No weak subjects identified yet — keep practicing and this will fill in.</p>`}
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--gold);">🟡 Total Mistakes Tracked</span><span style="font-weight:700;">${mistakeCount}</span></div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--correct);">🟢 Final Quick Review</span><span style="font-weight:700;">Use Quick Revision anytime</span></div>
+  `;
+}
+function startExamRevision(){
+  const subjects = getRevisionSubjects();
+  const subjectOrder = subjects.map(s => s.subject);
+  const pool = [...getRevisionPool()].sort((a, b) => {
+    const aRank = subjectOrder.indexOf(a.Subject || 'General');
+    const bRank = subjectOrder.indexOf(b.Subject || 'General');
+    return aRank - bRank; // weakest subjects (lower index = higher mistake count) come first
+  });
+  if(pool.length === 0){ alert('Nothing due for revision right now.'); return; }
+  currentSetInfo = null;
+  revisionModeActive = true;
+  revisionPendingFlashCards = getDueFlashCardsForRevision();
+  launchQuiz(pool, 'Revision', 0, 0);
+}
+document.getElementById('examRevisionBtn').addEventListener('click', () => {
+  showScreen(examRevisionScreen);
+  renderExamRevisionPlan();
+});
+document.getElementById('examRevisionStartBtn').addEventListener('click', startExamRevision);
+
+function generate7DayPlan(){
+  const subjects = getRevisionSubjects().slice(0, 5).map(s => s.subject);
+  const days = subjects.map(s => ({ label: s, type: 'subject', value: s }));
+  while(days.length < 5) days.push({ label: 'General Practice', type: 'subject', value: null });
+  days.push({ label: 'Weak Areas', type: 'weak', value: null });
+  days.push({ label: 'Full Revision', type: 'full', value: null });
+  const plan = { days, startDate: todayISO() };
+  try{ localStorage.setItem('hl_7day_revision_plan', JSON.stringify(plan)); }catch(e){}
+  return plan;
+}
+function get7DayPlan(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('hl_7day_revision_plan') || 'null');
+    if(saved) return saved;
+  }catch(e){}
+  return generate7DayPlan();
+}
+function render7DayPlan(){
+  const plan = get7DayPlan();
+  const startDate = new Date(plan.startDate + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dayIndex = Math.floor((today - startDate) / 86400000); // 0-based day elapsed since plan started
+  const wrap = document.getElementById('sevenDayList');
+  wrap.innerHTML = plan.days.map((d, i) => {
+    const isToday = i === dayIndex;
+    const isPast = i < dayIndex;
+    const icon = d.type === 'weak' ? '⚠️' : (d.type === 'full' ? '🔄' : '📚');
+    return `
+      <button class="note-item seven-day-row" data-idx="${i}" style="width:100%; text-align:left; border:${isToday ? '2px solid var(--teal)' : 'none'}; cursor:pointer; opacity:${isPast ? 0.55 : 1};">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="ni-title" style="font-size:13px;">Day ${i + 1} — ${icon} ${d.label}</span>
+          ${isToday ? '<span style="font-size:10.5px; font-weight:700; color:var(--teal);">TODAY</span>' : ''}
+        </div>
+      </button>`;
+  }).join('');
+  document.querySelectorAll('.seven-day-row').forEach(btn => {
+    btn.addEventListener('click', () => start7DayItem(plan.days[parseInt(btn.dataset.idx, 10)]));
+  });
+}
+function start7DayItem(day){
+  let pool;
+  if(day.type === 'subject' && day.value){
+    pool = shuffle(getRevisionPool().filter(q => (q.Subject || 'General') === day.value));
+  } else if(day.type === 'weak'){
+    const weakSubjects = getRevisionSubjects().map(s => s.subject);
+    pool = shuffle(getRevisionPool().filter(q => weakSubjects.includes(q.Subject || 'General')));
+  } else {
+    pool = shuffle([...getRevisionPool()]);
+  }
+  if(pool.length === 0){ alert('Nothing due for this day yet — keep practicing and it will fill in.'); return; }
+  currentSetInfo = null;
+  revisionModeActive = true;
+  revisionPendingFlashCards = day.type === 'full' ? getDueFlashCardsForRevision() : [];
+  launchQuiz(pool, 'Revision', 0, 0);
+}
+document.getElementById('sevenDayRevisionBtn').addEventListener('click', () => {
+  showScreen(sevenDayRevisionScreen);
+  render7DayPlan();
+});
+document.getElementById('sevenDayResetBtn').addEventListener('click', () => {
+  if(!confirm('Regenerate your 7-day plan from today, based on your current weak subjects?')) return;
+  generate7DayPlan();
+  render7DayPlan();
 });
 
 // ---------- Mistake Book: every wrong answer, automatically tracked, grouped by subject ----------
+let mistakeActiveFilter = 'all';
+function getMistakeCategory(q){
+  const wrongCount = q.wrongCount || 1;
+  const correctReviews = q.correctReviews || 0;
+  if(wrongCount === 1 && correctReviews === 0) return { key: 'new', label: '🆕 New', color: 'var(--wrong)' };
+  if(wrongCount >= 3 && wrongCount > correctReviews) return { key: 'struggling', label: '⚠️ Struggling', color: 'var(--wrong)' };
+  if(correctReviews >= 2) return { key: 'improving', label: '🟡 Improving', color: 'var(--gold)' };
+  return { key: 'learning', label: '🟠 Learning', color: 'var(--gold)' };
+}
 function renderMistakeBook(){
   const wrap = document.getElementById('mistakeBookContent');
   const practiceBtn = document.getElementById('practiceMistakesBtn');
@@ -11551,17 +11985,45 @@ function renderMistakeBook(){
   if(list.length === 0){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No mistakes tracked yet — questions you get wrong during practice will show up here automatically.</p>`;
     practiceBtn.style.display = 'none';
+    document.getElementById('mistakeProgressCard').innerHTML = '';
     return;
   }
   practiceBtn.style.display = 'block';
 
   const today = todayISO();
+  const dueList = list.filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
+  const strugglingCount = list.filter(q => getMistakeCategory(q).key === 'struggling').length;
+  let mastered = 0;
+  try{ mastered = parseInt(localStorage.getItem('hl_mistakes_mastered_count') || '0', 10); }catch(e){}
+
+  document.getElementById('mistakeProgressCard').innerHTML = `
+    <div class="content-card" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff; margin-bottom:10px;">
+      <div style="font-size:11px; font-weight:700; opacity:0.9;">🔥 DUE TODAY</div>
+      <div style="font-size:24px; font-weight:800;">${dueList.length} question${dueList.length === 1 ? '' : 's'}</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-tile"><div class="st-num">${list.length}</div><div class="st-label">Total</div></div>
+      <div class="stat-tile"><div class="st-num" style="color:var(--wrong);">${strugglingCount}</div><div class="st-label">Struggling</div></div>
+      <div class="stat-tile"><div class="st-num" style="color:var(--correct);">${mastered}</div><div class="st-label">Mastered</div></div>
+    </div>
+  `;
+
+  let filtered = list;
+  if(mistakeActiveFilter === 'due') filtered = dueList;
+  else if(mistakeActiveFilter === 'new') filtered = list.filter(q => getMistakeCategory(q).key === 'new');
+  else if(mistakeActiveFilter === 'struggling') filtered = list.filter(q => getMistakeCategory(q).key === 'struggling');
+
   const groups = {};
-  list.forEach(q => {
+  filtered.forEach(q => {
     const subj = q.Subject || 'Other';
     if(!groups[subj]) groups[subj] = [];
     groups[subj].push(q);
   });
+
+  if(Object.keys(groups).length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">Nothing in this filter right now.</p>`;
+    return;
+  }
 
   wrap.innerHTML = Object.keys(groups).map(subj => {
     const itemsHtml = groups[subj].map(q => {
@@ -11570,12 +12032,17 @@ function renderMistakeBook(){
         statusText = '🔴 Due now';
       } else {
         const days = Math.ceil((new Date(q.nextRevisionDate) - new Date(today)) / 86400000);
-        statusText = `🟡 Due in ${days} day${days !== 1 ? 's' : ''}`;
+        statusText = `Due in ${days} day${days !== 1 ? 's' : ''}`;
       }
+      const cat = getMistakeCategory(q);
       return `
         <div class="bookmark-item">
-          <div class="bq-subject">${statusText}</div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;">
+            <span style="color:${cat.color}; font-weight:700;">${cat.label}</span>
+            <span style="color:var(--ink-soft);">${statusText}</span>
+          </div>
           <div class="bq-text">${q.Question}</div>
+          <div style="font-size:10.5px; color:var(--ink-soft); margin-top:2px;">Wrong ${q.wrongCount || 1}× · Correct reviews ${q.correctReviews || 0}</div>
           <button class="bookmark-remove-btn" data-key="${encodeURIComponent(questionKey(q))}">✕ Remove</button>
         </div>
       `;
@@ -11596,11 +12063,26 @@ function renderMistakeBook(){
     });
   });
 }
+document.querySelectorAll('.mistake-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    mistakeActiveFilter = btn.dataset.filter;
+    document.querySelectorAll('.mistake-filter-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderMistakeBook();
+  });
+});
 document.getElementById('practiceMistakesBtn').addEventListener('click', () => {
-  const list = getWrongQuestions();
-  if(list.length === 0) return;
+  const today = todayISO();
+  const dueList = getWrongQuestions().filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
+  if(dueList.length === 0){ alert('Nothing due right now — check back later or browse "All" below.'); return; }
   currentSetInfo = null;
-  launchQuiz(shuffle([...list]), 'Revision', 0, 0);
+  mistakeReviewActive = true;
+  launchQuiz(shuffle([...dueList]), 'Revision', 0, 0);
 });
 
 function renderReminderSettings(){
@@ -15544,6 +16026,21 @@ function getTodaysQotdEntry(){
     Description: 'A fresh question is waiting for you on the home screen — answer it before it changes tomorrow.'
   };
 }
+// Client-side generated, same pattern as the QOTD entry above — only shown when something is
+// genuinely due, not a fixed daily nag. Morning/evening timing from the document isn't
+// achievable without real push notifications (this app has none), so this shows whenever the
+// notifications screen is actually opened instead — an honest, in-app equivalent.
+function getTodaysRevisionEntry(){
+  const mcqCount = getRevisionPool().length;
+  const cardCount = getDueFlashCardsForRevision().length;
+  const total = mcqCount + cardCount;
+  if(total === 0) return null;
+  return {
+    Date: formatDualDate(new Date()),
+    Title: `🔄 ${total} item${total === 1 ? ' is' : 's are'} ready for today's revision`,
+    Description: `${mcqCount} question${mcqCount === 1 ? '' : 's'} and ${cardCount} Flash Card${cardCount === 1 ? '' : 's'} are due. Open Revision Mode to get started.`
+  };
+}
 
 function paintNotifications(entries){
   const wrap = document.getElementById('notificationsContent');
@@ -15567,7 +16064,7 @@ async function loadNotifications(){
   // never a blank "Loading…" screen
   let cached = null;
   try{ cached = JSON.parse(localStorage.getItem('hl_cache_notifications') || 'null'); }catch(e){}
-  const instantEntries = [getTodaysQotdEntry(), ...(cached || [])];
+  const instantEntries = [getTodaysQotdEntry(), getTodaysRevisionEntry(), ...(cached || [])].filter(Boolean);
   paintNotifications(instantEntries);
 
   // Quietly refresh in the background
@@ -15575,10 +16072,11 @@ async function loadNotifications(){
     const res = await fetch(`${SHEET_API_URL}?action=notifications`);
     const sheetEntries = await res.json();
     localStorage.setItem('hl_cache_notifications', JSON.stringify(sheetEntries));
-    paintNotifications([getTodaysQotdEntry(), ...sheetEntries]);
+    const allEntries = [getTodaysQotdEntry(), getTodaysRevisionEntry(), ...sheetEntries].filter(Boolean);
+    paintNotifications(allEntries);
 
     // Mark all as "seen" now that the user has opened this screen — clears the badge
-    try{ localStorage.setItem('hl_notif_seen_count', String(sheetEntries.length + 1)); }catch(e){}
+    try{ localStorage.setItem('hl_notif_seen_count', String(allEntries.length)); }catch(e){}
     updateNotificationBadge();
   }catch(err){
     // Keep showing cached/instant data — no need to alarm the user
@@ -15590,10 +16088,11 @@ async function updateNotificationBadge(){
   let seenCount = 0;
   try{ seenCount = parseInt(localStorage.getItem('hl_notif_seen_count') || '0', 10); }catch(e){}
 
-  let totalCount = 1; // the always-present Question of the Day entry counts as 1
+  const revisionBonus = getTodaysRevisionEntry() ? 1 : 0; // QOTD is always present; Revision only counts when something's actually due
+  let totalCount = 1 + revisionBonus;
   try{
     let cached = JSON.parse(localStorage.getItem('hl_cache_notifications') || '[]');
-    totalCount = 1 + cached.filter(n => n && n.Title).length;
+    totalCount = 1 + revisionBonus + cached.filter(n => n && n.Title).length;
   }catch(e){}
 
   paintBadge(Math.max(0, totalCount - seenCount));
@@ -15603,7 +16102,7 @@ async function updateNotificationBadge(){
     const res = await fetch(`${SHEET_API_URL}?action=notifications`);
     const sheetEntries = await res.json();
     localStorage.setItem('hl_cache_notifications', JSON.stringify(sheetEntries));
-    const freshTotal = 1 + sheetEntries.filter(n => n && n.Title).length;
+    const freshTotal = 1 + revisionBonus + sheetEntries.filter(n => n && n.Title).length;
     paintBadge(Math.max(0, freshTotal - seenCount));
   }catch(err){}
 }
@@ -18715,6 +19214,9 @@ function openRapidFireSetup(modeKey){
   document.getElementById('rapidFireSubjectRow').style.display = needsSubject ? 'block' : 'none';
   document.getElementById('rapidFireTimeRow').style.display = needsTime ? 'block' : 'none';
   document.getElementById('rapidFireCustomTime').value = '';
+  // "All Due" bypasses the time/pace system entirely — only makes sense for Mistake Fire,
+  // where "everything due today" is a real, bounded, meaningful set (unlike other modes)
+  document.getElementById('rapidFireAllDueBtn').style.display = modeKey === 'mistake' ? 'block' : 'none';
 
   if(needsSubject){
     const post = rapidFireDefaultPost();
@@ -18766,6 +19268,14 @@ function updateRapidFirePreview(){
   document.getElementById('rapidFirePreviewPace').textContent = `Target pace: ~${pace} sec/question`;
 }
 document.getElementById('rapidFireStartBtn').addEventListener('click', startRapidFire);
+document.getElementById('rapidFireAllDueBtn').addEventListener('click', () => {
+  const today = todayISO();
+  const dueList = getWrongQuestions().filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
+  if(dueList.length === 0){ alert('Nothing due right now.'); return; }
+  currentSetInfo = null;
+  mistakeReviewActive = true;
+  launchQuiz(shuffle([...dueList]), 'Revision', 0, 0);
+});
 async function startRapidFire(){
   const mode = rapidFireSelectedMode;
   const post = rapidFireDefaultPost();
@@ -19068,6 +19578,10 @@ function renderQuestion(){
   document.getElementById('nextBtn').textContent =
     currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Select an answer, then tap to continue';
 
+  // "I Don't Know" is shown only during Revision Mode sessions — better information than
+  // forcing a guess, and tagged distinctly from a wrong answer so it can inform priority later
+  document.getElementById('idkBtn').style.display = revisionModeActive ? 'block' : 'none';
+
   refreshOmrStrip();
 
   document.querySelectorAll('.option').forEach(opt => {
@@ -19119,7 +19633,8 @@ function handleAnswer(letter){
   const q = quizQuestions[currentIndex];
   const isCorrect = letter === (q.CorrectAnswer || '').trim().toUpperCase();
 
-  answers[currentIndex] = { correct: isCorrect, chosen: letter, correctAnswer: q.CorrectAnswer };
+  answers[currentIndex] = { correct: isCorrect, chosen: letter, correctAnswer: q.CorrectAnswer, idk: letter === 'IDK' };
+  document.getElementById('idkBtn').style.display = 'none';
 
   document.querySelectorAll('.option').forEach(opt => {
     opt.classList.add('disabled');
@@ -19130,7 +19645,12 @@ function handleAnswer(letter){
 
   const fb = document.getElementById('feedbackBox');
   fb.className = 'feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
-  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + q.CorrectAnswer}</b>${q.Explanation || ''}${q.Explanation ? `<button class="chat-save-btn" id="saveExplanationBtn" style="display:block; margin-top:6px;" title="Save to My Notes">🔖 Save explanation</button>` : ''}`;
+  // During Mistake review specifically, show what was chosen wrong last time — more useful than
+  // plain correct/wrong per the document's own example, since it highlights the actual confusion
+  const prevAnswerLine = (mistakeReviewActive && q.lastWrongAnswer)
+    ? `<p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Your previous answer: <b>${q.lastWrongAnswer}. ${q['Option' + q.lastWrongAnswer] || ''}</b> ❌</p>`
+    : '';
+  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + q.CorrectAnswer}</b>${prevAnswerLine}${q.Explanation || ''}${q.Explanation ? `<button class="chat-save-btn" id="saveExplanationBtn" style="display:block; margin-top:6px;" title="Save to My Notes">🔖 Save explanation</button>` : ''}`;
   if(q.Explanation){
     document.getElementById('saveExplanationBtn').addEventListener('click', (e) => {
       const btn = e.target;
@@ -19157,6 +19677,7 @@ function handleAnswer(letter){
   document.getElementById('nextBtn').disabled = false;
   refreshOmrStrip();
 }
+document.getElementById('idkBtn').addEventListener('click', () => handleAnswer('IDK'));
 
 document.getElementById('nextBtn').addEventListener('click', () => {
   if(currentIndex < quizQuestions.length - 1){
@@ -19206,7 +19727,7 @@ function finishQuiz(){
     } else {
       wrong++; score -= (marks * 0.2);
       reviewHtml.push(reviewRow(q, i, 'Wrong', a.chosen));
-      addToWrongQuestions(q);
+      addToWrongQuestions(q, a.chosen);
     }
   });
 
@@ -19266,6 +19787,22 @@ function finishQuiz(){
     submitDailyBattleResult(correct, quizQuestions.length);
     currentDailyBattleActive = false;
   }
+
+  // ---- Smart Revision: after the MCQ portion finishes, offer to continue straight into any
+  // due Flash Cards that were bundled into this same session, rather than silently dropping them
+  if(revisionModeActive){
+    revisionModeActive = false;
+    if(revisionPendingFlashCards.length > 0){
+      const cards = revisionPendingFlashCards;
+      revisionPendingFlashCards = [];
+      setTimeout(() => {
+        if(confirm(`Nice work! ${cards.length} Flash Card${cards.length === 1 ? ' is' : 's are'} also due — continue revising with them now?`)){
+          startFlashcardStudy(cards);
+        }
+      }, 300); // let the quiz result screen render first
+    }
+  }
+  mistakeReviewActive = false;
 
   // ---- Rapid Fire: pace summary, and streak update for Daily Fire ----
   if(currentRapidFireMode){
