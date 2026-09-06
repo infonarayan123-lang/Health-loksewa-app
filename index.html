@@ -2510,12 +2510,36 @@
 
   <!-- MY BOOKMARKS -->
   <div class="screen" id="bookmarksScreen">
-    <div class="back-link" data-back="progress">← Back</div>
+    <div class="back-link" data-back="myBookmarksHub">← Back</div>
     <div class="home-body">
-      <div class="section-title">⭐ My Bookmarks</div>
+      <div class="section-title">📚 Bookmarked Questions</div>
       <div id="bookmarksContent">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
+    </div>
+  </div>
+
+  <div class="screen" id="myBookmarksHubScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔖 My Bookmarks</div>
+      <div id="mbhTotalCount" style="font-size:12px; color:var(--ink-soft); margin-bottom:12px;"></div>
+
+      <input type="text" class="formula-search-box" id="mbhSearchBox" placeholder="Search bookmarks…">
+
+      <div id="mbhTypeGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 0;"></div>
+
+      <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;">
+        <button class="calc-btn mbh-filter-btn active" data-filter="all" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap;">All</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="question" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📚 Questions</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="note" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📝 Notes</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="flashcard" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🧩 Flash Cards</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="mnemonic" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🧠 Mnemonics</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="healthday" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📅 Health Days</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="quickref" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⚡ Quick Refs</button>
+      </div>
+
+      <div id="mbhListContent"></div>
     </div>
   </div>
 
@@ -5973,6 +5997,7 @@ const upgradeScreen = document.getElementById('upgradeScreen');
 const progressScreen = document.getElementById('progressScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
+const myBookmarksHubScreen = document.getElementById('myBookmarksHubScreen');
 const formulaScreen = document.getElementById('formulaScreen');
 const quickRefScreen = document.getElementById('quickRefScreen');
 const quickRefDetailScreen = document.getElementById('quickRefDetailScreen');
@@ -6082,13 +6107,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen };
 let docViewerBackTarget = homeScreen;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
@@ -6249,7 +6274,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -6403,8 +6428,8 @@ document.getElementById('goToLeaderboard').addEventListener('click', (e) => {
 });
 document.getElementById('goToBookmarks').addEventListener('click', (e) => {
   e.preventDefault();
-  showScreen(bookmarksScreen);
-  renderBookmarks();
+  showScreen(myBookmarksHubScreen);
+  renderMyBookmarksHub();
 });
 document.getElementById('goToNotes').addEventListener('click', (e) => {
   e.preventDefault();
@@ -13845,6 +13870,136 @@ async function renderLeaderboard(){
   }).join('');
 }
 
+// ---------- My Bookmarks Hub: a read-only aggregation layer over every existing bookmark store
+// in the app (MCQ questions, pinned Notes, favorited Flash Cards, Mnemonics, Health Days, Quick
+// References) — deliberately does NOT introduce a new unified storage format. Each type keeps
+// saving exactly where it already does; this just reads all of them together into one view.
+// Removing an item here calls that type's own original toggle function, so the source of truth
+// never moves and nothing else in the app needs to change. ----------
+const MBH_TYPE_META = {
+  question: { icon: '📚', label: 'Questions' },
+  note: { icon: '📝', label: 'Notes' },
+  flashcard: { icon: '🧩', label: 'Flash Cards' },
+  mnemonic: { icon: '🧠', label: 'Mnemonics' },
+  healthday: { icon: '📅', label: 'Health Days' },
+  quickref: { icon: '⚡', label: 'Quick Refs' },
+};
+function getAggregatedBookmarks(){
+  const items = [];
+  getBookmarks().forEach(q => items.push({ type: 'question', title: q.Question, subtitle: q.Subject || '', raw: q }));
+  getNotes().filter(n => n.pinned && !n.deletedAt).forEach(n => items.push({ type: 'note', title: n.title || '(untitled)', subtitle: n.folder || '', raw: n }));
+  getFcCards().filter(c => c.favorite).forEach(c => items.push({ type: 'flashcard', title: c.front, subtitle: c.back, raw: c }));
+  const mnemonicBookmarks = getMnemonicBookmarks();
+  getAllMnemonics().filter(m => mnemonicBookmarks.includes(m.id)).forEach(m => items.push({ type: 'mnemonic', title: m.topic, subtitle: m.category, raw: m }));
+  const healthDayBookmarks = getHealthDayBookmarks();
+  HEALTH_DAYS.filter(d => healthDayBookmarks.includes(d.title)).forEach(d => items.push({ type: 'healthday', title: d.title, subtitle: d.date, raw: d }));
+  getQuickRefBookmarks().forEach(sub => items.push({ type: 'quickref', title: sub, subtitle: 'Quick Reference', raw: { subtopic: sub } }));
+  return items;
+}
+function mbhOpenItem(item){
+  if(item.type === 'question'){ showScreen(bookmarksScreen); renderBookmarks(); }
+  else if(item.type === 'note') openNoteEditor(item.raw.id);
+  else if(item.type === 'flashcard') openFcCardEdit(item.raw.id);
+  else if(item.type === 'mnemonic') openMnemonicDetail(item.raw);
+  else if(item.type === 'healthday') openHealthDayDetail(item.raw);
+  else if(item.type === 'quickref') openQuickRefSubtopic(item.raw.subtopic);
+}
+function mbhRemoveItem(item){
+  if(item.type === 'question') toggleBookmark(item.raw);
+  else if(item.type === 'note'){
+    const notes = getNotes();
+    const note = notes.find(n => n.id === item.raw.id);
+    if(note){ note.pinned = false; saveNotes(notes); }
+  }
+  else if(item.type === 'flashcard'){
+    const cards = getFcCards();
+    const card = cards.find(c => c.id === item.raw.id);
+    if(card){ card.favorite = false; saveFcCards(cards); }
+  }
+  else if(item.type === 'mnemonic') toggleMnemonicBookmark(item.raw.id);
+  else if(item.type === 'healthday') toggleHealthDayBookmark(item.raw.title);
+  else if(item.type === 'quickref') toggleQuickRefBookmark(item.raw.subtopic);
+  renderMyBookmarksHub(document.getElementById('mbhSearchBox').value);
+}
+let mbhActiveFilter = 'all';
+function renderMyBookmarksHub(searchTerm){
+  const all = getAggregatedBookmarks();
+  document.getElementById('mbhTotalCount').textContent = `${all.length} bookmark${all.length === 1 ? '' : 's'} total`;
+
+  const typeGrid = document.getElementById('mbhTypeGrid');
+  typeGrid.innerHTML = Object.keys(MBH_TYPE_META).map(type => {
+    const count = all.filter(i => i.type === type).length;
+    const meta = MBH_TYPE_META[type];
+    return `
+      <button class="note-item mbh-type-card" data-type="${type}" style="width:100%; text-align:left; border:none; cursor:pointer;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="ni-title" style="font-size:13px;">${meta.icon} ${meta.label}</span>
+          <span style="font-weight:800; color:var(--gold);">${count}</span>
+        </div>
+      </button>`;
+  }).join('');
+  document.querySelectorAll('.mbh-type-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mbhActiveFilter = btn.dataset.type;
+      document.querySelectorAll('.mbh-filter-btn').forEach(b => {
+        const active = b.dataset.filter === mbhActiveFilter;
+        b.classList.toggle('active', active);
+        b.style.background = active ? '' : 'var(--panel)';
+        b.style.color = active ? '' : 'var(--ink)';
+        b.style.border = active ? '' : '1.5px solid var(--line)';
+      });
+      renderMbhList(searchTerm);
+    });
+  });
+
+  renderMbhList(searchTerm);
+}
+function renderMbhList(searchTerm){
+  const term = (searchTerm || '').toLowerCase().trim();
+  let list = getAggregatedBookmarks();
+  if(mbhActiveFilter !== 'all') list = list.filter(i => i.type === mbhActiveFilter);
+  if(term) list = list.filter(i => i.title.toLowerCase().includes(term) || i.subtitle.toLowerCase().includes(term));
+
+  const wrap = document.getElementById('mbhListContent');
+  if(list.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">No bookmarks here yet.</p>`;
+    return;
+  }
+  wrap.innerHTML = list.map((item, i) => {
+    const meta = MBH_TYPE_META[item.type];
+    return `
+      <div class="content-card" style="margin-bottom:10px;">
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:3px;">${meta.icon} ${meta.label}</div>
+        <div style="font-size:13.5px; font-weight:700; color:var(--ink);">${item.title}</div>
+        ${item.subtitle ? `<div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">${item.subtitle}</div>` : ''}
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="calc-btn mbh-open-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px;">Open</button>
+          <button class="calc-btn mbh-remove-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Remove</button>
+        </div>
+      </div>`;
+  }).join('');
+  document.querySelectorAll('.mbh-open-btn').forEach(btn => {
+    btn.addEventListener('click', () => mbhOpenItem(list[parseInt(btn.dataset.idx, 10)]));
+  });
+  document.querySelectorAll('.mbh-remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => mbhRemoveItem(list[parseInt(btn.dataset.idx, 10)]));
+  });
+}
+document.getElementById('mbhSearchBox').addEventListener('input', (e) => renderMbhList(e.target.value));
+document.querySelectorAll('.mbh-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    mbhActiveFilter = btn.dataset.filter;
+    document.querySelectorAll('.mbh-filter-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderMbhList(document.getElementById('mbhSearchBox').value);
+  });
+});
+
 function renderBookmarks(){
   const wrap = document.getElementById('bookmarksContent');
   const list = getBookmarks();
@@ -14580,8 +14735,8 @@ document.getElementById('myPrepViewProgressBtn').addEventListener('click', () =>
   renderProgressScreen();
 });
 document.getElementById('menuMyBookmarks').addEventListener('click', () => {
-  showScreen(bookmarksScreen);
-  renderBookmarks();
+  showScreen(myBookmarksHubScreen);
+  renderMyBookmarksHub();
 });
 document.getElementById('menuMyNotes').addEventListener('click', () => {
   showScreen(notesScreen);
