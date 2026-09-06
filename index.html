@@ -11834,7 +11834,7 @@ function renderNoteCard(n){
       <div class="ni-header">
         <div>
           <div class="ni-title">${n.revisionStatus ? `<span class="ni-revision-dot" style="background:${dotColor};"></span>` : ''}${isLocked ? '🔒 ' : ''}${n.title || 'Untitled Note'}</div>
-          <div class="ni-meta">${n.folder || 'General'} · ${new Date(n.updatedAt || Date.now()).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>
+          <div class="ni-meta">${n.folder || 'General'} · ${formatDualDate(new Date(n.updatedAt || Date.now()))}</div>
         </div>
       </div>
       <div class="ni-body">${isLocked ? '🔒 PIN-locked — tap to unlock' : bodyPreview + (bodyPreview.length >= (notesViewMode === 'grid' ? 60 : 140) ? '…' : '')}</div>
@@ -13169,7 +13169,7 @@ function renderNoteTrash(){
   wrap.innerHTML = trashed.map(n => `
     <div class="note-item">
       <div class="ni-title">${n.title || 'Untitled Note'}</div>
-      <div class="ni-meta">${n.folder || 'General'} · Deleted ${new Date(n.deletedAt).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</div>
+      <div class="ni-meta">${n.folder || 'General'} · Deleted ${formatDualDate(new Date(n.deletedAt))}</div>
       <div class="ni-actions">
         <button style="color:var(--navy);" data-restore="${n.id}">↩️ Restore</button>
         <button style="color:var(--wrong);" data-purge="${n.id}">🗑️ Delete Forever</button>
@@ -15393,7 +15393,7 @@ setInterval(() => { computeUpcomingExams(); paintExamSlide(); renderHomeHealthDa
 
 // ---------- Notifications: self-managing feed (Sheet-driven) + auto Question-of-Day entry ----------
 function getTodaysQotdEntry(){
-  const todayLabel = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  const todayLabel = formatDualDate(new Date());
   return {
     Date: todayLabel,
     Title: '🎯 Question of the Day is ready!',
