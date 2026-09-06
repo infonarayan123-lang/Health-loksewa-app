@@ -2537,7 +2537,17 @@
         <button class="calc-btn mbh-filter-btn" data-filter="mnemonic" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🧠 Mnemonics</button>
         <button class="calc-btn mbh-filter-btn" data-filter="healthday" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📅 Health Days</button>
         <button class="calc-btn mbh-filter-btn" data-filter="quickref" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⚡ Quick Refs</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="pdf" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📄 PDFs</button>
+        <button class="calc-btn mbh-filter-btn" data-filter="custom" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">💡 Concepts</button>
       </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <p style="font-size:11px; font-weight:700; color:var(--ink-soft); margin:0;">📁 Collections</p>
+        <button class="calc-btn" id="mbhNewCollectionBtn" style="margin:0; width:auto; padding:5px 10px; font-size:11px;">＋ New</button>
+      </div>
+      <div id="mbhCollectionRow" style="display:flex; gap:6px; margin-bottom:14px; overflow-x:auto;"></div>
+
+      <button class="calc-btn" id="mbhAddCustomBtn" style="margin-bottom:14px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">💡 Save a Custom Bookmark</button>
 
       <div id="mbhListContent"></div>
     </div>
@@ -5187,7 +5197,10 @@
   <div class="screen" id="docViewerScreen">
     <div class="back-link" data-back="dynamic">← Back</div>
     <div style="padding:0 20px 16px;">
-      <div class="section-title" id="docViewerTitle" style="margin-bottom:10px;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+        <div class="section-title" id="docViewerTitle" style="margin:0;"></div>
+        <button class="calc-btn" id="docViewerBookmarkBtn" style="margin:0; width:auto; padding:6px 12px; font-size:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔖</button>
+      </div>
       <iframe id="docViewerFrame" style="width:100%; height:70vh; border:1px solid var(--line); border-radius:12px;"></iframe>
     </div>
   </div>
@@ -6230,6 +6243,7 @@ window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
 const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen };
 let docViewerBackTarget = homeScreen;
+let currentDocViewerItem = null;
 let setSelectBackTarget = subjectPickScreen;
 let docListBackTarget = gkScreen;
 let comingSoonBackTarget = mcqPostScreen;
@@ -6302,6 +6316,7 @@ function showScreen(el){
   updateBottomNav(el);
   if(el === learnScreen) resetGlobalSearch();
   if(el === calculatorScreen) resetToolsSearch();
+  if(el === docViewerScreen) refreshDocViewerBookmarkBtn();
   if(el === homeScreen){
     const activeTab = document.querySelector('.home-chart-tab.active');
     renderHomeChart(activeTab ? activeTab.dataset.mode : 'daily');
@@ -9500,6 +9515,7 @@ function applyStudyResourcesData(data){
       document.getElementById('docViewerTitle').textContent = p.name;
       document.getElementById('docViewerFrame').src = driveEmbedUrl(p.link);
       docViewerBackTarget = dictionaryScreen;
+      currentDocViewerItem = { title: p.name, link: p.link };
       showScreen(docViewerScreen);
     });
   });
@@ -14015,17 +14031,80 @@ const MBH_TYPE_META = {
   mnemonic: { icon: '🧠', label: 'Mnemonics' },
   healthday: { icon: '📅', label: 'Health Days' },
   quickref: { icon: '⚡', label: 'Quick Refs' },
+  pdf: { icon: '📄', label: 'PDFs' },
+  custom: { icon: '💡', label: 'Concepts' },
 };
+// ---------- PDF bookmarks: genuinely new capability (nothing bookmarked PDFs before). Custom
+// bookmarks: a free-form "save anything else" escape hatch for content that doesn't fit any of
+// the app's existing types — e.g. a concept or an external link a student wants to keep. Both
+// are dedicated local stores, same pattern as every other bookmark type here. ----------
+function getPdfBookmarks(){
+  try{ return JSON.parse(localStorage.getItem('hl_pdf_bookmarks') || '[]'); }catch(e){ return []; }
+}
+function isPdfBookmarked(link){ return getPdfBookmarks().some(p => p.link === link); }
+function togglePdfBookmark(title, link){
+  let list = getPdfBookmarks();
+  if(list.some(p => p.link === link)) list = list.filter(p => p.link !== link);
+  else list.unshift({ title, link });
+  try{ localStorage.setItem('hl_pdf_bookmarks', JSON.stringify(list)); }catch(e){}
+}
+function getCustomBookmarks(){
+  try{ return JSON.parse(localStorage.getItem('hl_custom_bookmarks') || '[]'); }catch(e){ return []; }
+}
+function saveCustomBookmarks(list){
+  try{ localStorage.setItem('hl_custom_bookmarks', JSON.stringify(list)); }catch(e){}
+}
+function refreshDocViewerBookmarkBtn(){
+  const btn = document.getElementById('docViewerBookmarkBtn');
+  if(!currentDocViewerItem){ btn.style.display = 'none'; return; }
+  btn.style.display = 'block';
+  const bookmarked = isPdfBookmarked(currentDocViewerItem.link);
+  btn.textContent = bookmarked ? '🔖' : '🏷️';
+  btn.style.color = bookmarked ? 'var(--gold)' : 'var(--ink)';
+}
+document.getElementById('docViewerBookmarkBtn').addEventListener('click', () => {
+  if(!currentDocViewerItem) return;
+  togglePdfBookmark(currentDocViewerItem.title, currentDocViewerItem.link);
+  refreshDocViewerBookmarkBtn();
+});
+
+// ---------- Collections: a label a bookmark can carry, not a second copy of it — matching the
+// document's explicit rule. Stored as a simple {itemKey: collectionName} map, keyed by each
+// item's stable key (built fresh below for every type so collection tags survive re-renders). ----
+function getBookmarkCollections(){
+  try{ return JSON.parse(localStorage.getItem('hl_bookmark_collections') || '[]'); }catch(e){ return []; }
+}
+function saveBookmarkCollections(list){
+  try{ localStorage.setItem('hl_bookmark_collections', JSON.stringify(list)); }catch(e){}
+}
+function getBookmarkCollectionMap(){
+  try{ return JSON.parse(localStorage.getItem('hl_bookmark_collection_map') || '{}'); }catch(e){ return {}; }
+}
+function setBookmarkCollectionMap(map){
+  try{ localStorage.setItem('hl_bookmark_collection_map', JSON.stringify(map)); }catch(e){}
+}
+function getItemCollection(key){ return getBookmarkCollectionMap()[key] || null; }
+function setItemCollection(key, collectionName){
+  const map = getBookmarkCollectionMap();
+  if(collectionName) map[key] = collectionName;
+  else delete map[key];
+  setBookmarkCollectionMap(map);
+}
+
 function getAggregatedBookmarks(){
   const items = [];
-  getBookmarks().forEach(q => items.push({ type: 'question', title: q.Question, subtitle: q.Subject || '', raw: q }));
-  getNotes().filter(n => n.pinned && !n.deletedAt).forEach(n => items.push({ type: 'note', title: n.title || '(untitled)', subtitle: n.folder || '', raw: n }));
-  getFcCards().filter(c => c.favorite).forEach(c => items.push({ type: 'flashcard', title: c.front, subtitle: c.back, raw: c }));
+  getBookmarks().forEach(q => items.push({ type: 'question', key: 'question::' + questionKey(q), title: q.Question, subtitle: q.Subject || '', raw: q }));
+  getNotes().filter(n => n.pinned && !n.deletedAt).forEach(n => items.push({ type: 'note', key: 'note::' + n.id, title: n.title || '(untitled)', subtitle: n.folder || '', raw: n }));
+  getFcCards().filter(c => c.favorite).forEach(c => items.push({ type: 'flashcard', key: 'flashcard::' + c.id, title: c.front, subtitle: c.back, raw: c }));
   const mnemonicBookmarks = getMnemonicBookmarks();
-  getAllMnemonics().filter(m => mnemonicBookmarks.includes(m.id)).forEach(m => items.push({ type: 'mnemonic', title: m.topic, subtitle: m.category, raw: m }));
+  getAllMnemonics().filter(m => mnemonicBookmarks.includes(m.id)).forEach(m => items.push({ type: 'mnemonic', key: 'mnemonic::' + m.id, title: m.topic, subtitle: m.category, raw: m }));
   const healthDayBookmarks = getHealthDayBookmarks();
-  HEALTH_DAYS.filter(d => healthDayBookmarks.includes(d.title)).forEach(d => items.push({ type: 'healthday', title: d.title, subtitle: d.date, raw: d }));
-  getQuickRefBookmarks().forEach(sub => items.push({ type: 'quickref', title: sub, subtitle: 'Quick Reference', raw: { subtopic: sub } }));
+  HEALTH_DAYS.filter(d => healthDayBookmarks.includes(d.title)).forEach(d => items.push({ type: 'healthday', key: 'healthday::' + d.title, title: d.title, subtitle: d.date, raw: d }));
+  getQuickRefBookmarks().forEach(sub => items.push({ type: 'quickref', key: 'quickref::' + sub, title: sub, subtitle: 'Quick Reference', raw: { subtopic: sub } }));
+  getPdfBookmarks().forEach(p => items.push({ type: 'pdf', key: 'pdf::' + p.link, title: p.title, subtitle: 'PDF', raw: p }));
+  getCustomBookmarks().forEach(c => items.push({ type: 'custom', key: 'custom::' + c.id, title: c.title, subtitle: c.note || '', raw: c }));
+  const collectionMap = getBookmarkCollectionMap();
+  items.forEach(i => { i.collection = collectionMap[i.key] || null; });
   return items;
 }
 function mbhOpenItem(item){
@@ -14035,6 +14114,17 @@ function mbhOpenItem(item){
   else if(item.type === 'mnemonic') openMnemonicDetail(item.raw);
   else if(item.type === 'healthday') openHealthDayDetail(item.raw);
   else if(item.type === 'quickref') openQuickRefSubtopic(item.raw.subtopic);
+  else if(item.type === 'pdf'){
+    document.getElementById('docViewerTitle').textContent = item.raw.title;
+    document.getElementById('docViewerFrame').src = driveEmbedUrl(item.raw.link);
+    docViewerBackTarget = myBookmarksHubScreen;
+    currentDocViewerItem = { title: item.raw.title, link: item.raw.link };
+    showScreen(docViewerScreen);
+  }
+  else if(item.type === 'custom'){
+    if(item.raw.link) window.open(item.raw.link, '_blank');
+    else alert(item.raw.note || item.raw.title);
+  }
 }
 function mbhRemoveItem(item){
   if(item.type === 'question') toggleBookmark(item.raw);
@@ -14051,6 +14141,9 @@ function mbhRemoveItem(item){
   else if(item.type === 'mnemonic') toggleMnemonicBookmark(item.raw.id);
   else if(item.type === 'healthday') toggleHealthDayBookmark(item.raw.title);
   else if(item.type === 'quickref') toggleQuickRefBookmark(item.raw.subtopic);
+  else if(item.type === 'pdf') togglePdfBookmark(item.raw.title, item.raw.link);
+  else if(item.type === 'custom') saveCustomBookmarks(getCustomBookmarks().filter(c => c.id !== item.raw.id));
+  setItemCollection(item.key, null); // clear any collection tag along with the bookmark itself
   renderMyBookmarksHub(document.getElementById('mbhSearchBox').value);
 }
 let mbhActiveFilter = 'all';
@@ -14084,12 +14177,46 @@ function renderMyBookmarksHub(searchTerm){
     });
   });
 
+  renderMbhCollectionChips();
   renderMbhList(searchTerm);
 }
+let mbhActiveCollection = null; // null = all collections
+function renderMbhCollectionChips(){
+  const wrap = document.getElementById('mbhCollectionRow');
+  const collections = getBookmarkCollections();
+  const chip = (label, value) => `<button class="note-folder-chip mbh-collection-chip ${mbhActiveCollection === value ? 'active' : ''}" data-col="${value || ''}" style="white-space:nowrap;">${label}</button>`;
+  wrap.innerHTML = chip('All Collections', null) + collections.map(c => chip('📁 ' + c, c)).join('');
+  document.querySelectorAll('.mbh-collection-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mbhActiveCollection = btn.dataset.col || null;
+      renderMbhCollectionChips();
+      renderMbhList(document.getElementById('mbhSearchBox').value);
+    });
+  });
+}
+document.getElementById('mbhNewCollectionBtn').addEventListener('click', () => {
+  const name = prompt('New collection name (e.g. "PHO Preparation"):');
+  if(!name || !name.trim()) return;
+  const collections = getBookmarkCollections();
+  if(!collections.includes(name.trim())) collections.push(name.trim());
+  saveBookmarkCollections(collections);
+  renderMbhCollectionChips();
+});
+document.getElementById('mbhAddCustomBtn').addEventListener('click', () => {
+  const title = prompt('What do you want to save?');
+  if(!title || !title.trim()) return;
+  const note = prompt('Optional note or link (leave blank to skip):') || '';
+  const isLink = /^https?:\/\//i.test(note.trim());
+  const custom = getCustomBookmarks();
+  custom.unshift({ id: 'cb_' + Date.now() + Math.random().toString(36).slice(2,7), title: title.trim(), note: isLink ? '' : note.trim(), link: isLink ? note.trim() : '' });
+  saveCustomBookmarks(custom);
+  renderMyBookmarksHub(document.getElementById('mbhSearchBox').value);
+});
 function renderMbhList(searchTerm){
   const term = (searchTerm || '').toLowerCase().trim();
   let list = getAggregatedBookmarks();
   if(mbhActiveFilter !== 'all') list = list.filter(i => i.type === mbhActiveFilter);
+  if(mbhActiveCollection) list = list.filter(i => i.collection === mbhActiveCollection);
   if(term) list = list.filter(i => i.title.toLowerCase().includes(term) || i.subtitle.toLowerCase().includes(term));
 
   const wrap = document.getElementById('mbhListContent');
@@ -14097,15 +14224,20 @@ function renderMbhList(searchTerm){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">No bookmarks here yet.</p>`;
     return;
   }
+  const collections = getBookmarkCollections();
   wrap.innerHTML = list.map((item, i) => {
     const meta = MBH_TYPE_META[item.type];
     return `
       <div class="content-card" style="margin-bottom:10px;">
-        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:3px;">${meta.icon} ${meta.label}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+          <span style="font-size:10.5px; color:var(--ink-soft);">${meta.icon} ${meta.label}</span>
+          ${item.collection ? `<span style="font-size:10px; color:var(--gold); font-weight:700;">📁 ${item.collection}</span>` : ''}
+        </div>
         <div style="font-size:13.5px; font-weight:700; color:var(--ink);">${item.title}</div>
         ${item.subtitle ? `<div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">${item.subtitle}</div>` : ''}
         <div style="display:flex; gap:8px; margin-top:10px;">
           <button class="calc-btn mbh-open-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px;">Open</button>
+          ${collections.length > 0 ? `<button class="calc-btn mbh-move-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📁 Move</button>` : ''}
           <button class="calc-btn mbh-remove-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Remove</button>
         </div>
       </div>`;
@@ -14115,6 +14247,18 @@ function renderMbhList(searchTerm){
   });
   document.querySelectorAll('.mbh-remove-btn').forEach(btn => {
     btn.addEventListener('click', () => mbhRemoveItem(list[parseInt(btn.dataset.idx, 10)]));
+  });
+  document.querySelectorAll('.mbh-move-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = list[parseInt(btn.dataset.idx, 10)];
+      const options = collections.map((c, i) => `${i + 1}. ${c}`).join('\n');
+      const choice = prompt(`Move "${item.title}" to which collection?\n\n${options}\n\n(Enter a number, or 0 to remove from any collection)`);
+      if(choice === null) return;
+      const idx = parseInt(choice, 10);
+      if(idx === 0) setItemCollection(item.key, null);
+      else if(idx >= 1 && idx <= collections.length) setItemCollection(item.key, collections[idx - 1]);
+      renderMbhList(document.getElementById('mbhSearchBox').value);
+    });
   });
 }
 document.getElementById('mbhSearchBox').addEventListener('input', (e) => renderMbhList(e.target.value));
@@ -16182,6 +16326,7 @@ function renderSyllabusPosts(){
       document.getElementById('docViewerTitle').textContent = post.label;
       document.getElementById('docViewerFrame').src = driveEmbedUrl(post.url);
       docViewerBackTarget = syllabusScreen;
+      currentDocViewerItem = { title: post.label, link: post.url };
       showScreen(docViewerScreen);
     });
   });
