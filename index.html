@@ -2761,6 +2761,8 @@
         <button class="calc-btn" id="dailyBattleJoinBtn" style="margin-top:10px; background:#fff; color:var(--crimson);">Loading…</button>
       </div>
 
+      <button class="start-btn" id="quickBattleBtn" style="margin-bottom:18px;">⚡ Quick Battle — Find an Opponent Now</button>
+
       <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Or challenge a friend live — same questions, same time, real-time progress.</p>
       <button class="start-btn" id="createBattleBtn" style="margin-bottom:14px;">⚔️ Create a Live Battle</button>
 
@@ -2769,6 +2771,15 @@
         <input type="text" id="joinBattleCodeInput" placeholder="Enter Battle code" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-family:'Inter',sans-serif; font-size:14px; background:var(--panel); color:var(--ink); text-transform:uppercase; margin-bottom:12px;">
         <button class="start-btn" id="joinBattleBtn" style="margin-top:0;">Join Battle</button>
       </div>
+    </div>
+  </div>
+
+  <div class="screen" id="quickBattleSearchScreen">
+    <div class="home-body" style="padding-top:60px; text-align:center;">
+      <div style="font-size:48px; margin-bottom:16px;" id="qbSearchIcon">🔍</div>
+      <div class="section-title" style="justify-content:center;">Finding an opponent…</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:10px 0 24px;">Matching you with another student searching right now. This may take a moment if no one else is currently looking for a match.</p>
+      <button class="calc-btn" id="qbCancelBtn" style="background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Cancel</button>
     </div>
   </div>
 
@@ -5390,7 +5401,7 @@
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
-    deleteDoc, serverTimestamp, onSnapshot, updateDoc
+    deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -5411,7 +5422,7 @@
   // Expose to the rest of the app (outside this module script) — used by Profile's
   // My Device, Change Password, and Delete Account features.
   window.hlFirestore = db;
-  window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp, onSnapshot, updateDoc };
+  window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction, query, where, limit };
   window.hlSignOut = () => signOut(auth);
   window.hlSendPasswordReset = (email) => sendPasswordResetEmail(auth, email);
   // Change Password (in-app, with the current password required first) — used by the
@@ -6116,6 +6127,7 @@ const cprDemoScreen = document.getElementById('cprDemoScreen');
 const answerCheckerScreen = document.getElementById('answerCheckerScreen');
 const battleScreen = document.getElementById('battleScreen');
 const battleLobbyScreen = document.getElementById('battleLobbyScreen');
+const quickBattleSearchScreen = document.getElementById('quickBattleSearchScreen');
 const battleLiveScreen = document.getElementById('battleLiveScreen');
 const battleResultScreen = document.getElementById('battleResultScreen');
 const dailyBattleResultScreen = document.getElementById('dailyBattleResultScreen');
@@ -6210,7 +6222,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -6269,9 +6281,17 @@ function showScreen(el){
   // real-time listener. Same lesson as the CPR render loop above: an onSnapshot listener has no
   // automatic "user navigated away" awareness, so it would otherwise keep running (and keep
   // billing Firestore reads) indefinitely in the background.
-  const battleScreens = [battleLobbyScreen, battleLiveScreen, battleResultScreen];
+  const battleScreens = [battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen];
   if(battleScreens.includes(currentActive) && !battleScreens.includes(el)){
     battleStopListening();
+    // Leaving the matchmaking search specifically (not via the Cancel button, which already
+    // does this) must also remove the queue entry — otherwise it sits there as a phantom
+    // "waiting" opponent that could match a real searcher later, even though this user left.
+    if(currentActive === quickBattleSearchScreen && currentQueueUid && window.hlFirestore && window.hlFirestoreFns){
+      const { doc, deleteDoc } = window.hlFirestoreFns;
+      deleteDoc(doc(window.hlFirestore, 'matchmakingQueue', currentQueueUid)).catch(() => {});
+      currentQueueUid = null;
+    }
   }
   suppressHistoryPush = false;
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -6385,7 +6405,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
   const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -18072,6 +18092,108 @@ function battleStopListening(){
   if(battleUnsubscribe){ battleUnsubscribe(); battleUnsubscribe = null; }
   clearInterval(battleLiveTimerInterval);
 }
+
+// ---------- Quick Battle: live random matchmaking, the hardest piece of this whole feature.
+// Honest simplification worth stating plainly: the document's matching criteria (subject,
+// difficulty, performance level, accuracy, recent battle rating) needs a real skill-rating
+// system that doesn't exist yet — no wins/losses/rating are tracked anywhere in this app. So
+// this matches on "first available opponent searching right now" — genuinely fair, just not
+// skill-based yet. Once a real Battle Rating system exists, this is the one function that would
+// need to change; nothing else in the pipeline would. Once two people ARE matched, this feeds
+// directly into the exact same Lobby → Live → Result pipeline built for Friend Battle — no new
+// code needed there at all. Uses a Firestore transaction specifically for the "claim a waiting
+// opponent" step, since two people searching in the same instant could otherwise both grab the
+// same queue entry without one. ----------
+let currentQueueUid = null;
+async function startQuickBattleSearch(){
+  if(!window.hlFirestore || !window.hlFirestoreFns || !window.currentUser){
+    alert('Please log in to use Quick Battle.');
+    return;
+  }
+  showScreen(quickBattleSearchScreen);
+  const { doc, getDocs, collection, query, where, limit, runTransaction, setDoc, deleteDoc, serverTimestamp, onSnapshot } = window.hlFirestoreFns;
+  const myUid = window.currentUser.uid;
+  const myName = window.currentUser.displayName || 'A student';
+  currentQueueUid = myUid;
+
+  try{
+    // Look for anyone else already waiting
+    const q = query(collection(window.hlFirestore, 'matchmakingQueue'), where('matched', '==', false), limit(5));
+    const waitingSnap = await getDocs(q);
+    const candidate = waitingSnap.docs.find(d => d.id !== myUid);
+
+    if(candidate){
+      // Fetch questions BEFORE the transaction — network calls don't belong inside one
+      const res = await fetch(`${SHEET_API_URL}?action=random&count=10&post=${currentMcqPost}`);
+      const pool = await res.json();
+      if(!pool || pool.length === 0){
+        battleCancelSearch();
+        alert('No questions available yet. Add MCQs to your Google Sheet first!');
+        return;
+      }
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const claimed = await runTransaction(window.hlFirestore, async (tx) => {
+        const candidateRef = doc(window.hlFirestore, 'matchmakingQueue', candidate.id);
+        const freshSnap = await tx.get(candidateRef);
+        if(!freshSnap.exists() || freshSnap.data().matched) return false; // someone else claimed them first
+        tx.update(candidateRef, { matched: true, battleCode: code });
+        tx.set(doc(window.hlFirestore, 'battles', code), {
+          status: 'waiting',
+          subject: pool[0]?.Subject || 'Mixed',
+          questions: pool,
+          totalQuestions: pool.length,
+          creatorUid: myUid, creatorName: myName,
+          creatorReady: false, creatorIndex: 0, creatorCorrect: 0, creatorFinished: false,
+          joinerUid: candidate.data().uid, joinerName: candidate.data().name,
+          joinerReady: false, joinerIndex: 0, joinerCorrect: 0, joinerFinished: false,
+          createdAt: serverTimestamp(),
+        });
+        return true;
+      });
+      if(claimed){
+        currentBattleCode = code;
+        currentBattleRole = 'creator';
+        showScreen(battleLobbyScreen);
+        battleSubscribeLobby(code, 'creator');
+        return;
+      }
+      // Transaction lost the race — fall through to waiting in the queue ourselves
+    }
+
+    // No one available (or we lost the race) — join the queue and wait to be found
+    await setDoc(doc(window.hlFirestore, 'matchmakingQueue', myUid), {
+      uid: myUid, name: myName, matched: false, battleCode: null, joinedAt: serverTimestamp(),
+    });
+    battleUnsubscribe = onSnapshot(doc(window.hlFirestore, 'matchmakingQueue', myUid), (snap) => {
+      if(!snap.exists()) return;
+      const data = snap.data();
+      if(data.matched && data.battleCode){
+        battleStopListening();
+        deleteDoc(doc(window.hlFirestore, 'matchmakingQueue', myUid)).catch(() => {});
+        currentBattleCode = data.battleCode;
+        currentBattleRole = 'joiner';
+        showScreen(battleLobbyScreen);
+        battleSubscribeLobby(data.battleCode, 'joiner');
+      }
+    });
+  }catch(e){
+    battleCancelSearch();
+    alert('Could not start matchmaking. Check your connection and try again.');
+  }
+}
+document.getElementById('quickBattleBtn').addEventListener('click', startQuickBattleSearch);
+function battleCancelSearch(){
+  battleStopListening();
+  if(currentQueueUid && window.hlFirestore && window.hlFirestoreFns){
+    const { doc, deleteDoc } = window.hlFirestoreFns;
+    deleteDoc(doc(window.hlFirestore, 'matchmakingQueue', currentQueueUid)).catch(() => {});
+  }
+  currentQueueUid = null;
+  showScreen(battleScreen);
+  renderDailyBattleCard();
+}
+document.getElementById('qbCancelBtn').addEventListener('click', battleCancelSearch);
+
 async function createBattle(){
   if(!window.hlFirestore || !window.hlFirestoreFns || !window.currentUser){
     alert('Please log in to create a Battle Challenge.');
