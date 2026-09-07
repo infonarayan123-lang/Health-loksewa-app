@@ -12696,6 +12696,24 @@ function getNeedsAttentionSubjects(){
     .sort((a, b) => b.count - a.count)
     .slice(0, 3);
 }
+// ---------- Shared weak-subject signal for Rapid Fire's Weak Topic Fire and Topic Fire modes —
+// prioritizes real mistake frequency (getNeedsAttentionSubjects, updates on every single wrong
+// answer) over Set-completion accuracy (computeProgressStats().weakest, which only updates when
+// a full Set finishes and is much slower to reflect what's actually happening day to day).
+// Falls back to the Set-based signal only when there's no mistake history yet — e.g. a new user
+// who's completed Sets but hasn't missed anything trackable yet. ----------
+function getBestWeakSubject(){
+  const attention = getNeedsAttentionSubjects();
+  if(attention.length > 0) return attention[0].subject;
+  const stats = computeProgressStats();
+  return stats.weakest ? stats.weakest.subject : null;
+}
+function getWeakSubjectsRanked(){
+  const fromMistakes = getNeedsAttentionSubjects().map(a => a.subject);
+  const stats = computeProgressStats();
+  if(stats.weakest && !fromMistakes.includes(stats.weakest.subject)) fromMistakes.push(stats.weakest.subject);
+  return fromMistakes;
+}
 function renderRevisionSummary(){
   const allWrong = getWrongQuestions();
   const today = todayISO();
@@ -20718,11 +20736,12 @@ let currentRapidFirePace = 45;
 
 function renderRapidFireModes(){
   const shades = ['t1','t2','t3','t4','t5','t6'];
+  const weakSubject = getBestWeakSubject(); // shown live on the card itself, so the "automatic" part is actually visible, not just working invisibly behind the scenes
   document.getElementById('rapidFireModeGrid').innerHTML = RAPID_FIRE_MODES.map((m, i) => `
     <div class="dash-card hub-tile ${shades[i % shades.length]}" data-mode="${m.key}">
       <div class="dc-icon">${m.icon}</div>
       <div class="dc-label">${m.label}</div>
-      <div class="dc-sub">${m.shortDesc}</div>
+      <div class="dc-sub">${m.key === 'weak' && weakSubject ? weakSubject : m.shortDesc}</div>
     </div>
   `).join('');
   document.querySelectorAll('#rapidFireModeGrid .dash-card').forEach(card => {
@@ -20757,8 +20776,18 @@ function openRapidFireSetup(modeKey){
 
   if(needsSubject){
     const post = rapidFireDefaultPost();
-    const subjects = (post === 'pho') ? KNOWN_SUBJECTS : (KNOWN_SUBJECTS_BY_POST[post] || KNOWN_SUBJECTS);
-    document.getElementById('rapidFireSubjectSelect').innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+    let subjects = (post === 'pho') ? KNOWN_SUBJECTS : (KNOWN_SUBJECTS_BY_POST[post] || KNOWN_SUBJECTS);
+    // Weak subjects (from real mistake frequency, not a fixed list) float to the top so picking
+    // something relevant to drill is the easy default, not something the user has to hunt for
+    const weakRanked = getWeakSubjectsRanked();
+    subjects = [...subjects].sort((a, b) => {
+      const aRank = weakRanked.indexOf(a), bRank = weakRanked.indexOf(b);
+      if(aRank === -1 && bRank === -1) return 0;
+      if(aRank === -1) return 1;
+      if(bRank === -1) return -1;
+      return aRank - bRank;
+    });
+    document.getElementById('rapidFireSubjectSelect').innerHTML = subjects.map(s => `<option value="${s}">${weakRanked.includes(s) ? '⚠️ ' : ''}${s}</option>`).join('');
   }
   if(needsTime){
     document.getElementById('rapidFireTimeGrid').innerHTML = RAPID_FIRE_TIME_PRESETS.map(min => `
@@ -20825,14 +20854,14 @@ async function startRapidFire(){
     if(mode === 'quick' || mode === 'daily'){
       pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${post}`)).json();
     } else if(mode === 'weak'){
-      const stats = computeProgressStats();
-      if(!stats.weakest){
+      const weakSubject = getBestWeakSubject();
+      if(!weakSubject){
         hideQuizLoading();
-        alert('Complete a few Sets first so Health Loksewa knows your weak areas.');
+        alert('Complete a few Sets or some practice questions first so Health Loksewa knows your weak areas.');
         return;
       }
-      const weakPost = findPostForSubject(stats.weakest.subject) || post;
-      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${weakPost}&subject=${encodeURIComponent(stats.weakest.subject)}`)).json();
+      const weakPost = findPostForSubject(weakSubject) || post;
+      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${weakPost}&subject=${encodeURIComponent(weakSubject)}`)).json();
     } else if(mode === 'mistake'){
       pool = getWrongQuestions().slice(0, questionCount);
       if(pool.length === 0){ hideQuizLoading(); alert('No mistakes tracked yet — this mode needs some practice history first.'); return; }
