@@ -2157,6 +2157,10 @@
         <button class="profile-menu-item" id="menuMySavedNews" style="padding:10px 4px;"><span class="pm-icon">📰</span> Saved News</button>
       </div>
 
+      <div class="calc-card" style="margin:0 4px 18px;">
+        <button class="profile-menu-item" id="menuScreenTime" style="padding:10px 4px;"><span class="pm-icon">⏱️</span> Study Time &amp; App Usage</button>
+      </div>
+
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
         <div id="examTypeClickTarget" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between;">
           <div>
@@ -2257,6 +2261,77 @@
 
       <div id="appVersionLine" style="text-align:center; padding:18px 4px 6px; font-size:11.5px; color:var(--ink-soft);">Health Loksewa</div>
       <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon">🚪</span> Logout</button>
+    </div>
+  </div>
+
+  <!-- SCREEN TIME & STUDY TIME — Health Loksewa's own in-app usage only; a web app has no
+       access to other apps or total phone screen time, so this deliberately never claims to
+       show either. -->
+  <div class="screen" id="screenTimeScreen">
+    <div class="back-link" data-back="profile">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⏱️ Study Time &amp; App Usage</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Tracks time spent inside Health Loksewa only — not your phone's total screen time or other apps, which no web app can see.</p>
+
+      <div class="content-card" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff; margin-bottom:14px;">
+        <div style="font-size:11px; font-weight:700; opacity:0.9;">TODAY IN HEALTH LOKSEWA</div>
+        <div style="font-size:28px; font-weight:800; margin:4px 0;" id="stTodayTotal">0m</div>
+        <div style="font-size:12px; opacity:0.9; margin-bottom:10px;" id="stVsYesterday"></div>
+        <div style="font-size:11px; opacity:0.9; margin-bottom:3px;">🎯 Daily Goal: <span id="stGoalLabel"></span></div>
+        <div style="background:rgba(255,255,255,0.3); border-radius:6px; height:8px; overflow:hidden;"><div id="stGoalBar" style="background:#fff; height:100%; width:0%;"></div></div>
+      </div>
+
+      <div class="section-title" style="font-size:15px;">📊 Last 7 Days</div>
+      <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;">
+        <button class="calc-btn st-chart-mode active" data-mode="total" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap;">Total Time</button>
+        <button class="calc-btn st-chart-mode" data-mode="study" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Study Time</button>
+      </div>
+      <div id="stWeekChart" style="display:flex; align-items:flex-end; gap:6px; height:110px; margin-bottom:20px; padding:0 4px;"></div>
+
+      <div class="section-title" style="font-size:15px;">📚 Study Time</div>
+      <div class="stats-grid" style="margin-bottom:16px;" id="stStudyStats"></div>
+
+      <div class="section-title" style="font-size:15px;">📱 Today's Usage by Feature</div>
+      <div id="stFeatureList" style="margin-bottom:18px;"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="section-title" style="font-size:15px; margin:0;">🎯 Daily Goal</div>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:18px; overflow-x:auto;">
+        <button class="calc-btn st-goal-btn" data-hours="2" style="margin:0; width:auto; padding:6px 12px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">2h</button>
+        <button class="calc-btn st-goal-btn" data-hours="3" style="margin:0; width:auto; padding:6px 12px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">3h</button>
+        <button class="calc-btn st-goal-btn" data-hours="4" style="margin:0; width:auto; padding:6px 12px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">4h</button>
+        <button class="calc-btn st-goal-btn" data-hours="5" style="margin:0; width:auto; padding:6px 12px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">5h</button>
+        <button class="calc-btn" id="stGoalCustomBtn" style="margin:0; width:auto; padding:6px 12px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Custom</button>
+      </div>
+
+      <div class="section-title" style="font-size:15px;">⏳ Focus Mode</div>
+      <div style="display:flex; gap:6px; margin-bottom:18px; overflow-x:auto;">
+        <button class="calc-btn st-focus-btn" data-min="25" style="margin:0; width:auto; padding:8px 14px; font-size:12px; white-space:nowrap;">25 min</button>
+        <button class="calc-btn st-focus-btn" data-min="50" style="margin:0; width:auto; padding:8px 14px; font-size:12px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">50 min</button>
+        <button class="calc-btn st-focus-btn" data-min="90" style="margin:0; width:auto; padding:8px 14px; font-size:12px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">90 min</button>
+        <button class="calc-btn" id="stFocusCustomBtn" style="margin:0; width:auto; padding:8px 14px; font-size:12px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Custom</button>
+      </div>
+
+      <div class="section-title" style="font-size:15px;">📅 History</div>
+      <div style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;">
+        <button class="calc-btn st-history-btn active" data-range="1" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap;">Today</button>
+        <button class="calc-btn st-history-btn" data-range="7" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">7 Days</button>
+        <button class="calc-btn st-history-btn" data-range="30" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">30 Days</button>
+      </div>
+      <div class="content-card" style="margin-bottom:18px;" id="stHistoryCard"></div>
+
+      <div class="section-title" style="font-size:15px;">🏆 Insights</div>
+      <div id="stInsightsList"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="focusSessionScreen">
+    <div class="home-body" style="padding-top:60px; text-align:center;" id="focusSessionWrap">
+      <div style="font-size:13px; color:var(--ink-soft); margin-bottom:10px;">📚 Focus Session</div>
+      <div style="font-size:48px; font-weight:800; color:var(--ink);" id="focusCountdown">25:00</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin:10px 0 24px;" id="focusRemainingLabel">remaining</p>
+      <button class="calc-btn" id="focusCancelBtn" style="background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong); width:auto; padding:8px 20px;">Cancel Session</button>
     </div>
   </div>
 
@@ -2571,7 +2646,18 @@
   <div class="screen" id="leaderboardScreen">
     <div class="back-link" data-back="progress">← Back</div>
     <div class="home-body">
-      <div class="section-title">🏆 Leaderboard — Top 10</div>
+      <div class="section-title">🏆 Leaderboard</div>
+
+      <div style="display:flex; gap:8px; margin-bottom:10px; overflow-x:auto;">
+        <button class="calc-btn lb-period-btn" data-period="today" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Today</button>
+        <button class="calc-btn lb-period-btn active" data-period="week" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap;">This Week</button>
+        <button class="calc-btn lb-period-btn" data-period="month" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">This Month</button>
+        <button class="calc-btn lb-period-btn" data-period="all" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">All Time</button>
+      </div>
+      <div id="lbSubjectRow" style="display:flex; gap:6px; margin-bottom:14px; overflow-x:auto;"></div>
+
+      <div id="leaderboardMyRankCard" style="margin-bottom:14px;"></div>
+      <div id="leaderboardBadgesRow" style="display:flex; gap:8px; overflow-x:auto; margin-bottom:14px;"></div>
       <div id="leaderboardContent">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
@@ -4808,24 +4894,85 @@
   <div class="screen" id="studyGroupsScreen">
     <div class="back-link" data-back="progress">← Back</div>
     <div class="home-body">
-      <div class="section-title">👥 Study Groups</div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="section-title" style="margin:0;">👥 Study Groups</div>
+        <button class="calc-btn" id="openCreateGroupBtn" style="margin:0; width:auto; padding:7px 12px; font-size:12px;">➕ Create</button>
+      </div>
 
-      <div class="content-card" style="margin-bottom:12px;">
-        <h4 style="margin-bottom:10px;">Create a New Group</h4>
-        <input type="text" class="formula-search-box" id="newGroupNameInput" placeholder="Group name, e.g. PHO 2026 Batch — Kathmandu" style="margin-bottom:10px;">
-        <button class="start-btn" id="createGroupBtn">Create Group</button>
+      <input type="text" class="formula-search-box" id="groupSearchBox" placeholder="Search groups by name, subject, exam…" style="margin:12px 0;">
+
+      <div style="display:flex; gap:6px; margin-bottom:14px; overflow-x:auto;">
+        <button class="calc-btn group-cat-chip active" data-cat="" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap;">All</button>
+        <button class="calc-btn group-cat-chip" data-cat="Exam Preparation" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🎯 Exam Prep</button>
+        <button class="calc-btn group-cat-chip" data-cat="Academic" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🎓 Academic</button>
+        <button class="calc-btn group-cat-chip" data-cat="General Study" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📚 General</button>
       </div>
 
       <div class="content-card" style="margin-bottom:16px;">
-        <h4 style="margin-bottom:10px;">Join a Group</h4>
+        <h4 style="margin-bottom:10px;">Have an invite code?</h4>
         <input type="text" class="formula-search-box" id="joinGroupCodeInput" placeholder="Enter 6-letter group code" style="margin-bottom:10px; text-transform:uppercase;">
-        <button class="start-btn" id="joinGroupBtn">Join Group</button>
+        <button class="start-btn" id="joinGroupBtn" style="margin-top:0;">Preview Group</button>
       </div>
 
       <div class="section-title">My Groups</div>
-      <div id="myGroupsList">
+      <div id="myGroupsList" style="margin-bottom:18px;">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
+
+      <div class="section-title">Discover Groups</div>
+      <div id="discoverGroupsList">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="groupCreateScreen">
+    <div class="back-link" data-back="studyGroups">← Back</div>
+    <div class="home-body">
+      <div class="section-title">➕ Create Study Group</div>
+      <div id="groupCreateStep1">
+        <div class="content-card">
+          <div class="calc-field"><label>Group Name</label><input type="text" id="gcName" placeholder="e.g. PHO Loksewa 2083 Batch"></div>
+          <div class="calc-field"><label>Description</label><textarea id="gcDescription" placeholder="What's this group about?" style="width:100%; min-height:50px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></textarea></div>
+          <div class="calc-field"><label>Category</label>
+            <select id="gcCategory" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+              <option value="Exam Preparation">🎯 Exam Preparation</option>
+              <option value="Academic">🎓 Academic</option>
+              <option value="General Study" selected>📚 General Study</option>
+            </select>
+          </div>
+          <div class="calc-field"><label>Privacy</label>
+            <select id="gcPrivacy" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+              <option value="public" selected>🌐 Public — anyone can join instantly</option>
+              <option value="private">🔒 Private — approval required to join</option>
+              <option value="inviteOnly">🔗 Invite Only — join by code/link only, hidden from search</option>
+            </select>
+          </div>
+        </div>
+        <button class="start-btn" id="gcContinueBtn" style="margin-top:14px;">Continue</button>
+      </div>
+      <div id="groupCreateStep2" style="display:none;">
+        <div class="content-card">
+          <div class="calc-field"><label>Group Goal (optional)</label><input type="text" id="gcGoal" placeholder="e.g. Complete PHO syllabus + weekly MCQ practice"></div>
+        </div>
+        <button class="start-btn" id="gcCreateBtn" style="margin-top:14px;">Create Group</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="groupPreviewScreen">
+    <div class="back-link" data-back="studyGroups">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="gpName">Group</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;" id="gpMeta"></p>
+      <div class="content-card" style="margin-bottom:14px;">
+        <h4 style="margin-bottom:8px;">🎯 Goal</h4>
+        <p style="font-size:13px; color:var(--ink);" id="gpGoal">Not set</p>
+      </div>
+      <div class="content-card" style="margin-bottom:16px;">
+        <p style="font-size:13px; color:var(--ink); line-height:1.5;" id="gpDescription"></p>
+      </div>
+      <button class="start-btn" id="gpJoinBtn">Join Group</button>
     </div>
   </div>
 
@@ -4834,8 +4981,107 @@
     <div class="back-link" data-back="studyGroupsBack">← Back to Groups</div>
     <div class="home-body">
       <div class="section-title" id="groupDetailTitle"></div>
-      <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">Group code: <b id="groupDetailCode"></b> — share this with friends to invite them</p>
-      <div id="groupDetailLeaderboard"></div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;" id="groupDetailMeta"></p>
+
+      <div style="display:flex; gap:6px; margin-bottom:16px; overflow-x:auto;">
+        <button class="calc-btn gd-tab-btn active" data-tab="overview" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap;">Overview</button>
+        <button class="calc-btn gd-tab-btn" data-tab="study" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Study</button>
+        <button class="calc-btn gd-tab-btn" data-tab="discuss" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Discuss</button>
+        <button class="calc-btn gd-tab-btn" data-tab="members" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Members</button>
+        <button class="calc-btn gd-tab-btn" data-tab="more" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⋮ More</button>
+      </div>
+
+      <div id="gdTabOverview">
+        <div id="groupPendingRequestsCard" style="margin-bottom:14px; display:none;"></div>
+        <div class="content-card" style="margin-bottom:14px;">
+          <h4 style="margin-bottom:8px;">🎯 Group Goal</h4>
+          <p style="font-size:13px; color:var(--ink);" id="gdGoal">Not set</p>
+        </div>
+        <div class="content-card" style="margin-bottom:14px;" id="gdDescriptionCard">
+          <p style="font-size:13px; color:var(--ink); line-height:1.5;" id="gdDescription"></p>
+        </div>
+        <div class="stats-grid" style="margin-bottom:14px;" id="gdProgressStats"></div>
+        <div class="section-title" style="font-size:15px;">🏆 Leaderboard</div>
+        <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;">
+          <button class="calc-btn gd-period-btn" data-period="today" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Today</button>
+          <button class="calc-btn gd-period-btn active" data-period="week" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap;">This Week</button>
+          <button class="calc-btn gd-period-btn" data-period="month" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">This Month</button>
+          <button class="calc-btn gd-period-btn" data-period="all" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">All Time</button>
+        </div>
+        <div id="groupDetailLeaderboard"></div>
+      </div>
+
+      <div id="gdTabStudy" style="display:none;">
+        <div class="section-title" style="font-size:15px;">🔥 This Week's Challenge</div>
+        <div id="gdChallengeCard" style="margin-bottom:18px;"></div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div class="section-title" style="font-size:15px; margin:0;">📚 Shared Resources</div>
+          <button class="calc-btn" id="gdShareResourceBtn" style="margin:0; width:auto; padding:5px 10px; font-size:11px;">＋ Share</button>
+        </div>
+        <div id="gdResourcesList"></div>
+      </div>
+
+      <div id="gdTabDiscuss" style="display:none;">
+        <button class="start-btn" id="gdStartDiscussionBtn" style="margin-bottom:14px;">＋ Start Discussion</button>
+        <div id="gdDiscussionsList"></div>
+      </div>
+
+      <div id="gdTabMembers" style="display:none;">
+        <input type="text" class="formula-search-box" id="gdMemberSearchBox" placeholder="Search members…" style="margin-bottom:14px;">
+        <div id="gdMembersList"></div>
+      </div>
+
+      <div id="gdTabMore" style="display:none;">
+        <div class="content-card" style="margin-bottom:12px;">
+          <h4 style="margin-bottom:8px;">📌 Group Information</h4>
+          <div style="font-size:12.5px; color:var(--ink-soft);">Code: <b id="gdMoreCode" style="color:var(--ink);"></b></div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">Category: <span id="gdMoreCategory" style="color:var(--ink);"></span></div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">Privacy: <span id="gdMorePrivacy" style="color:var(--ink);"></span></div>
+        </div>
+        <button class="calc-btn" id="gdInviteBtn" style="margin-bottom:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">🔗 Copy Invite Code</button>
+        <button class="calc-btn" id="gdLeaveBtn" style="background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong); font-size:12.5px;">🚪 Leave Group</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="startDiscussionScreen">
+    <div class="back-link" data-back="groupDetail">← Back</div>
+    <div class="home-body">
+      <div class="section-title">＋ Start Discussion</div>
+      <div class="content-card">
+        <div class="calc-field"><label>Type</label>
+          <select id="sdType" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
+            <option value="Question">❓ Question</option>
+            <option value="Explanation">💡 Explanation</option>
+            <option value="Resource">🔗 Resource</option>
+            <option value="Study Update">📢 Study Update</option>
+          </select>
+        </div>
+        <div class="calc-field"><label>Title</label><input type="text" id="sdTitle" placeholder="What's this about?"></div>
+        <div class="calc-field"><label>Details</label><textarea id="sdContent" placeholder="Add more detail…" style="width:100%; min-height:80px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></textarea></div>
+      </div>
+      <button class="start-btn" id="sdPostBtn" style="margin-top:14px;">Post Discussion</button>
+    </div>
+  </div>
+
+  <div class="screen" id="discussionThreadScreen">
+    <div class="back-link" data-back="groupDetail">← Back</div>
+    <div class="home-body">
+      <div class="content-card" style="margin-bottom:14px;">
+        <div style="font-size:10.5px; color:var(--gold); font-weight:700; margin-bottom:4px;" id="dtType"></div>
+        <h4 style="margin-bottom:6px;" id="dtTitle"></h4>
+        <p style="font-size:13px; color:var(--ink); line-height:1.5; margin-bottom:10px;" id="dtContent"></p>
+        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:10px;">👤 <span id="dtAuthor"></span></div>
+        <button class="calc-btn" id="dtLikeBtn" style="margin:0; width:auto; padding:5px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">👍 <span id="dtLikeCount">0</span></button>
+        <button class="calc-btn" id="dtPinBtn" style="display:none; margin:0; margin-left:8px; width:auto; padding:5px 12px; font-size:11.5px; background:var(--panel); color:var(--gold); border:1.5px solid var(--gold);">📌 Pin</button>
+      </div>
+      <div class="section-title" style="font-size:14px;" id="dtReplyCountLabel">Replies</div>
+      <div id="dtRepliesList" style="margin-bottom:16px;"></div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" class="formula-search-box" id="dtReplyInput" placeholder="Write a reply…" style="margin:0; flex:1;">
+        <button class="calc-btn" id="dtReplySendBtn" style="margin:0; width:auto; padding:0 16px;">Send</button>
+      </div>
     </div>
   </div>
 
@@ -5637,7 +5883,21 @@
     try{ await signOut(auth); }catch(err){}
   };
 
-  // ---- Leaderboard: sync this user's stats to Firestore, and fetch the top 10 ----
+  // ---- Leaderboard: sync this user's stats (now including Learning Points, period totals, and
+  // per-subject points) to Firestore, and fetch a ranked pool for a chosen period/subject.
+  // Primary sort happens in the Firestore query itself (a single top-level field — today/week/
+  // month/all-time LP, no composite index needed since it's still single-field ordering); the
+  // document's tie-break chain (accuracy, then completed questions, then earlier achievement) is
+  // applied client-side after fetching, since true compound ordering across multiple fields needs
+  // a Firestore composite index configured in the console — not something creatable from here.
+  // Subject-specific ranking is honestly a re-sort of the SAME top-100-by-period pool (Firestore
+  // can't cheaply order by a dynamic nested map field without its own new index per subject) —
+  // this means a student who's excellent at one subject but outside the top 100 overall won't
+  // show up on that subject's leaderboard; a real per-subject leaderboard would need its own
+  // indexed collection, flagged as a limitation rather than hidden. Fetches a top-100 pool rather
+  // than just 10, so "my rank" can be computed honestly; at real scale (thousands of ranked
+  // users) this would need real server-side rank aggregation instead of a client sorting a
+  // fetched pool — fine for now, flagged for later. ----
   window.syncStatsToLeaderboard = async function(stats){
     const user = auth.currentUser;
     if(!user) return;
@@ -5647,6 +5907,11 @@
         totalCorrect: stats.totalCorrect,
         totalAttempted: stats.totalAttempted,
         overallPct: stats.overallPct,
+        learningPoints: stats.learningPoints || 0,
+        todayLP: stats.todayLP || 0,
+        weekLP: stats.weekLP || 0,
+        monthLP: stats.monthLP || 0,
+        subjectPoints: stats.subjectPoints || {},
         updatedAt: new Date().toISOString()
       }, { merge: true });
     }catch(err){
@@ -5654,12 +5919,28 @@
     }
   };
 
-  window.fetchLeaderboard = async function(){
+  const LP_PERIOD_FIELD = { today: 'todayLP', week: 'weekLP', month: 'monthLP', all: 'learningPoints' };
+  window.fetchLeaderboard = async function(period, subject){
+    const sortField = LP_PERIOD_FIELD[period] || 'weekLP';
     try{
-      const q = query(collection(db, 'leaderboard'), orderBy('overallPct', 'desc'), limit(10));
+      const q = query(collection(db, 'leaderboard'), orderBy(sortField, 'desc'), limit(100));
       const snap = await getDocs(q);
       const results = [];
-      snap.forEach(docSnap => results.push(docSnap.data()));
+      snap.forEach(docSnap => results.push({ uid: docSnap.id, ...docSnap.data() }));
+      if(subject){
+        // Subject view: re-rank the same pool by that subject's points specifically
+        results.sort((a, b) => ((b.subjectPoints || {})[subject] || 0) - ((a.subjectPoints || {})[subject] || 0));
+        results.forEach(r => { r.displayPoints = (r.subjectPoints || {})[subject] || 0; });
+      } else {
+        // Tie-break: accuracy, then completed questions, then earlier achievement (older updatedAt wins a tie)
+        results.sort((a, b) => {
+          if((b[sortField] || 0) !== (a[sortField] || 0)) return (b[sortField] || 0) - (a[sortField] || 0);
+          if((b.overallPct || 0) !== (a.overallPct || 0)) return (b.overallPct || 0) - (a.overallPct || 0);
+          if((b.totalAttempted || 0) !== (a.totalAttempted || 0)) return (b.totalAttempted || 0) - (a.totalAttempted || 0);
+          return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
+        });
+        results.forEach(r => { r.displayPoints = r[sortField] || 0; });
+      }
       return results;
     }catch(err){
       return [];
@@ -5721,17 +6002,28 @@
     return code;
   }
 
-  window.createStudyGroup = async function(groupName){
+  // ---- Study Groups: extended with privacy (public/private/inviteOnly), category, description,
+  // and goal. Public groups join instantly; Private groups go into a pendingUids queue awaiting
+  // admin approval; Invite Only groups join instantly via code/link (the code itself IS the
+  // invitation) but simply don't appear in open Discovery search — same instant-join mechanics
+  // as Public, different visibility only. ----
+  window.createStudyGroup = async function(details){
     const user = auth.currentUser;
     if(!user) return null;
     const code = generateGroupCode();
     try{
       await setDoc(doc(db, 'groups', code), {
-        name: groupName,
+        name: details.name,
+        description: details.description || '',
+        category: details.category || 'General Study',
+        privacy: details.privacy || 'public', // 'public' | 'private' | 'inviteOnly'
+        goal: details.goal || '',
         code: code,
         createdBy: user.uid,
         memberUids: [user.uid],
         memberNames: { [user.uid]: user.displayName || 'Student' },
+        pendingUids: [],
+        moderatorUids: [],
         createdAt: new Date().toISOString()
       });
       return code;
@@ -5751,11 +6043,125 @@
 
       const data = snap.data();
       if(data.memberUids.includes(user.uid)) return { success: true, alreadyMember: true, name: data.name };
+      if((data.pendingUids || []).includes(user.uid)) return { success: false, reason: 'already_pending', name: data.name };
+
+      if(data.privacy === 'private'){
+        const updatedPending = [...(data.pendingUids || []), user.uid];
+        await setDoc(ref, { pendingUids: updatedPending }, { merge: true });
+        return { success: false, reason: 'pending_approval', name: data.name };
+      }
 
       const updatedUids = [...data.memberUids, user.uid];
       const updatedNames = { ...data.memberNames, [user.uid]: user.displayName || 'Student' };
       await setDoc(ref, { memberUids: updatedUids, memberNames: updatedNames }, { merge: true });
       return { success: true, name: data.name };
+    }catch(err){
+      return { success: false, reason: 'error' };
+    }
+  };
+
+  window.fetchGroupPreview = async function(code){
+    try{
+      const snap = await getDoc(doc(db, 'groups', code.trim().toUpperCase()));
+      return snap.exists() ? { code: snap.id, ...snap.data() } : null;
+    }catch(err){
+      return null;
+    }
+  };
+
+  // Honest "Popular" rather than a fake personalized "Recommended" — there's no real
+  // recommendation signal (interests, past activity matching) built here, just public groups
+  // sorted by member count, which is what "recommended" would collapse to anyway without that
+  window.fetchDiscoverableGroups = async function(searchTerm, category){
+    try{
+      const q = query(collection(db, 'groups'), where('privacy', '==', 'public'), limit(50));
+      const snap = await getDocs(q);
+      let results = [];
+      snap.forEach(docSnap => results.push({ code: docSnap.id, ...docSnap.data() }));
+      if(category) results = results.filter(g => g.category === category);
+      if(searchTerm){
+        const term = searchTerm.toLowerCase();
+        results = results.filter(g => (g.name || '').toLowerCase().includes(term) || (g.category || '').toLowerCase().includes(term) || (g.description || '').toLowerCase().includes(term));
+      }
+      results.sort((a, b) => (b.memberUids || []).length - (a.memberUids || []).length);
+      return results;
+    }catch(err){
+      return [];
+    }
+  };
+
+  window.approveJoinRequest = async function(code, uid, approve){
+    try{
+      const ref = doc(db, 'groups', code);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return false;
+      const data = snap.data();
+      const updatedPending = (data.pendingUids || []).filter(u => u !== uid);
+      if(approve){
+        const updatedUids = [...data.memberUids, uid];
+        // Name isn't known here without a separate user lookup — falls back to "Student" until
+        // that member's own name sync (e.g. their next leaderboard sync) fills it in properly
+        const updatedNames = { ...data.memberNames, [uid]: data.memberNames[uid] || 'Student' };
+        await setDoc(ref, { memberUids: updatedUids, memberNames: updatedNames, pendingUids: updatedPending }, { merge: true });
+      } else {
+        await setDoc(ref, { pendingUids: updatedPending }, { merge: true });
+      }
+      return true;
+    }catch(err){
+      return false;
+    }
+  };
+
+  // ---- Roles: Admin = createdBy (the one owner, set at creation, never reassigned here —
+  // matching the document's own "don't create unnecessary roles" restraint), Moderator =
+  // moderatorUids (Admin-appointed, can be added/removed), Member = everyone else in
+  // memberUids. Only the Admin can promote/demote moderators or remove members — enforced here
+  // client-side; a real production system would also want Firestore security rules mirroring
+  // this, which aren't part of what's editable from this file. ----
+  window.setGroupModerator = async function(code, uid, isModerator){
+    try{
+      const ref = doc(db, 'groups', code);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return false;
+      const data = snap.data();
+      if(data.createdBy !== auth.currentUser.uid) return false; // only Admin can appoint/remove moderators
+      let updatedMods = data.moderatorUids || [];
+      updatedMods = isModerator ? [...new Set([...updatedMods, uid])] : updatedMods.filter(u => u !== uid);
+      await setDoc(ref, { moderatorUids: updatedMods }, { merge: true });
+      return true;
+    }catch(err){
+      return false;
+    }
+  };
+  window.removeGroupMember = async function(code, uid){
+    try{
+      const ref = doc(db, 'groups', code);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return false;
+      const data = snap.data();
+      if(data.createdBy !== auth.currentUser.uid) return false; // only Admin can remove members
+      if(uid === data.createdBy) return false; // Admin can't remove themselves this way — use Leave/Delete instead
+      const updatedUids = data.memberUids.filter(u => u !== uid);
+      const updatedMods = (data.moderatorUids || []).filter(u => u !== uid);
+      await setDoc(ref, { memberUids: updatedUids, moderatorUids: updatedMods }, { merge: true });
+      return true;
+    }catch(err){
+      return false;
+    }
+  };
+  window.leaveStudyGroup = async function(code){
+    const user = auth.currentUser;
+    if(!user) return false;
+    try{
+      const ref = doc(db, 'groups', code);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return false;
+      const data = snap.data();
+      if(data.createdBy === user.uid) return { success: false, reason: 'admin_cannot_leave' }; // Admin must delete the group instead, not just leave it ownerless
+      const updatedUids = data.memberUids.filter(u => u !== user.uid);
+      const updatedMods = (data.moderatorUids || []).filter(u => u !== user.uid);
+      await setDoc(ref, { memberUids: updatedUids, moderatorUids: updatedMods }, { merge: true });
+      return { success: true };
     }catch(err){
       return { success: false, reason: 'error' };
     }
@@ -5768,14 +6174,15 @@
       const q = query(collection(db, 'groups'), where('memberUids', 'array-contains', user.uid));
       const snap = await getDocs(q);
       const results = [];
-      snap.forEach(docSnap => results.push(docSnap.data()));
+      snap.forEach(docSnap => results.push({ code: docSnap.id, ...docSnap.data() }));
       return results;
     }catch(err){
       return [];
     }
   };
 
-  window.fetchGroupLeaderboard = async function(groupCode){
+  window.fetchGroupLeaderboard = async function(groupCode, period){
+    const field = { today: 'todayLP', week: 'weekLP', month: 'monthLP', all: 'learningPoints' }[period] || 'weekLP';
     try{
       const groupSnap = await getDoc(doc(db, 'groups', groupCode));
       if(!groupSnap.exists()) return [];
@@ -5786,15 +6193,18 @@
       for(const uid of memberUids){
         try{
           const lbSnap = await getDoc(doc(db, 'leaderboard', uid));
+          const d = lbSnap.exists() ? lbSnap.data() : {};
           results.push({
-            name: memberNames[uid] || 'Student',
-            overallPct: lbSnap.exists() ? (lbSnap.data().overallPct || 0) : 0
+            uid, name: memberNames[uid] || 'Student',
+            overallPct: d.overallPct || 0,
+            displayPoints: d[field] || 0,
+            totalAttempted: d.totalAttempted || 0,
           });
         }catch(e){
-          results.push({ name: memberNames[uid] || 'Student', overallPct: 0 });
+          results.push({ uid, name: memberNames[uid] || 'Student', overallPct: 0, displayPoints: 0, totalAttempted: 0 });
         }
       }
-      results.sort((a, b) => b.overallPct - a.overallPct);
+      results.sort((a, b) => b.displayPoints - a.displayPoints);
       return results;
     }catch(err){
       return [];
@@ -6172,6 +6582,7 @@ let selectedSubject = '__ALL__';
 let answers = []; // { correct: bool|null (null = skipped), chosen, correctAnswer }
 let revisionModeActive = false;
 let mistakeReviewActive = false;
+let mockTestActive = false;
 let timerInterval = null;
 let secondsLeft = 0;
 let currentSetInfo = null; // { subject, setNumber, totalSets } when running a locked Set; null otherwise
@@ -6199,6 +6610,8 @@ const webPortalScreen = document.getElementById('webPortalScreen');
 const newsPortalScreen = document.getElementById('newsPortalScreen');
 const aiChatScreen = document.getElementById('aiChatScreen');
 const profileScreen = document.getElementById('profileScreen');
+const screenTimeScreen = document.getElementById('screenTimeScreen');
+const focusSessionScreen = document.getElementById('focusSessionScreen');
 const changePasswordScreen = document.getElementById('changePasswordScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
 const upgradeScreen = document.getElementById('upgradeScreen');
@@ -6299,7 +6712,11 @@ const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
 const studyGroupsScreen = document.getElementById('studyGroupsScreen');
+const groupCreateScreen = document.getElementById('groupCreateScreen');
+const groupPreviewScreen = document.getElementById('groupPreviewScreen');
 const groupDetailScreen = document.getElementById('groupDetailScreen');
+const startDiscussionScreen = document.getElementById('startDiscussionScreen');
+const discussionThreadScreen = document.getElementById('discussionThreadScreen');
 const notesScreen = document.getElementById('notesScreen');
 const noteEditorScreen = document.getElementById('noteEditorScreen');
 const noteTrashScreen = document.getElementById('noteTrashScreen');
@@ -6325,13 +6742,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupDetailScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen };
 let docViewerBackTarget = homeScreen;
 let currentDocViewerItem = null;
 let setSelectBackTarget = subjectPickScreen;
@@ -6368,8 +6785,89 @@ let studyGroupsBackTarget = studyGroupsScreen;
 let navHistoryStack = [];
 let suppressHistoryPush = false;
 
+// ---------- Screen Time & Study Time tracking: Health Loksewa's OWN in-app usage only — a web
+// app has no way to see other apps or total phone screen time (no browser API exposes that;
+// it's OS-level, walled off from anything running in a browser or webview). Every screen maps to
+// one feature area; time is measured as elapsed-since-last-navigation and logged to today's
+// bucket whenever the user moves to a different area, via the same shared showScreen() hook
+// already used for the CPR/Battle cleanup — reused for measurement here as it's already the one
+// place every navigation passes through. ----------
+const SCREENTIME_STUDY_AREAS = ['Learn Hub', 'Practice & MCQs', 'Notes', 'Flash Cards'];
+function getFeatureArea(screenEl){
+  const groups = {
+    'Learn Hub': [learnScreen, currentAffairsScreen, syllabusScreen, gkScreen, videoScreen, docViewerScreen,
+      healthGuideScreen, cprDemoScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen,
+      quickRefScreen, quickRefDetailScreen, studyResourcesScreen, formulaScreen, dictionaryScreen, healthDaysScreen,
+      healthDayDetailScreen, healthDayCalendarScreen],
+    'Practice & MCQs': [practiceScreen, quizScreen, resultsScreen, subjectPickScreen, setSelectScreen, setupScreen,
+      mcqPostScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentScreen, tournamentPostScreen,
+      rapidFireScreen, rapidFireSetupScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen,
+      battleResultScreen, dailyBattleResultScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen,
+      revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, mistakeBookScreen, bookmarksScreen,
+      myBookmarksHubScreen, answerCheckerScreen],
+    'Notes': [notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen],
+    'Flash Cards': [flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen],
+    'AI Assistant': [aiChatScreen],
+    'Study Groups': [studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen],
+    'Tools': [calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen,
+      hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen,
+      icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen,
+      epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen,
+      epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen,
+      statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen,
+      statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen,
+      taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen,
+      wellnessScreen, safetySignalScreen],
+  };
+  for(const area in groups){
+    if(groups[area].includes(screenEl)) return area;
+  }
+  return 'Other';
+}
+function getScreenTimeLog(){
+  try{ return JSON.parse(localStorage.getItem('hl_screentime_log') || '{}'); }catch(e){ return {}; }
+}
+function saveScreenTimeLog(log){
+  try{ localStorage.setItem('hl_screentime_log', JSON.stringify(log)); }catch(e){}
+}
+function pruneScreenTimeLog(log){
+  const cutoff = addDaysISO(-35);
+  const pruned = {};
+  Object.keys(log).forEach(date => { if(date >= cutoff) pruned[date] = log[date]; });
+  return pruned;
+}
+let screenTimeAreaStart = Date.now();
+let screenTimeCurrentArea = null;
+function logScreenTimeElapsed(){
+  if(!screenTimeCurrentArea) return;
+  const elapsedSec = Math.round((Date.now() - screenTimeAreaStart) / 1000);
+  // Ignore anything over 30 minutes in one go — almost certainly the app sat in the background
+  // (phone locked, tab backgrounded) rather than genuinely being used continuously that whole
+  // time, and counting it would badly distort the numbers
+  if(elapsedSec <= 0 || elapsedSec > 1800) return;
+  const log = getScreenTimeLog();
+  const today = todayISO();
+  if(!log[today]) log[today] = { total: 0, byArea: {} };
+  log[today].total += elapsedSec;
+  log[today].byArea[screenTimeCurrentArea] = (log[today].byArea[screenTimeCurrentArea] || 0) + elapsedSec;
+  saveScreenTimeLog(pruneScreenTimeLog(log));
+}
+document.addEventListener('visibilitychange', () => {
+  // The page being backgrounded (phone locked, app switched away) is exactly the same kind of
+  // "not really using it" gap as CPR's render loop or Battle's listeners not knowing the user
+  // left — log what's elapsed so far, then reset the clock rather than let a backgrounded tab
+  // silently keep accumulating time it was never actually being used for
+  if(document.hidden){ logScreenTimeElapsed(); }
+  else { screenTimeAreaStart = Date.now(); }
+});
+
 function showScreen(el){
   const currentActive = document.querySelector('.screen.active');
+  if(currentActive){
+    logScreenTimeElapsed();
+    screenTimeCurrentArea = getFeatureArea(el);
+    screenTimeAreaStart = Date.now();
+  }
   if(currentActive && currentActive !== el && !suppressHistoryPush){
     navHistoryStack.push(currentActive);
     if(navHistoryStack.length > 30) navHistoryStack.shift(); // cap — avoid unbounded growth over a long session
@@ -6396,6 +6894,13 @@ function showScreen(el){
       deleteDoc(doc(window.hlFirestore, 'matchmakingQueue', currentQueueUid)).catch(() => {});
       currentQueueUid = null;
     }
+  }
+  // Leaving the Focus Session screen any way other than its own Cancel button (e.g. Android
+  // back) — same lesson again: a setInterval has no idea the user left, so it would otherwise
+  // keep ticking in the background and could still fire its completion alert on a screen the
+  // user isn't looking at anymore.
+  if(currentActive === focusSessionScreen && el !== focusSessionScreen){
+    clearInterval(focusTimerInterval);
   }
   suppressHistoryPush = false;
   ALL_SCREENS.forEach(s => s.classList.remove('active'));
@@ -6511,8 +7016,8 @@ function updateBottomNav(activeScreen){
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
-  const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupDetailScreen, notesScreen];
-  const profileScreens = [profileScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
+  const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
+  const profileScreens = [profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
   let activeKey = '';
   if(homeScreens.includes(activeScreen)) activeKey = 'home';
@@ -6679,59 +7184,136 @@ document.getElementById('goToStudyGroups').addEventListener('click', (e) => {
   e.preventDefault();
   showScreen(studyGroupsScreen);
   renderMyGroups();
+  renderDiscoverGroups();
 });
 
-document.getElementById('createGroupBtn').addEventListener('click', async () => {
-  const nameInput = document.getElementById('newGroupNameInput');
-  const name = nameInput.value.trim();
-  if(!name){
-    alert('Please enter a group name first.');
-    return;
-  }
+// ---------- Study Groups: Create (2-step) + Discovery (search/category/popular) + the 3
+// joining methods (Public=instant, Private=request+approval, Invite Only=code, hidden from
+// search) + a real Preview shown before joining, per the document's own "don't require joining
+// just to see basic information" rule. ----------
+document.getElementById('openCreateGroupBtn').addEventListener('click', () => {
+  document.getElementById('gcName').value = '';
+  document.getElementById('gcDescription').value = '';
+  document.getElementById('gcGoal').value = '';
+  document.getElementById('groupCreateStep1').style.display = 'block';
+  document.getElementById('groupCreateStep2').style.display = 'none';
+  showScreen(groupCreateScreen);
+});
+document.getElementById('gcContinueBtn').addEventListener('click', () => {
+  if(!document.getElementById('gcName').value.trim()){ alert('Please enter a group name first.'); return; }
+  document.getElementById('groupCreateStep1').style.display = 'none';
+  document.getElementById('groupCreateStep2').style.display = 'block';
+});
+document.getElementById('gcCreateBtn').addEventListener('click', async () => {
   if(!window.createStudyGroup) return;
-
-  const btn = document.getElementById('createGroupBtn');
-  btn.disabled = true;
-  btn.textContent = 'Creating…';
-  const code = await window.createStudyGroup(name);
-  btn.disabled = false;
-  btn.textContent = 'Create Group';
-
+  const btn = document.getElementById('gcCreateBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  const code = await window.createStudyGroup({
+    name: document.getElementById('gcName').value.trim(),
+    description: document.getElementById('gcDescription').value.trim(),
+    category: document.getElementById('gcCategory').value,
+    privacy: document.getElementById('gcPrivacy').value,
+    goal: document.getElementById('gcGoal').value.trim(),
+  });
+  btn.disabled = false; btn.textContent = 'Create Group';
   if(code){
-    nameInput.value = '';
-    alert(`✅ Group created! Share this code with friends: ${code}`);
+    alert(`✅ Group created! Share this code with others: ${code}`);
+    showScreen(studyGroupsScreen);
     renderMyGroups();
+    renderDiscoverGroups();
   } else {
     alert('Could not create the group. Please try again.');
   }
 });
 
-document.getElementById('joinGroupBtn').addEventListener('click', async () => {
-  const codeInput = document.getElementById('joinGroupCodeInput');
-  const code = codeInput.value.trim();
-  if(!code){
-    alert('Please enter a group code first.');
-    return;
-  }
-  if(!window.joinStudyGroup) return;
-
-  const btn = document.getElementById('joinGroupBtn');
+let currentPreviewCode = null;
+async function openGroupPreview(code){
+  if(!window.fetchGroupPreview) return;
+  const group = await window.fetchGroupPreview(code);
+  if(!group){ alert('No group found with that code.'); return; }
+  currentPreviewCode = group.code;
+  const privacyLabel = { public: '🌐 Public', private: '🔒 Private', inviteOnly: '🔗 Invite Only' }[group.privacy] || '🌐 Public';
+  document.getElementById('gpName').textContent = group.name;
+  document.getElementById('gpMeta').textContent = `${privacyLabel} · ${(group.memberUids || []).length} members · ${group.category || 'General Study'}`;
+  document.getElementById('gpGoal').textContent = group.goal || 'Not set';
+  document.getElementById('gpDescription').textContent = group.description || '';
+  const joinBtn = document.getElementById('gpJoinBtn');
+  const myUid = window.currentUser ? window.currentUser.uid : null;
+  const alreadyMember = myUid && (group.memberUids || []).includes(myUid);
+  const alreadyPending = myUid && (group.pendingUids || []).includes(myUid);
+  joinBtn.disabled = false;
+  if(alreadyMember){ joinBtn.textContent = 'Open Group →'; }
+  else if(alreadyPending){ joinBtn.textContent = '⏳ Request Pending'; joinBtn.disabled = true; }
+  else if(group.privacy === 'private'){ joinBtn.textContent = 'Request to Join'; }
+  else { joinBtn.textContent = 'Join Group'; }
+  showScreen(groupPreviewScreen);
+}
+document.getElementById('gpJoinBtn').addEventListener('click', async () => {
+  if(!currentPreviewCode) return;
+  const btn = document.getElementById('gpJoinBtn');
+  if(btn.textContent === 'Open Group →'){ openGroupDetail(currentPreviewCode); return; }
   btn.disabled = true;
-  btn.textContent = 'Joining…';
-  const result = await window.joinStudyGroup(code);
+  const result = await window.joinStudyGroup(currentPreviewCode);
   btn.disabled = false;
-  btn.textContent = 'Join Group';
-
   if(result.success){
-    codeInput.value = '';
     alert(result.alreadyMember ? `You're already a member of "${result.name}"!` : `✅ Joined "${result.name}"!`);
+    openGroupDetail(currentPreviewCode);
     renderMyGroups();
+  } else if(result.reason === 'pending_approval'){
+    alert(`Request sent to join "${result.name}" — you'll be able to access it once an admin approves.`);
+    showScreen(studyGroupsScreen);
+  } else if(result.reason === 'already_pending'){
+    alert('Your request is already pending approval.');
   } else if(result.reason === 'not_found'){
-    alert('No group found with that code. Please check and try again.');
+    alert('No group found with that code.');
   } else {
     alert('Could not join the group. Please try again.');
   }
 });
+
+document.getElementById('joinGroupBtn').addEventListener('click', () => {
+  const code = document.getElementById('joinGroupCodeInput').value.trim();
+  if(!code){ alert('Please enter a group code first.'); return; }
+  openGroupPreview(code);
+});
+
+let discoverActiveCategory = '';
+document.querySelectorAll('.group-cat-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    discoverActiveCategory = btn.dataset.cat;
+    document.querySelectorAll('.group-cat-chip').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderDiscoverGroups();
+  });
+});
+document.getElementById('groupSearchBox').addEventListener('input', () => renderDiscoverGroups());
+async function renderDiscoverGroups(){
+  const wrap = document.getElementById('discoverGroupsList');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  if(!window.fetchDiscoverableGroups) return;
+  const term = document.getElementById('groupSearchBox').value.trim();
+  const groups = await window.fetchDiscoverableGroups(term, discoverActiveCategory);
+  const myUid = window.currentUser ? window.currentUser.uid : null;
+  const notJoined = groups.filter(g => !myUid || !(g.memberUids || []).includes(myUid));
+  if(notJoined.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No groups found — be the first to create one!</p>`;
+    return;
+  }
+  wrap.innerHTML = notJoined.map(g => `
+    <div class="group-card" data-code="${g.code}">
+      <div class="gc-name">${g.name}</div>
+      <div class="gc-meta">👥 ${(g.memberUids || []).length} members · ${g.category || 'General Study'}</div>
+    </div>
+  `).join('');
+  document.querySelectorAll('#discoverGroupsList .group-card').forEach(card => {
+    card.addEventListener('click', () => openGroupPreview(card.dataset.code));
+  });
+}
 
 async function renderMyGroups(){
   const wrap = document.getElementById('myGroupsList');
@@ -6744,57 +7326,539 @@ async function renderMyGroups(){
 
   const groups = await window.fetchMyStudyGroups();
   if(groups.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">You're not in any groups yet — create one or join with a code above!</p>`;
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">You're not in any groups yet — discover one below or create your own!</p>`;
     return;
   }
 
   wrap.innerHTML = groups.map(g => `
     <div class="group-card" data-code="${g.code}">
-      <div class="gc-name">${g.name}</div>
+      <div class="gc-name">${g.name}${(g.pendingUids || []).length > 0 && g.createdBy === (window.currentUser ? window.currentUser.uid : null) ? ` <span style="color:var(--gold); font-size:11px;">(${g.pendingUids.length} pending)</span>` : ''}</div>
       <div class="gc-meta">${g.memberUids.length} member${g.memberUids.length !== 1 ? 's' : ''} · Code: ${g.code}</div>
     </div>
   `).join('');
 
-  document.querySelectorAll('.group-card').forEach(card => {
+  document.querySelectorAll('#myGroupsList .group-card').forEach(card => {
     card.addEventListener('click', () => {
       openGroupDetail(card.dataset.code);
     });
   });
 }
 
+let currentGroupDetailCode = null;
+let groupDetailPeriod = 'week';
+let currentGroupDetailGroup = null;
 async function openGroupDetail(code){
   studyGroupsBackTarget = studyGroupsScreen;
+  currentGroupDetailCode = code;
   showScreen(groupDetailScreen);
+  switchGroupTab('overview');
 
   const groups = await window.fetchMyStudyGroups();
   const group = groups.find(g => g.code === code);
+  currentGroupDetailGroup = group;
   document.getElementById('groupDetailTitle').textContent = group ? group.name : 'Group';
-  document.getElementById('groupDetailCode').textContent = code;
+  const privacyLabel = group ? ({ public: '🌐 Public', private: '🔒 Private', inviteOnly: '🔗 Invite Only' }[group.privacy] || '🌐 Public') : '';
+  document.getElementById('groupDetailMeta').textContent = group ? `${(group.memberUids || []).length} Members · ${privacyLabel}` : '';
 
+  document.getElementById('gdGoal').textContent = (group && group.goal) || 'Not set';
+  const descCard = document.getElementById('gdDescriptionCard');
+  if(group && group.description){ descCard.style.display = 'block'; document.getElementById('gdDescription').textContent = group.description; }
+  else descCard.style.display = 'none';
+
+  document.getElementById('gdMoreCode').textContent = code;
+  document.getElementById('gdMoreCategory').textContent = (group && group.category) || 'General Study';
+  document.getElementById('gdMorePrivacy').textContent = privacyLabel;
+
+  renderGroupPendingRequests(group);
+  renderGroupMembers(group);
+  renderGroupStudyTab();
+  renderGroupResources();
+  renderGroupDiscussions();
+  await renderGroupDetailLeaderboard();
+}
+function switchGroupTab(tab){
+  ['overview','study','discuss','members','more'].forEach(t => {
+    document.getElementById('gdTab' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.gd-tab-btn').forEach(b => {
+    const active = b.dataset.tab === tab;
+    b.classList.toggle('active', active);
+    b.style.background = active ? '' : 'var(--panel)';
+    b.style.color = active ? '' : 'var(--ink)';
+    b.style.border = active ? '' : '1.5px solid var(--line)';
+  });
+}
+document.querySelectorAll('.gd-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchGroupTab(btn.dataset.tab));
+});
+document.getElementById('gdMemberSearchBox').addEventListener('input', () => renderGroupMembers(currentGroupDetailGroup));
+function renderGroupMembers(group){
+  const wrap = document.getElementById('gdMembersList');
+  if(!group){ wrap.innerHTML = ''; return; }
+  const term = document.getElementById('gdMemberSearchBox').value.trim().toLowerCase();
+  const myUid = window.currentUser ? window.currentUser.uid : null;
+  const isAdmin = group.createdBy === myUid;
+  const mods = group.moderatorUids || [];
+
+  const rows = group.memberUids
+    .map(uid => ({ uid, name: (group.memberNames && group.memberNames[uid]) || 'Student' }))
+    .filter(m => !term || m.name.toLowerCase().includes(term));
+  const admins = rows.filter(m => m.uid === group.createdBy);
+  const moderators = rows.filter(m => mods.includes(m.uid) && m.uid !== group.createdBy);
+  const members = rows.filter(m => m.uid !== group.createdBy && !mods.includes(m.uid));
+
+  const memberRow = (m, roleLabel) => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-top:1px solid var(--line);">
+      <span style="font-size:12.5px;">${roleLabel} ${m.name}${m.uid === myUid ? ' (You)' : ''}</span>
+      ${isAdmin && m.uid !== group.createdBy ? `
+        <div style="display:flex; gap:6px;">
+          <button class="calc-btn gd-mod-toggle" data-uid="${m.uid}" data-ismod="${mods.includes(m.uid)}" style="margin:0; width:auto; padding:4px 8px; font-size:10px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">${mods.includes(m.uid) ? 'Demote' : 'Make Mod'}</button>
+          <button class="calc-btn gd-member-remove" data-uid="${m.uid}" style="margin:0; width:auto; padding:4px 8px; font-size:10px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Remove</button>
+        </div>` : ''}
+    </div>`;
+
+  wrap.innerHTML = `
+    ${admins.length > 0 ? `<div class="content-card" style="margin-bottom:10px;"><h4 style="margin-bottom:4px; font-size:13px;">👑 Admin</h4>${admins.map(m => memberRow(m, '')).join('')}</div>` : ''}
+    ${moderators.length > 0 ? `<div class="content-card" style="margin-bottom:10px;"><h4 style="margin-bottom:4px; font-size:13px;">🛡 Moderators</h4>${moderators.map(m => memberRow(m, '')).join('')}</div>` : ''}
+    <div class="content-card"><h4 style="margin-bottom:4px; font-size:13px;">👤 Members (${members.length})</h4>${members.map(m => memberRow(m, '')).join('')}</div>
+  `;
+  wrap.querySelectorAll('.gd-mod-toggle').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await window.setGroupModerator(currentGroupDetailCode, btn.dataset.uid, btn.dataset.ismod !== 'true');
+      openGroupDetail(currentGroupDetailCode);
+    });
+  });
+  wrap.querySelectorAll('.gd-member-remove').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Remove this member from the group?')) return;
+      await window.removeGroupMember(currentGroupDetailCode, btn.dataset.uid);
+      openGroupDetail(currentGroupDetailCode);
+    });
+  });
+}
+document.getElementById('gdInviteBtn').addEventListener('click', async () => {
+  if(!currentGroupDetailCode) return;
+  try{ await navigator.clipboard.writeText(currentGroupDetailCode); alert('Invite code copied!'); }catch(e){}
+});
+document.getElementById('gdLeaveBtn').addEventListener('click', async () => {
+  if(!currentGroupDetailCode || !confirm('Leave this group?')) return;
+  const result = await window.leaveStudyGroup(currentGroupDetailCode);
+  if(result.reason === 'admin_cannot_leave'){
+    alert('As the group Admin, you can\'t leave — you would need to delete the group instead.');
+    return;
+  }
+  if(result.success){
+    showScreen(studyGroupsScreen);
+    renderMyGroups();
+  } else {
+    alert('Could not leave the group. Please try again.');
+  }
+});
+function renderGroupPendingRequests(group){
+  const card = document.getElementById('groupPendingRequestsCard');
+  const myUid = window.currentUser ? window.currentUser.uid : null;
+  const isAdmin = group && group.createdBy === myUid;
+  const pending = group ? (group.pendingUids || []) : [];
+  if(!isAdmin || pending.length === 0){ card.style.display = 'none'; return; }
+
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div class="content-card">
+      <h4 style="margin-bottom:8px;">⏳ Pending Requests (${pending.length})</h4>
+      ${pending.map(uid => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--line);">
+          <span style="font-size:12.5px;">${(group.memberNames && group.memberNames[uid]) || 'Student'}</span>
+          <div style="display:flex; gap:6px;">
+            <button class="calc-btn gpr-approve" data-uid="${uid}" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--correct); color:#fff;">✓ Approve</button>
+            <button class="calc-btn gpr-reject" data-uid="${uid}" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">✕</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  card.querySelectorAll('.gpr-approve').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await window.approveJoinRequest(currentGroupDetailCode, btn.dataset.uid, true);
+      openGroupDetail(currentGroupDetailCode);
+    });
+  });
+  card.querySelectorAll('.gpr-reject').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await window.approveJoinRequest(currentGroupDetailCode, btn.dataset.uid, false);
+      openGroupDetail(currentGroupDetailCode);
+    });
+  });
+}
+
+// ---------- Group Study Challenge: deliberately reuses the exact same pattern already proven
+// for Daily Battle — a shared question set cached in Firestore, participant scores in a
+// subcollection, group progress computed at read time — rather than inventing a second version
+// of that same idea. Any member can create one if none is active (not admin-restricted, since a
+// weekly study challenge is a collaborative prompt, not an administrative action). Reuses the
+// existing Practice/MCQ engine (launchQuiz + quizScreen) rather than a new question runner,
+// matching the document's own explicit instruction. ----------
+const GROUP_CHALLENGE_QUESTION_COUNT = 20;
+const GROUP_CHALLENGE_DAYS = 7;
+let currentGroupChallengeId = null;
+async function fetchActiveGroupChallenge(code){
+  const { collection, query, orderBy: fsOrderBy, limit: fsLimit, getDocs } = window.hlFirestoreFns;
+  try{
+    const snap = await getDocs(collection(window.hlFirestore, 'groups', code, 'challenges'));
+    let latest = null;
+    snap.forEach(d => {
+      const data = d.data();
+      if(new Date(data.expiresAt) > new Date() && (!latest || new Date(data.createdAt) > new Date(latest.createdAt))){
+        latest = { id: d.id, ...data };
+      }
+    });
+    return latest;
+  }catch(e){ return null; }
+}
+async function renderGroupStudyTab(){
+  const wrap = document.getElementById('gdChallengeCard');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>`;
+  const challenge = await fetchActiveGroupChallenge(currentGroupDetailCode);
+
+  if(!challenge){
+    wrap.innerHTML = `
+      <div class="content-card" style="text-align:center;">
+        <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:10px;">No active challenge right now.</p>
+        <button class="start-btn" id="gdCreateChallengeBtn" style="margin-top:0;">🔥 Start This Week's Challenge</button>
+      </div>`;
+    document.getElementById('gdCreateChallengeBtn').addEventListener('click', createGroupChallenge);
+    return;
+  }
+  currentGroupChallengeId = challenge.id;
+  const { getDocs, collection } = window.hlFirestoreFns;
+  const participantsSnap = await getDocs(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'challenges', challenge.id, 'participants'));
+  const totalMembers = (currentGroupDetailGroup && currentGroupDetailGroup.memberUids.length) || 1;
+  let groupTotalPct = 0;
+  let myScore = null;
+  const myUid = window.currentUser ? window.currentUser.uid : null;
+  participantsSnap.forEach(d => {
+    const data = d.data();
+    groupTotalPct += (data.score / challenge.totalQuestions) * 100;
+    if(d.id === myUid) myScore = data.score;
+  });
+  const groupAvgPct = participantsSnap.size > 0 ? Math.round(groupTotalPct / participantsSnap.size) : 0;
+  const daysLeft = Math.max(0, Math.ceil((new Date(challenge.expiresAt) - new Date()) / 86400000));
+
+  wrap.innerHTML = `
+    <div class="content-card">
+      <h4 style="margin-bottom:4px;">${challenge.subject || 'Mixed'} Week</h4>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">${challenge.totalQuestions} Questions · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left</p>
+      <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">Group Progress · ${groupAvgPct}% avg</div>
+      <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden; margin-bottom:10px;"><div style="background:var(--teal); height:100%; width:${groupAvgPct}%;"></div></div>
+      <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;">👥 ${participantsSnap.size} / ${totalMembers} members participating</div>
+      ${myScore !== null
+        ? `<p style="font-size:12.5px; color:var(--correct); font-weight:700;">✓ Your score: ${myScore} / ${challenge.totalQuestions}</p>`
+        : `<button class="start-btn" id="gdStartChallengeBtn" style="margin-top:0;">Start Challenge</button>`}
+    </div>
+  `;
+  if(myScore === null){
+    document.getElementById('gdStartChallengeBtn').addEventListener('click', () => startGroupChallengeQuiz(challenge));
+  }
+}
+async function createGroupChallenge(){
+  const btn = document.getElementById('gdCreateChallengeBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=random&count=${GROUP_CHALLENGE_QUESTION_COUNT}`);
+    const pool = await res.json();
+    if(!pool || pool.length === 0){ alert('No questions available yet.'); btn.disabled = false; btn.textContent = '🔥 Start This Week\'s Challenge'; return; }
+    const { doc, setDoc, collection, serverTimestamp } = window.hlFirestoreFns;
+    const id = 'ch_' + Date.now();
+    await setDoc(doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'challenges', id), {
+      questions: pool, totalQuestions: pool.length, subject: pool[0]?.Subject || 'Mixed',
+      createdAt: new Date().toISOString(), expiresAt: addDaysISO(GROUP_CHALLENGE_DAYS),
+      createdBy: window.currentUser.uid,
+    });
+    renderGroupStudyTab();
+  }catch(e){
+    alert('Could not create the challenge. Please try again.');
+    btn.disabled = false; btn.textContent = '🔥 Start This Week\'s Challenge';
+  }
+}
+let groupChallengeActive = false;
+function startGroupChallengeQuiz(challenge){
+  quizQuestions = challenge.questions;
+  currentIndex = 0;
+  answers = new Array(quizQuestions.length).fill(null);
+  secondsLeft = quizQuestions.length * 45;
+  currentSetInfo = null;
+  groupChallengeActive = true;
+  buildOmrStrip();
+  showScreen(quizScreen);
+  startTimer();
+  renderQuestion();
+}
+async function submitGroupChallengeResult(correct, total){
+  if(!currentGroupDetailCode || !currentGroupChallengeId || !window.currentUser) return;
+  try{
+    const { doc, setDoc, serverTimestamp } = window.hlFirestoreFns;
+    await setDoc(doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'challenges', currentGroupChallengeId, 'participants', window.currentUser.uid), {
+      score: correct, total, submittedAt: serverTimestamp(),
+    });
+  }catch(e){}
+}
+
+// ---------- Shared Resources: a reference to something already in My Notes, never a second
+// document-storage system — sharing copies the note's title+body into the group; other members
+// can "Save to My Notes" to pull it back into their own local Notes, matching the document's
+// explicit reuse instruction. ----------
+async function renderGroupResources(){
+  const wrap = document.getElementById('gdResourcesList');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>`;
+  try{
+    const { getDocs, collection } = window.hlFirestoreFns;
+    const snap = await getDocs(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'sharedResources'));
+    const resources = [];
+    snap.forEach(d => resources.push({ id: d.id, ...d.data() }));
+    resources.sort((a, b) => new Date(b.sharedAt || 0) - new Date(a.sharedAt || 0));
+    if(resources.length === 0){
+      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">Nothing shared yet — share a note from My Notes with the group.</p>`;
+      return;
+    }
+    wrap.innerHTML = resources.map(r => `
+      <div class="content-card" style="margin-bottom:8px;">
+        <div style="font-size:12.5px; font-weight:700;">📄 ${r.title}</div>
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:6px;">Shared by ${r.sharedByName || 'Student'}</div>
+        <button class="chat-save-btn gd-save-resource" data-idx="${resources.indexOf(r)}" style="display:inline-block;">🔖 Save to My Notes</button>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.gd-save-resource').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const r = resources[parseInt(btn.dataset.idx, 10)];
+        const notes = getNotes();
+        notes.unshift({
+          id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+          title: r.title, body: r.body || '', folder: 'Shared', tags: ['Group'], pinned: false,
+          revisionStatus: null, reviewDateAD: null,
+          createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), deletedAt: null,
+        });
+        saveNotes(notes);
+        btn.textContent = '✓ Saved';
+      });
+    });
+  }catch(e){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">Could not load shared resources.</p>`;
+  }
+}
+document.getElementById('gdShareResourceBtn').addEventListener('click', async () => {
+  const notes = getNotes().filter(n => !n.deletedAt);
+  if(notes.length === 0){ alert('You don\'t have any notes yet to share.'); return; }
+  const options = notes.map((n, i) => `${i + 1}. ${n.title || 'Untitled'}`).join('\n');
+  const choice = prompt(`Which note do you want to share with the group?\n\n${options}`);
+  if(choice === null) return;
+  const idx = parseInt(choice, 10) - 1;
+  if(idx < 0 || idx >= notes.length) return;
+  const note = notes[idx];
+  try{
+    const { doc, setDoc } = window.hlFirestoreFns;
+    await setDoc(doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'sharedResources', 'res_' + Date.now()), {
+      title: note.title || 'Untitled', body: note.body || '',
+      sharedBy: window.currentUser.uid, sharedByName: window.currentUser.displayName || 'Student',
+      sharedAt: new Date().toISOString(),
+    });
+    renderGroupResources();
+  }catch(e){
+    alert('Could not share the note. Please try again.');
+  }
+});
+
+// ---------- Discussion: the one genuinely new capability here — nothing like threaded
+// discussion/comments exists anywhere else in the app to extend. Kept deliberately minimal per
+// the document's own "avoid turning it into Facebook" instruction: a type, a title, content, a
+// single like count, and flat replies — no nested reply threads, no reactions beyond one like,
+// no feed algorithm. Pin is Admin/Moderator only, matching the document's role definitions. ----
+const DISCUSSION_TYPE_ICON = { 'Question': '❓', 'Explanation': '💡', 'Resource': '🔗', 'Study Update': '📢' };
+async function renderGroupDiscussions(){
+  const wrap = document.getElementById('gdDiscussionsList');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>`;
+  try{
+    const { getDocs, collection } = window.hlFirestoreFns;
+    const snap = await getDocs(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions'));
+    const discussions = [];
+    snap.forEach(d => discussions.push({ id: d.id, ...d.data() }));
+    discussions.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.createdAt) - new Date(a.createdAt));
+    if(discussions.length === 0){
+      wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">No discussions yet — start the first one!</p>`;
+      return;
+    }
+    wrap.innerHTML = discussions.map(d => `
+      <div class="note-item gd-discussion-row" data-id="${d.id}" style="cursor:pointer;">
+        ${d.pinned ? '<div style="font-size:10px; color:var(--gold); font-weight:700; margin-bottom:3px;">📌 Pinned</div>' : ''}
+        <div class="ni-title" style="font-size:13px;">${DISCUSSION_TYPE_ICON[d.type] || '💬'} ${d.title}</div>
+        <div class="ni-meta">💬 ${d.replyCount || 0} replies · 👍 ${(d.likes || []).length}</div>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.gd-discussion-row').forEach(row => {
+      row.addEventListener('click', () => openDiscussionThread(row.dataset.id));
+    });
+  }catch(e){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">Could not load discussions.</p>`;
+  }
+}
+document.getElementById('gdStartDiscussionBtn').addEventListener('click', () => {
+  document.getElementById('sdTitle').value = '';
+  document.getElementById('sdContent').value = '';
+  document.getElementById('sdType').value = 'Question';
+  showScreen(startDiscussionScreen);
+});
+document.getElementById('sdPostBtn').addEventListener('click', async () => {
+  const title = document.getElementById('sdTitle').value.trim();
+  if(!title){ alert('Please enter a title first.'); return; }
+  try{
+    const { doc, setDoc } = window.hlFirestoreFns;
+    await setDoc(doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', 'disc_' + Date.now()), {
+      type: document.getElementById('sdType').value,
+      title, content: document.getElementById('sdContent').value.trim(),
+      authorUid: window.currentUser.uid, authorName: window.currentUser.displayName || 'Student',
+      createdAt: new Date().toISOString(), pinned: false, likes: [], replyCount: 0,
+    });
+    showScreen(groupDetailScreen);
+    renderGroupDiscussions();
+  }catch(e){
+    alert('Could not post. Please try again.');
+  }
+});
+
+let currentDiscussionId = null;
+async function openDiscussionThread(discussionId){
+  currentDiscussionId = discussionId;
+  showScreen(discussionThreadScreen);
+  const { doc, getDoc, getDocs, collection } = window.hlFirestoreFns;
+  const snap = await getDoc(doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', discussionId));
+  if(!snap.exists()) return;
+  const d = snap.data();
+  document.getElementById('dtType').textContent = `${DISCUSSION_TYPE_ICON[d.type] || '💬'} ${d.type}`;
+  document.getElementById('dtTitle').textContent = d.title;
+  document.getElementById('dtContent').textContent = d.content || '';
+  document.getElementById('dtAuthor').textContent = d.authorName;
+  const liked = window.currentUser && (d.likes || []).includes(window.currentUser.uid);
+  document.getElementById('dtLikeBtn').style.color = liked ? 'var(--gold)' : '';
+  document.getElementById('dtLikeCount').textContent = (d.likes || []).length;
+
+  const myUid = window.currentUser ? window.currentUser.uid : null;
+  const canModerate = currentGroupDetailGroup && (currentGroupDetailGroup.createdBy === myUid || (currentGroupDetailGroup.moderatorUids || []).includes(myUid));
+  const pinBtn = document.getElementById('dtPinBtn');
+  if(canModerate){
+    pinBtn.style.display = 'inline-block';
+    pinBtn.textContent = d.pinned ? '📌 Unpin' : '📌 Pin';
+  } else {
+    pinBtn.style.display = 'none';
+  }
+
+  const repliesSnap = await getDocs(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', discussionId, 'replies'));
+  const replies = [];
+  repliesSnap.forEach(r => replies.push(r.data()));
+  replies.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  document.getElementById('dtReplyCountLabel').textContent = `Replies (${replies.length})`;
+  document.getElementById('dtRepliesList').innerHTML = replies.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:12.5px;">No replies yet.</p>`
+    : replies.map(r => `
+      <div class="content-card" style="margin-bottom:8px;">
+        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">👤 ${r.authorName}</div>
+        <div style="font-size:13px; color:var(--ink);">${r.content}</div>
+      </div>
+    `).join('');
+}
+document.getElementById('dtLikeBtn').addEventListener('click', async () => {
+  if(!currentDiscussionId || !window.currentUser) return;
+  try{
+    const { doc, getDoc, setDoc } = window.hlFirestoreFns;
+    const ref = doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', currentDiscussionId);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return;
+    const data = snap.data();
+    const uid = window.currentUser.uid;
+    const likes = data.likes || [];
+    const updated = likes.includes(uid) ? likes.filter(u => u !== uid) : [...likes, uid];
+    await setDoc(ref, { likes: updated }, { merge: true });
+    openDiscussionThread(currentDiscussionId);
+  }catch(e){}
+});
+document.getElementById('dtReplySendBtn').addEventListener('click', async () => {
+  const input = document.getElementById('dtReplyInput');
+  const content = input.value.trim();
+  if(!content || !currentDiscussionId || !window.currentUser) return;
+  try{
+    const { doc, getDoc, setDoc, collection } = window.hlFirestoreFns;
+    await setDoc(doc(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', currentDiscussionId, 'replies')), {
+      content, authorUid: window.currentUser.uid, authorName: window.currentUser.displayName || 'Student',
+      createdAt: new Date().toISOString(),
+    });
+    const discRef = doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', currentDiscussionId);
+    const discSnap = await getDoc(discRef);
+    if(discSnap.exists()) await setDoc(discRef, { replyCount: (discSnap.data().replyCount || 0) + 1 }, { merge: true });
+    input.value = '';
+    openDiscussionThread(currentDiscussionId);
+  }catch(e){
+    alert('Could not post your reply. Please try again.');
+  }
+});
+document.getElementById('dtPinBtn').addEventListener('click', async () => {
+  if(!currentDiscussionId) return;
+  try{
+    const { doc, getDoc, setDoc } = window.hlFirestoreFns;
+    const ref = doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', currentDiscussionId);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return;
+    await setDoc(ref, { pinned: !snap.data().pinned }, { merge: true });
+    openDiscussionThread(currentDiscussionId);
+  }catch(e){}
+});
+
+async function renderGroupDetailLeaderboard(){
   const lbWrap = document.getElementById('groupDetailLeaderboard');
   lbWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
 
-  const entries = window.fetchGroupLeaderboard ? await window.fetchGroupLeaderboard(code) : [];
+  const entries = window.fetchGroupLeaderboard ? await window.fetchGroupLeaderboard(currentGroupDetailCode, groupDetailPeriod) : [];
+
+  // Group Progress (doc section 16) — computed from the SAME data already fetched for the
+  // leaderboard, not a separate fetch: members active this period, average accuracy, total
+  // questions solved across the group, plus the existing general study streak for "Study Streak"
+  const activeCount = entries.filter(e => e.displayPoints > 0).length;
+  const avgAccuracy = entries.length > 0 ? Math.round(entries.reduce((sum, e) => sum + e.overallPct, 0) / entries.length) : 0;
+  const totalSolved = entries.reduce((sum, e) => sum + e.totalAttempted, 0);
+  document.getElementById('gdProgressStats').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${activeCount}</div><div class="st-label">Active</div></div>
+    <div class="stat-tile"><div class="st-num">${avgAccuracy}%</div><div class="st-label">Avg Accuracy</div></div>
+    <div class="stat-tile"><div class="st-num">${totalSolved.toLocaleString()}</div><div class="st-label">Solved</div></div>
+  `;
+
   if(entries.length === 0){
     lbWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No scores yet — complete a Set to appear on this leaderboard!</p>`;
     return;
   }
 
-  let myName = '';
-  try{ myName = JSON.parse(localStorage.getItem('hl_user') || '{}').name || ''; }catch(e){}
+  const myUid = window.currentUser ? window.currentUser.uid : null;
   const medalRanks = ['top1','top2','top3'];
   lbWrap.innerHTML = entries.map((r, i) => {
-    const isYou = r.name === myName;
+    const isYou = r.uid === myUid;
     const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
     return `
       <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
         <div class="lb-rank ${medalRanks[i] || ''}">${rankIcon}</div>
         <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
-        <div class="lb-pct">${r.overallPct}%</div>
+        <div class="lb-pct">${r.displayPoints || 0} LP · ${r.overallPct}%</div>
       </div>
     `;
   }).join('');
 }
+document.querySelectorAll('.gd-period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    groupDetailPeriod = btn.dataset.period;
+    document.querySelectorAll('.gd-period-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderGroupDetailLeaderboard();
+  });
+});
 
 // ---------- Weekly Tournament ----------
 document.getElementById('cardTournament').addEventListener('click', () => {
@@ -14467,37 +15531,120 @@ document.getElementById('weakAreaPracticeBtn').addEventListener('click', () => {
   }
 });
 
+let lbActivePeriod = 'week';
+let lbActiveSubject = null; // null = Overall
+function renderLeaderboardSubjectChips(){
+  const wrap = document.getElementById('lbSubjectRow');
+  // Subject options are honestly drawn from the user's OWN tracked subjects — there's no
+  // static, app-wide subject list to pull from (subjects are Sheet-driven and vary by exam post)
+  const mySubjects = Object.keys(getLpData().subjectPoints || {}).sort();
+  const chip = (label, value) => `<button class="note-folder-chip lb-subject-chip ${lbActiveSubject === value ? 'active' : ''}" data-subject="${value || ''}" style="white-space:nowrap;">${label}</button>`;
+  wrap.innerHTML = chip('Overall', null) + mySubjects.map(s => chip(s, s)).join('');
+  document.querySelectorAll('.lb-subject-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      lbActiveSubject = btn.dataset.subject || null;
+      renderLeaderboardSubjectChips();
+      renderLeaderboard();
+    });
+  });
+}
+function renderLeaderboardBadges(){
+  const wrap = document.getElementById('leaderboardBadgesRow');
+  const badges = getEarnedBadges().slice(0, 10); // most recent first, already stored that way
+  if(badges.length === 0){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = badges.map(b => `
+    <div class="content-card" style="flex-shrink:0; text-align:center; padding:8px 12px;">
+      <div style="font-size:18px;">${b.badge.split(' ')[0]}</div>
+      <div style="font-size:9.5px; color:var(--ink-soft); white-space:nowrap;">${b.badge.split(' ').slice(1).join(' ')}</div>
+    </div>
+  `).join('');
+}
+document.querySelectorAll('.lb-period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    lbActivePeriod = btn.dataset.period;
+    document.querySelectorAll('.lb-period-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderLeaderboard();
+  });
+});
 async function renderLeaderboard(){
   const wrap = document.getElementById('leaderboardContent');
+  const rankCardWrap = document.getElementById('leaderboardMyRankCard');
   wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  rankCardWrap.innerHTML = '';
+  renderLeaderboardSubjectChips();
+  checkWeeklyRewards();
+  renderLeaderboardBadges();
 
   if(!window.fetchLeaderboard){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Leaderboard needs you to be signed in.</p>`;
     return;
   }
 
-  const results = await window.fetchLeaderboard();
+  const results = await window.fetchLeaderboard(lbActivePeriod, lbActiveSubject);
   if(results.length === 0){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No leaderboard entries yet — complete a Set to be the first!</p>`;
     return;
   }
 
-  let myName = '';
-  try{ myName = JSON.parse(localStorage.getItem('hl_user') || '{}').name || ''; }catch(e){}
+  const myUid = window.currentUser ? window.currentUser.uid : null;
+  const myIndex = results.findIndex(r => r.uid === myUid);
 
+  // Rank-change: compare against the last time THIS SPECIFIC period+subject view was checked —
+  // a stored "week" rank wouldn't mean anything compared against "today's" rank, so the
+  // comparison key includes both, and there's still no server-side rank history to draw on
+  const rankKey = `hl_last_known_rank_${lbActivePeriod}_${lbActiveSubject || 'overall'}`;
+  if(myIndex !== -1){
+    const myRank = myIndex + 1;
+    let lastRank = null;
+    try{ lastRank = JSON.parse(localStorage.getItem(rankKey) || 'null'); }catch(e){}
+    const change = lastRank ? lastRank - myRank : 0;
+    try{ localStorage.setItem(rankKey, JSON.stringify(myRank)); }catch(e){}
+
+    const me = results[myIndex];
+    rankCardWrap.innerHTML = `
+      <div class="content-card" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff;">
+        <div style="font-size:11px; font-weight:700; opacity:0.9;">MY RANK</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin:4px 0;">
+          <span style="font-size:26px; font-weight:800;">#${myRank}</span>
+          ${change !== 0 ? `<span style="font-size:13px; font-weight:700;">${change > 0 ? '↑' : '↓'}${Math.abs(change)}</span>` : ''}
+        </div>
+        <div style="font-size:12.5px; opacity:0.9;">${me.displayPoints || 0} LP · ${me.overallPct || 0}% accuracy</div>
+      </div>
+    `;
+  }
+
+  const top10 = results.slice(0, 10);
   const medalRanks = ['top1','top2','top3'];
-  wrap.innerHTML = results.map((r, i) => {
-    const isYou = r.name === myName;
+  let html = top10.map((r, i) => {
+    const isYou = r.uid === myUid;
     const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
     const rankClass = medalRanks[i] || '';
     return `
       <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
         <div class="lb-rank ${rankClass}">${rankIcon}</div>
         <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
-        <div class="lb-pct">${r.overallPct}%</div>
+        <div class="lb-pct">${r.displayPoints || 0} LP · ${r.overallPct || 0}%</div>
       </div>
     `;
   }).join('');
+  // If I'm outside the top 10, show my row separately at the bottom, matching the document's own mockup
+  if(myIndex >= 10){
+    const me = results[myIndex];
+    html += `
+      <div class="leaderboard-row is-you" style="margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;">
+        <div class="lb-rank">${myIndex + 1}</div>
+        <div class="lb-name">${me.name} (You)</div>
+        <div class="lb-pct">${me.displayPoints || 0} LP · ${me.overallPct || 0}%</div>
+      </div>
+    `;
+  }
+  wrap.innerHTML = html;
 }
 
 // ---------- My Bookmarks Hub: a read-only aggregation layer over every existing bookmark store
@@ -15508,6 +16655,221 @@ document.getElementById('menuMySavedNews').addEventListener('click', () => {
   showScreen(newsPortalScreen);
   newsPortalSelectedKey = '__saved__';
   renderNewsPortal();
+});
+
+document.getElementById('menuScreenTime').addEventListener('click', () => {
+  showScreen(screenTimeScreen);
+  renderScreenTimeDashboard();
+});
+
+let stChartMode = 'total';
+let stHistoryRange = 1;
+function renderScreenTimeDashboard(){
+  const today = todayISO();
+  const yesterday = addDaysISO(-1);
+  const todayData = getScreenTimeForDate(today);
+  const yesterdayTotal = getScreenTimeForDate(yesterday).total;
+  const goals = getScreenTimeGoals();
+
+  document.getElementById('stTodayTotal').textContent = fmtDuration(todayData.total);
+  if(yesterdayTotal > 0){
+    const pctChange = Math.round(((todayData.total - yesterdayTotal) / yesterdayTotal) * 100);
+    document.getElementById('stVsYesterday').textContent = `${pctChange >= 0 ? '+' : ''}${pctChange}% compared with yesterday`;
+  } else {
+    document.getElementById('stVsYesterday').textContent = '';
+  }
+  document.getElementById('stGoalLabel').textContent = fmtDuration(goals.dailySec);
+  document.getElementById('stGoalBar').style.width = `${Math.min(100, Math.round((todayData.total / goals.dailySec) * 100))}%`;
+
+  renderStWeekChart();
+  renderStStudyStats();
+  renderStFeatureList(todayData);
+  renderStHistory();
+  renderStInsights();
+}
+function renderStWeekChart(){
+  const wrap = document.getElementById('stWeekChart');
+  const dates = getLastNDates(7);
+  const values = dates.map(d => stChartMode === 'study' ? getStudyTimeForDate(d) : getScreenTimeForDate(d).total);
+  const max = Math.max(...values, 1);
+  wrap.innerHTML = dates.map((d, i) => {
+    const heightPct = Math.max(4, Math.round((values[i] / max) * 100));
+    const label = new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }).charAt(0);
+    const isToday = d === todayISO();
+    return `
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+        <div style="width:100%; max-width:28px; background:${isToday ? 'var(--teal)' : 'var(--panel)'}; border:1.5px solid ${isToday ? 'var(--teal)' : 'var(--line)'}; border-radius:4px 4px 0 0; height:${heightPct}%;" title="${fmtDuration(values[i])}"></div>
+        <div style="font-size:9.5px; color:var(--ink-soft); margin-top:4px;">${label}</div>
+      </div>`;
+  }).join('');
+}
+document.querySelectorAll('.st-chart-mode').forEach(btn => {
+  btn.addEventListener('click', () => {
+    stChartMode = btn.dataset.mode;
+    document.querySelectorAll('.st-chart-mode').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderStWeekChart();
+  });
+});
+function renderStStudyStats(){
+  const dates7 = getLastNDates(7);
+  const studyToday = getStudyTimeForDate(todayISO());
+  const studyWeek = dates7.reduce((sum, d) => sum + getStudyTimeForDate(d), 0);
+  const studyAvg = Math.round(studyWeek / 7);
+  const questionsAttempted = computeProgressStats().totalAttempted;
+  const focusToday = getFocusSessionsForDate(todayISO());
+  document.getElementById('stStudyStats').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${fmtDuration(studyToday)}</div><div class="st-label">Today</div></div>
+    <div class="stat-tile"><div class="st-num">${fmtDuration(studyWeek)}</div><div class="st-label">This Week</div></div>
+    <div class="stat-tile"><div class="st-num">${fmtDuration(studyAvg)}</div><div class="st-label">Daily Avg</div></div>
+    <div class="stat-tile"><div class="st-num">${questionsAttempted}</div><div class="st-label">Questions</div></div>
+    <div class="stat-tile"><div class="st-num">${focusToday}</div><div class="st-label">Focus Sessions</div></div>
+  `;
+}
+const FEATURE_AREA_ICON = { 'Learn Hub': '📖', 'Practice & MCQs': '📝', 'Notes': '📄', 'Flash Cards': '🧩', 'AI Assistant': '🤖', 'Study Groups': '👥', 'Tools': '🧮', 'Other': '⚙️' };
+function renderStFeatureList(todayData){
+  const wrap = document.getElementById('stFeatureList');
+  const entries = Object.keys(todayData.byArea).map(area => ({ area, sec: todayData.byArea[area] })).sort((a, b) => b.sec - a.sec);
+  if(entries.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">No usage recorded yet today.</p>`;
+    return;
+  }
+  wrap.innerHTML = entries.map(e => `
+    <div style="display:flex; justify-content:space-between; padding:7px 0; border-top:1px solid var(--line); font-size:12.5px;">
+      <span>${FEATURE_AREA_ICON[e.area] || '📱'} ${e.area}</span>
+      <span style="font-weight:700; color:var(--ink);">${fmtDuration(e.sec)}</span>
+    </div>
+  `).join('');
+}
+document.querySelectorAll('.st-goal-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const goals = getScreenTimeGoals();
+    goals.dailySec = parseInt(btn.dataset.hours, 10) * 3600;
+    saveScreenTimeGoals(goals);
+    renderScreenTimeDashboard();
+  });
+});
+document.getElementById('stGoalCustomBtn').addEventListener('click', () => {
+  const input = prompt('Set a custom daily goal in hours (e.g. 3.5):');
+  const hours = parseFloat(input);
+  if(!hours || hours <= 0) return;
+  const goals = getScreenTimeGoals();
+  goals.dailySec = Math.round(hours * 3600);
+  saveScreenTimeGoals(goals);
+  renderScreenTimeDashboard();
+});
+document.querySelectorAll('.st-history-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    stHistoryRange = parseInt(btn.dataset.range, 10);
+    document.querySelectorAll('.st-history-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderStHistory();
+  });
+});
+function renderStHistory(){
+  const dates = getLastNDates(stHistoryRange);
+  const dayTotals = dates.map(d => getScreenTimeForDate(d).total);
+  const dayStudyTotals = dates.map(d => getStudyTimeForDate(d));
+  const totalTime = dayTotals.reduce((a, b) => a + b, 0);
+  const avgPerDay = Math.round(totalTime / dates.length);
+  const totalStudy = dayStudyTotals.reduce((a, b) => a + b, 0);
+
+  const allAreaTotals = {};
+  dates.forEach(d => {
+    const day = getScreenTimeForDate(d);
+    Object.keys(day.byArea).forEach(a => { allAreaTotals[a] = (allAreaTotals[a] || 0) + day.byArea[a]; });
+  });
+  const mostUsed = Object.keys(allAreaTotals).sort((a, b) => allAreaTotals[b] - allAreaTotals[a])[0] || '—';
+  const longestSession = Math.max(...dayTotals, 0);
+  const goals = getScreenTimeGoals();
+  const goalsMet = dates.filter(d => getScreenTimeForDate(d).total >= goals.dailySec).length;
+
+  document.getElementById('stHistoryCard').innerHTML = `
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0;"><span style="color:var(--ink-soft);">Total Time</span><span style="font-weight:700;">${fmtDuration(totalTime)}</span></div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">Average / Day</span><span style="font-weight:700;">${fmtDuration(avgPerDay)}</span></div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">Study Time</span><span style="font-weight:700;">${fmtDuration(totalStudy)}</span></div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">Most-Used Feature</span><span style="font-weight:700;">${FEATURE_AREA_ICON[mostUsed] || ''} ${mostUsed}</span></div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">Highest Single Day</span><span style="font-weight:700;">${fmtDuration(longestSession)}</span></div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">Goal Achievement</span><span style="font-weight:700;">${goalsMet}/${dates.length} days</span></div>
+  `;
+}
+function renderStInsights(){
+  const dates7 = getLastNDates(7);
+  const goals = getScreenTimeGoals();
+  let bestDay = null, bestDayTotal = -1;
+  let bestStudyDay = null, bestStudyTotal = -1;
+  let goalsMetWeek = 0;
+  dates7.forEach(d => {
+    const total = getScreenTimeForDate(d).total;
+    const study = getStudyTimeForDate(d);
+    if(total > bestDayTotal){ bestDayTotal = total; bestDay = d; }
+    if(study > bestStudyTotal){ bestStudyTotal = study; bestStudyDay = d; }
+    if(total >= goals.dailySec) goalsMetWeek++;
+  });
+  const dayName = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+  const streak = typeof getStudyStreak === 'function' ? getStudyStreak() : 0;
+
+  document.getElementById('stInsightsList').innerHTML = `
+    <div class="content-card" style="margin-bottom:8px;"><div style="display:flex; justify-content:space-between;"><span style="font-size:12.5px;">🌟 Best Day</span><span style="font-size:12.5px; font-weight:700;">${bestDayTotal > 0 ? `${dayName(bestDay)} — ${fmtDuration(bestDayTotal)}` : '—'}</span></div></div>
+    <div class="content-card" style="margin-bottom:8px;"><div style="display:flex; justify-content:space-between;"><span style="font-size:12.5px;">📚 Best Study Day</span><span style="font-size:12.5px; font-weight:700;">${bestStudyTotal > 0 ? `${dayName(bestStudyDay)} — ${fmtDuration(bestStudyTotal)}` : '—'}</span></div></div>
+    <div class="content-card" style="margin-bottom:8px;"><div style="display:flex; justify-content:space-between;"><span style="font-size:12.5px;">🔥 Study Streak</span><span style="font-size:12.5px; font-weight:700;">${streak} day${streak === 1 ? '' : 's'}</span></div></div>
+    <div class="content-card"><div style="display:flex; justify-content:space-between;"><span style="font-size:12.5px;">🎯 Goal Achievement</span><span style="font-size:12.5px; font-weight:700;">${goalsMetWeek}/7 days</span></div></div>
+  `;
+}
+
+// ---------- Focus Mode: a genuine countdown timer, no permissions or tracking beyond what's
+// already local — completion logs to the same focus-session log used in Study Time stats above ----
+let focusTimerInterval = null;
+let focusSecondsLeft = 0;
+let focusOriginalMinutes = 0;
+function startFocusSession(minutes){
+  focusOriginalMinutes = minutes;
+  focusSecondsLeft = minutes * 60;
+  showScreen(focusSessionScreen);
+  updateFocusDisplay();
+  clearInterval(focusTimerInterval);
+  focusTimerInterval = setInterval(() => {
+    focusSecondsLeft--;
+    if(focusSecondsLeft <= 0){
+      clearInterval(focusTimerInterval);
+      logFocusSession(focusOriginalMinutes);
+      alert(`🎉 Focus session completed! ${focusOriginalMinutes} minutes studied.`);
+      showScreen(screenTimeScreen);
+      renderScreenTimeDashboard();
+      return;
+    }
+    updateFocusDisplay();
+  }, 1000);
+}
+function updateFocusDisplay(){
+  const m = Math.floor(focusSecondsLeft / 60);
+  const s = focusSecondsLeft % 60;
+  document.getElementById('focusCountdown').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+document.querySelectorAll('.st-focus-btn').forEach(btn => {
+  btn.addEventListener('click', () => startFocusSession(parseInt(btn.dataset.min, 10)));
+});
+document.getElementById('stFocusCustomBtn').addEventListener('click', () => {
+  const input = prompt('Custom focus session length in minutes:');
+  const minutes = parseInt(input, 10);
+  if(!minutes || minutes <= 0) return;
+  startFocusSession(minutes);
+});
+document.getElementById('focusCancelBtn').addEventListener('click', () => {
+  if(!confirm('End this focus session early? It won\'t be counted as completed.')) return;
+  clearInterval(focusTimerInterval);
+  showScreen(screenTimeScreen);
+  renderScreenTimeDashboard();
 });
 
 document.getElementById('postGateContinueBtn').addEventListener('click', () => {
@@ -17271,6 +18633,7 @@ async function startMockTest(post){
     }
   }
   currentSetInfo = null;
+  mockTestActive = true;
   showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
   try{
     const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}&post=${post.key}`;
@@ -17589,6 +18952,178 @@ function getStudyStreak(){
   }catch(e){ return 0; }
 }
 
+// ---------- Learning Points (LP): one central ranking engine per the document's own explicit
+// rule — every activity type funnels through this single function, not separate scoring systems
+// per feature. Only "Correct MCQ" gets a daily cap here: Mock Tests, Battle, Daily Challenge,
+// and Revision completion are already naturally rate-limited by their own structure (Mock Test
+// already has its own weekly usage limit, Battle needs a real opponent or a day to pass, Daily
+// Challenge is once/day) — adding artificial caps to those would just be redundant complexity
+// the document itself warns against. ----------
+const LP_VALUES = {
+  correctMcq: 10, correctPastQuestion: 12, mockTestComplete: 20,
+  dailyChallenge: 15, revisionComplete: 10, mistakeRecovered: 10,
+  battleWin: 20, battleParticipation: 5,
+  weeklyReward: 1, // per-point value of 1 — the tier's exact bonus is passed as the count, not derived from a fixed rate
+};
+const LP_DAILY_CAP_MCQ = 300; // 30 correct MCQs/day worth — genuine daily practice still counts fully, endless grinding doesn't
+const LP_LOG_RETENTION_DAYS = 35; // enough to always compute "this month" for the current month plus buffer
+function getLpData(){
+  const fallback = { total: 0, dailyMcqEarned: 0, dailyMcqDate: todayISO(), dailyLog: {}, subjectPoints: {} };
+  try{
+    const saved = JSON.parse(localStorage.getItem('hl_learning_points') || 'null');
+    return saved ? { ...fallback, ...saved } : fallback; // merge so older saves without dailyLog/subjectPoints still work
+  }catch(e){ return fallback; }
+}
+function saveLpData(data){
+  try{ localStorage.setItem('hl_learning_points', JSON.stringify(data)); }catch(e){}
+}
+function pruneLpLog(dailyLog){
+  const cutoff = addDaysISO(-LP_LOG_RETENTION_DAYS);
+  const pruned = {};
+  Object.keys(dailyLog).forEach(date => { if(date >= cutoff) pruned[date] = dailyLog[date]; });
+  return pruned;
+}
+// Sums the daily log across a window — Today/This Week (Mon-start)/This Month, all derived from
+// the same per-day log rather than three separately-tracked counters that could drift apart
+function computeLpPeriodTotals(){
+  const data = getLpData();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekStart = new Date(today); weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // Monday
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  let todayPts = 0, weekPts = 0, monthPts = 0;
+  Object.keys(data.dailyLog || {}).forEach(dateStr => {
+    const d = new Date(dateStr + 'T00:00:00');
+    const pts = data.dailyLog[dateStr];
+    if(d >= monthStart) monthPts += pts;
+    if(d >= weekStart) weekPts += pts;
+    if(dateStr === todayISO()) todayPts += pts;
+  });
+  return { todayPts, weekPts, monthPts, allTimePts: data.total };
+}
+
+// ---------- Weekly Rewards: kept deliberately simple per the document's own "avoid excessive
+// rewards" rule — a badge plus a small one-time LP bonus, nothing more. Honest limitation worth
+// being upfront about: there's no server-side scheduling in this stack to snapshot the EXACT
+// rank at the exact moment a week ends. Instead, this uses the rank last recorded whenever the
+// user actually viewed the Week leaderboard during that week (already tracked for the rank-
+// change arrow) as the best available signal of where they finished — a reasonable
+// approximation, not a perfectly precise snapshot, and stated as such rather than presented as
+// more authoritative than it is. ----------
+function getWeekKey(date){
+  const d = new Date(date);
+  const monday = new Date(d); monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return monday.toISOString().slice(0, 10); // the Monday date IS the week's identifier
+}
+const WEEKLY_REWARD_TIERS = [
+  { maxRank: 1, badge: '🥇 Champion', bonus: 50 },
+  { maxRank: 2, badge: '🥈 Runner-up', bonus: 30 },
+  { maxRank: 3, badge: '🥉 Achievement', bonus: 20 },
+  { maxRank: 10, badge: '⭐ Elite', bonus: 10 },
+];
+function getEarnedBadges(){
+  try{ return JSON.parse(localStorage.getItem('hl_earned_badges') || '[]'); }catch(e){ return []; }
+}
+function saveEarnedBadges(list){
+  try{ localStorage.setItem('hl_earned_badges', JSON.stringify(list)); }catch(e){}
+}
+function checkWeeklyRewards(){
+  const currentWeekKey = getWeekKey(new Date());
+  let lastCheckedWeek = null;
+  try{ lastCheckedWeek = localStorage.getItem('hl_reward_week_marker'); }catch(e){}
+  if(lastCheckedWeek === currentWeekKey) return; // already checked this week, nothing to do yet
+  try{ localStorage.setItem('hl_reward_week_marker', currentWeekKey); }catch(e){}
+  if(!lastCheckedWeek) return; // first time ever opening the leaderboard — nothing to reward retroactively
+
+  let lastRank = null;
+  try{ lastRank = JSON.parse(localStorage.getItem('hl_last_known_rank_week_overall') || 'null'); }catch(e){}
+  if(!lastRank) return;
+
+  const tier = WEEKLY_REWARD_TIERS.find(t => lastRank <= t.maxRank);
+  if(!tier) return;
+
+  const badges = getEarnedBadges();
+  badges.unshift({ badge: tier.badge, weekKey: lastCheckedWeek, rank: lastRank, earnedAt: new Date().toISOString() });
+  saveEarnedBadges(badges);
+  awardLearningPoints('weeklyReward', tier.bonus);
+  setTimeout(() => alert(`🎉 Last week you finished #${lastRank} — you earned the ${tier.badge} badge! +${tier.bonus} LP`), 400);
+}
+
+function awardLearningPoints(activityKey, count, subject){
+  count = count || 1;
+  const perPoint = LP_VALUES[activityKey];
+  if(!perPoint) return;
+  const data = getLpData();
+  if(data.dailyMcqDate !== todayISO()){ data.dailyMcqDate = todayISO(); data.dailyMcqEarned = 0; }
+
+  let awarded = perPoint * count;
+  if(activityKey === 'correctMcq' || activityKey === 'mistakeRecovered'){
+    const room = Math.max(0, LP_DAILY_CAP_MCQ - data.dailyMcqEarned);
+    awarded = Math.min(awarded, room);
+    data.dailyMcqEarned += awarded;
+  }
+  if(awarded <= 0) return;
+  data.total += awarded;
+  const today = todayISO();
+  data.dailyLog[today] = (data.dailyLog[today] || 0) + awarded;
+  data.dailyLog = pruneLpLog(data.dailyLog);
+  if(subject){
+    data.subjectPoints[subject] = (data.subjectPoints[subject] || 0) + awarded;
+  }
+  saveLpData(data);
+  syncLearningPointsToLeaderboard();
+}
+let lpSyncTimeout = null;
+function syncLearningPointsToLeaderboard(){
+  // Debounced — a quiz can award points for many questions in quick succession; no need to hit
+  // Firestore on every single one
+  clearTimeout(lpSyncTimeout);
+  lpSyncTimeout = setTimeout(() => {
+    if(!window.syncStatsToLeaderboard) return;
+    const stats = computeProgressStats();
+    const periods = computeLpPeriodTotals();
+    window.syncStatsToLeaderboard({ ...stats, todayLP: periods.todayPts, weekLP: periods.weekPts, monthLP: periods.monthPts, subjectPoints: getLpData().subjectPoints });
+  }, 1500);
+}
+
+// ---------- Screen Time & Study Time computation, all derived from the same daily log ----------
+function fmtDuration(totalSec){
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.round((totalSec % 3600) / 60);
+  if(h === 0) return `${m}m`;
+  return `${h}h ${String(m).padStart(2,'0')}m`;
+}
+function getScreenTimeForDate(dateISO){
+  const log = getScreenTimeLog();
+  return log[dateISO] || { total: 0, byArea: {} };
+}
+function getStudyTimeForDate(dateISO){
+  const day = getScreenTimeForDate(dateISO);
+  return SCREENTIME_STUDY_AREAS.reduce((sum, area) => sum + (day.byArea[area] || 0), 0);
+}
+function getLastNDates(n){
+  const dates = [];
+  for(let i = n - 1; i >= 0; i--) dates.push(addDaysISO(-i));
+  return dates;
+}
+function getScreenTimeGoals(){
+  try{ return JSON.parse(localStorage.getItem('hl_screentime_goals') || 'null') || { dailySec: 4 * 3600, weeklySec: 28 * 3600 }; }
+  catch(e){ return { dailySec: 4 * 3600, weeklySec: 28 * 3600 }; }
+}
+function saveScreenTimeGoals(goals){
+  try{ localStorage.setItem('hl_screentime_goals', JSON.stringify(goals)); }catch(e){}
+}
+function getFocusSessionLog(){
+  try{ return JSON.parse(localStorage.getItem('hl_focus_sessions') || '[]'); }catch(e){ return []; }
+}
+function logFocusSession(minutes){
+  const log = getFocusSessionLog();
+  log.unshift({ date: todayISO(), minutes, completedAt: new Date().toISOString() });
+  try{ localStorage.setItem('hl_focus_sessions', JSON.stringify(log.slice(0, 200))); }catch(e){} // cap — a rolling recent history, not unbounded
+}
+function getFocusSessionsForDate(dateISO){
+  return getFocusSessionLog().filter(s => s.date === dateISO).length;
+}
+
 // ---------- Progress stats, computed from locally saved Set results ----------
 function computeProgressStats(){
   const p = loadProgress();
@@ -17620,7 +19155,7 @@ function computeProgressStats(){
   const totalAttempted = totalCorrect + totalWrong + totalSkipped;
   const overallPct = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0;
 
-  return { totalAttempted, totalCorrect, totalWrong, totalSets, strongest, weakest, overallPct };
+  return { totalAttempted, totalCorrect, totalWrong, totalSets, strongest, weakest, overallPct, learningPoints: getLpData().total };
 }
 
 // ---------- Set Selection screen — opens INSTANTLY, no waiting on question counts ----------
@@ -19039,6 +20574,7 @@ function showBattleLiveResult(b, role){
   document.getElementById('battleResultOppScore').textContent = oppScore;
   document.getElementById('battleResultCorrect').textContent = `${youScore} / ${total}`;
   document.getElementById('battleResultWrong').textContent = `${total - youScore} / ${total}`;
+  awardLearningPoints(youScore > oppScore ? 'battleWin' : 'battleParticipation');
   showScreen(battleResultScreen);
 }
 document.getElementById('battleResultDoneBtn').addEventListener('click', () => {
@@ -19140,6 +20676,7 @@ async function submitDailyBattleResult(correct, total){
     await setDoc(doc(window.hlFirestore, 'dailyBattles', todayISO(), 'participants', window.currentUser.uid), {
       name: window.currentUser.displayName || 'Student', score: correct, total, submittedAt: serverTimestamp(),
     });
+    awardLearningPoints('dailyChallenge'); // once per day, on top of any per-question points already awarded above
     const snap = await getDocs(collection(window.hlFirestore, 'dailyBattles', todayISO(), 'participants'));
     const scores = snap.docs.map(d => d.data().score).sort((a, b) => b - a);
     const rank = scores.indexOf(correct) + 1;
@@ -19721,8 +21258,13 @@ function finishQuiz(){
       reviewHtml.push(reviewRow(q, i, 'Correct', a.chosen));
       if(currentSetInfo && currentSetInfo.subject === 'Revision'){
         advanceRevisionSchedule(q); // spaced repetition — advance to the next interval, or graduate
+        // A mistake-review correct answer earns "Recover a Mistake" points instead of the
+        // regular "Correct MCQ" points — same question, but this is specifically recovery,
+        // not fresh practice, matching the document's own distinct point categories
+        awardLearningPoints(mistakeReviewActive ? 'mistakeRecovered' : 'correctMcq', 1, q.Subject);
       } else {
         removeFromWrongQuestions(q); // regular practice — got it right, no longer needs revision
+        awardLearningPoints('correctMcq', 1, q.Subject);
       }
     } else {
       wrong++; score -= (marks * 0.2);
@@ -19792,6 +21334,7 @@ function finishQuiz(){
   // due Flash Cards that were bundled into this same session, rather than silently dropping them
   if(revisionModeActive){
     revisionModeActive = false;
+    awardLearningPoints('revisionComplete'); // once per session, on top of any per-question points already awarded above
     if(revisionPendingFlashCards.length > 0){
       const cards = revisionPendingFlashCards;
       revisionPendingFlashCards = [];
@@ -19803,6 +21346,14 @@ function finishQuiz(){
     }
   }
   mistakeReviewActive = false;
+  if(mockTestActive){
+    mockTestActive = false;
+    awardLearningPoints('mockTestComplete');
+  }
+  if(groupChallengeActive){
+    groupChallengeActive = false;
+    submitGroupChallengeResult(correct, quizQuestions.length);
+  }
 
   // ---- Rapid Fire: pace summary, and streak update for Daily Fire ----
   if(currentRapidFireMode){
