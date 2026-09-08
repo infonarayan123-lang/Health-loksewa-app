@@ -2473,6 +2473,12 @@
     <div class="home-body">
       <div class="section-title">My Progress</div>
 
+      <div class="content-card" style="text-align:center; margin-bottom:14px; background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff;">
+        <div style="font-size:11px; font-weight:700; opacity:0.9;">OVERALL ACCURACY</div>
+        <div style="font-size:34px; font-weight:800; margin:2px 0;" id="overallProgressPct">0%</div>
+        <div style="font-size:11px; opacity:0.85;">Across everything you've attempted</div>
+      </div>
+
       <div class="streak-banner" id="streakBanner">
         <div class="streak-fire">🔥</div>
         <div>
@@ -2501,8 +2507,57 @@
         </div>
       </div>
 
-      <div class="section-title" style="font-size:15px; margin-top:20px; margin-bottom:12px;">🏆 Achievements</div>
-      <div class="badges-grid" id="badgesGrid"></div>
+      <div class="section-title" style="font-size:15px; margin-top:16px; margin-bottom:8px;">💡 Insights</div>
+      <div id="smartInsightsList" style="margin-bottom:16px;"></div>
+
+      <div class="section-title" style="font-size:15px; margin-top:20px; margin-bottom:12px;">🔍 Explore Your Progress</div>
+      <div class="dash-grid">
+        <a class="dash-card hub-tile t1" href="#" id="goToSubjectProgress">
+          <div class="dc-icon">📚</div>
+          <div class="dc-label">Subject Progress</div>
+          <div class="dc-sub">By subject, with charts</div>
+        </a>
+        <a class="dash-card hub-tile t2" href="#" id="goToQuestionPerformance">
+          <div class="dc-icon">📝</div>
+          <div class="dc-label">Question Performance</div>
+          <div class="dc-sub">Trends over time</div>
+        </a>
+        <a class="dash-card hub-tile t3" href="#" id="goToWeakAreas">
+          <div class="dc-icon">⚠️</div>
+          <div class="dc-label">Weak Areas</div>
+          <div class="dc-sub">What to fix first</div>
+        </a>
+        <a class="dash-card hub-tile t4" href="#" id="goToAchievementsScreen">
+          <div class="dc-icon">🏆</div>
+          <div class="dc-label">Achievements</div>
+          <div class="dc-sub" id="achievementsPreviewSub">— earned</div>
+        </a>
+        <a class="dash-card hub-tile t5" href="#" id="goToLearnHubProgress">
+          <div class="dc-icon">📖</div>
+          <div class="dc-label">Learn Hub &amp; Confidence</div>
+          <div class="dc-sub">Topics &amp; self-rating</div>
+        </a>
+        <a class="dash-card hub-tile t6" href="#" id="goToRevisionProgress">
+          <div class="dc-icon">🔄</div>
+          <div class="dc-label">Revision Progress</div>
+          <div class="dc-sub">Due, completed, overdue</div>
+        </a>
+        <a class="dash-card hub-tile t1" href="#" id="goToStudyActivity">
+          <div class="dc-icon">📈</div>
+          <div class="dc-label">Study Activity</div>
+          <div class="dc-sub">Habits over time</div>
+        </a>
+        <a class="dash-card hub-tile t2" href="#" id="goToProgressGoals">
+          <div class="dc-icon">🎯</div>
+          <div class="dc-label">Goals</div>
+          <div class="dc-sub">Daily &amp; weekly targets</div>
+        </a>
+        <a class="dash-card hub-tile t3" href="#" id="goToProgressHistory">
+          <div class="dc-icon">📅</div>
+          <div class="dc-label">History</div>
+          <div class="dc-sub">Look back by date</div>
+        </a>
+      </div>
 
       <div class="dash-grid">
       <a class="dash-card hub-tile t1" href="#" id="goToLeaderboard">
@@ -2536,6 +2591,156 @@
         <div class="dc-sub">Wrong &amp; bookmarked</div>
       </a>
       </div>
+    </div>
+  </div>
+
+  <div class="screen" id="subjectProgressScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📚 Subject Progress</div>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Tap a subject to see topic-level detail.</p>
+      <div id="subjectProgressList"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="subjectDetailScreen">
+    <div class="back-link" data-back="subjectProgress">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="sdSubjectTitle">Subject</div>
+      <div class="stats-grid" style="margin-bottom:16px;" id="sdStatsGrid"></div>
+      <div class="section-title" style="font-size:15px;">📖 Topics</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:10px;">Based on your activity since topic tracking started — not retroactive.</p>
+      <div id="sdTopicsList" style="margin-bottom:18px;"></div>
+      <div class="content-card" style="margin-bottom:16px;" id="sdWeakTopicsCard"></div>
+      <button class="start-btn" id="sdStudyWeakBtn">Study Weak Topics →</button>
+    </div>
+  </div>
+
+  <div class="screen" id="questionPerformanceScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📝 Question Performance</div>
+      <div class="stats-grid" style="margin-bottom:16px;" id="qpStatsGrid"></div>
+      <div class="section-title" style="font-size:15px;">📈 Trend</div>
+      <div style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;">
+        <button class="calc-btn qp-trend-btn active" data-range="7" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap;">7 Days</button>
+        <button class="calc-btn qp-trend-btn" data-range="30" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">30 Days</button>
+      </div>
+      <div id="qpTrendChart" style="display:flex; align-items:flex-end; gap:4px; height:110px; margin-bottom:8px; padding:0 4px;"></div>
+      <p style="font-size:10.5px; color:var(--ink-soft); text-align:center; margin-bottom:20px;">Questions solved per day</p>
+
+      <div class="section-title" style="font-size:15px;">🧪 Mock Test Performance</div>
+      <div class="stats-grid" style="margin-bottom:10px;" id="mtStatsGrid"></div>
+      <div id="mtChart" style="display:flex; align-items:flex-end; gap:4px; height:70px; margin-bottom:8px; padding:0 4px;"></div>
+      <div id="mtRecentList" style="margin-bottom:20px;"></div>
+
+      <div class="section-title" style="font-size:15px;">📜 Past Question Performance</div>
+      <div class="stats-grid" style="margin-bottom:10px;" id="pqStatsGrid"></div>
+      <div id="pqByYearList" style="margin-bottom:20px;"></div>
+
+      <div class="section-title" style="font-size:15px;">🏆 Tournament Progress</div>
+      <div class="stats-grid" style="margin-bottom:16px;" id="tpStatsGrid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="weakAreasScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">⚠️ Weak Areas</div>
+      <div class="section-title" style="font-size:15px;">Weak Subjects</div>
+      <div id="waSubjectChart" style="margin-bottom:18px;"></div>
+      <div class="section-title" style="font-size:15px;">Weak Topics</div>
+      <div id="waTopicsList" style="margin-bottom:18px;"></div>
+      <div class="section-title" style="font-size:15px;">Repeated Mistakes</div>
+      <div id="waRepeatedList" style="margin-bottom:18px;"></div>
+      <button class="start-btn" id="waPracticeBtn">Practice Weak Areas →</button>
+    </div>
+  </div>
+
+  <div class="screen" id="achievementsScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🏆 Achievements</div>
+
+      <div class="content-card" style="text-align:center; margin-bottom:16px; background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff;">
+        <div style="font-size:11px; font-weight:700; opacity:0.9;">LEVEL <span id="levelNumber">1</span></div>
+        <div style="font-size:20px; font-weight:800; margin:2px 0;" id="levelName">Beginner</div>
+        <div style="font-size:11px; opacity:0.9; margin-bottom:6px;" id="levelXpLabel"></div>
+        <div style="background:rgba(255,255,255,0.3); border-radius:6px; height:8px; overflow:hidden;"><div id="levelXpBar" style="background:#fff; height:100%; width:0%;"></div></div>
+      </div>
+
+      <div class="content-card" style="text-align:center; margin-bottom:18px;">
+        <div id="achRingChart" style="width:120px; height:120px; margin:0 auto 10px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800;"></div>
+        <p style="font-size:12px; color:var(--ink-soft);" id="achRingLabel"></p>
+      </div>
+      <div class="badges-grid" id="achievementsFullGrid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="learnHubProgressScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📖 Learn Hub Progress</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:14px;">Based on topics (chapters) you've engaged with since tracking started — not a full syllabus checklist.</p>
+      <div class="stats-grid" style="margin-bottom:10px;" id="lhStatsGrid"></div>
+      <div id="lhStatusChart" style="display:flex; height:24px; border-radius:6px; overflow:hidden; margin-bottom:20px;"></div>
+
+      <div class="section-title" style="font-size:15px;">⭐ Confidence</div>
+      <div id="lhConfidenceChart" style="margin-bottom:16px;"></div>
+      <div class="content-card" style="margin-bottom:18px;">
+        <h4 style="margin-bottom:8px;">🔍 Accuracy vs Confidence</h4>
+        <p style="font-size:11px; color:var(--ink-soft); margin-bottom:10px;">Topics where how you feel and how you're doing don't match.</p>
+        <div id="lhMismatchList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="revisionProgressScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔄 Revision Progress</div>
+      <div class="stats-grid" style="margin-bottom:16px;" id="rpStatsGrid"></div>
+      <div class="section-title" style="font-size:15px;">Schedule Breakdown</div>
+      <div id="rpScheduleChart" style="margin-bottom:18px;"></div>
+      <button class="start-btn" id="rpStartBtn">Start Revision →</button>
+    </div>
+  </div>
+
+  <div class="screen" id="studyActivityScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📈 Study Activity</div>
+      <div style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;">
+        <button class="calc-btn sa-range-btn active" data-range="7" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap;">Weekly</button>
+        <button class="calc-btn sa-range-btn" data-range="30" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Monthly</button>
+      </div>
+      <div id="saActivityChart" style="display:flex; align-items:flex-end; gap:4px; height:100px; margin-bottom:16px; padding:0 4px;"></div>
+      <div class="stats-grid" id="saStatsGrid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="progressGoalsScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🎯 Goals</div>
+      <div class="section-title" style="font-size:15px;">Today's Goal</div>
+      <div class="content-card" style="margin-bottom:16px;" id="pgTodayCard"></div>
+      <div class="section-title" style="font-size:15px;">Weekly Goal</div>
+      <div class="content-card" style="margin-bottom:18px;" id="pgWeekCard"></div>
+      <button class="calc-btn" id="pgEditBtn" style="background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Edit Goals</button>
+    </div>
+  </div>
+
+  <div class="screen" id="progressHistoryScreen">
+    <div class="back-link" data-back="progress">← Back</div>
+    <div class="home-body">
+      <div class="section-title">📅 History</div>
+      <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;">
+        <button class="calc-btn ph-range-btn active" data-range="1" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap;">Today</button>
+        <button class="calc-btn ph-range-btn" data-range="7" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Week</button>
+        <button class="calc-btn ph-range-btn" data-range="30" style="margin:0; width:auto; padding:6px 12px; font-size:11px; white-space:nowrap; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Month</button>
+      </div>
+      <div id="progressHistoryList"></div>
     </div>
   </div>
 
@@ -5994,6 +6199,29 @@
     }
   };
 
+  // Genuine rank lookup (not just top-10) for My Progress's Tournament summary — fetches a
+  // larger pool honestly, same "top-100, not everyone" limitation already applied to the main
+  // Leaderboard: correct for realistic weekly participation, not guaranteed exact at massive scale
+  window.fetchMyTournamentRank = async function(weekKey){
+    const user = auth.currentUser;
+    if(!user) return null;
+    try{
+      const q = query(
+        collection(db, 'tournamentEntries'),
+        where('weekKey', '==', weekKey),
+        orderBy('score', 'desc'),
+        limit(200)
+      );
+      const snap = await getDocs(q);
+      const results = [];
+      snap.forEach(docSnap => results.push(docSnap.data()));
+      const myIndex = results.findIndex(r => r.uid === user.uid);
+      return myIndex === -1 ? null : myIndex + 1;
+    }catch(err){
+      return null;
+    }
+  };
+
   // ---- Study Groups: create, join, and view a shared group leaderboard ----
   function generateGroupCode(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars like O/0, I/1
@@ -6583,6 +6811,7 @@ let answers = []; // { correct: bool|null (null = skipped), chosen, correctAnswe
 let revisionModeActive = false;
 let mistakeReviewActive = false;
 let mockTestActive = false;
+let pastQuestionActive = false;
 let timerInterval = null;
 let secondsLeft = 0;
 let currentSetInfo = null; // { subject, setNumber, totalSets } when running a locked Set; null otherwise
@@ -6616,6 +6845,16 @@ const changePasswordScreen = document.getElementById('changePasswordScreen');
 const legalInfoScreen = document.getElementById('legalInfoScreen');
 const upgradeScreen = document.getElementById('upgradeScreen');
 const progressScreen = document.getElementById('progressScreen');
+const subjectProgressScreen = document.getElementById('subjectProgressScreen');
+const subjectDetailScreen = document.getElementById('subjectDetailScreen');
+const questionPerformanceScreen = document.getElementById('questionPerformanceScreen');
+const weakAreasScreen = document.getElementById('weakAreasScreen');
+const achievementsScreen = document.getElementById('achievementsScreen');
+const learnHubProgressScreen = document.getElementById('learnHubProgressScreen');
+const revisionProgressScreen = document.getElementById('revisionProgressScreen');
+const studyActivityScreen = document.getElementById('studyActivityScreen');
+const progressGoalsScreen = document.getElementById('progressGoalsScreen');
+const progressHistoryScreen = document.getElementById('progressHistoryScreen');
 const leaderboardScreen = document.getElementById('leaderboardScreen');
 const bookmarksScreen = document.getElementById('bookmarksScreen');
 const myBookmarksHubScreen = document.getElementById('myBookmarksHubScreen');
@@ -6742,13 +6981,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen };
 let docViewerBackTarget = homeScreen;
 let currentDocViewerItem = null;
 let setSelectBackTarget = subjectPickScreen;
@@ -7016,7 +7255,7 @@ function updateBottomNav(activeScreen){
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
-  const myProgressScreens = [progressScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
+  const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
   let activeKey = '';
@@ -15505,33 +15744,627 @@ function renderProgressScreen(){
     weakCard.style.display = 'none';
   }
 
+  renderOverallProgressCard();
   renderAchievements(stats, streak);
+  renderSmartInsights();
 }
+// Overall Accuracy is a single, stable lifetime figure — deliberately not split by period, since
+// there's no real per-period accuracy data tracked separately from the lifetime total; showing a
+// period toggle that didn't actually change the number would be misleading
+function renderOverallProgressCard(){
+  document.getElementById('overallProgressPct').textContent = `${computeProgressStats().overallPct}%`;
+}
+document.getElementById('goToSubjectProgress').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(subjectProgressScreen);
+  renderSubjectProgressList();
+});
+document.getElementById('goToQuestionPerformance').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(questionPerformanceScreen);
+  renderQuestionPerformance();
+});
+document.getElementById('goToWeakAreas').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(weakAreasScreen);
+  renderWeakAreas();
+});
+document.getElementById('goToAchievementsScreen').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(achievementsScreen);
+  renderAchievements(computeProgressStats(), getStudyStreak());
+});
+document.getElementById('goToLearnHubProgress').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(learnHubProgressScreen);
+  renderLearnHubProgress();
+});
+
+// ---------- Smart Insights: short, auto-generated observations from data already computed
+// elsewhere on this screen — deliberately capped at a few lines with one action each, per the
+// document's own "avoid long AI-generated reports" instruction. Nothing here calls the AI backend
+// — these are simple, deterministic rules over real numbers, not generated text. ----------
+function renderSmartInsights(){
+  const stats = computeProgressStats();
+  const wrap = document.getElementById('smartInsightsList');
+  const insights = [];
+
+  if(stats.weakest){
+    insights.push({ text: `${stats.weakest.subject} is currently your weakest subject at ${stats.weakest.pct}%.`, actionLabel: `Practice ${stats.weakest.subject}`, action: () => { const post = findPostForSubject(stats.weakest.subject); if(post){ currentMcqPost = post; openSetSelect(stats.weakest.subject); } } });
+  }
+  const dueCount = getRevisionPool().length;
+  if(dueCount > 0){
+    insights.push({ text: `You have ${dueCount} item${dueCount === 1 ? '' : 's'} due for revision.`, actionLabel: 'Start Revision', action: () => { showScreen(revisionScreen); renderRevisionSummary(); } });
+  }
+  const streak = getStudyStreak();
+  if(streak >= 3){
+    insights.push({ text: `You're on a ${streak}-day streak — keep it going!`, actionLabel: null });
+  }
+  if(insights.length === 0){
+    insights.push({ text: 'Complete a few more questions to start seeing personalized insights here.', actionLabel: null });
+  }
+
+  wrap.innerHTML = insights.slice(0, 3).map((ins, i) => `
+    <div class="content-card" style="margin-bottom:8px;">
+      <p style="font-size:12.5px; color:var(--ink); margin-bottom:${ins.actionLabel ? '8px' : '0'};">${ins.text}</p>
+      ${ins.actionLabel ? `<button class="calc-btn si-action-btn" data-idx="${i}" style="margin:0; width:auto; padding:5px 12px; font-size:11px;">${ins.actionLabel}</button>` : ''}
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.si-action-btn').forEach(btn => {
+    btn.addEventListener('click', () => insights[parseInt(btn.dataset.idx, 10)].action());
+  });
+}
+
+// ---------- Revision Progress: entirely reused data — the spaced-repetition schedule already
+// tracked for Mistake Book / Revision Mode, just summarized here rather than duplicated ----------
+document.getElementById('goToRevisionProgress').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(revisionProgressScreen);
+  renderRevisionProgress();
+});
+function renderRevisionProgress(){
+  const wrong = getWrongQuestions();
+  const today = todayISO();
+  const dueToday = wrong.filter(w => !w.nextRevisionDate || w.nextRevisionDate === today);
+  const overdue = wrong.filter(w => w.nextRevisionDate && w.nextRevisionDate < today);
+  const upcoming = wrong.filter(w => w.nextRevisionDate && w.nextRevisionDate > today);
+  let mastered = 0;
+  try{ mastered = parseInt(localStorage.getItem('hl_mistakes_mastered_count') || '0', 10); }catch(e){}
+
+  document.getElementById('rpStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${dueToday.length}</div><div class="st-label">Due Today</div></div>
+    <div class="stat-tile"><div class="st-num" style="color:var(--wrong);">${overdue.length}</div><div class="st-label">Overdue</div></div>
+    <div class="stat-tile"><div class="st-num">${upcoming.length}</div><div class="st-label">Upcoming</div></div>
+    <div class="stat-tile"><div class="st-num" style="color:var(--correct);">${mastered}</div><div class="st-label">Completed</div></div>
+  `;
+  const stageLabels = REVISION_INTERVALS_DAYS.map(d => `${d} Day${d === 1 ? '' : 's'}`);
+  document.getElementById('rpScheduleChart').innerHTML = REVISION_INTERVALS_DAYS.map((d, i) => {
+    const count = wrong.filter(w => (w.intervalIndex || 0) === i).length;
+    return `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; border-top:1px solid var(--line);"><span>${stageLabels[i]}</span><span style="font-weight:700;">${count}</span></div>`;
+  }).join('');
+}
+document.getElementById('rpStartBtn').addEventListener('click', () => {
+  showScreen(revisionScreen);
+  renderRevisionSummary();
+});
+
+// ---------- Study Activity: reuses the exact Screen Time daily log rather than a second time-
+// tracking system ----------
+document.getElementById('goToStudyActivity').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(studyActivityScreen);
+  renderStudyActivity();
+});
+let saRange = 7;
+function renderStudyActivity(){
+  const dates = getLastNDates(saRange);
+  const values = dates.map(d => getStudyTimeForDate(d));
+  const max = Math.max(...values, 1);
+  const showLabels = saRange === 7;
+  document.getElementById('saActivityChart').innerHTML = dates.map((d, i) => {
+    const heightPct = Math.max(3, Math.round((values[i] / max) * 100));
+    const isToday = d === todayISO();
+    const label = showLabels ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }).charAt(0) : '';
+    return `
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+        <div style="width:100%; max-width:22px; background:${isToday ? 'var(--teal)' : 'var(--panel)'}; border:1.5px solid ${isToday ? 'var(--teal)' : 'var(--line)'}; border-radius:3px 3px 0 0; height:${heightPct}%;" title="${fmtDuration(values[i])}"></div>
+        ${showLabels ? `<div style="font-size:9px; color:var(--ink-soft); margin-top:3px;">${label}</div>` : ''}
+      </div>`;
+  }).join('');
+  const activeDays = values.filter(v => v > 0).length;
+  const avgDaily = Math.round(values.reduce((a,b) => a+b, 0) / dates.length);
+  const questionsInRange = dates.reduce((sum, d) => sum + getQuestionCountForDate(d), 0);
+  document.getElementById('saStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${questionsInRange}</div><div class="st-label">Questions</div></div>
+    <div class="stat-tile"><div class="st-num">${activeDays}/${dates.length}</div><div class="st-label">Active Days</div></div>
+    <div class="stat-tile"><div class="st-num">${fmtDuration(avgDaily)}</div><div class="st-label">Daily Avg</div></div>
+    <div class="stat-tile"><div class="st-num">${getStudyStreak()}</div><div class="st-label">Current Streak</div></div>
+    <div class="stat-tile"><div class="st-num">${getLongestStreak()}</div><div class="st-label">Longest Streak</div></div>
+  `;
+}
+document.querySelectorAll('.sa-range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    saRange = parseInt(btn.dataset.range, 10);
+    document.querySelectorAll('.sa-range-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderStudyActivity();
+  });
+});
+
+// ---------- Goals: Study Time reuses Screen Time's existing daily/weekly goal; Questions and
+// Topics are new, separate targets since they're a different kind of thing (a count, not a
+// duration) ----------
+document.getElementById('goToProgressGoals').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(progressGoalsScreen);
+  renderProgressGoals();
+});
+function renderProgressGoals(){
+  const timeGoals = getScreenTimeGoals();
+  const progGoals = getProgressGoals();
+  const todayQuestions = getQuestionCountForDate(todayISO());
+  const todayStudyTime = getStudyTimeForDate(todayISO());
+  const todayTopics = Object.values(getChapterStats()).filter(c => c.attempted > 0).length; // topics engaged today isn't separately tracked — this is lifetime engaged topics as the closest honest proxy
+
+  const barRow = (label, current, target, fmt) => {
+    const pct = Math.min(100, Math.round((current/target)*100));
+    return `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;"><span>${label}</span><span>${fmt(current)} / ${fmt(target)}</span></div>
+        <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden;"><div style="background:var(--teal); height:100%; width:${pct}%;"></div></div>
+      </div>`;
+  };
+  document.getElementById('pgTodayCard').innerHTML =
+    barRow('📝 Questions', todayQuestions, progGoals.dailyQuestions, v => v) +
+    barRow('⏱️ Study Time', todayStudyTime, timeGoals.dailySec, fmtDuration) +
+    barRow('📖 Topics Engaged', todayTopics, progGoals.dailyTopics, v => v);
+
+  const weekQuestions = getLastNDates(7).reduce((s,d) => s + getQuestionCountForDate(d), 0);
+  const weekStudyTime = getLastNDates(7).reduce((s,d) => s + getStudyTimeForDate(d), 0);
+  document.getElementById('pgWeekCard').innerHTML =
+    barRow('📝 Questions', weekQuestions, progGoals.weeklyQuestions, v => v) +
+    barRow('⏱️ Study Time', weekStudyTime, timeGoals.weeklySec, fmtDuration);
+}
+document.getElementById('pgEditBtn').addEventListener('click', () => {
+  const timeGoals = getScreenTimeGoals();
+  const progGoals = getProgressGoals();
+  const dq = parseInt(prompt('Daily question goal:', progGoals.dailyQuestions), 10);
+  if(dq > 0) progGoals.dailyQuestions = dq;
+  const wq = parseInt(prompt('Weekly question goal:', progGoals.weeklyQuestions), 10);
+  if(wq > 0) progGoals.weeklyQuestions = wq;
+  const dt = parseInt(prompt('Daily topics goal:', progGoals.dailyTopics), 10);
+  if(dt > 0) progGoals.dailyTopics = dt;
+  saveProgressGoals(progGoals);
+  renderProgressGoals();
+});
+
+// ---------- History: pulls from the 3 dedicated result logs (Mock Test/Past Question/
+// Tournament) built in Phase 2 — the only activities with a real per-entry date to filter by ----
+document.getElementById('goToProgressHistory').addEventListener('click', (e) => {
+  e.preventDefault();
+  showScreen(progressHistoryScreen);
+  renderProgressHistory();
+});
+let phRange = 1;
+function renderProgressHistory(){
+  const cutoff = addDaysISO(-(phRange - 1));
+  const entries = [];
+  getMockTestHistory().filter(h => h.date >= cutoff).forEach(h => entries.push({ date: h.date, icon: '🧪', text: `Mock Test — ${h.pct}%` }));
+  getPastQuestionHistory().filter(h => h.date >= cutoff).forEach(h => entries.push({ date: h.date, icon: '📜', text: `${h.paperName} — ${h.pct}%` }));
+  getTournamentHistory().filter(h => h.date >= cutoff).forEach(h => entries.push({ date: h.date, icon: '🏆', text: `Weekly Tournament — ${h.pct}%` }));
+  entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  const wrap = document.getElementById('progressHistoryList');
+  wrap.innerHTML = entries.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:12.5px; text-align:center; padding:20px 0;">No activity in this range yet.</p>`
+    : entries.map(e => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid var(--line);">
+        <span style="font-size:12.5px;">${e.icon} ${e.text}</span>
+        <span style="font-size:11px; color:var(--ink-soft);">${formatDualDate(new Date(e.date + 'T00:00:00'))}</span>
+      </div>`).join('');
+}
+document.querySelectorAll('.ph-range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    phRange = parseInt(btn.dataset.range, 10);
+    document.querySelectorAll('.ph-range-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderProgressHistory();
+  });
+});
+
+// ---------- Learn Hub Progress + Confidence: built on the same chapter entities already tracked
+// for Subject Detail — "topics" here means chapters, since Learn Hub itself has no separate
+// itemized topic list of its own (it's a navigation menu to Syllabus/GK/Video/Handbook, which are
+// PDF-based, not a digital per-topic checklist). This is honestly a reflection of engaged
+// chapters, not a full syllabus completion tracker. ----------
+function renderLearnHubProgress(){
+  const allChapters = Object.values(getChapterStats());
+  const notStarted = allChapters.filter(c => getChapterStatus(c) === 'Not Started').length;
+  const learning = allChapters.filter(c => getChapterStatus(c) === 'Learning').length;
+  const readyForRevision = allChapters.filter(c => getChapterStatus(c) === 'Ready for Revision').length;
+  const completed = allChapters.filter(c => getChapterStatus(c) === 'Completed').length;
+
+  // Study time specifically attributed to the Learn Hub feature area, summed over the retained
+  // Screen Time log window — honestly "recent," not lifetime, since that log is pruned to 35 days
+  const dates35 = getLastNDates(35);
+  const learnHubSeconds = dates35.reduce((sum, d) => sum + (getScreenTimeForDate(d).byArea['Learn Hub'] || 0), 0);
+
+  document.getElementById('lhStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${completed}</div><div class="st-label">Completed</div></div>
+    <div class="stat-tile"><div class="st-num">${learning}</div><div class="st-label">Learning</div></div>
+    <div class="stat-tile"><div class="st-num">${notStarted}</div><div class="st-label">Not Started</div></div>
+    <div class="stat-tile"><div class="st-num">${fmtDuration(learnHubSeconds)}</div><div class="st-label">Study Time (35d)</div></div>
+  `;
+
+  const total = allChapters.length || 1;
+  const seg = (count, color) => count > 0 ? `<div style="flex:${count}; background:${color};"></div>` : '';
+  document.getElementById('lhStatusChart').innerHTML = allChapters.length === 0
+    ? `<div style="flex:1; background:var(--panel);"></div>`
+    : seg(completed, 'var(--correct)') + seg(readyForRevision, 'var(--wrong)') + seg(learning, 'var(--gold)') + seg(notStarted, 'var(--panel)');
+
+  // Confidence distribution
+  const rated = allChapters.filter(c => c.confidence > 0);
+  const confChart = document.getElementById('lhConfidenceChart');
+  if(rated.length === 0){
+    confChart.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">Rate your confidence on topics from Subject Detail to see this fill in.</p>`;
+  } else {
+    confChart.innerHTML = [5,4,3,2,1].map(star => {
+      const count = rated.filter(c => c.confidence === star).length;
+      const pct = Math.round((count / rated.length) * 100);
+      return `
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+          <span style="font-size:11px; width:70px; flex-shrink:0;">${'⭐'.repeat(star)}</span>
+          <div style="flex:1; background:var(--panel); border-radius:5px; height:14px; overflow:hidden;"><div style="background:var(--gold); height:100%; width:${pct}%;"></div></div>
+          <span style="font-size:11px; color:var(--ink-soft); width:24px; text-align:right;">${count}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // Accuracy vs Confidence mismatch — flags topics where self-perception and real performance
+  // disagree meaningfully (a 25-point gap either direction), per the document's own example
+  const mismatches = rated.filter(c => c.attempted >= 3).map(c => {
+    const acc = Math.round((c.correct / c.attempted) * 100);
+    return { ...c, acc, gap: acc - (c.confidence * 20) };
+  }).filter(c => Math.abs(c.gap) >= 25).sort((a,b) => Math.abs(b.gap) - Math.abs(a.gap));
+  const mismatchWrap = document.getElementById('lhMismatchList');
+  mismatchWrap.innerHTML = mismatches.length === 0
+    ? `<p style="font-size:12px; color:var(--ink-soft);">No major mismatches found — your confidence generally matches your performance.</p>`
+    : mismatches.slice(0,5).map(c => `
+      <div style="font-size:12px; padding:5px 0; border-top:1px solid var(--line);">
+        <b>${c.chapter}</b> (${c.subject})<br>
+        <span style="color:var(--ink-soft);">Accuracy ${c.acc}% · Confidence ${c.confidence}/5 — ${c.gap > 0 ? 'performing better than you feel' : 'feeling more confident than results show'}</span>
+      </div>`).join('');
+}
+
+// ---------- Subject Progress + Subject Detail ----------
+function renderSubjectProgressList(){
+  const wrap = document.getElementById('subjectProgressList');
+  const subjects = computeProgressStats().subjectAverages;
+  if(subjects.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">Complete a Set to see subject-by-subject progress here.</p>`;
+    return;
+  }
+  wrap.innerHTML = subjects.map(s => `
+    <button class="note-item sp-subject-row" data-subject="${s.subject.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; margin-bottom:10px; display:block;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;"><span>${s.subject}</span><span style="font-weight:700;">${s.pct}%</span></div>
+      <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden;"><div style="background:${s.pct >= 70 ? 'var(--correct)' : (s.pct >= 50 ? 'var(--gold)' : 'var(--wrong)')}; height:100%; width:${s.pct}%;"></div></div>
+    </button>
+  `).join('');
+  document.querySelectorAll('.sp-subject-row').forEach(row => {
+    row.addEventListener('click', () => openSubjectDetail(row.dataset.subject));
+  });
+}
+let currentSubjectDetail = null;
+function openSubjectDetail(subject){
+  currentSubjectDetail = subject;
+  showScreen(subjectDetailScreen);
+  document.getElementById('sdSubjectTitle').textContent = subject;
+
+  const stats = computeProgressStats();
+  const subjEntry = stats.subjectAverages.find(s => s.subject === subject);
+  const chapters = getChaptersForSubject(subject);
+  const completedCount = chapters.filter(isChapterComplete).length;
+  const attempted = chapters.reduce((sum, c) => sum + c.attempted, 0);
+
+  document.getElementById('sdStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${subjEntry ? subjEntry.pct : 0}%</div><div class="st-label">Overall</div></div>
+    <div class="stat-tile"><div class="st-num">${completedCount}/${chapters.length}</div><div class="st-label">Topics</div></div>
+    <div class="stat-tile"><div class="st-num">${attempted}</div><div class="st-label">Questions</div></div>
+  `;
+
+  const topicsWrap = document.getElementById('sdTopicsList');
+  if(chapters.length === 0){
+    topicsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">No topic-level activity tracked yet for this subject — keep practicing and this fills in.</p>`;
+  } else {
+    const statusIcon = { 'Not Started': '⚪', 'Learning': '🟠', 'Ready for Revision': '🔴', 'Completed': '🟢' };
+    topicsWrap.innerHTML = chapters.sort((a,b) => b.attempted - a.attempted).map((c, i) => {
+      const pct = c.attempted > 0 ? Math.round((c.correct / c.attempted) * 100) : 0;
+      const status = getChapterStatus(c);
+      const stars = '⭐'.repeat(c.confidence || 0) + '☆'.repeat(5 - (c.confidence || 0));
+      return `
+        <div class="sd-topic-row" data-idx="${i}" style="padding:7px 0; border-top:1px solid var(--line); cursor:pointer;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;">
+            <span>${statusIcon[status]} ${c.chapter}</span>
+            <span style="color:var(--ink-soft);">${pct}% (${c.attempted})</span>
+          </div>
+          <div style="font-size:11px; margin-top:2px; color:var(--gold);">${stars}</div>
+        </div>`;
+    }).join('');
+    document.querySelectorAll('.sd-topic-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const c = chapters[parseInt(row.dataset.idx, 10)];
+        const input = prompt(`Rate your confidence in "${c.chapter}" (1-5):`, c.confidence || 3);
+        const rating = parseInt(input, 10);
+        if(rating >= 1 && rating <= 5){
+          setChapterConfidence(c.subject, c.chapter, rating);
+          openSubjectDetail(currentSubjectDetail);
+        }
+      });
+    });
+  }
+
+  const weakChapters = chapters.filter(c => c.attempted >= 3 && Math.round((c.correct / c.attempted) * 100) < CHAPTER_COMPLETE_MIN_ACCURACY).sort((a,b) => (a.correct/a.attempted) - (b.correct/b.attempted));
+  const weakCard = document.getElementById('sdWeakTopicsCard');
+  weakCard.innerHTML = weakChapters.length === 0
+    ? `<p style="font-size:12.5px; color:var(--ink-soft);">No weak topics identified yet in this subject.</p>`
+    : `<h4 style="margin-bottom:8px;">⚠️ Weak Topics</h4>${weakChapters.slice(0,5).map(c => `<div style="font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);">⚠ ${c.chapter}</div>`).join('')}`;
+}
+document.getElementById('sdStudyWeakBtn').addEventListener('click', () => {
+  if(!currentSubjectDetail) return;
+  const post = findPostForSubject(currentSubjectDetail);
+  if(post){ currentMcqPost = post; openSetSelect(currentSubjectDetail); }
+  else alert('Could not find this subject in your current exam post.');
+});
+
+// ---------- Question Performance ----------
+let qpTrendRange = 7;
+function renderQuestionPerformance(){
+  const stats = computeProgressStats();
+  document.getElementById('qpStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${stats.totalAttempted}</div><div class="st-label">Attempted</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.totalCorrect}</div><div class="st-label">Correct</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.totalWrong}</div><div class="st-label">Incorrect</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.overallPct}%</div><div class="st-label">Accuracy</div></div>
+  `;
+  renderQpTrendChart();
+  renderMockTestSection();
+  renderPastQuestionSection();
+  renderTournamentSection();
+}
+// ---- Mock Test Performance: real history, tracked from the moment mockTestActive fires ----
+function renderMockTestSection(){
+  const history = getMockTestHistory();
+  if(history.length === 0){
+    document.getElementById('mtStatsGrid').innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px; grid-column:1/-1;">No Mock Tests completed yet.</p>`;
+    document.getElementById('mtChart').innerHTML = '';
+    document.getElementById('mtRecentList').innerHTML = '';
+    return;
+  }
+  const avgScore = Math.round(history.reduce((s,h) => s + h.pct, 0) / history.length);
+  const highest = Math.max(...history.map(h => h.pct));
+  document.getElementById('mtStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${history.length}</div><div class="st-label">Completed</div></div>
+    <div class="stat-tile"><div class="st-num">${avgScore}%</div><div class="st-label">Avg Score</div></div>
+    <div class="stat-tile"><div class="st-num">${highest}%</div><div class="st-label">Highest</div></div>
+  `;
+  const recent = history.slice(0, 8);
+  const max = Math.max(...recent.map(h => h.pct), 1);
+  document.getElementById('mtChart').innerHTML = recent.slice().reverse().map(h => `
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+      <div style="width:100%; max-width:20px; background:var(--panel); border:1.5px solid var(--line); border-radius:3px 3px 0 0; height:${Math.max(4, Math.round((h.pct/max)*100))}%;" title="${h.pct}%"></div>
+    </div>`).join('');
+  document.getElementById('mtRecentList').innerHTML = recent.slice(0,5).map((h,i) => `
+    <div style="display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-top:1px solid var(--line);"><span>Mock Test #${history.length - i}</span><span style="font-weight:700;">${h.pct}%</span></div>
+  `).join('');
+}
+// ---- Past Question Performance: grouped by year, extracted from the paper name at log time ----
+function renderPastQuestionSection(){
+  const history = getPastQuestionHistory();
+  if(history.length === 0){
+    document.getElementById('pqStatsGrid').innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px; grid-column:1/-1;">No Past Question papers attempted yet.</p>`;
+    document.getElementById('pqByYearList').innerHTML = '';
+    return;
+  }
+  const totalAttempted = history.reduce((s,h) => s + h.total, 0);
+  const totalCorrect = history.reduce((s,h) => s + h.score, 0);
+  const overallPct = totalAttempted > 0 ? Math.round((totalCorrect/totalAttempted)*100) : 0;
+  document.getElementById('pqStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${totalAttempted}</div><div class="st-label">Attempted</div></div>
+    <div class="stat-tile"><div class="st-num">${totalCorrect}</div><div class="st-label">Correct</div></div>
+    <div class="stat-tile"><div class="st-num">${overallPct}%</div><div class="st-label">Accuracy</div></div>
+  `;
+  const byYear = {};
+  history.forEach(h => {
+    const y = h.year || 'Unknown';
+    if(!byYear[y]) byYear[y] = { correct: 0, total: 0 };
+    byYear[y].correct += h.score; byYear[y].total += h.total;
+  });
+  const years = Object.keys(byYear).sort().reverse();
+  document.getElementById('pqByYearList').innerHTML = years.map(y => {
+    const pct = Math.round((byYear[y].correct / byYear[y].total) * 100);
+    return `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; border-top:1px solid var(--line);"><span>${y}</span><span style="font-weight:700;">${pct}%</span></div>`;
+  }).join('');
+}
+// ---- Tournament Progress: Best Rank looked up live for the most recent participation only, not
+// the user's whole history — an honest, bounded scope rather than N async rank lookups on load ----
+async function renderTournamentSection(){
+  const history = getTournamentHistory();
+  const wrap = document.getElementById('tpStatsGrid');
+  if(history.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px; grid-column:1/-1;">No Tournaments entered yet.</p>`;
+    return;
+  }
+  const wins = history.filter(h => h.pct === 100).length; // best available local signal — a perfect score; a true "win" needs the full leaderboard, not tracked per-entry
+  const bestScore = Math.max(...history.map(h => h.pct));
+  wrap.innerHTML = `
+    <div class="stat-tile"><div class="st-num">${history.length}</div><div class="st-label">Participated</div></div>
+    <div class="stat-tile"><div class="st-num">…</div><div class="st-label">Best Rank</div></div>
+    <div class="stat-tile"><div class="st-num">${bestScore}%</div><div class="st-label">Best Score</div></div>
+    <div class="stat-tile"><div class="st-num">${wins}</div><div class="st-label">Perfect Scores</div></div>
+  `;
+  if(window.fetchMyTournamentRank){
+    const rank = await window.fetchMyTournamentRank(history[0].weekKey);
+    const rankTile = wrap.children[1];
+    if(rankTile) rankTile.querySelector('.st-num').textContent = rank ? `#${rank}` : '—';
+  }
+}
+function renderQpTrendChart(){
+  const wrap = document.getElementById('qpTrendChart');
+  const dates = getLastNDates(qpTrendRange);
+  const values = dates.map(d => getQuestionCountForDate(d));
+  const max = Math.max(...values, 1);
+  wrap.innerHTML = dates.map((d, i) => {
+    const heightPct = Math.max(3, Math.round((values[i] / max) * 100));
+    const isToday = d === todayISO();
+    const showLabel = qpTrendRange === 7;
+    const label = showLabel ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }).charAt(0) : '';
+    return `
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+        <div style="width:100%; max-width:22px; background:${isToday ? 'var(--teal)' : 'var(--panel)'}; border:1.5px solid ${isToday ? 'var(--teal)' : 'var(--line)'}; border-radius:3px 3px 0 0; height:${heightPct}%;" title="${values[i]} questions"></div>
+        ${showLabel ? `<div style="font-size:9px; color:var(--ink-soft); margin-top:3px;">${label}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+document.querySelectorAll('.qp-trend-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    qpTrendRange = parseInt(btn.dataset.range, 10);
+    document.querySelectorAll('.qp-trend-btn').forEach(b => {
+      const active = b === btn;
+      b.classList.toggle('active', active);
+      b.style.background = active ? '' : 'var(--panel)';
+      b.style.color = active ? '' : 'var(--ink)';
+      b.style.border = active ? '' : '1.5px solid var(--line)';
+    });
+    renderQpTrendChart();
+  });
+});
+
+// ---------- Weak Areas ----------
+function renderWeakAreas(){
+  const stats = computeProgressStats();
+  const weakSubjects = [...stats.subjectAverages].sort((a,b) => a.pct - b.pct).slice(0, 5);
+  document.getElementById('waSubjectChart').innerHTML = weakSubjects.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:12.5px;">Complete a few Sets to see weak subjects here.</p>`
+    : weakSubjects.map(s => `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;"><span>⚠ ${s.subject}</span><span style="font-weight:700; color:var(--wrong);">${s.pct}%</span></div>
+        <div style="background:var(--panel); border-radius:6px; height:7px; overflow:hidden;"><div style="background:var(--wrong); height:100%; width:${s.pct}%;"></div></div>
+      </div>`).join('');
+
+  const allChapters = Object.values(getChapterStats());
+  const weakTopics = allChapters.filter(c => c.attempted >= 3 && Math.round((c.correct/c.attempted)*100) < CHAPTER_COMPLETE_MIN_ACCURACY)
+    .sort((a,b) => (a.correct/a.attempted) - (b.correct/b.attempted)).slice(0, 6);
+  document.getElementById('waTopicsList').innerHTML = weakTopics.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:12.5px;">No weak topics identified yet.</p>`
+    : weakTopics.map(c => `<div class="content-card" style="margin-bottom:6px; padding:8px 12px;"><span style="font-size:12.5px;">⚠ ${c.chapter} <span style="color:var(--ink-soft);">(${c.subject})</span></span></div>`).join('');
+
+  const repeated = getWrongQuestions().filter(w => (w.wrongCount || 1) >= 2).sort((a,b) => (b.wrongCount||1) - (a.wrongCount||1)).slice(0, 6);
+  document.getElementById('waRepeatedList').innerHTML = repeated.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:12.5px;">No repeated mistakes yet — good sign!</p>`
+    : repeated.map(w => `<div class="content-card" style="margin-bottom:6px; padding:8px 12px;"><div style="font-size:12px;">${w.Question}</div><div style="font-size:10.5px; color:var(--wrong); margin-top:2px;">Wrong ${w.wrongCount || 1}× </div></div>`).join('');
+}
+document.getElementById('waPracticeBtn').addEventListener('click', () => {
+  showScreen(revisionScreen);
+  renderRevisionSummary();
+});
+
 // Achievements are computed from stats you already track — no new data collection, and no
 // server round-trip. All-or-nothing badges: shown grayed out until actually earned.
+// Escalating tiers (per the document's own example: 30-day streak unlocks 60, then 120,
+// doubling from there; 1000 MCQs unlocks 2000, then 4000) are generated rather than hardcoded —
+// shows every tier already earned, plus exactly one upcoming tier as the next visible goal,
+// so the list grows with genuine progress instead of stopping at a fixed ceiling or scrolling
+// forever with tiers nobody's close to yet.
+function generateEscalatingTiers(baseValues, doubleAfter, currentValue){
+  const tiers = [...baseValues];
+  let next = doubleAfter * 2;
+  while(next <= currentValue * 2 || tiers.length < baseValues.length + 1){
+    tiers.push(next);
+    if(next > currentValue) break; // stop once we've included the first tier still ahead
+    next *= 2;
+  }
+  return tiers;
+}
 function computeAchievements(stats, streak){
   let mastered = 0;
   try{ mastered = parseInt(localStorage.getItem('hl_mistakes_mastered_count') || '0', 10); }catch(e){}
-  return [
-    { icon: '🎯', label: 'First Steps', earned: stats.totalAttempted >= 10 },
-    { icon: '📚', label: '100 Questions', earned: stats.totalAttempted >= 100 },
-    { icon: '🏆', label: '500 Questions', earned: stats.totalAttempted >= 500 },
-    { icon: '💯', label: '1000 Questions', earned: stats.totalAttempted >= 1000 },
-    { icon: '🔥', label: '7-Day Streak', earned: streak >= 7 },
-    { icon: '🔥', label: '30-Day Streak', earned: streak >= 30 },
+
+  const questionTiers = generateEscalatingTiers([10, 100, 500, 1000], 1000, stats.totalAttempted);
+  const streakTiers = generateEscalatingTiers([7, 30], 30, getLongestStreak());
+  const masteredTiers = generateEscalatingTiers([10], 10, mastered);
+
+  const badges = [
+    ...questionTiers.map(t => ({ icon: t >= 1000 ? '💯' : (t >= 100 ? '🏆' : '🎯'), label: `${t.toLocaleString()} Questions`, earned: stats.totalAttempted >= t })),
+    ...streakTiers.map(t => ({ icon: '🔥', label: `${t}-Day Streak`, earned: getLongestStreak() >= t })),
+    ...masteredTiers.map(t => ({ icon: '🧠', label: `${t} Mistakes Recovered`, earned: mastered >= t })),
     { icon: '⭐', label: '90% Accuracy', earned: stats.totalAttempted >= 20 && stats.overallPct >= 90 },
-    { icon: '🧠', label: 'Revision Master', earned: mastered >= 10 },
     { icon: '📖', label: 'Set Explorer', earned: stats.totalSets >= 10 },
+    { icon: '🏅', label: 'Tournament Winner', earned: getTournamentHistory().some(h => h.pct === 100) },
+    { icon: '✅', label: 'Full Revision Completed', earned: getRevisionPool().length === 0 && getWrongQuestions().length > 0 },
   ];
+  return badges;
+}
+// ---------- Level System: XP is Learning Points directly, not a parallel currency — the
+// document's own requirement ("XP comes from useful activities, not just opening the app") is
+// already exactly what Learning Points does, so reusing it here means Levels stay consistent
+// with everything else that already reads from the same number (Leaderboard, rewards). ----------
+const LEVEL_THRESHOLDS = [
+  { level: 1, name: 'Beginner', minXp: 0 },
+  { level: 2, name: 'Learner', minXp: 500 },
+  { level: 3, name: 'Practitioner', minXp: 2000 },
+  { level: 4, name: 'Advanced', minXp: 5000 },
+  { level: 5, name: 'Lok Sewa Pro', minXp: 10000 },
+];
+function getCurrentLevelInfo(xp){
+  let current = LEVEL_THRESHOLDS[0];
+  for(const tier of LEVEL_THRESHOLDS) if(xp >= tier.minXp) current = tier;
+  const nextIndex = LEVEL_THRESHOLDS.indexOf(current) + 1;
+  const next = LEVEL_THRESHOLDS[nextIndex] || null; // null once at the top level — nothing further to climb toward
+  return { current, next };
 }
 function renderAchievements(stats, streak){
+  const xp = getLpData().total;
+  const { current, next } = getCurrentLevelInfo(xp);
+  document.getElementById('levelNumber').textContent = current.level;
+  document.getElementById('levelName').textContent = current.name;
+  if(next){
+    document.getElementById('levelXpLabel').textContent = `${xp.toLocaleString()} / ${next.minXp.toLocaleString()} XP to ${next.name}`;
+    document.getElementById('levelXpBar').style.width = `${Math.round(((xp - current.minXp) / (next.minXp - current.minXp)) * 100)}%`;
+  } else {
+    document.getElementById('levelXpLabel').textContent = `${xp.toLocaleString()} XP — top level reached`;
+    document.getElementById('levelXpBar').style.width = '100%';
+  }
+
   const badges = computeAchievements(stats, streak);
-  document.getElementById('badgesGrid').innerHTML = badges.map(b => `
-    <div class="badge-tile ${b.earned ? 'earned' : ''}">
-      <div class="badge-icon">${b.icon}</div>
-      <div class="badge-label">${b.label}</div>
-    </div>
-  `).join('');
+  const earnedCount = badges.filter(b => b.earned).length;
+  const preview = document.getElementById('achievementsPreviewSub');
+  if(preview) preview.textContent = `${earnedCount}/${badges.length} earned`;
+  const fullGrid = document.getElementById('achievementsFullGrid');
+  if(fullGrid){
+    fullGrid.innerHTML = badges.map(b => `
+      <div class="badge-tile ${b.earned ? 'earned' : ''}">
+        <div class="badge-icon">${b.icon}</div>
+        <div class="badge-label">${b.label}</div>
+      </div>
+    `).join('');
+  }
+  const ring = document.getElementById('achRingChart');
+  if(ring){
+    const pct = Math.round((earnedCount / badges.length) * 100);
+    ring.style.background = `conic-gradient(var(--teal) ${pct}%, var(--panel) ${pct}%)`;
+    ring.innerHTML = `<div style="width:88px; height:88px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; color:var(--ink);">${earnedCount}/${badges.length}</div>`;
+    document.getElementById('achRingLabel').textContent = `${pct}% of achievements unlocked`;
+  }
 }
 // Bound once (not inside renderProgressScreen, which runs on every visit) — reads the
 // current weakest subject fresh at click-time so it always reflects the latest stats.
@@ -18785,6 +19618,7 @@ async function startPastQuestionPaper(paperName){
     }
   }
   currentSetInfo = null; // no Set-locking/progress-tracking for past papers, same as Mock Test
+  pastQuestionActive = true;
   showQuizLoading('Please wait, loading this paper… this may take a moment.');
   try{
     const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=${currentMcqPost}`;
@@ -18954,7 +19788,12 @@ function updateStudyStreak(){
   try{
     localStorage.setItem('hl_streak_count', String(streak));
     localStorage.setItem('hl_streak_last_date', todayKey);
+    const longest = parseInt(localStorage.getItem('hl_longest_streak') || '0', 10);
+    if(streak > longest) localStorage.setItem('hl_longest_streak', String(streak));
   }catch(e){}
+}
+function getLongestStreak(){
+  try{ return Math.max(parseInt(localStorage.getItem('hl_longest_streak') || '0', 10), getStudyStreak()); }catch(e){ return getStudyStreak(); }
 }
 function getStudyStreak(){
   try{
@@ -18985,6 +19824,114 @@ const LP_VALUES = {
 };
 const LP_DAILY_CAP_MCQ = 300; // 30 correct MCQs/day worth — genuine daily practice still counts fully, endless grinding doesn't
 const LP_LOG_RETENTION_DAYS = 35; // enough to always compute "this month" for the current month plus buffer
+
+// ---------- Chapter-level performance tracking for My Progress's Subject Detail and Weak
+// Topics — Sets only ever stored subject-level correct/wrong counts, never per-chapter, so this
+// starts building that dataset going forward from every answer (any quiz type), the same
+// pattern already proven for Learning Points' per-subject totals. This means "Topics completed"
+// only reflects activity from this point forward, not retroactively — there's no historical
+// chapter data to recover, and pretending otherwise would be dishonest about what's known. ----
+function getChapterStats(){
+  try{ return JSON.parse(localStorage.getItem('hl_chapter_stats') || '{}'); }catch(e){ return {}; }
+}
+function saveChapterStats(stats){
+  try{ localStorage.setItem('hl_chapter_stats', JSON.stringify(stats)); }catch(e){}
+}
+function recordChapterAnswer(subject, chapter, isCorrect){
+  if(!subject || !chapter) return; // some question sources may not have Chapter populated
+  const stats = getChapterStats();
+  const key = subject + '::' + chapter;
+  if(!stats[key]) stats[key] = { subject, chapter, correct: 0, attempted: 0, confidence: 0 };
+  stats[key].attempted++;
+  if(isCorrect) stats[key].correct++;
+  saveChapterStats(stats);
+}
+function getChaptersForSubject(subject){
+  const stats = getChapterStats();
+  return Object.values(stats).filter(c => c.subject === subject);
+}
+// A chapter counts as "completed" once genuinely practiced with solid accuracy — thresholds are
+// a judgment call, not a value handed down by any existing system, since nothing like this was
+// tracked before
+const CHAPTER_COMPLETE_MIN_ATTEMPTS = 5;
+const CHAPTER_COMPLETE_MIN_ACCURACY = 70;
+function isChapterComplete(c){
+  return c.attempted >= CHAPTER_COMPLETE_MIN_ATTEMPTS && Math.round((c.correct / c.attempted) * 100) >= CHAPTER_COMPLETE_MIN_ACCURACY;
+}
+// ---------- Confidence Rating (1-5): the one piece here that genuinely can't be derived from
+// activity — only the student knows how confident they feel, so this is a direct self-rating,
+// stored on the same chapter entity as its quiz-derived accuracy. That pairing is what makes the
+// "Accuracy vs Confidence" comparison in Confidence Progress possible without a separate system. ----
+function setChapterConfidence(subject, chapter, rating){
+  const stats = getChapterStats();
+  const key = subject + '::' + chapter;
+  if(!stats[key]) stats[key] = { subject, chapter, correct: 0, attempted: 0, confidence: 0 };
+  stats[key].confidence = rating;
+  saveChapterStats(stats);
+}
+// Status is derived, not manually set, so it can never drift out of sync with the same data
+// driving everything else: Not Started (never attempted) / Ready for Revision (has a mistake
+// from this chapter due right now) / Completed (meets the accuracy+attempts bar) / Learning
+// (attempted but not there yet) — "Ready for Revision" takes priority since it's the most
+// actionable state to surface right now
+function getChapterStatus(c){
+  if(c.attempted === 0) return 'Not Started';
+  const hasDueRevision = getWrongQuestions().some(w => w.Subject === c.subject && w.Chapter === c.chapter && (!w.nextRevisionDate || w.nextRevisionDate <= todayISO()));
+  if(hasDueRevision) return 'Ready for Revision';
+  if(isChapterComplete(c)) return 'Completed';
+  return 'Learning';
+}
+
+// ---------- Daily question-count log for My Progress's trend chart — a raw count of every
+// question answered (correct+wrong+skipped combined) per day. Deliberately separate from the
+// Learning Points daily log: LP only awards on correct answers and at varying rates per activity
+// type, so it doesn't map 1:1 to "questions answered" and would give a misleading trend line. ----
+function getQuestionCountLog(){
+  try{ return JSON.parse(localStorage.getItem('hl_question_count_log') || '{}'); }catch(e){ return {}; }
+}
+function recordQuestionAnswered(){
+  const log = getQuestionCountLog();
+  const today = todayISO();
+  log[today] = (log[today] || 0) + 1;
+  const cutoff = addDaysISO(-35);
+  const pruned = {};
+  Object.keys(log).forEach(d => { if(d >= cutoff) pruned[d] = log[d]; });
+  try{ localStorage.setItem('hl_question_count_log', JSON.stringify(pruned)); }catch(e){}
+}
+function getQuestionCountForDate(dateISO){
+  return getQuestionCountLog()[dateISO] || 0;
+}
+
+// ---------- Dedicated result history for Mock Test, Past Questions, and Tournament — none of
+// these were distinguishable from general practice before; each now gets its own local log
+// recorded at the exact moment its existing completion flag/marker fires, so results feed real
+// dedicated summaries instead of disappearing into generic Set/quiz stats. ----------
+function getMockTestHistory(){
+  try{ return JSON.parse(localStorage.getItem('hl_mock_test_history') || '[]'); }catch(e){ return []; }
+}
+function logMockTestResult(score, total){
+  const log = getMockTestHistory();
+  log.unshift({ date: todayISO(), score, total, pct: total > 0 ? Math.round((score/total)*100) : 0 });
+  try{ localStorage.setItem('hl_mock_test_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+}
+function getPastQuestionHistory(){
+  try{ return JSON.parse(localStorage.getItem('hl_past_question_history') || '[]'); }catch(e){ return []; }
+}
+function logPastQuestionResult(paperName, score, total){
+  const yearMatch = paperName.match(/\d{4}/);
+  const log = getPastQuestionHistory();
+  log.unshift({ date: todayISO(), paperName, year: yearMatch ? yearMatch[0] : null, score, total, pct: total > 0 ? Math.round((score/total)*100) : 0 });
+  try{ localStorage.setItem('hl_past_question_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+}
+function getTournamentHistory(){
+  try{ return JSON.parse(localStorage.getItem('hl_tournament_history') || '[]'); }catch(e){ return []; }
+}
+function logTournamentResult(weekKey, score, total){
+  const log = getTournamentHistory();
+  log.unshift({ date: todayISO(), weekKey, score, total, pct: total > 0 ? Math.round((score/total)*100) : 0 });
+  try{ localStorage.setItem('hl_tournament_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+}
+
 function getLpData(){
   const fallback = { total: 0, dailyMcqEarned: 0, dailyMcqDate: todayISO(), dailyLog: {}, subjectPoints: {} };
   try{
@@ -19130,6 +20077,15 @@ function getScreenTimeGoals(){
 function saveScreenTimeGoals(goals){
   try{ localStorage.setItem('hl_screentime_goals', JSON.stringify(goals)); }catch(e){}
 }
+// Questions + Topics goals — kept separate from Screen Time's time-only goal since they're a
+// different concept (a count target, not a duration), reused together on the Goals screen
+function getProgressGoals(){
+  try{ return JSON.parse(localStorage.getItem('hl_progress_goals') || 'null') || { dailyQuestions: 100, weeklyQuestions: 500, dailyTopics: 3 }; }
+  catch(e){ return { dailyQuestions: 100, weeklyQuestions: 500, dailyTopics: 3 }; }
+}
+function saveProgressGoals(goals){
+  try{ localStorage.setItem('hl_progress_goals', JSON.stringify(goals)); }catch(e){}
+}
 function getFocusSessionLog(){
   try{ return JSON.parse(localStorage.getItem('hl_focus_sessions') || '[]'); }catch(e){ return []; }
 }
@@ -19173,7 +20129,7 @@ function computeProgressStats(){
   const totalAttempted = totalCorrect + totalWrong + totalSkipped;
   const overallPct = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0;
 
-  return { totalAttempted, totalCorrect, totalWrong, totalSets, strongest, weakest, overallPct, learningPoints: getLpData().total };
+  return { totalAttempted, totalCorrect, totalWrong, totalSets, strongest, weakest, overallPct, learningPoints: getLpData().total, subjectAverages };
 }
 
 // ---------- Set Selection screen — opens INSTANTLY, no waiting on question counts ----------
@@ -21285,6 +22241,8 @@ function finishQuiz(){
     } else if(a.correct){
       correct++; score += marks;
       reviewHtml.push(reviewRow(q, i, 'Correct', a.chosen));
+      recordChapterAnswer(q.Subject, q.Chapter, true);
+      recordQuestionAnswered();
       if(currentSetInfo && currentSetInfo.subject === 'Revision'){
         advanceRevisionSchedule(q); // spaced repetition — advance to the next interval, or graduate
         // A mistake-review correct answer earns "Recover a Mistake" points instead of the
@@ -21298,6 +22256,8 @@ function finishQuiz(){
     } else {
       wrong++; score -= (marks * 0.2);
       reviewHtml.push(reviewRow(q, i, 'Wrong', a.chosen));
+      recordChapterAnswer(q.Subject, q.Chapter, false);
+      recordQuestionAnswered();
       addToWrongQuestions(q, a.chosen);
     }
   });
@@ -21316,6 +22276,7 @@ function finishQuiz(){
   // ---- Weekly Tournament: submit the score once, then clear the flag ----
   if(currentTournamentWeekKey && window.submitTournamentScore){
     window.submitTournamentScore(currentTournamentWeekKey, correct, quizQuestions.length);
+    logTournamentResult(currentTournamentWeekKey, correct, quizQuestions.length);
     currentTournamentWeekKey = null;
   }
 
@@ -21378,6 +22339,12 @@ function finishQuiz(){
   if(mockTestActive){
     mockTestActive = false;
     awardLearningPoints('mockTestComplete');
+    logMockTestResult(correct, quizQuestions.length);
+  }
+  if(pastQuestionActive){
+    pastQuestionActive = false;
+    const paperName = quizQuestions[0] ? quizQuestions[0].PastPaper : 'Unknown Paper';
+    logPastQuestionResult(paperName, correct, quizQuestions.length);
   }
   if(groupChallengeActive){
     groupChallengeActive = false;
