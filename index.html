@@ -2618,6 +2618,12 @@
         <div class="dc-label">Leaderboard</div>
         <div class="dc-sub">Your rank</div>
       </a>
+      </div>
+
+      <!-- Moved conceptually to Practice — kept here as hidden originals rather than deleted,
+           since goToRevision in particular carries real async premium-check logic that would be
+           risky to duplicate. Practice's own tiles now delegate a .click() to these. -->
+      <div style="display:none;">
       <a class="dash-card hub-tile t2" href="#" id="goToBookmarks">
         <div class="dc-icon">⭐</div>
         <div class="dc-label">My Bookmarks</div>
@@ -2799,7 +2805,7 @@
 
   <!-- DAILY STUDY REMINDER SETTINGS -->
   <div class="screen" id="reminderScreen">
-    <div class="back-link" data-back="progress">← Back</div>
+    <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div class="section-title">🔔 Daily Study Reminder</div>
       <p style="color:var(--ink-soft); font-size:13px; margin-bottom:16px;">Choose a time, and we'll try to remind you to keep your streak going.</p>
@@ -2821,7 +2827,7 @@
 
   <!-- REVISION MODE -->
   <div class="screen" id="revisionScreen">
-    <div class="back-link" data-back="progress">← Back</div>
+    <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div class="section-title">🔄 Revision Mode</div>
       <p style="color:var(--ink-soft); font-size:13px; margin-bottom:16px;">Revise what matters most today.</p>
@@ -2934,7 +2940,7 @@
   </div>
 
   <div class="screen" id="myBookmarksHubScreen">
-    <div class="back-link" data-back="progress">← Back</div>
+    <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div class="section-title">🔖 My Bookmarks</div>
       <div id="mbhTotalCount" style="font-size:12px; color:var(--ink-soft); margin-bottom:12px;"></div>
@@ -3139,6 +3145,21 @@
         <div class="dc-icon">⚡</div>
         <div class="dc-label">Rapid Fire</div>
         <div class="dc-sub">Paced mini-test</div>
+      </a>
+      <a class="dash-card hub-tile t1" href="#" id="goToReminderFromPractice">
+        <div class="dc-icon">🔔</div>
+        <div class="dc-label">Daily Reminder</div>
+        <div class="dc-sub">Practice reminder</div>
+      </a>
+      <a class="dash-card hub-tile t2" href="#" id="goToStudyGroupsFromPractice">
+        <div class="dc-icon">👥</div>
+        <div class="dc-label">Study Groups</div>
+        <div class="dc-sub">With friends</div>
+      </a>
+      <a class="dash-card hub-tile t3" href="#" id="goToNotesFromPractice">
+        <div class="dc-icon">📝</div>
+        <div class="dc-label">My Notes</div>
+        <div class="dc-sub">Saved on device</div>
       </a>
       </div>
     </div>
@@ -5152,7 +5173,7 @@
 
   <!-- STUDY GROUPS -->
   <div class="screen" id="studyGroupsScreen">
-    <div class="back-link" data-back="progress">← Back</div>
+    <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div class="section-title" style="margin:0;">👥 Study Groups</div>
@@ -5347,7 +5368,7 @@
 
   <!-- MY NOTES -->
   <div class="screen" id="notesScreen">
-    <div class="back-link" data-back="progress">← Back</div>
+    <div class="back-link" data-back="practice">← Back</div>
     <div class="home-body">
       <div class="section-title">📝 My Notes</div>
       <div class="calc-field"><input type="text" id="notesSearchInput" placeholder="🔎 Search notes..." style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px;"></div>
@@ -7397,6 +7418,18 @@ document.getElementById('goToRevisionFromPractice').addEventListener('click', (e
 document.getElementById('goToBookmarksFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
   document.getElementById('goToBookmarks').click();
+});
+document.getElementById('goToReminderFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('goToReminder').click();
+});
+document.getElementById('goToStudyGroupsFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('goToStudyGroups').click();
+});
+document.getElementById('goToNotesFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('goToNotes').click();
 });
 document.getElementById('goToMistakeBookFromPractice').addEventListener('click', (e) => {
   e.preventDefault();
@@ -12359,7 +12392,7 @@ document.getElementById('goToRevision').addEventListener('click', async (e) => {
     const access = await window.checkRevisionAccess();
     if(!access.allowed){
       if(await showPremiumLockModal('🔄 Your 7-day free trial of Revision Mode has ended. Upgrade to Premium to keep using it?')){
-        premiumBackTarget = progressScreen;
+        premiumBackTarget = practiceScreen;
         showScreen(upgradeScreen);
         renderPremiumStatus();
       }
