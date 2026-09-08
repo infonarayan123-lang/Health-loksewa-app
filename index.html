@@ -3023,6 +3023,7 @@
         <p style="font-size:13px; color:var(--gold); line-height:1.6;" id="qrExamTip"></p>
       </div>
       <button class="calc-btn" id="qrCopyBtn" style="margin-top:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📋 Copy</button>
+      <button class="calc-btn" id="qrListenBtn" style="margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">🔊 Listen</button>
     </div>
   </div>
 
@@ -3673,6 +3674,7 @@
         <h4>💡 Memory Tip</h4>
         <p style="font-size:13.5px; color:var(--ink); line-height:1.6;" id="mnDetailExplain"></p>
       </div>
+      <button class="calc-btn" id="mnListenBtn" style="margin-top:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12px;">🔊 Listen</button>
 
       <div style="display:flex; gap:8px; margin:16px 0;">
         <button class="calc-btn" id="mnSaveBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">🔖 Save</button>
@@ -11296,6 +11298,10 @@ document.getElementById('mnCopyBtn').addEventListener('click', async () => {
   const text = `${currentMnemonicDetail.topic}\n${currentMnemonicDetail.trick}\n${currentMnemonicDetail.explain}`;
   try{ await navigator.clipboard.writeText(text); alert('Copied!'); }catch(e){}
 });
+document.getElementById('mnListenBtn').addEventListener('click', (e) => {
+  if(!currentMnemonicDetail) return;
+  speakText(`${currentMnemonicDetail.topic}. ${currentMnemonicDetail.trick}. ${currentMnemonicDetail.explain}`, e.currentTarget);
+});
 document.getElementById('mnToFlashcardBtn').addEventListener('click', () => {
   if(!currentMnemonicDetail) return;
   const decks = ensureDefaultFcDeck();
@@ -14349,6 +14355,9 @@ document.getElementById('qrBookmarkBtn').addEventListener('click', (e) => {
 document.getElementById('qrCopyBtn').addEventListener('click', async () => {
   const text = document.getElementById('qrDetailContent').innerText;
   try{ await navigator.clipboard.writeText(text); alert('Copied!'); }catch(e){}
+});
+document.getElementById('qrListenBtn').addEventListener('click', (e) => {
+  speakText(document.getElementById('qrDetailContent').innerText, e.currentTarget);
 });
 function renderQuickRefSearch(term){
   const q = (term || '').toLowerCase().trim();
@@ -22441,8 +22450,11 @@ function handleAnswer(letter){
   const prevAnswerLine = (mistakeReviewActive && q.lastWrongAnswer)
     ? `<p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Your previous answer: <b>${q.lastWrongAnswer}. ${q['Option' + q.lastWrongAnswer] || ''}</b> ❌</p>`
     : '';
-  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + q.CorrectAnswer}</b>${prevAnswerLine}${q.Explanation || ''}${q.Explanation ? `<button class="chat-save-btn" id="saveExplanationBtn" style="display:block; margin-top:6px;" title="Save to My Notes">🔖 Save explanation</button>` : ''}`;
+  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + q.CorrectAnswer}</b>${prevAnswerLine}${q.Explanation || ''}${q.Explanation ? `<div style="display:flex; gap:8px; margin-top:6px;"><button class="chat-save-btn" id="saveExplanationBtn" style="display:block;" title="Save to My Notes">🔖 Save explanation</button><button class="chat-save-btn" id="listenExplanationBtn" style="display:block;">🔊 Listen</button></div>` : ''}`;
   if(q.Explanation){
+    document.getElementById('listenExplanationBtn').addEventListener('click', (e) => {
+      speakText(q.Explanation, e.currentTarget);
+    });
     document.getElementById('saveExplanationBtn').addEventListener('click', (e) => {
       const btn = e.target;
       const notes = getNotes();
@@ -22864,11 +22876,29 @@ function addSaveToNotesButtonToBubble(bubble, text){
   });
   bubble.appendChild(saveBtn);
 }
-function speakText(text){
+// ---------- Voice Study Mode: the browser's own built-in text-to-speech, no external service or
+// cost. The optional `btn` parameter adds play/stop toggle behavior for buttons that want it
+// (Dictionary, Health Guide, Mnemonics) without changing anything for the existing AI Chat speak
+// button, which never passed one and keeps working exactly as before. speechSynthesis only ever
+// plays one utterance at a time page-wide, so a new call always cancels whatever was playing, and
+// resets that button's icon too if it was mid-speech. ----------
+let currentSpeakingBtn = null;
+function speakText(text, btn){
   if(!window.speechSynthesis) return;
+  const wasThisButton = btn && currentSpeakingBtn === btn;
   window.speechSynthesis.cancel(); // stop anything already playing first
+  if(currentSpeakingBtn) currentSpeakingBtn.textContent = '🔊 Listen';
+  currentSpeakingBtn = null;
+  if(wasThisButton) return; // tapping the same toggle button again just stops it
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.95;
+  if(btn){
+    utterance.onend = () => { if(currentSpeakingBtn === btn){ btn.textContent = '🔊 Listen'; currentSpeakingBtn = null; } };
+    utterance.onerror = utterance.onend;
+    currentSpeakingBtn = btn;
+    btn.textContent = '⏹ Stop';
+  }
   window.speechSynthesis.speak(utterance);
 }
 
