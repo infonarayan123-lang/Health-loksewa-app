@@ -1723,6 +1723,35 @@
     </div>
   </div>
 
+  <!-- App Lock: a real PIN gate on launch, reusing the exact hashing/entry pattern already
+       proven for locking individual Notes. Never claims to be biometric — a web app genuinely
+       can't use native fingerprint hardware the reliable way a real app can. -->
+  <div class="screen" id="appLockScreen">
+    <div class="app-loading-wrap" style="justify-content:center;">
+      <div style="font-size:40px; margin-bottom:10px;">🔐</div>
+      <div class="splash-title" style="font-size:18px;">Enter PIN</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin:8px 0 20px;">Unlock Health Loksewa to continue</p>
+      <input type="password" inputmode="numeric" maxlength="6" id="appLockPinInput" placeholder="••••" style="width:160px; text-align:center; letter-spacing:8px; font-size:22px; padding:12px; border:1.5px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); margin-bottom:10px;">
+      <p style="font-size:12px; color:var(--wrong); min-height:16px; margin-bottom:14px;" id="appLockError"></p>
+      <button class="start-btn" id="appLockUnlockBtn" style="width:160px;">Unlock</button>
+    </div>
+  </div>
+
+  <!-- First-run App Lock setup offer — shown once, skippable, never inserted into the existing
+       onboarding wizard steps to avoid touching that multi-step flow. -->
+  <div id="appLockOfferBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
+  <div id="appLockOfferModal" style="display:none; position:fixed; left:8%; right:8%; top:22%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:81; text-align:center;">
+    <div style="font-size:32px; margin-bottom:8px;">🔐</div>
+    <h4 style="margin-bottom:8px;">Set Up App Lock?</h4>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">Add a PIN so only you can open Health Loksewa. You can turn this off anytime in Profile.</p>
+    <input type="password" inputmode="numeric" maxlength="6" id="appLockOfferPinInput" placeholder="Choose a 4–6 digit PIN" style="width:100%; text-align:center; letter-spacing:4px; padding:12px; border:1.5px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); margin-bottom:10px;">
+    <p style="font-size:11.5px; color:var(--wrong); min-height:14px; margin-bottom:10px;" id="appLockOfferError"></p>
+    <div style="display:flex; gap:8px;">
+      <button class="calc-btn" id="appLockOfferSetBtn" style="margin:0; flex:1;">Set PIN</button>
+      <button class="calc-btn" id="appLockOfferSkipBtn" style="margin:0; flex:1; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Skip</button>
+    </div>
+  </div>
+
   <div class="screen" id="loginScreen">
     <div class="login-hero">
       <img src="icon-192.png" alt="Health Loksewa" class="login-logo">
@@ -2159,6 +2188,7 @@
 
       <div class="calc-card" style="margin:0 4px 18px;">
         <button class="profile-menu-item" id="menuScreenTime" style="padding:10px 4px;"><span class="pm-icon">⏱️</span> Study Time &amp; App Usage</button>
+        <button class="profile-menu-item" id="menuAppLock" style="padding:10px 4px;"><span class="pm-icon">🔐</span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
       </div>
 
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
@@ -6068,11 +6098,13 @@
           uid: user.uid, name: name, email: user.email
         }));
       }catch(e){}
+      if(window.checkAppLockOnBoot) await window.checkAppLockOnBoot();
       window.showScreen(window.moodCheckinScreen || window.postGateScreen);
       if(window.initMoodCheckin) window.initMoodCheckin();
       if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
       if(window.renderHomePremiumBanner) window.renderHomePremiumBanner();
       if(window.checkForEsewaReturnAndActivate) window.checkForEsewaReturnAndActivate();
+      if(window.maybeOfferAppLockSetup) setTimeout(window.maybeOfferAppLockSetup, 1500); // let the next screen settle first, not stack on top of it instantly
     } else {
       try{ localStorage.removeItem('hl_user'); }catch(e){}
       window.showScreen(window.loginScreen);
@@ -6837,6 +6869,7 @@ let currentMarksPerQuestion = 1; // 1 for normal Sets/GK; Mock Test sets this pe
 let currentTournamentWeekKey = null; // set only while taking a Weekly Tournament attempt
 
 const appLoadingScreen = document.getElementById('appLoadingScreen');
+const appLockScreen = document.getElementById('appLockScreen');
 const loginScreen = document.getElementById('loginScreen');
 const postGateScreen = document.getElementById('postGateScreen');
 const moodCheckinScreen = document.getElementById('moodCheckinScreen');
@@ -6999,7 +7032,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -7259,7 +7292,7 @@ const SCREEN_REFRESH_MAP = {
   }, { passive: true });
 })();
 
-const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
+const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
@@ -14545,6 +14578,69 @@ function simplePinHash(pin){
   }
   return String(hash);
 }
+
+// ---------- App Lock: a PIN gate on launch, reusing the exact hash function already proven for
+// locking individual Notes — never claims to be fingerprint/biometric, since a web app genuinely
+// can't reach native Android biometric hardware the reliable way a real installed app can.
+// Checked once per app boot (not per navigation), right after auth resolves and before the user
+// ever sees Home. ----------
+function getAppLockPinHash(){
+  try{ return localStorage.getItem('hl_app_lock_pin_hash'); }catch(e){ return null; }
+}
+function setAppLockPinHash(hash){
+  try{
+    if(hash) localStorage.setItem('hl_app_lock_pin_hash', hash);
+    else localStorage.removeItem('hl_app_lock_pin_hash');
+  }catch(e){}
+}
+function checkAppLockOnBoot(){
+  const hash = getAppLockPinHash();
+  if(!hash) return Promise.resolve(); // no PIN set — nothing to gate
+  showScreen(appLockScreen);
+  document.getElementById('appLockPinInput').value = '';
+  document.getElementById('appLockError').textContent = '';
+  setTimeout(() => document.getElementById('appLockPinInput').focus(), 200);
+  return new Promise((resolve) => {
+    const attempt = () => {
+      const pin = document.getElementById('appLockPinInput').value;
+      if(simplePinHash(pin) === hash){
+        resolve();
+      } else {
+        document.getElementById('appLockError').textContent = 'Incorrect PIN. Try again.';
+        document.getElementById('appLockPinInput').value = '';
+      }
+    };
+    document.getElementById('appLockUnlockBtn').onclick = attempt;
+    document.getElementById('appLockPinInput').onkeydown = (e) => { if(e.key === 'Enter') attempt(); };
+  });
+}
+// First-run offer — shown once ever, after the very first successful login, never inserted into
+// the existing onboarding wizard steps (kept separate to avoid touching that multi-step flow)
+function maybeOfferAppLockSetup(){
+  let alreadyOffered = false;
+  try{ alreadyOffered = localStorage.getItem('hl_app_lock_offered') === 'true'; }catch(e){}
+  if(alreadyOffered || getAppLockPinHash()) return;
+  try{ localStorage.setItem('hl_app_lock_offered', 'true'); }catch(e){}
+  document.getElementById('appLockOfferPinInput').value = '';
+  document.getElementById('appLockOfferError').textContent = '';
+  document.getElementById('appLockOfferBackdrop').style.display = 'block';
+  document.getElementById('appLockOfferModal').style.display = 'block';
+}
+document.getElementById('appLockOfferSetBtn').addEventListener('click', () => {
+  const pin = document.getElementById('appLockOfferPinInput').value;
+  if(pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)){
+    document.getElementById('appLockOfferError').textContent = 'PIN must be 4–6 digits.';
+    return;
+  }
+  setAppLockPinHash(simplePinHash(pin));
+  document.getElementById('appLockOfferBackdrop').style.display = 'none';
+  document.getElementById('appLockOfferModal').style.display = 'none';
+  alert('App Lock enabled! You can change or remove it anytime from Profile.');
+});
+document.getElementById('appLockOfferSkipBtn').addEventListener('click', () => {
+  document.getElementById('appLockOfferBackdrop').style.display = 'none';
+  document.getElementById('appLockOfferModal').style.display = 'none';
+});
 let lockNoteMode = 'set'; // 'set' or 'unlock'
 function openLockNoteModal(mode){
   lockNoteMode = mode;
@@ -16890,6 +16986,7 @@ async function refreshProfileData(){
   renderHighContrastToggle();
   renderLanguagePicker();
   renderCalendarPrefPicker();
+  document.getElementById('appLockStatusLabel').textContent = getAppLockPinHash() ? 'On' : 'Off';
   renderProfileDarkModeToggle();
   renderEyeComfortToggle();
   renderBrightnessSlider();
@@ -17551,6 +17648,41 @@ document.getElementById('menuMySavedNews').addEventListener('click', () => {
 document.getElementById('menuScreenTime').addEventListener('click', () => {
   showScreen(screenTimeScreen);
   renderScreenTimeDashboard();
+});
+document.getElementById('menuAppLock').addEventListener('click', () => {
+  const existingHash = getAppLockPinHash();
+  if(existingHash){
+    // Require the current PIN before allowing a change or removal — otherwise anyone holding
+    // the unlocked phone could just switch the lock off, defeating the point of having one
+    const currentAttempt = prompt('Enter your current App Lock PIN to continue:');
+    if(currentAttempt === null) return;
+    if(simplePinHash(currentAttempt) !== existingHash){
+      alert('Incorrect PIN.');
+      return;
+    }
+    const choice = confirm('PIN verified. Tap OK to set a NEW PIN, or Cancel to remove App Lock entirely.');
+    if(choice){
+      const newPin = prompt('Enter a new 4–6 digit PIN:');
+      if(newPin && /^\d{4,6}$/.test(newPin)){
+        setAppLockPinHash(simplePinHash(newPin));
+        alert('App Lock PIN updated.');
+      } else if(newPin !== null){
+        alert('PIN must be 4–6 digits — no changes made.');
+      }
+    } else {
+      setAppLockPinHash(null);
+      alert('App Lock removed.');
+    }
+  } else {
+    const newPin = prompt('Set a 4–6 digit App Lock PIN:');
+    if(newPin && /^\d{4,6}$/.test(newPin)){
+      setAppLockPinHash(simplePinHash(newPin));
+      alert('App Lock enabled.');
+    } else if(newPin !== null){
+      alert('PIN must be 4–6 digits — App Lock not enabled.');
+    }
+  }
+  refreshProfileData();
 });
 
 let stChartMode = 'total';
