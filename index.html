@@ -2403,6 +2403,24 @@
     </div>
   </div>
 
+  <!-- Read Carefully reminder — shown once before Subject-wise MCQs / Past Questions / Mock Test
+       each day, not every single time (that would just become noise to dismiss). -->
+  <div id="readCarefullyBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
+  <div id="readCarefullyModal" style="display:none; position:fixed; left:8%; right:8%; top:20%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:81;">
+    <div style="text-align:center; font-size:28px; margin-bottom:8px;">📋</div>
+    <h4 style="text-align:center; margin-bottom:14px;">Before You Start</h4>
+    <div style="font-size:12.5px; color:var(--ink); line-height:1.7; margin-bottom:16px;">
+      <div><b>1.</b> Read each question carefully, all the way through.</div>
+      <div><b>2.</b> Check all four options before choosing one.</div>
+      <div><b>3.</b> Watch for words like "NOT" or "EXCEPT."</div>
+      <div><b>4.</b> Review the explanation after answering, even if correct.</div>
+    </div>
+    <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;">
+      <input type="checkbox" id="readCarefullyDontShowToday"> Don't show this again today
+    </label>
+    <button class="start-btn" id="readCarefullyContinueBtn" style="margin-top:0;">Got It — Continue</button>
+  </div>
+
   <!-- Health Day startup card — a small once-per-day prompt shown on the way into Home when a
        health day is within 7 days, not a full screen/big popup (matching the architecture
        document's explicit "keep it professional, not annoying" guidance). -->
@@ -17053,6 +17071,28 @@ function selectPricingPlan(index){
 // this, showing the REAL current monthly price (with genuine strikethrough + discount badge
 // when a discount is active), instead of the old hardcoded "NPR 200/month" text that couldn't
 // reflect price or discount changes. ----------
+// ---------- Read Carefully reminder: shown once per day before Subject-wise MCQs, Past
+// Questions, or Mock Test specifically — not Revision/Mistake/Battle/Rapid Fire, which are
+// repeat-practice flows where this would just become something to dismiss reflexively every time.
+async function showReadCarefullyReminder(){
+  let dismissedDate = null;
+  try{ dismissedDate = localStorage.getItem('hl_read_carefully_dismissed_date'); }catch(e){}
+  if(dismissedDate === todayISO()) return; // already acknowledged today
+
+  document.getElementById('readCarefullyBackdrop').style.display = 'block';
+  document.getElementById('readCarefullyModal').style.display = 'block';
+  document.getElementById('readCarefullyDontShowToday').checked = false;
+  return new Promise((resolve) => {
+    document.getElementById('readCarefullyContinueBtn').onclick = () => {
+      if(document.getElementById('readCarefullyDontShowToday').checked){
+        try{ localStorage.setItem('hl_read_carefully_dismissed_date', todayISO()); }catch(e){}
+      }
+      document.getElementById('readCarefullyBackdrop').style.display = 'none';
+      document.getElementById('readCarefullyModal').style.display = 'none';
+      resolve();
+    };
+  });
+}
 async function showPremiumLockModal(message){
   document.getElementById('premiumLockMessage').textContent = message;
   await ensurePricingPlansLoaded();
@@ -19483,6 +19523,7 @@ async function startMockTest(post){
       return;
     }
   }
+  await showReadCarefullyReminder();
   currentSetInfo = null;
   mockTestActive = true;
   showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
@@ -19617,6 +19658,7 @@ async function startPastQuestionPaper(paperName){
       return;
     }
   }
+  await showReadCarefullyReminder();
   currentSetInfo = null; // no Set-locking/progress-tracking for past papers, same as Mock Test
   pastQuestionActive = true;
   showQuizLoading('Please wait, loading this paper… this may take a moment.');
@@ -20390,6 +20432,7 @@ function generateCertificate(subject, totalSets){
 // ---------- Start a specific Set (fixed 50 questions, stable order per set) ----------
 // This is the ONE moment a network fetch is genuinely unavoidable — we need real questions.
 async function startSet(subject, setNumber, totalSets){
+  await showReadCarefullyReminder();
   const cacheKey = 'hl_set_cache_' + progressKey(subject) + '_' + setNumber;
   showQuizLoading('Loading Question 1…');
   const FIRST_BATCH = 5;
