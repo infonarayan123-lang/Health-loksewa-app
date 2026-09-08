@@ -2033,6 +2033,11 @@
           <div class="dc-label">Handbook</div>
           <div class="dc-sub">Formulas, Quick References &amp; more</div>
         </button>
+        <button class="dash-card c-video" id="cardWhatsNew">
+          <div class="dc-icon">🆕</div>
+          <div class="dc-label">What's New</div>
+          <div class="dc-sub" id="whatsNewHomeSub">App updates &amp; features</div>
+        </button>
         <div class="dash-card c-qotd qotd-card" id="cardQotd">
           <div class="qotd-card-header">
             <div class="dc-icon">🎯</div>
@@ -5755,6 +5760,21 @@
     </div>
   </div>
 
+  <div class="screen" id="whatsNewScreen">
+    <div class="back-link" data-back="home">← Back to Home</div>
+    <div class="home-body">
+      <div class="section-title">🆕 What's New</div>
+      <div id="whatsNewList" style="margin-bottom:20px;">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="section-title" style="font-size:14px; margin:0;">📁 Archive</div>
+        <button class="calc-btn" id="whatsNewArchiveToggle" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Show</button>
+      </div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:10px;">Older updates you've already read stay here — nothing is ever deleted.</p>
+      <div id="whatsNewArchiveList" style="display:none;"></div>
+    </div>
+  </div>
 
   <!-- SYLLABUS SCREEN -->
   <div class="screen" id="syllabusScreen">
@@ -6851,7 +6871,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxF8jQoFjFWrvng49be2bPYX0UUIpVYKCmb3AXzJ7Tt5UInrHZzL4gB2Q7rJoCJtCFDvg/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbx3x65h1i45Dyk6j0Zs0gWahe0yLLnHvhD9FAgjP6leJKp8SSPUjsoSI_GaoJULfyMGpw/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -7022,6 +7042,7 @@ const examRevisionScreen = document.getElementById('examRevisionScreen');
 const sevenDayRevisionScreen = document.getElementById('sevenDayRevisionScreen');
 const revisionTopicPickScreen = document.getElementById('revisionTopicPickScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
+const whatsNewScreen = document.getElementById('whatsNewScreen');
 const subjectPickScreen = document.getElementById('subjectPickScreen');
 const pastQuestionsPostScreen = document.getElementById('pastQuestionsPostScreen');
 const pastQuestionsYearScreen = document.getElementById('pastQuestionsYearScreen');
@@ -7032,7 +7053,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -18467,6 +18488,79 @@ async function loadNotifications(){
     // Keep showing cached/instant data — no need to alarm the user
   }
 }
+
+// ---------- What's New: a changelog feed, deliberately separate from Notifications (that one
+// accumulates daily reminders; this one is feature announcements with their own lifecycle).
+// "Read" is counted once per screen visit while an update is still in the New list — after 2
+// visits it moves to Archive, but the entry itself is NEVER deleted, only reclassified, so
+// nothing an admin wrote is ever actually lost. ----------
+function getUpdateReadCounts(){
+  try{ return JSON.parse(localStorage.getItem('hl_update_read_counts') || '{}'); }catch(e){ return {}; }
+}
+function saveUpdateReadCounts(counts){
+  try{ localStorage.setItem('hl_update_read_counts', JSON.stringify(counts)); }catch(e){}
+}
+function updateKeyFor(u){ return String(u.ID || u.Title || ''); }
+async function renderWhatsNew(){
+  const wrap = document.getElementById('whatsNewList');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  let updates = [];
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=appUpdates`);
+    updates = await res.json();
+  }catch(e){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load updates. Check your connection.</p>`;
+    return;
+  }
+  updates = updates.filter(u => u && u.Title);
+  updates.sort((a, b) => new Date(b.Date || 0) - new Date(a.Date || 0));
+
+  const counts = getUpdateReadCounts();
+  const newOnes = updates.filter(u => (counts[updateKeyFor(u)] || 0) < 2);
+  const archived = updates.filter(u => (counts[updateKeyFor(u)] || 0) >= 2);
+
+  wrap.innerHTML = newOnes.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No new updates right now — check the archive below for past ones.</p>`
+    : newOnes.map(u => `
+      <div class="content-card" style="margin-bottom:10px;">
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:3px;">${u.Date ? formatDualDate(new Date(u.Date)) : ''}</div>
+        <h4 style="margin-bottom:6px;">${u.Title}</h4>
+        <p style="font-size:13px; color:var(--ink); line-height:1.5;">${u.Description || ''}</p>
+      </div>
+    `).join('');
+
+  document.getElementById('whatsNewArchiveList').innerHTML = archived.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:12.5px;">Nothing archived yet.</p>`
+    : archived.map(u => `
+      <div class="content-card" style="margin-bottom:8px; opacity:0.75;">
+        <div style="font-size:10px; color:var(--ink-soft); margin-bottom:3px;">${u.Date ? formatDualDate(new Date(u.Date)) : ''}</div>
+        <h4 style="margin-bottom:4px; font-size:13px;">${u.Title}</h4>
+        <p style="font-size:12px; color:var(--ink-soft); line-height:1.4;">${u.Description || ''}</p>
+      </div>
+    `).join('');
+
+  // Count this as one more "read" for every update still in the New list — one increment per
+  // screen visit, not per render call, so re-rendering the same visit doesn't over-count
+  newOnes.forEach(u => {
+    const key = updateKeyFor(u);
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  saveUpdateReadCounts(counts);
+
+  const homeSub = document.getElementById('whatsNewHomeSub');
+  if(homeSub) homeSub.textContent = newOnes.length > 0 ? `${newOnes.length} new` : 'App updates & features';
+}
+document.getElementById('cardWhatsNew').addEventListener('click', () => {
+  showScreen(whatsNewScreen);
+  renderWhatsNew();
+});
+document.getElementById('whatsNewArchiveToggle').addEventListener('click', () => {
+  const list = document.getElementById('whatsNewArchiveList');
+  const showing = list.style.display === 'block';
+  list.style.display = showing ? 'none' : 'block';
+  document.getElementById('whatsNewArchiveToggle').textContent = showing ? 'Show' : 'Hide';
+});
+
 
 // ---------- Unread notification badge (red count on the bell icon) ----------
 async function updateNotificationBadge(){
