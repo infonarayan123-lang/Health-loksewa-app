@@ -6049,6 +6049,7 @@
       <div class="feedback" id="feedbackBox"></div>
     </div>
     <div class="quiz-nav">
+      <button class="calc-btn" id="skipQuestionBtn" style="margin:0 0 8px; background:var(--panel); color:var(--ink-soft); border:1.5px dashed var(--line); font-size:12.5px;">⏭️ Skip this question</button>
       <button class="next-btn" id="nextBtn" disabled>Select an answer, then tap to continue</button>
     </div>
   </div>
@@ -22686,6 +22687,10 @@ function renderQuestion(){
   document.getElementById('nextBtn').textContent =
     currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Select an answer, then tap to continue';
 
+  // Skip is available on every quiz type (Sets/Mock Test/Past Questions/Revision/etc.) until the
+  // current question is answered — once answered there's nothing left to skip
+  document.getElementById('skipQuestionBtn').style.display = 'block';
+
   // "I Don't Know" is shown only during Revision Mode sessions — better information than
   // forcing a guess, and tagged distinctly from a wrong answer so it can inform priority later
   document.getElementById('idkBtn').style.display = revisionModeActive ? 'block' : 'none';
@@ -22743,6 +22748,7 @@ function handleAnswer(letter){
 
   answers[currentIndex] = { correct: isCorrect, chosen: letter, correctAnswer: q.CorrectAnswer, idk: letter === 'IDK' };
   document.getElementById('idkBtn').style.display = 'none';
+  document.getElementById('skipQuestionBtn').style.display = 'none'; // nothing left to skip once answered
 
   document.querySelectorAll('.option').forEach(opt => {
     opt.classList.add('disabled');
@@ -22791,6 +22797,20 @@ function handleAnswer(letter){
 document.getElementById('idkBtn').addEventListener('click', () => handleAnswer('IDK'));
 
 document.getElementById('nextBtn').addEventListener('click', () => {
+  if(currentIndex < quizQuestions.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    clearInterval(timerInterval);
+    finishQuiz();
+  }
+});
+// Skip: deliberately leaves answers[currentIndex] as null (never sets it) and just advances —
+// finishQuiz()'s existing results loop already treats any null answer as "Skipped" with no score
+// deduction and no chapter/accuracy tracking, so nothing new was needed there, only a real way
+// for the user to reach that state mid-quiz rather than only via running out of time
+document.getElementById('skipQuestionBtn').addEventListener('click', () => {
+  if(answers[currentIndex] !== null) return; // already answered — nothing to skip
   if(currentIndex < quizQuestions.length - 1){
     currentIndex++;
     renderQuestion();
