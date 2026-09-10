@@ -15,6 +15,11 @@
     --bg:#0B1526;
     --panel:#13233F;
     --panel-elevated:#1B2F52;
+    /* Always white regardless of theme, on purpose — panel-elevated is intentionally a fixed
+       dark navy across every theme (including light mode), so text on it must stay fixed light
+       too. Using --ink here would go dark-on-dark in light mode, where --ink correctly becomes a
+       dark color for readability against light panels but panel-elevated never lightens to match. */
+    --ink-on-elevated:#FFFFFF;
     --ink:#FFFFFF;
     --ink-soft:#E2E8F0;
     --ink-muted:#64748B;
@@ -2488,10 +2493,10 @@
        and discount badge when a discount is active — not static text that goes stale. -->
   <div id="premiumLockBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
   <div id="premiumLockModal" style="display:none; position:fixed; left:8%; right:8%; top:25%; background:var(--panel-elevated); border-radius:16px; padding:24px; z-index:81; text-align:center;">
-    <div id="premiumLockMessage" style="font-size:13.5px; color:var(--ink); margin-bottom:16px; line-height:1.5;"></div>
+    <div id="premiumLockMessage" style="font-size:13.5px; color:var(--ink-on-elevated); margin-bottom:16px; line-height:1.5;"></div>
     <div id="premiumLockPriceWrap" style="margin-bottom:18px;">
-      <span id="premiumLockBasePrice" style="display:none; font-size:13px; color:var(--ink-soft); text-decoration:line-through; margin-right:8px;"></span>
-      <span id="premiumLockFinalPrice" style="font-size:20px; font-weight:800; color:var(--ink);"></span>
+      <span id="premiumLockBasePrice" style="display:none; font-size:13px; color:var(--ink-on-elevated); opacity:0.7; text-decoration:line-through; margin-right:8px;"></span>
+      <span id="premiumLockFinalPrice" style="font-size:20px; font-weight:800; color:var(--ink-on-elevated);"></span>
       <span id="premiumLockDiscountBadge" style="display:none; margin-left:6px; font-size:11px; font-weight:700; color:#fff; background:var(--crimson); padding:2px 8px; border-radius:10px;"></span>
     </div>
     <div style="display:flex; gap:8px;">
@@ -2505,14 +2510,14 @@
   <div id="readCarefullyBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
   <div id="readCarefullyModal" style="display:none; position:fixed; left:8%; right:8%; top:20%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:81;">
     <div style="text-align:center; font-size:28px; margin-bottom:8px;">📋</div>
-    <h4 style="text-align:center; margin-bottom:14px;">Before You Start</h4>
-    <div style="font-size:12.5px; color:var(--ink); line-height:1.7; margin-bottom:16px;">
+    <h4 style="text-align:center; margin-bottom:14px; color:var(--ink-on-elevated);">Before You Start</h4>
+    <div style="font-size:12.5px; color:var(--ink-on-elevated); line-height:1.7; margin-bottom:16px;">
       <div><b>1.</b> Read each question carefully, all the way through.</div>
       <div><b>2.</b> Check all four options before choosing one.</div>
       <div><b>3.</b> Watch for words like "NOT" or "EXCEPT."</div>
       <div><b>4.</b> Review the explanation after answering, even if correct.</div>
     </div>
-    <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-soft); margin-bottom:16px;">
+    <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-on-elevated); opacity:0.8; margin-bottom:16px;">
       <input type="checkbox" id="readCarefullyDontShowToday"> Don't show this again today
     </label>
     <button class="start-btn" id="readCarefullyContinueBtn" style="margin-top:0;">Got It — Continue</button>
