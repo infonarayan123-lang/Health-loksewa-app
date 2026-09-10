@@ -3678,6 +3678,11 @@
         <div class="dc-label">Health Dictionary</div>
         <div class="dc-sub">Reference PDFs</div>
       </a>
+      <a class="dash-card hub-tile t5" href="#" id="goToEnNpDictionaryFromHub">
+        <div class="dc-icon">🇳🇵</div>
+        <div class="dc-label">English-Nepali</div>
+        <div class="dc-sub">Term glossary</div>
+      </a>
       <a class="dash-card hub-tile t5" href="#" id="goToFaqsFromHub">
         <div class="dc-icon">❓</div>
         <div class="dc-label">FAQs</div>
@@ -3858,6 +3863,19 @@
       </div>
       <p style="font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;">📄 Dictionary PDFs</p>
       <div id="dictionaryPdfLinks"></div>
+    </div>
+  </div>
+
+  <!-- English-Nepali Dictionary: a curated term glossary, not a general "type anything, translate
+       anything" tool — that would need a real paid translation API (e.g. Google Translate API)
+       not currently part of this app's infrastructure. Honestly labeled as a term list. -->
+  <div class="screen" id="enNpDictionaryScreen">
+    <div class="back-link" data-back="studyResources">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🇳🇵 English-Nepali Dictionary</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:14px;">A curated glossary of exam-relevant terms — not a general translator for arbitrary text.</p>
+      <input type="text" id="enNpSearchBox" placeholder="🔍 Search in English or Nepali…" style="width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:9px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13.5px; margin-bottom:14px;">
+      <div id="enNpResultsList"></div>
     </div>
   </div>
 
@@ -6962,7 +6980,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbx3x65h1i45Dyk6j0Zs0gWahe0yLLnHvhD9FAgjP6leJKp8SSPUjsoSI_GaoJULfyMGpw/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzoz3-cIVPB5ysy5Tbb3B89hThpKYy2F26YImy5evJ0TAfTQ8nbQ2y2D2iw1IAWhOt1tQ/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -7055,6 +7073,7 @@ const healthDaysScreen = document.getElementById('healthDaysScreen');
 const healthDayDetailScreen = document.getElementById('healthDayDetailScreen');
 const healthDayCalendarScreen = document.getElementById('healthDayCalendarScreen');
 const dictionaryScreen = document.getElementById('dictionaryScreen');
+const enNpDictionaryScreen = document.getElementById('enNpDictionaryScreen');
 const calculatorScreen = document.getElementById('calculatorScreen');
 const basicCalcScreen = document.getElementById('basicCalcScreen');
 const bmiCalcScreen = document.getElementById('bmiCalcScreen');
@@ -7145,7 +7164,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -7417,7 +7436,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
+  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
@@ -8710,6 +8729,42 @@ document.getElementById('goToDictionaryFromHub').addEventListener('click', (e) =
   e.preventDefault();
   showScreen(dictionaryScreen);
 });
+// ---------- English-Nepali Dictionary: cached-first (matching the app's established pattern for
+// Sheet-driven reference content — instant from cache, quietly refreshed in the background) ----
+let enNpTerms = [];
+document.getElementById('goToEnNpDictionaryFromHub').addEventListener('click', async (e) => {
+  e.preventDefault();
+  showScreen(enNpDictionaryScreen);
+  document.getElementById('enNpSearchBox').value = '';
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem('hl_cache_en_np_dict') || 'null'); }catch(err){}
+  if(cached){ enNpTerms = cached; renderEnNpResults(''); }
+  else document.getElementById('enNpResultsList').innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=enNpDictionary`);
+    enNpTerms = await res.json();
+    localStorage.setItem('hl_cache_en_np_dict', JSON.stringify(enNpTerms));
+    renderEnNpResults(document.getElementById('enNpSearchBox').value);
+  }catch(err){
+    if(!cached) document.getElementById('enNpResultsList').innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Could not load the dictionary. Check your connection.</p>`;
+  }
+});
+function renderEnNpResults(term){
+  const wrap = document.getElementById('enNpResultsList');
+  const q = (term || '').toLowerCase().trim();
+  const matches = enNpTerms.filter(t => !q || (t.English || '').toLowerCase().includes(q) || (t.Nepali || '').includes(term.trim()));
+  if(matches.length === 0){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">No matching terms found in the glossary.</p>`;
+    return;
+  }
+  wrap.innerHTML = matches.slice(0, 200).map(t => `
+    <div class="content-card" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:13.5px;">${t.English || ''}</span>
+      <span style="font-size:13.5px; font-weight:700; color:var(--teal);">${t.Nepali || ''}</span>
+    </div>
+  `).join('');
+}
+document.getElementById('enNpSearchBox').addEventListener('input', (e) => renderEnNpResults(e.target.value));
 // ---------- Calculator Hub ----------
 document.getElementById('goToBasicCalc').addEventListener('click', (e) => {
   e.preventDefault();
