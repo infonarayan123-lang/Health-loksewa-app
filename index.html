@@ -15221,6 +15221,7 @@ function presentAppLockScreen(settings){
   return appLockPendingPromise;
 }
 async function presentAppLockScreenInner(settings){
+  const screenBeforeLock = document.querySelector('.screen.active'); // remembered so unlock can return here directly — needed for the auto-lock-after-use case, where nothing else is waiting to navigate anywhere afterward
   showScreen(appLockScreen);
   const bioBtn = document.getElementById('appLockBiometricBtn');
   const pinRow = document.getElementById('appLockPinRow');
@@ -15237,6 +15238,16 @@ async function presentAppLockScreenInner(settings){
       const s = getAppLockSettings();
       s.lastUnlockTime = Date.now();
       saveAppLockSettings(s);
+      // This is the actual fix: previously only resolve() ran here, with nothing navigating away
+      // from the lock screen. At boot time that was invisible, because the caller (updateAuthUI)
+      // separately shows Home right after the await — but for auto-lock-after-use, triggered by
+      // the visibility handler with nobody awaiting it, NOTHING else was ever bringing the screen
+      // back. The unlock "succeeded" internally, but the screen just stayed locked forever — the
+      // exact "works once, breaks after leaving it a minute" symptom being reported. Restoring
+      // the screen that was active before locking fixes that path; at boot time this briefly
+      // shows the loading screen before updateAuthUI's own navigation immediately overrides it,
+      // which is harmless.
+      if(screenBeforeLock && screenBeforeLock !== appLockScreen) showScreen(screenBeforeLock);
       resolve();
     };
     const attemptPin = () => {
