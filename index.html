@@ -5326,6 +5326,27 @@
       <div id="tournamentLeaderboard">
         <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
       </div>
+      <button class="calc-btn" id="goToMonthlyTournamentBtn" style="margin-top:18px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:12.5px;">📅 Go to Monthly Tournament →</button>
+    </div>
+  </div>
+
+  <!-- Monthly Tournament: a genuinely separate, larger competition from the Weekly one above —
+       its own questions, own entries, own leaderboard. Deliberately labeled "Monthly Tournament"
+       consistently (never "Championship"), to stay distinguishable from the separate Monthly
+       Championship rewards layered on the general Leaderboard elsewhere in the app. -->
+  <div class="screen" id="monthlyTournamentScreen">
+    <div class="back-link" data-back="tournament">← Back</div>
+    <div class="home-body">
+      <div class="stats-grid" style="margin-bottom:16px;" id="monthlyTournamentStatsGrid"></div>
+      <div class="tournament-hero">
+        <h2 id="monthlyTournamentHeroTitle">📅 Monthly PHO Tournament</h2>
+        <p>200 questions · A bigger monthly challenge</p>
+      </div>
+      <div id="monthlyTournamentActionArea"></div>
+      <div class="section-title" style="margin-top:20px;">This Month's Leaderboard</div>
+      <div id="monthlyTournamentLeaderboard">
+        <p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>
+      </div>
     </div>
   </div>
 
@@ -6477,6 +6498,73 @@
     }
   };
 
+  // ---- Monthly Tournament: a genuinely separate collection from Weekly's tournamentEntries —
+  // not a shared store distinguished by a type field, an actually independent competition with
+  // its own entries/leaderboard/rank, matching the document's own framing of Monthly as a
+  // distinct, larger event rather than a relabeled version of Weekly. ----
+  window.submitMonthlyTournamentScore = async function(monthKey, score, totalQuestions){
+    const user = auth.currentUser;
+    if(!user) return false;
+    try{
+      await setDoc(doc(db, 'monthlyTournamentEntries', monthKey + '_' + user.uid), {
+        monthKey: monthKey,
+        uid: user.uid,
+        name: user.displayName || 'Student',
+        score: score,
+        totalQuestions: totalQuestions,
+        submittedAt: new Date().toISOString()
+      });
+      return true;
+    }catch(err){
+      return false;
+    }
+  };
+  window.hasEnteredMonthlyTournament = async function(monthKey){
+    const user = auth.currentUser;
+    if(!user) return false;
+    try{
+      const snap = await getDoc(doc(db, 'monthlyTournamentEntries', monthKey + '_' + user.uid));
+      return snap.exists();
+    }catch(err){
+      return false;
+    }
+  };
+  window.fetchMonthlyTournamentLeaderboard = async function(monthKey){
+    try{
+      const q = query(
+        collection(db, 'monthlyTournamentEntries'),
+        where('monthKey', '==', monthKey),
+        orderBy('score', 'desc'),
+        limit(10)
+      );
+      const snap = await getDocs(q);
+      const results = [];
+      snap.forEach(docSnap => results.push(docSnap.data()));
+      return results;
+    }catch(err){
+      return [];
+    }
+  };
+  window.fetchMyMonthlyTournamentRank = async function(monthKey){
+    const user = auth.currentUser;
+    if(!user) return null;
+    try{
+      const q = query(
+        collection(db, 'monthlyTournamentEntries'),
+        where('monthKey', '==', monthKey),
+        orderBy('score', 'desc'),
+        limit(200)
+      );
+      const snap = await getDocs(q);
+      const results = [];
+      snap.forEach(docSnap => results.push(docSnap.data()));
+      const myIndex = results.findIndex(r => r.uid === user.uid);
+      return myIndex === -1 ? null : myIndex + 1;
+    }catch(err){
+      return null;
+    }
+  };
+
   // ---- Study Groups: create, join, and view a shared group leaderboard ----
   function generateGroupCode(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars like O/0, I/1
@@ -7113,7 +7201,7 @@
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzoz3-cIVPB5ysy5Tbb3B89hThpKYy2F26YImy5evJ0TAfTQ8nbQ2y2D2iw1IAWhOt1tQ/exec";
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbz4YQp-06PGx-fXg-H2ZxrbZWjHwjtUmOA-bk4mOQlJPS1xDNazTM-P9d2TpU8z6lInlQ/exec";
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -7129,6 +7217,7 @@ let secondsLeft = 0;
 let currentSetInfo = null; // { subject, setNumber, totalSets } when running a locked Set; null otherwise
 let currentMarksPerQuestion = 1; // 1 for normal Sets/GK; Mock Test sets this per post (PHO=1, others=2)
 let currentTournamentWeekKey = null; // set only while taking a Weekly Tournament attempt
+let currentMonthlyTournamentMonthKey = null; // set only while taking a Monthly Tournament attempt — a genuinely separate flag, not shared with Weekly's
 
 const appLoadingScreen = document.getElementById('appLoadingScreen');
 const appLockScreen = document.getElementById('appLockScreen');
@@ -7267,6 +7356,7 @@ const safetySignalScreen = document.getElementById('safetySignalScreen');
 const faqsScreen = document.getElementById('faqsScreen');
 const tournamentPostScreen = document.getElementById('tournamentPostScreen');
 const tournamentScreen = document.getElementById('tournamentScreen');
+const monthlyTournamentScreen = document.getElementById('monthlyTournamentScreen');
 const studyGroupsScreen = document.getElementById('studyGroupsScreen');
 const groupCreateScreen = document.getElementById('groupCreateScreen');
 const groupPreviewScreen = document.getElementById('groupPreviewScreen');
@@ -7301,13 +7391,13 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen };
+const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen, tournament: tournamentScreen };
 let docViewerBackTarget = homeScreen;
 let currentDocViewerItem = null;
 let setSelectBackTarget = subjectPickScreen;
@@ -7574,7 +7664,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -8466,7 +8556,12 @@ function renderTournamentPosts(){
 
 async function renderTournamentScreen(){
   const postInfo = TOURNAMENT_POSTS.find(p => p.key === currentTournamentPost);
+  // Question count and timing now match this post's real exam pattern — the same MOCK_POSTS
+  // config Mock Test itself uses, so both features draw from one shared source of truth rather
+  // than two separately-maintained numbers that could drift apart
+  const mockConfig = MOCK_POSTS.find(p => p.key === currentTournamentPost) || { questionCount: 50, minutes: 60 };
   document.getElementById('tournamentHeroTitle').textContent = '🏆 Weekly ' + (postInfo ? postInfo.label : 'PHO') + ' Championship';
+  document.querySelector('#tournamentScreen .tournament-hero p').textContent = `${mockConfig.questionCount} questions · ${mockConfig.minutes} minutes · Same for everyone this week`;
   renderTournamentStats();
 
   const actionArea = document.getElementById('tournamentActionArea');
@@ -8474,7 +8569,7 @@ async function renderTournamentScreen(){
   actionArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center;">Loading…</p>`;
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=weeklyTournamentQuestions&post=${currentTournamentPost}`);
+    const res = await fetch(`${SHEET_API_URL}?action=weeklyTournamentQuestions&post=${currentTournamentPost}&count=${mockConfig.questionCount}`);
     const data = await res.json();
     const weekKey = data.weekKey;
 
@@ -8490,7 +8585,7 @@ async function renderTournamentScreen(){
     } else {
       actionArea.innerHTML = `<button class="start-btn" id="startTournamentBtn">Start This Week's Tournament</button>`;
       document.getElementById('startTournamentBtn').addEventListener('click', () => {
-        startTournament(data.questions, weekKey);
+        startTournament(data.questions, weekKey, mockConfig.minutes);
       });
     }
 
@@ -8538,12 +8633,99 @@ function renderTournamentStats(){
     <div class="stat-tile"><div class="st-num">${stats.wins}</div><div class="st-label">Perfect Scores</div></div>
   `;
 }
+document.getElementById('goToMonthlyTournamentBtn').addEventListener('click', () => {
+  showScreen(monthlyTournamentScreen);
+  renderMonthlyTournamentScreen();
+});
+async function renderMonthlyTournamentScreen(){
+  const postInfo = TOURNAMENT_POSTS.find(p => p.key === currentTournamentPost);
+  // Monthly is framed as a bigger version of Weekly throughout the original document (its own
+  // PHO example is exactly double Weekly's numbers on both question count and time) — derived
+  // that way here too, rather than as a separately-maintained set of numbers that could drift
+  // out of proportion to Weekly's real per-post pattern
+  const weeklyConfig = MOCK_POSTS.find(p => p.key === currentTournamentPost) || { questionCount: 50, minutes: 60 };
+  const mockConfig = { questionCount: weeklyConfig.questionCount * 2, minutes: weeklyConfig.minutes * 2 };
+  document.getElementById('monthlyTournamentHeroTitle').textContent = '📅 Monthly ' + (postInfo ? postInfo.label : 'PHO') + ' Tournament';
+  document.querySelector('#monthlyTournamentScreen .tournament-hero p').textContent = `${mockConfig.questionCount} questions · ${mockConfig.minutes} minutes · A bigger monthly challenge`;
+  renderMonthlyTournamentStats();
 
-function startTournament(questions, weekKey){
+  const actionArea = document.getElementById('monthlyTournamentActionArea');
+  const lbArea = document.getElementById('monthlyTournamentLeaderboard');
+  actionArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center;">Loading…</p>`;
+
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=monthlyTournamentQuestions&post=${currentTournamentPost}&count=${mockConfig.questionCount}`);
+    const data = await res.json();
+    const monthKey = data.monthKey;
+
+    if(!monthKey || data.questions.length === 0){
+      actionArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center;">Monthly Tournament questions aren't ready yet — check back soon!</p>`;
+      return;
+    }
+
+    const alreadyEntered = window.hasEnteredMonthlyTournament ? await window.hasEnteredMonthlyTournament(monthKey) : false;
+
+    if(alreadyEntered){
+      actionArea.innerHTML = `<div class="content-card" style="text-align:center;"><p style="color:var(--correct); font-weight:700;">✅ You've already entered this month's tournament!</p><p style="color:var(--ink-soft); font-size:12.5px; margin-top:4px;">Come back next month for a new challenge.</p></div>`;
+    } else {
+      actionArea.innerHTML = `<button class="start-btn" id="startMonthlyTournamentBtn">Start This Month's Tournament</button>`;
+      document.getElementById('startMonthlyTournamentBtn').addEventListener('click', () => {
+        startMonthlyTournament(data.questions, monthKey, mockConfig.minutes);
+      });
+    }
+
+    const entries = window.fetchMonthlyTournamentLeaderboard ? await window.fetchMonthlyTournamentLeaderboard(monthKey) : [];
+    let myName = '';
+    try{ myName = JSON.parse(localStorage.getItem('hl_user') || '{}').name || ''; }catch(e){}
+    if(entries.length === 0){
+      lbArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No entries yet this month — be the first!</p>`;
+    } else {
+      const medalRanks = ['top1','top2','top3'];
+      lbArea.innerHTML = entries.map((r, i) => {
+        const isYou = r.name === myName;
+        const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+        return `
+          <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
+            <div class="lb-rank ${medalRanks[i] || ''}">${rankIcon}</div>
+            <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
+            <div class="lb-pct">${r.score}/${r.totalQuestions}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    const myTop10Index = entries.findIndex(r => r.name === myName);
+    if(myTop10Index !== -1){
+      updateBestMonthlyTournamentRank(myTop10Index + 1);
+    } else if(alreadyEntered && window.fetchMyMonthlyTournamentRank){
+      const rank = await window.fetchMyMonthlyTournamentRank(monthKey);
+      if(rank) updateBestMonthlyTournamentRank(rank);
+    }
+    renderMonthlyTournamentStats();
+  }catch(err){
+    actionArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center;">Could not load the tournament. Check your internet connection.</p>`;
+  }
+}
+function renderMonthlyTournamentStats(){
+  const stats = getMonthlyTournamentStats();
+  document.getElementById('monthlyTournamentStatsGrid').innerHTML = `
+    <div class="stat-tile"><div class="st-num">${stats.totalPoints.toLocaleString()}</div><div class="st-label">Tournament Points</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.bestRank ? '#' + stats.bestRank : '—'}</div><div class="st-label">Best Rank</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.tournamentsPlayed}</div><div class="st-label">Played</div></div>
+    <div class="stat-tile"><div class="st-num">${stats.wins}</div><div class="st-label">Perfect Scores</div></div>
+  `;
+}
+
+function startTournament(questions, weekKey, minutes){
   currentSetInfo = null;
   currentTournamentWeekKey = weekKey;
   currentMarksPerQuestion = 1;
   launchQuiz(questions, 'Weekly Tournament', 0, 0);
+  // Override launchQuiz's generic per-question pace estimate with the real, fixed exam-length
+  // timer for this post — matching Mock Test's exact approach (secondsLeft = minutes * 60) rather
+  // than a pace guess. Done as a post-launchQuiz override, not a change to launchQuiz itself,
+  // since that function is shared by several other callers (Battle, Speed Challenge, etc.) who
+  // still need their own timing behavior untouched.
+  if(minutes) secondsLeft = minutes * 60;
 }
 
 document.getElementById('goToFormulaFromHub').addEventListener('click', (e) => {
@@ -20998,6 +21180,41 @@ function updateBestTournamentRank(rank){
   }
 }
 
+// ---------- Monthly Tournament local tracking — a genuinely separate history/points/best-rank
+// store from Weekly's, not a shared one distinguished by a type flag ----------
+function getMonthlyTournamentHistory(){
+  try{ return JSON.parse(localStorage.getItem('hl_monthly_tournament_history') || '[]'); }catch(e){ return []; }
+}
+function logMonthlyTournamentResult(monthKey, score, total){
+  const log = getMonthlyTournamentHistory();
+  const points = (score * TOURNAMENT_POINTS_PER_CORRECT) + (total > 0 ? TOURNAMENT_COMPLETION_BONUS : 0);
+  log.unshift({ date: todayISO(), monthKey, score, total, pct: total > 0 ? Math.round((score/total)*100) : 0, points });
+  try{ localStorage.setItem('hl_monthly_tournament_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+}
+function getMonthlyTournamentStats(){
+  const history = getMonthlyTournamentHistory();
+  const totalPoints = history.reduce((sum, h) => sum + (h.points || 0), 0);
+  const wins = history.filter(h => h.pct === 100).length;
+  let bestRank = null;
+  try{ bestRank = JSON.parse(localStorage.getItem('hl_monthly_tournament_best_rank') || 'null'); }catch(e){}
+  return { totalPoints, tournamentsPlayed: history.length, wins, bestRank };
+}
+function updateBestMonthlyTournamentRank(rank){
+  if(!rank) return;
+  let best = null;
+  try{ best = JSON.parse(localStorage.getItem('hl_monthly_tournament_best_rank') || 'null'); }catch(e){}
+  if(!best || rank < best){
+    try{ localStorage.setItem('hl_monthly_tournament_best_rank', JSON.stringify(rank)); }catch(e){}
+  }
+}
+function startMonthlyTournament(questions, monthKey, minutes){
+  currentSetInfo = null;
+  currentMonthlyTournamentMonthKey = monthKey;
+  currentMarksPerQuestion = 1;
+  launchQuiz(questions, 'Monthly Tournament', 0, 0);
+  if(minutes) secondsLeft = minutes * 60; // real fixed exam-length timer, same override approach as Weekly Tournament
+}
+
 function getLpData(){
   const fallback = { total: 0, dailyMcqEarned: 0, dailyMcqDate: todayISO(), dailyLog: {}, subjectPoints: {} };
   try{
@@ -23471,6 +23688,13 @@ function finishQuiz(){
     window.submitTournamentScore(currentTournamentWeekKey, correct, quizQuestions.length);
     logTournamentResult(currentTournamentWeekKey, correct, quizQuestions.length);
     currentTournamentWeekKey = null;
+  }
+  // ---- Monthly Tournament: genuinely separate from Weekly — its own flag, its own submission,
+  // its own local history — not a relabeled branch of the Weekly path above ----
+  if(currentMonthlyTournamentMonthKey && window.submitMonthlyTournamentScore){
+    window.submitMonthlyTournamentScore(currentMonthlyTournamentMonthKey, correct, quizQuestions.length);
+    logMonthlyTournamentResult(currentMonthlyTournamentMonthKey, correct, quizQuestions.length);
+    currentMonthlyTournamentMonthKey = null;
   }
 
   // ---- Set-specific: performance message, unlock next set, "Next Set" button ----
