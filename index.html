@@ -1748,6 +1748,25 @@
     </div>
   </div>
 
+  <!-- Email Verification gate: proves the registering person actually owns the email address,
+       using Firebase's real built-in verification link (not a typed OTP code, which would need a
+       separate paid email-sending service this app doesn't have). Only ever gates brand-new,
+       recently-created email/password accounts — never applied retroactively to existing users,
+       who would otherwise be locked out of accounts that predate this feature entirely. -->
+  <div class="screen" id="verifyEmailScreen">
+    <div class="app-loading-wrap" style="justify-content:center;">
+      <div style="font-size:40px; margin-bottom:10px;">📧</div>
+      <div class="splash-title" style="font-size:18px;">Verify Your Email</div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:8px 0 4px; text-align:center; padding:0 30px;">We sent a verification link to</p>
+      <p style="font-size:13.5px; color:var(--ink); font-weight:700; margin-bottom:16px;" id="verifyEmailAddress"></p>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:24px; text-align:center; padding:0 30px; line-height:1.5;">Open your inbox, tap the link, then come back here and tap Continue.</p>
+      <button class="start-btn" id="verifyEmailContinueBtn" style="width:220px; margin-bottom:10px;">I've Verified — Continue</button>
+      <button class="calc-btn" id="verifyEmailResendBtn" style="width:220px; margin-bottom:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Resend Email</button>
+      <p style="font-size:12px; color:var(--wrong); min-height:16px; margin-bottom:10px;" id="verifyEmailError"></p>
+      <button class="calc-btn" id="verifyEmailLogoutBtn" style="width:220px; background:none; color:var(--ink-soft); border:none; font-size:12px;">Use a different account</button>
+    </div>
+  </div>
+
   <!-- First-run App Lock setup offer — shown once, skippable, never inserted into the existing
        onboarding wizard steps to avoid touching that multi-step flow. Biometric button only
        shows if the device actually reports a platform authenticator available — the document's
@@ -2313,6 +2332,7 @@
       <details class="profile-accordion" id="accSupport">
         <summary>ℹ️ Support and About</summary>
         <div class="profile-accordion-body">
+          <button class="profile-menu-item" id="menuAppGuidelines"><span class="pm-icon">📘</span> App Guidelines</button>
           <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon">📞</span> Contact Us</button>
           <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon">ℹ️</span> About Us</button>
           <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon">💬</span> Feedback</button>
@@ -6216,7 +6236,7 @@
     getAuth, signOut, onAuthStateChanged, updateProfile, deleteUser,
     createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
     EmailAuthProvider, reauthenticateWithCredential, updatePassword,
-    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult
+    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendEmailVerification, reload
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
@@ -6303,6 +6323,21 @@
   async function updateAuthUI(user){
     window.currentUser = user || null;
     if(user){
+      // Email verification gate — only for brand-new, recently-created email/password accounts.
+      // Google Sign-In accounts are already verified by Google itself (checked via providerId),
+      // and any account older than 30 days is grandfathered in regardless of its verification
+      // status, since this feature didn't exist when older accounts were created — retroactively
+      // locking out existing, established users over something that wasn't required at signup
+      // would be a real regression, not a fix.
+      const isPasswordAccount = user.providerData && user.providerData.some(p => p.providerId === 'password');
+      const accountAgeDays = user.metadata && user.metadata.creationTime
+        ? (Date.now() - new Date(user.metadata.creationTime).getTime()) / (1000 * 60 * 60 * 24) : 999;
+      if(isPasswordAccount && !user.emailVerified && accountAgeDays <= 30){
+        document.getElementById('verifyEmailAddress').textContent = user.email || '';
+        document.getElementById('verifyEmailError').textContent = '';
+        window.showScreen(verifyEmailScreen);
+        return; // don't proceed into the app until this resolves
+      }
       let name = user.displayName;
 
       // Safety net: if this account has no displayName saved (e.g. registered
@@ -6995,6 +7030,45 @@
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
+  // ---- Email Verification screen: Continue re-checks the real, current status (Firebase
+  // doesn't push an update automatically when the link is clicked elsewhere — the app has to ask
+  // again), Resend re-sends the same real verification link, Logout lets someone switch accounts
+  // if they registered with the wrong email entirely. ----
+  document.getElementById('verifyEmailContinueBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('verifyEmailContinueBtn');
+    btn.disabled = true; btn.textContent = 'Checking…';
+    try{
+      await reload(auth.currentUser);
+      if(auth.currentUser.emailVerified){
+        updateAuthUI(auth.currentUser); // proceeds into the app now that it's genuinely verified
+      } else {
+        document.getElementById('verifyEmailError').textContent = 'Still not verified — check your inbox (and spam folder) for the link.';
+      }
+    }catch(err){
+      document.getElementById('verifyEmailError').textContent = 'Could not check right now — please try again.';
+    }finally{
+      btn.disabled = false; btn.textContent = "I've Verified — Continue";
+    }
+  });
+  document.getElementById('verifyEmailResendBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('verifyEmailResendBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try{
+      await sendEmailVerification(auth.currentUser);
+      document.getElementById('verifyEmailError').style.color = 'var(--correct)';
+      document.getElementById('verifyEmailError').textContent = 'Verification email sent again — check your inbox.';
+    }catch(err){
+      document.getElementById('verifyEmailError').style.color = 'var(--wrong)';
+      document.getElementById('verifyEmailError').textContent = 'Could not resend right now — please try again in a moment.';
+    }finally{
+      btn.disabled = false; btn.textContent = 'Resend Email';
+    }
+  });
+  document.getElementById('verifyEmailLogoutBtn').addEventListener('click', async () => {
+    if(!confirm('Sign out and use a different account?')) return;
+    await signOut(auth);
+  });
+
   // ---- Google Sign-In: popup first (no third-party-cookie prompt, since it runs in its own
   // top-level browsing context rather than needing storage access on Firebase's domain from
   // inside the page) — this is what actually avoids the "wants to use third-party cookies for
@@ -7142,6 +7216,11 @@
       if(isRegisterMode){
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: fullName });
+        // Real email ownership verification — Firebase's own built-in link-based system, not a
+        // typed OTP code (which would need a separate paid email-sending service this app
+        // doesn't have). Sent once at registration; onAuthStateChanged/updateAuthUI is what
+        // actually gates access on it, not this line — this just starts the email on its way.
+        try{ await sendEmailVerification(cred.user); }catch(veErr){}
         // Save full profile (name + phone) to Firestore, tied to this account
         try{
           await setDoc(doc(db, 'users', cred.user.uid), {
@@ -7221,6 +7300,7 @@ let currentMonthlyTournamentMonthKey = null; // set only while taking a Monthly 
 
 const appLoadingScreen = document.getElementById('appLoadingScreen');
 const appLockScreen = document.getElementById('appLockScreen');
+const verifyEmailScreen = document.getElementById('verifyEmailScreen');
 const loginScreen = document.getElementById('loginScreen');
 const postGateScreen = document.getElementById('postGateScreen');
 const moodCheckinScreen = document.getElementById('moodCheckinScreen');
@@ -7391,7 +7471,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -7651,7 +7731,7 @@ const SCREEN_REFRESH_MAP = {
   }, { passive: true });
 })();
 
-const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
+const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
@@ -18293,6 +18373,39 @@ document.getElementById('menuContactUs').addEventListener('click', () => {
     </div>
 
     <p>We typically respond within a few days. Please include as much detail as possible (your account email, what happened, and any screenshots) so we can help quickly.</p>
+  `);
+});
+
+document.getElementById('menuAppGuidelines').addEventListener('click', () => {
+  openLegalInfo('App Guidelines', `
+    <p>A quick guide to what's available in Health Loksewa and how to get the most out of it.</p>
+
+    <h3>🏠 Home</h3>
+    <p>Your starting point — Question of the Day, quick access to Rapid Fire, the Handbook, and What's New (feature announcements). Home also shows any active Premium offers.</p>
+
+    <h3>📚 Learn</h3>
+    <p>Reference and study material: Syllabus PDFs, Current Affairs, General Knowledge, Video Lessons, the Health Guide, a CPR demonstration, Mnemonics Library, Quick References, Health Days calendar, the Health Dictionary, the English-Nepali glossary, and Inspiration Hub (success stories and public health history).</p>
+
+    <h3>📝 Practice</h3>
+    <p>Where you actually study: Subject-wise MCQs, Past Question papers, Mock Tests (timed, matching each exam's real question count and duration), Rapid Fire (5 fast practice modes), your Personal Study Planner, Revision Mode (spaced repetition on your mistakes and bookmarks), Daily Reminder, Study Groups, My Notes, and My Bookmarks.</p>
+
+    <h3>📊 Progress</h3>
+    <p>Your personal analytics — Overall Accuracy, Subject Progress, Question Performance (including separate Mock Test/Past Question/Tournament breakdowns), Weak Areas, Learn Hub & Confidence tracking, Achievements and your Level, Revision Progress, Study Activity, Goals, and History. The Leaderboard also lives here.</p>
+
+    <h3>👤 Profile</h3>
+    <p>Account settings, Study Time & App Usage (in-app time tracking only — this can't see other apps or your phone's total screen time), Account & Privacy (including App Lock — PIN and, where your device supports it, fingerprint/face unlock), theme and accessibility settings, and this Support and About section.</p>
+
+    <h3>🏆 Tournament</h3>
+    <p>Weekly and Monthly competitive exams — same questions for everyone, real per-exam timing, a live leaderboard, and Tournament Points tracked separately from your regular practice.</p>
+
+    <h3>Tips</h3>
+    <ul>
+      <li>Explanations are worth reading even when you get a question right — tap 🔊 Listen to hear them read aloud.</li>
+      <li>Skip a hard question instead of guessing — skipped questions are never counted as wrong.</li>
+      <li>Set a daily App Lock and Study Time goal from Profile to build a steady habit.</li>
+    </ul>
+
+    <p style="margin-top:16px; font-size:12px; color:var(--ink-soft);">Have a question this guide doesn't answer? Use Feedback or Contact Us below.</p>
   `);
 });
 
