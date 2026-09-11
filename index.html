@@ -2947,6 +2947,42 @@
     </div>
   </div>
 
+  <!-- Personal Study Planner: a genuinely different, more flexible tool than the 7-Day Plan
+       above — the user sets a real exam date/daily hours/subjects/target, and gets a proportional
+       daily time-split they can add to or delete from, rather than a fixed 7-day rotation. -->
+  <div class="screen" id="studyPlannerSetupScreen">
+    <div class="back-link" data-back="practice">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🗓️ Personal Study Planner</div>
+      <div class="content-card" style="margin-bottom:14px;">
+        <div class="calc-field"><label>Exam Date</label><input type="date" id="spExamDate"></div>
+        <div class="calc-field"><label>Available Study Hours / Day</label><input type="number" id="spHoursPerDay" min="0.5" max="16" step="0.5" placeholder="e.g. 2"></div>
+        <div class="calc-field"><label>Target Score (optional)</label><input type="number" id="spTargetScore" min="0" max="100" placeholder="e.g. 80%"></div>
+      </div>
+      <div class="section-title" style="font-size:14px;">Subjects to Focus On</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">Leave none selected to auto-focus on your current weak subjects instead.</p>
+      <div id="spSubjectChecklist" style="margin-bottom:16px;"></div>
+      <button class="start-btn" id="spGeneratePlanBtn">Generate My Plan</button>
+    </div>
+  </div>
+
+  <div class="screen" id="studyPlannerScreen">
+    <div class="back-link" data-back="practice">← Back</div>
+    <div class="home-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div class="section-title" style="margin:0;">🗓️ Today's Plan</div>
+        <button class="calc-btn" id="spEditSettingsBtn" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⚙️ Edit</button>
+      </div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-bottom:6px;" id="spDaysUntilExam"></p>
+      <div class="content-card" style="margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;"><span>Today's Progress</span><span id="spProgressLabel">0%</span></div>
+        <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden;"><div id="spProgressBar" style="background:var(--teal); height:100%; width:0%;"></div></div>
+      </div>
+      <div id="spPlanList" style="margin-bottom:14px;"></div>
+      <button class="calc-btn" id="spAddCustomBtn" style="background:var(--panel); color:var(--ink); border:1.5px dashed var(--line); font-size:12.5px;">＋ Add Custom Task</button>
+    </div>
+  </div>
+
   <div class="screen" id="revisionCalendarScreen">
     <div class="back-link" data-back="revision">← Back</div>
     <div class="home-body">
@@ -3237,6 +3273,11 @@
         <div class="dc-icon">📝</div>
         <div class="dc-label">My Notes</div>
         <div class="dc-sub">Saved on device</div>
+      </a>
+      <a class="dash-card hub-tile t4" href="#" id="goToStudyPlannerFromPractice">
+        <div class="dc-icon">🗓️</div>
+        <div class="dc-label">Study Planner</div>
+        <div class="dc-sub">Your personal daily plan</div>
       </a>
       </div>
     </div>
@@ -6132,7 +6173,7 @@
     getAuth, signOut, onAuthStateChanged, updateProfile, deleteUser,
     createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
     EmailAuthProvider, reauthenticateWithCredential, updatePassword,
-    GoogleAuthProvider, signInWithRedirect, getRedirectResult
+    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
@@ -6844,29 +6885,24 @@
 
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
-  // ---- Google Sign-In: uses redirect rather than popup — popups are unreliable inside mobile
-  // WebViews/TWA-wrapped contexts, where they can be silently blocked or behave inconsistently;
-  // redirect works the same reliable way in a plain browser tab, an installed PWA, or a native
-  // Android wrapper, since it's just navigating to Google's real sign-in page and back. ----
-  window.signInWithGoogle = function(){
-    const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider);
-    // Execution ends here — the page navigates away to Google's sign-in page, then back
-  };
-  getRedirectResult(auth).then(async (result) => {
-    if(!result || !result.user) return;
-    clearLoginError();
+  // ---- Google Sign-In: popup first (no third-party-cookie prompt, since it runs in its own
+  // top-level browsing context rather than needing storage access on Firebase's domain from
+  // inside the page) — this is what actually avoids the "wants to use third-party cookies for
+  // legacy Google Sign-In" dialog Chrome now shows for signInWithRedirect. Falls back to redirect
+  // automatically only if the popup itself is genuinely blocked, so sign-in still works even in
+  // a context that won't allow popups at all — never a dead end either way. ----
+  async function ensureGoogleUserProfile(user){
     // First-time Google sign-in needs the same Firestore profile doc that email/password
     // registration creates (fullName/email/phone/createdAt/trialStartedAt) — several other
     // features (premium trial eligibility among them) read trialStartedAt and would otherwise
     // silently misbehave for anyone who signed up this way instead of the normal registration form
     try{
-      const profileRef = doc(db, 'users', result.user.uid);
+      const profileRef = doc(db, 'users', user.uid);
       const existing = await getDoc(profileRef);
       if(!existing.exists()){
         await setDoc(profileRef, {
-          fullName: result.user.displayName || 'Student',
-          email: result.user.email || '',
+          fullName: user.displayName || 'Student',
+          email: user.email || '',
           phone: '', // Google doesn't provide this — left blank, same as any field the user hasn't filled in yet
           createdAt: new Date().toISOString(),
           trialStartedAt: new Date().toISOString()
@@ -6875,6 +6911,28 @@
     }catch(e){
       // Sign-in itself already succeeded — don't block the user over this extra save failing
     }
+  }
+  window.signInWithGoogle = async function(){
+    const provider = new GoogleAuthProvider();
+    try{
+      const result = await signInWithPopup(auth, provider);
+      clearLoginError();
+      await ensureGoogleUserProfile(result.user);
+      // onAuthStateChanged fires naturally for the newly-signed-in user — nothing else to do
+    }catch(err){
+      const code = err && err.code ? err.code : '';
+      if(code.includes('popup-blocked') || code.includes('operation-not-supported-in-this-environment')){
+        signInWithRedirect(auth, provider); // execution ends here — page navigates away and back
+        return;
+      }
+      const message = friendlyError(err);
+      if(message) showLoginError(message); // empty message means the user simply closed the popup — nothing to show
+    }
+  };
+  getRedirectResult(auth).then(async (result) => {
+    if(!result || !result.user) return;
+    clearLoginError();
+    await ensureGoogleUserProfile(result.user);
   }).catch((err) => {
     const message = friendlyError(err);
     if(message) showLoginError(message); // empty message means the user simply backed out — nothing to show
@@ -7204,6 +7262,8 @@ const revisionSubjectPickScreen = document.getElementById('revisionSubjectPickSc
 const revisionCalendarScreen = document.getElementById('revisionCalendarScreen');
 const examRevisionScreen = document.getElementById('examRevisionScreen');
 const sevenDayRevisionScreen = document.getElementById('sevenDayRevisionScreen');
+const studyPlannerSetupScreen = document.getElementById('studyPlannerSetupScreen');
+const studyPlannerScreen = document.getElementById('studyPlannerScreen');
 const revisionTopicPickScreen = document.getElementById('revisionTopicPickScreen');
 const notificationsScreen = document.getElementById('notificationsScreen');
 const whatsNewScreen = document.getElementById('whatsNewScreen');
@@ -7217,7 +7277,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -7278,7 +7338,7 @@ function getFeatureArea(screenEl){
       mcqPostScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentScreen, tournamentPostScreen,
       rapidFireScreen, rapidFireSetupScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen,
       battleResultScreen, dailyBattleResultScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen,
-      revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, mistakeBookScreen, bookmarksScreen,
+      revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, mistakeBookScreen, bookmarksScreen,
       myBookmarksHubScreen, answerCheckerScreen],
     'Notes': [notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen],
     'Flash Cards': [flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen],
@@ -7490,7 +7550,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
 
@@ -13524,6 +13584,158 @@ document.getElementById('examRevisionBtn').addEventListener('click', () => {
 });
 document.getElementById('examRevisionStartBtn').addEventListener('click', startExamRevision);
 
+// ---------- Personal Study Planner: a real, configurable daily plan (exam date, hours/day,
+// chosen subjects, target score) — deliberately kept separate from the 7-Day Plan above, which
+// is a fixed weak-subject rotation with no user configuration. Time is split proportionally
+// across Study/MCQs/Revision/Past Questions based on the user's own stated hours/day, regenerated
+// fresh each calendar day but preserving that day's own customizations (added/deleted items)
+// until the date actually changes. ----------
+function getStudyPlannerSettings(){
+  try{ return JSON.parse(localStorage.getItem('hl_study_planner_settings') || 'null'); }
+  catch(e){ return null; }
+}
+function saveStudyPlannerSettings(settings){
+  try{ localStorage.setItem('hl_study_planner_settings', JSON.stringify(settings)); }catch(e){}
+}
+function generateTodaysStudyPlan(settings){
+  const totalMinutes = Math.round((settings.hoursPerDay || 2) * 60);
+  const subjects = (settings.subjects && settings.subjects.length > 0) ? settings.subjects : [getBestWeakSubject() || 'General Practice'];
+  const focusSubject = subjects[0];
+  const round5 = (m) => Math.max(5, Math.round(m / 5) * 5);
+
+  const items = [
+    { id: 'i1', label: `📖 ${focusSubject}`, minutes: round5(totalMinutes * 0.30), done: false, custom: false, actionType: 'subject', actionValue: focusSubject },
+    { id: 'i2', label: '📝 MCQ Practice', minutes: round5(totalMinutes * 0.30), done: false, custom: false, actionType: 'mcq', actionValue: focusSubject },
+    { id: 'i3', label: '🔄 Revision', minutes: round5(totalMinutes * 0.20), done: false, custom: false, actionType: 'revision', actionValue: null },
+    { id: 'i4', label: '📜 Past Questions', minutes: round5(totalMinutes * 0.20), done: false, custom: false, actionType: 'pastQuestion', actionValue: null },
+  ];
+  return { date: todayISO(), items };
+}
+function getTodaysStudyPlan(){
+  const settings = getStudyPlannerSettings();
+  if(!settings) return null;
+  let plan = null;
+  try{ plan = JSON.parse(localStorage.getItem('hl_study_planner_today') || 'null'); }catch(e){}
+  if(!plan || plan.date !== todayISO()){
+    plan = generateTodaysStudyPlan(settings); // new day — fresh plan, yesterday's custom edits don't carry over
+    saveTodaysStudyPlan(plan);
+  }
+  return plan;
+}
+function saveTodaysStudyPlan(plan){
+  try{ localStorage.setItem('hl_study_planner_today', JSON.stringify(plan)); }catch(e){}
+}
+
+document.getElementById('goToStudyPlannerFromPractice') && document.getElementById('goToStudyPlannerFromPractice').addEventListener('click', (e) => {
+  e.preventDefault();
+  if(getStudyPlannerSettings()){ showScreen(studyPlannerScreen); renderStudyPlanner(); }
+  else { showScreen(studyPlannerSetupScreen); renderStudyPlannerSetup(); }
+});
+document.getElementById('spEditSettingsBtn').addEventListener('click', () => {
+  showScreen(studyPlannerSetupScreen);
+  renderStudyPlannerSetup();
+});
+function renderStudyPlannerSetup(){
+  const settings = getStudyPlannerSettings() || {};
+  document.getElementById('spExamDate').value = settings.examDate || '';
+  document.getElementById('spHoursPerDay').value = settings.hoursPerDay || '';
+  document.getElementById('spTargetScore').value = settings.targetScore || '';
+  const subjects = (currentMcqPost === 'pho') ? KNOWN_SUBJECTS : (KNOWN_SUBJECTS_BY_POST[currentMcqPost] || KNOWN_SUBJECTS);
+  document.getElementById('spSubjectChecklist').innerHTML = subjects.map(s => `
+    <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; padding:6px 0; border-top:1px solid var(--line);">
+      <input type="checkbox" class="sp-subject-check" value="${s}" ${(settings.subjects || []).includes(s) ? 'checked' : ''}> ${s}
+    </label>
+  `).join('');
+}
+document.getElementById('spGeneratePlanBtn').addEventListener('click', () => {
+  const hoursPerDay = parseFloat(document.getElementById('spHoursPerDay').value);
+  if(!hoursPerDay || hoursPerDay <= 0){ alert('Please enter how many hours you can study per day.'); return; }
+  const subjects = Array.from(document.querySelectorAll('.sp-subject-check:checked')).map(cb => cb.value);
+  saveStudyPlannerSettings({
+    examDate: document.getElementById('spExamDate').value || null,
+    hoursPerDay, subjects,
+    targetScore: document.getElementById('spTargetScore').value || null,
+  });
+  // A fresh settings save always regenerates today's plan from scratch — the point of editing
+  // settings is to get a plan that reflects them, not to keep yesterday's proportions around
+  saveTodaysStudyPlan(generateTodaysStudyPlan(getStudyPlannerSettings()));
+  showScreen(studyPlannerScreen);
+  renderStudyPlanner();
+});
+function renderStudyPlanner(){
+  const settings = getStudyPlannerSettings();
+  const plan = getTodaysStudyPlan();
+  if(!settings || !plan) return;
+
+  if(settings.examDate){
+    const days = Math.ceil((new Date(settings.examDate) - new Date(todayISO())) / 86400000);
+    document.getElementById('spDaysUntilExam').textContent = days >= 0 ? `${days} day${days === 1 ? '' : 's'} until your exam` : 'Exam date has passed';
+  } else {
+    document.getElementById('spDaysUntilExam').textContent = '';
+  }
+
+  const doneCount = plan.items.filter(i => i.done).length;
+  const pct = plan.items.length > 0 ? Math.round((doneCount / plan.items.length) * 100) : 0;
+  document.getElementById('spProgressLabel').textContent = `${pct}%`;
+  document.getElementById('spProgressBar').style.width = `${pct}%`;
+
+  const wrap = document.getElementById('spPlanList');
+  wrap.innerHTML = plan.items.length === 0
+    ? `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No tasks planned for today — add one below.</p>`
+    : plan.items.map(item => `
+      <div class="content-card" style="margin-bottom:8px; display:flex; align-items:center; gap:10px; ${item.done ? 'opacity:0.6;' : ''}">
+        <input type="checkbox" class="sp-item-done" data-id="${item.id}" ${item.done ? 'checked' : ''} style="width:18px; height:18px; flex-shrink:0;">
+        <div style="flex:1; cursor:pointer;" class="sp-item-open" data-id="${item.id}">
+          <div style="font-size:13px; ${item.done ? 'text-decoration:line-through;' : ''}">${item.label}</div>
+          <div style="font-size:10.5px; color:var(--ink-soft);">${item.minutes} min</div>
+        </div>
+        <button class="sp-item-delete" data-id="${item.id}" style="background:none; border:none; color:var(--wrong); font-size:16px; padding:4px;">✕</button>
+      </div>
+    `).join('');
+
+  wrap.querySelectorAll('.sp-item-done').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const item = plan.items.find(i => i.id === cb.dataset.id);
+      if(item) item.done = cb.checked;
+      saveTodaysStudyPlan(plan);
+      renderStudyPlanner();
+    });
+  });
+  wrap.querySelectorAll('.sp-item-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      plan.items = plan.items.filter(i => i.id !== btn.dataset.id);
+      saveTodaysStudyPlan(plan);
+      renderStudyPlanner();
+    });
+  });
+  wrap.querySelectorAll('.sp-item-open').forEach(row => {
+    row.addEventListener('click', () => {
+      const item = plan.items.find(i => i.id === row.dataset.id);
+      if(!item) return;
+      if(item.actionType === 'subject' && item.actionValue){
+        const post = findPostForSubject(item.actionValue);
+        if(post){ currentMcqPost = post; openSetSelect(item.actionValue); }
+      } else if(item.actionType === 'mcq'){
+        showScreen(practiceScreen);
+      } else if(item.actionType === 'revision'){
+        showScreen(revisionScreen); renderRevisionSummary();
+      } else if(item.actionType === 'pastQuestion'){
+        showScreen(pastQuestionsPostScreen);
+      }
+    });
+  });
+}
+document.getElementById('spAddCustomBtn').addEventListener('click', () => {
+  const label = prompt('What do you want to add to today\'s plan?');
+  if(!label) return;
+  const minutes = parseInt(prompt('How many minutes?', '30'), 10);
+  if(!minutes || minutes <= 0) return;
+  const plan = getTodaysStudyPlan();
+  plan.items.push({ id: 'custom' + Date.now(), label: '✍️ ' + label, minutes, done: false, custom: true, actionType: null, actionValue: null });
+  saveTodaysStudyPlan(plan);
+  renderStudyPlanner();
+});
+
 function generate7DayPlan(){
   const subjects = getRevisionSubjects().slice(0, 5).map(s => s.subject);
   const days = subjects.map(s => ({ label: s, type: 'subject', value: s }));
@@ -16947,6 +17159,7 @@ async function renderLeaderboard(){
   rankCardWrap.innerHTML = '';
   renderLeaderboardSubjectChips();
   checkWeeklyRewards();
+  checkMonthlyChampionship();
   renderLeaderboardBadges();
 
   if(!window.fetchLeaderboard){
@@ -20718,6 +20931,110 @@ function checkWeeklyRewards(){
   saveEarnedBadges(badges);
   awardLearningPoints('weeklyReward', tier.bonus);
   setTimeout(() => alert(`🎉 Last week you finished #${lastRank} — you earned the ${tier.badge} badge! +${tier.bonus} LP`), 400);
+}
+
+// ---------- Monthly Championship: reuses the exact same mechanism as Weekly Rewards rather than
+// a second system — the leaderboard's own Month period tab already records "last known rank" the
+// same way Week does (same rankKey pattern, just swapping in "month"), so this only needed a
+// month-scoped marker/tiers/badge-store, all sharing the existing getEarnedBadges() store
+// (badges are told apart by which one of weekKey/monthKey they carry). Same honest approximation
+// as Weekly Rewards: uses the last-known rank recorded whenever the user actually viewed the
+// Month tab during that month, since there's no server-side scheduling here to snapshot an exact
+// month-end moment. Certificates reuse the existing Canvas-based certificate generator pattern
+// already proven for Subject Score certificates — "digital certificates instead of expensive
+// physical prizes," per the document's own suggestion. ----------
+function getMonthKey(date){
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+const MONTHLY_REWARD_TIERS = [
+  { maxRank: 1, badge: '👑 Monthly Champion', bonus: 150 },
+  { maxRank: 2, badge: '🥈 Monthly Runner-up', bonus: 90 },
+  { maxRank: 3, badge: '🥉 Monthly Third Place', bonus: 60 },
+  { maxRank: 10, badge: '⭐ Monthly Elite', bonus: 25 },
+];
+function checkMonthlyChampionship(){
+  const currentMonthKey = getMonthKey(new Date());
+  let lastCheckedMonth = null;
+  try{ lastCheckedMonth = localStorage.getItem('hl_reward_month_marker'); }catch(e){}
+  if(lastCheckedMonth === currentMonthKey) return; // already checked this month, nothing to do yet
+  try{ localStorage.setItem('hl_reward_month_marker', currentMonthKey); }catch(e){}
+  if(!lastCheckedMonth) return; // first time ever opening the leaderboard — nothing to reward retroactively
+
+  let lastRank = null;
+  try{ lastRank = JSON.parse(localStorage.getItem('hl_last_known_rank_month_overall') || 'null'); }catch(e){}
+  if(!lastRank) return;
+
+  const tier = MONTHLY_REWARD_TIERS.find(t => lastRank <= t.maxRank);
+  if(!tier) return;
+
+  const badges = getEarnedBadges();
+  badges.unshift({ badge: tier.badge, monthKey: lastCheckedMonth, rank: lastRank, earnedAt: new Date().toISOString() });
+  saveEarnedBadges(badges);
+  awardLearningPoints('weeklyReward', tier.bonus); // reuses the same flat per-point LP category as Weekly Rewards — a monthly bonus is the same kind of thing, just a bigger number
+  const monthName = new Date(lastCheckedMonth + '-02').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  setTimeout(() => {
+    if(confirm(`🏆 ${monthName} Health Loksewa Championship: you finished #${lastRank}! You earned the ${tier.badge} badge and +${tier.bonus} LP.\n\nDownload a certificate?`)){
+      generateChampionshipCertificate(lastRank, monthName, tier.badge);
+    }
+  }, 500);
+}
+function generateChampionshipCertificate(rank, monthName, badgeLabel){
+  let userName = 'Student';
+  try{ userName = JSON.parse(localStorage.getItem('hl_user') || '{}').name || 'Student'; }catch(e){}
+  const rankLabel = rank === 1 ? '1st Place' : rank === 2 ? '2nd Place' : rank === 3 ? '3rd Place' : `Top ${rank}`;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1000; canvas.height = 700;
+  const ctx = canvas.getContext('2d');
+
+  const grad = ctx.createLinearGradient(0, 0, 1000, 700);
+  grad.addColorStop(0, '#0B1426');
+  grad.addColorStop(1, '#0D9488');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1000, 700);
+
+  ctx.fillStyle = '#FDFBF6';
+  ctx.fillRect(40, 40, 920, 620);
+  ctx.strokeStyle = '#C9962C';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(60, 60, 880, 580);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#C9962C';
+  ctx.font = '22px Georgia';
+  ctx.fillText(monthName.toUpperCase() + ' CHAMPIONSHIP', 500, 140);
+
+  ctx.fillStyle = '#2A2420';
+  ctx.font = 'bold 44px Georgia';
+  ctx.fillText(userName, 500, 250);
+
+  ctx.font = '18px Georgia';
+  ctx.fillStyle = '#6B6055';
+  ctx.fillText('finished the month ranked', 500, 300);
+
+  ctx.font = 'bold 40px Georgia';
+  ctx.fillStyle = '#1B3B6F';
+  ctx.fillText(rankLabel, 500, 365);
+
+  ctx.font = '22px Georgia';
+  ctx.fillStyle = '#2F7D5D';
+  ctx.fillText(badgeLabel, 500, 420);
+
+  ctx.font = '14px Georgia';
+  ctx.fillStyle = '#A69B8C';
+  ctx.fillText(formatDualDate(new Date()), 500, 550);
+
+  ctx.font = 'italic 16px Georgia';
+  ctx.fillStyle = '#6B6055';
+  ctx.fillText('Health Loksewa — Nepal Health Service Exam Preparation', 500, 600);
+
+  canvas.toBlob(blob => {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Health-Loksewa-Championship-' + monthName.replace(/\s+/g, '-') + '.png';
+    link.click();
+  });
 }
 
 function awardLearningPoints(activityKey, count, subject){
