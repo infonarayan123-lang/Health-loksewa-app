@@ -19682,6 +19682,12 @@ const DEFAULT_CAROUSEL_SLIDES = [
   { bg:'linear-gradient(135deg,#0D9488,#0B4A63)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
 ];
 let CAROUSEL_SLIDES = DEFAULT_CAROUSEL_SLIDES;
+// These two were being used without ever being declared anywhere — relying on implicit globals
+// (bad practice that happened to work for carouselIndex only because it's always assigned before
+// read; carouselTimer is read first via `if(carouselTimer)`, which throws ReferenceError on an
+// undeclared variable). Real bug, fixed with explicit declarations.
+let carouselIndex = 0;
+let carouselTimer = null;
 async function loadCarouselSlides(){
   try{
     const res = await fetch(`${SHEET_API_URL}?action=homeCarousel`);
