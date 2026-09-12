@@ -551,6 +551,9 @@
   .tournament-hero h2{ font-family:'Tinos',serif; font-size:19px; margin-bottom:4px; }
   .tournament-hero p{ font-size:12.5px; opacity:0.9; }
   .tournament-prizes{ display:flex; justify-content:center; gap:16px; margin-top:12px; font-size:12px; }
+  .np-cat-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line); font-size:13px; color:var(--ink); }
+  .np-cat-row:first-child{ border-top:none; }
+  .np-cat-row input{ width:18px; height:18px; flex-shrink:0; }
   .group-card{
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
     padding:14px; margin-bottom:10px; cursor:pointer;
@@ -1308,7 +1311,17 @@
     font-weight:700; color:var(--ink-soft); background:transparent; border:none; cursor:pointer;
     font-family:'Inter',sans-serif;
   }
-  .home-chart-tab.active{ background:rgba(20,163,168,0.18); color:var(--crimson); }
+  .home-chart-tab.active{ background:rgba(20,163,168,0.18); color:var(--crimson); box-shadow:0 0 10px rgba(20,163,168,0.25); }
+  .home-stat-card{
+    flex:1; background:var(--panel-elevated); border-radius:12px; padding:10px 6px; text-align:center;
+  }
+  .home-stat-card .hsc-icon{ font-size:14px; margin-bottom:2px; }
+  .home-stat-card .hsc-num{ font-size:15px; font-weight:800; color:var(--ink-on-elevated); }
+  .home-stat-card .hsc-label{ font-size:9px; color:var(--ink-on-elevated); opacity:0.7; text-transform:uppercase; letter-spacing:0.02em; margin-top:1px; }
+  .home-stat-card .hsc-trend{ font-size:10px; font-weight:700; margin-top:4px; min-height:13px; }
+  .home-stat-card .hsc-trend.trend-up{ color:#4ADE80; }
+  .home-stat-card .hsc-trend.trend-down{ color:#F87171; }
+  .home-stat-card .hsc-trend.trend-neutral{ color:var(--ink-on-elevated); opacity:0.6; }
   #homeSwipeDots span{ width:6px; height:6px; border-radius:50%; background:var(--line); cursor:pointer; }
   #homeSwipeDots span.on{ background:var(--crimson); width:18px; border-radius:3px; }
   .mood-checkin-btn{
@@ -1988,18 +2001,60 @@
 
       <div class="swipe-card" id="homeSwipeCard" style="margin:0 16px 16px;">
         <div id="homeProgressPanel">
-          <div class="swipe-tabs" style="display:flex; gap:6px; padding:14px 14px 0;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:14px 14px 0;">
+            <div>
+              <div style="display:flex; align-items:center; gap:6px; font-size:14.5px; font-weight:700; color:var(--ink);">📊 Study Performance</div>
+              <div style="font-size:10.5px; color:var(--ink-soft); margin-top:1px;">Track your learning progress</div>
+            </div>
+            <div style="position:relative;">
+              <button id="homeMetricSelectBtn" style="background:rgba(20,163,168,0.12); color:var(--crimson); border:none; border-radius:8px; padding:6px 10px; font-size:11.5px; font-weight:700; display:flex; align-items:center; gap:4px;">Accuracy ▾</button>
+              <div id="homeMetricDropdown" style="display:none; position:absolute; right:0; top:32px; background:var(--panel-elevated); border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.3); z-index:20; min-width:140px; overflow:hidden;">
+                <button class="home-metric-opt" data-metric="accuracy" style="display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:none; color:var(--ink-on-elevated); font-size:12.5px;">Accuracy</button>
+                <button class="home-metric-opt" data-metric="questions" style="display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:none; color:var(--ink-on-elevated); font-size:12.5px;">Questions</button>
+                <button class="home-metric-opt" data-metric="studyTime" style="display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:none; color:var(--ink-on-elevated); font-size:12.5px;">Study Time</button>
+                <button class="home-metric-opt" data-metric="topics" style="display:block; width:100%; text-align:left; padding:10px 14px; background:none; border:none; color:var(--ink-on-elevated); font-size:12.5px;">Topics Completed</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="swipe-tabs" style="display:flex; gap:6px; padding:12px 14px 0;">
             <button class="home-chart-tab active" data-mode="daily">Daily</button>
             <button class="home-chart-tab" data-mode="weekly">Weekly</button>
             <button class="home-chart-tab" data-mode="monthly">Monthly</button>
             <button class="home-chart-tab" data-mode="yearly">Yearly</button>
           </div>
-          <div style="padding:14px 16px;">
-            <svg id="homeChartSvg" width="100%" height="80" viewBox="0 0 300 80"></svg>
+          <div style="padding:14px 10px 6px;">
+            <svg id="homeChartSvg" width="100%" height="120" viewBox="0 0 320 120"></svg>
           </div>
-          <div style="display:flex; justify-content:space-around; padding:0 16px 16px; text-align:center;">
-            <div><div id="homeChartQ" style="color:var(--ink); font-size:15px; font-weight:700;">0</div><div style="color:var(--ink-soft); font-size:9.5px; text-transform:uppercase;">Questions</div></div>
-            <div><div id="homeChartAcc" style="color:var(--ink); font-size:15px; font-weight:700;">0%</div><div style="color:var(--ink-soft); font-size:9.5px; text-transform:uppercase;">Accuracy</div></div>
+
+          <div style="display:flex; gap:8px; padding:4px 14px 14px;">
+            <div class="home-stat-card">
+              <div class="hsc-icon">📝</div>
+              <div class="hsc-num" id="homeStatQNum">0</div>
+              <div class="hsc-label">Questions</div>
+              <div class="hsc-trend" id="homeStatQTrend"></div>
+            </div>
+            <div class="home-stat-card">
+              <div class="hsc-icon">🎯</div>
+              <div class="hsc-num" id="homeStatAccNum">0%</div>
+              <div class="hsc-label">Accuracy</div>
+              <div class="hsc-trend" id="homeStatAccTrend"></div>
+            </div>
+            <div class="home-stat-card">
+              <div class="hsc-icon">⏱️</div>
+              <div class="hsc-num" id="homeStatTimeNum">0m</div>
+              <div class="hsc-label">Study Time</div>
+              <div class="hsc-trend" id="homeStatTimeTrend"></div>
+            </div>
+          </div>
+
+          <div style="margin:0 14px 12px; padding:12px 14px; border-radius:12px; background:rgba(20,163,168,0.08); border:1px solid rgba(20,163,168,0.25);">
+            <div style="font-size:10.5px; font-weight:700; color:var(--crimson); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;">💡 Your Insight</div>
+            <div style="font-size:12px; color:var(--ink); line-height:1.5;" id="homeInsightText">Keep practicing to see your first insight here.</div>
+          </div>
+
+          <div style="text-align:center; padding-bottom:12px;">
+            <a href="#" id="homeViewFullProgressLink" style="font-size:12px; color:var(--crimson); font-weight:700; text-decoration:none;">View Full Progress →</a>
           </div>
         </div>
         <div id="homeMoodPanel" style="display:none; padding:18px 20px 4px; text-align:center;">
@@ -2239,6 +2294,7 @@
 
       <div class="calc-card" style="margin:0 4px 18px;">
         <button class="profile-menu-item" id="menuScreenTime" style="padding:10px 4px;"><span class="pm-icon">⏱️</span> Study Time &amp; App Usage</button>
+        <button class="profile-menu-item" id="menuNotificationPrefs" style="padding:10px 4px;"><span class="pm-icon">🔔</span> Notifications</button>
       </div>
 
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
@@ -2919,6 +2975,43 @@
         <h4 style="margin-bottom:8px;">ℹ️ How this works</h4>
         <p style="font-size:12.5px; color:var(--ink-soft); line-height:1.6;">Your preferred time is saved to your account. Actual notification delivery depends on your device allowing notifications for this app, and on background delivery setup — reminders may not always arrive at the exact minute chosen, especially with the app fully closed.</p>
       </div>
+    </div>
+  </div>
+
+  <!-- Notification Preferences: real push notifications via Firebase Cloud Messaging — these
+       show on the phone's actual notification bar/lock screen, not just inside the app. Choosing
+       categories here doesn't send anything itself; it registers this device to receive whichever
+       categories are checked, delivered by a daily scheduled job on the backend. -->
+  <div class="screen" id="notificationPrefsScreen">
+    <div class="back-link" data-back="profile">← Back</div>
+    <div class="home-body">
+      <div class="section-title">🔔 Notifications</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:16px;">Get real notifications on your phone — not just inside the app.</p>
+
+      <div class="content-card" style="margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:13.5px; font-weight:700;">Enable Notifications</span>
+          <button class="calc-btn" id="npMasterToggle" style="margin:0; width:auto; padding:6px 16px; font-size:12px;">Off</button>
+        </div>
+        <p style="font-size:11px; color:var(--ink-soft); margin-top:6px;">Your device will ask for notification permission the first time you turn this on.</p>
+      </div>
+
+      <div id="npCategoriesWrap" style="display:none;">
+        <div class="content-card">
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="qotd" checked> <span>📝 Question of the Day ready</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="mistakes" checked> <span>❌ Your mistakes due for revision</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="progress" checked> <span>📊 Your progress summary</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="healthDay" checked> <span>📅 Today's Health Day</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="whatsNew" checked> <span>🆕 New content added</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="news"> <span>📰 News</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="rapidFire"> <span>⚡ Rapid Fire reminder</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="goals" checked> <span>🎯 Target/goal reminders</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="tournament" checked> <span>🏆 Championship &amp; Tournament</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="discount" checked> <span>💰 Discounts &amp; offers</span></label>
+        </div>
+        <button class="start-btn" id="npSaveBtn" style="margin-top:14px;">Save Preferences</button>
+      </div>
+      <p id="npStatusMsg" style="font-size:12px; color:var(--wrong); margin-top:12px; text-align:center;"></p>
     </div>
   </div>
 
@@ -6242,6 +6335,9 @@
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
     deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import {
+    getMessaging, getToken, onMessage, isSupported as isMessagingSupported
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyD22QTLo3JSFSLRVeGwdCrZx4A9yCTw2sE",
@@ -6257,6 +6353,72 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   let isRegisterMode = false;
+
+  // ---------- Push Notifications: Firebase Cloud Messaging, already provisioned for this project
+  // (messagingSenderId was already in the config above). REQUIRES ONE MANUAL SETUP STEP before
+  // this can actually send anything: a VAPID key pair generated in Firebase Console → Project
+  // Settings → Cloud Messaging → Web Push certificates → "Generate key pair" — paste that public
+  // key into VAPID_PUBLIC_KEY below. Without it, getToken() will fail and registration will
+  // silently do nothing (caught and surfaced to the user as a friendly message, not a crash). ----
+  const VAPID_PUBLIC_KEY = 'PASTE_YOUR_VAPID_PUBLIC_KEY_HERE';
+  let messaging = null;
+  window.registerForPushNotifications = async function(prefs){
+    try{
+      const supported = await isMessagingSupported();
+      if(!supported) return { success: false, reason: 'unsupported' };
+      if(VAPID_PUBLIC_KEY === 'PASTE_YOUR_VAPID_PUBLIC_KEY_HERE') return { success: false, reason: 'not_configured' };
+
+      const permission = await Notification.requestPermission();
+      if(permission !== 'granted') return { success: false, reason: 'permission_denied' };
+
+      if(!messaging) messaging = getMessaging(app);
+      const swReg = await navigator.serviceWorker.ready;
+      const token = await getToken(messaging, { vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: swReg });
+      if(!token) return { success: false, reason: 'no_token' };
+
+      const user = auth.currentUser;
+      if(!user) return { success: false, reason: 'not_logged_in' };
+      await setDoc(doc(db, 'users', user.uid), { fcmToken: token, notificationPrefs: prefs }, { merge: true });
+      return { success: true };
+    }catch(err){
+      return { success: false, reason: 'error', message: err && err.message };
+    }
+  };
+  window.disablePushNotifications = async function(){
+    const user = auth.currentUser;
+    if(!user) return false;
+    try{
+      await setDoc(doc(db, 'users', user.uid), { fcmToken: null, notificationPrefs: null }, { merge: true });
+      return true;
+    }catch(err){
+      return false;
+    }
+  };
+  window.getMyNotificationPrefs = async function(){
+    const user = auth.currentUser;
+    if(!user) return null;
+    try{
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if(!snap.exists()) return null;
+      return { enabled: !!snap.data().fcmToken, prefs: snap.data().notificationPrefs || null };
+    }catch(err){
+      return null;
+    }
+  };
+  // Foreground messages (app already open) show as an in-app banner via the existing toast/alert
+  // pattern rather than a system notification, since the browser only shows system notifications
+  // for BACKGROUND messages by default — the service worker's own push handler covers that case
+  isMessagingSupported().then(supported => {
+    if(!supported) return;
+    try{
+      messaging = getMessaging(app);
+      onMessage(messaging, (payload) => {
+        const title = payload.notification && payload.notification.title || 'Health Loksewa';
+        const body = payload.notification && payload.notification.body || '';
+        if(window.showInAppNotificationBanner) window.showInAppNotificationBanner(title, body);
+      });
+    }catch(e){}
+  });
 
   // Expose to the rest of the app (outside this module script) — used by Profile's
   // My Device, Change Password, and Delete Account features.
@@ -6323,6 +6485,10 @@
   async function updateAuthUI(user){
     window.currentUser = user || null;
     if(user){
+      // Claim any pre-existing unnamespaced local data for this account before anything else
+      // reads it — must run before the verification gate and everything after it, since several
+      // of those paths read per-account data (streaks, progress, etc.)
+      if(window.migrateToPerAccountStorage) window.migrateToPerAccountStorage();
       // Email verification gate — only for brand-new, recently-created email/password accounts.
       // Google Sign-In accounts are already verified by Google itself (checked via providerId),
       // and any account older than 30 days is grandfathered in regardless of its verification
@@ -7451,6 +7617,7 @@ const handwrittenNoteScreen = document.getElementById('handwrittenNoteScreen');
 const scanNoteScreen = document.getElementById('scanNoteScreen');
 const pdfAnnotateScreen = document.getElementById('pdfAnnotateScreen');
 const reminderScreen = document.getElementById('reminderScreen');
+const notificationPrefsScreen = document.getElementById('notificationPrefsScreen');
 const revisionScreen = document.getElementById('revisionScreen');
 const revisionSubjectPickScreen = document.getElementById('revisionSubjectPickScreen');
 const revisionCalendarScreen = document.getElementById('revisionCalendarScreen');
@@ -7471,7 +7638,7 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+const ALL_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
@@ -7554,10 +7721,10 @@ function getFeatureArea(screenEl){
   return 'Other';
 }
 function getScreenTimeLog(){
-  try{ return JSON.parse(localStorage.getItem('hl_screentime_log') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_screentime_log')) || '{}'); }catch(e){ return {}; }
 }
 function saveScreenTimeLog(log){
-  try{ localStorage.setItem('hl_screentime_log', JSON.stringify(log)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_screentime_log'), JSON.stringify(log)); }catch(e){}
 }
 function pruneScreenTimeLog(log){
   const cutoff = addDaysISO(-35);
@@ -7746,7 +7913,7 @@ function updateBottomNav(activeScreen){
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
-  const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen];
+  const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen, notificationPrefsScreen];
 
   let activeKey = '';
   if(homeScreens.includes(activeScreen)) activeKey = 'home';
@@ -8948,7 +9115,7 @@ document.getElementById('hdStartupLearnMoreBtn').addEventListener('click', () =>
 // is shaped specifically for MCQs (Subject+Question keyed), so a parallel one here avoids
 // mixing shapes into it. ----------
 function getHealthDayBookmarks(){
-  try{ return JSON.parse(localStorage.getItem('hl_healthday_bookmarks') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_healthday_bookmarks')) || '[]'); }catch(e){ return []; }
 }
 function isHealthDayBookmarked(title){
   return getHealthDayBookmarks().includes(title);
@@ -8957,7 +9124,7 @@ function toggleHealthDayBookmark(title){
   let list = getHealthDayBookmarks();
   if(list.includes(title)) list = list.filter(t => t !== title);
   else list.unshift(title);
-  try{ localStorage.setItem('hl_healthday_bookmarks', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_healthday_bookmarks'), JSON.stringify(list)); }catch(e){}
 }
 
 // ---------- Health Day notifications: honest scope — this app has no server-push/background
@@ -10301,15 +10468,15 @@ document.getElementById('studyTimerResetBtn').addEventListener('click', () => {
 });
 function recordStudyMinutes(minutes){
   try{
-    const log = JSON.parse(localStorage.getItem('hl_study_minutes_log') || '{}');
+    const log = JSON.parse(localStorage.getItem(uk('hl_study_minutes_log')) || '{}');
     const today = todayISO();
     log[today] = (log[today] || 0) + minutes;
-    localStorage.setItem('hl_study_minutes_log', JSON.stringify(log));
+    localStorage.setItem(uk('hl_study_minutes_log'), JSON.stringify(log));
   }catch(e){}
 }
 function renderStudyTimerToday(){
   let log = {};
-  try{ log = JSON.parse(localStorage.getItem('hl_study_minutes_log') || '{}'); }catch(e){}
+  try{ log = JSON.parse(localStorage.getItem(uk('hl_study_minutes_log')) || '{}'); }catch(e){}
   const todayMinutes = log[todayISO()] || 0;
   const hrs = Math.floor(todayMinutes / 60);
   const mins = todayMinutes % 60;
@@ -10320,7 +10487,7 @@ updateStudyTimerDisplay();
 // ---------- My Health: Water Tracker, Sleep Log, BP Log — all manual entry, kept on-device,
 // with clear "not a diagnosis, look at the trend" language throughout. ----------
 function getWaterLog(){
-  try{ return JSON.parse(localStorage.getItem('hl_water_log') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_water_log')) || '{}'); }catch(e){ return {}; }
 }
 function renderWaterTracker(){
   const log = getWaterLog();
@@ -10335,19 +10502,19 @@ function renderWaterTracker(){
 document.getElementById('waterGoalInput').addEventListener('change', (e) => {
   const log = getWaterLog();
   log.goal = Math.max(1, parseInt(e.target.value, 10) || 8);
-  try{ localStorage.setItem('hl_water_log', JSON.stringify(log)); }catch(err){}
+  try{ localStorage.setItem(uk('hl_water_log'), JSON.stringify(log)); }catch(err){}
   renderWaterTracker();
 });
 document.getElementById('waterAddGlassBtn').addEventListener('click', () => {
   const log = getWaterLog();
   const today = todayISO();
   log[today] = (log[today] || 0) + 1;
-  try{ localStorage.setItem('hl_water_log', JSON.stringify(log)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_water_log'), JSON.stringify(log)); }catch(e){}
   renderWaterTracker();
 });
 
 function getSleepEntries(){
-  try{ return JSON.parse(localStorage.getItem('hl_sleep_log') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_sleep_log')) || '[]'); }catch(e){ return []; }
 }
 document.getElementById('sleepSaveBtn').addEventListener('click', () => {
   const bedtime = document.getElementById('sleepBedtime').value;
@@ -10367,7 +10534,7 @@ document.getElementById('sleepSaveBtn').addEventListener('click', () => {
   const mins = durationMinutes % 60;
   const entries = getSleepEntries();
   entries.push({ date: todayISO(), bedtime, waketime, durationMinutes });
-  try{ localStorage.setItem('hl_sleep_log', JSON.stringify(entries.slice(-30))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_sleep_log'), JSON.stringify(entries.slice(-30))); }catch(e){}
   resultEl.innerHTML = `<div class="calc-result">Sleep duration: ${hrs}h ${mins}m</div>`;
   renderSleepHistory();
 });
@@ -10386,7 +10553,7 @@ function renderSleepHistory(){
 }
 
 function getBpEntries(){
-  try{ return JSON.parse(localStorage.getItem('hl_bp_log') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_bp_log')) || '[]'); }catch(e){ return []; }
 }
 document.getElementById('bpSaveBtn').addEventListener('click', () => {
   const systolic = parseFloat(document.getElementById('bpSystolic').value);
@@ -10404,7 +10571,7 @@ document.getElementById('bpSaveBtn').addEventListener('click', () => {
     time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }),
     systolic, diastolic, pulse: isNaN(pulse) ? null : pulse
   });
-  try{ localStorage.setItem('hl_bp_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_bp_log'), JSON.stringify(entries.slice(-50))); }catch(e){}
   resultEl.innerHTML = `<div class="calc-result">Saved: ${systolic}/${diastolic}${!isNaN(pulse) ? ' · Pulse ' + pulse : ''}</div>`;
   document.getElementById('bpSystolic').value = '';
   document.getElementById('bpDiastolic').value = '';
@@ -10424,7 +10591,7 @@ function renderBpHistory(){
 }
 
 function getGlucoseEntries(){
-  try{ return JSON.parse(localStorage.getItem('hl_glucose_log') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_glucose_log')) || '[]'); }catch(e){ return []; }
 }
 document.getElementById('glucoseSaveBtn').addEventListener('click', () => {
   const reading = parseFloat(document.getElementById('glucoseReading').value);
@@ -10437,7 +10604,7 @@ document.getElementById('glucoseSaveBtn').addEventListener('click', () => {
   const now = new Date();
   const entries = getGlucoseEntries();
   entries.push({ date: todayISO(), time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }), reading, type });
-  try{ localStorage.setItem('hl_glucose_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_glucose_log'), JSON.stringify(entries.slice(-50))); }catch(e){}
   resultEl.innerHTML = `<div class="calc-result">Saved: ${reading} mg/dL (${type})</div>`;
   document.getElementById('glucoseReading').value = '';
   renderGlucoseHistory();
@@ -10453,7 +10620,7 @@ function renderGlucoseHistory(){
 }
 
 function getHrEntries(){
-  try{ return JSON.parse(localStorage.getItem('hl_hr_log') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_hr_log')) || '[]'); }catch(e){ return []; }
 }
 document.getElementById('hrSaveBtn').addEventListener('click', () => {
   const bpm = parseFloat(document.getElementById('hrBpm').value);
@@ -10466,7 +10633,7 @@ document.getElementById('hrSaveBtn').addEventListener('click', () => {
   const now = new Date();
   const entries = getHrEntries();
   entries.push({ date: todayISO(), time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }), bpm, type });
-  try{ localStorage.setItem('hl_hr_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_hr_log'), JSON.stringify(entries.slice(-50))); }catch(e){}
   resultEl.innerHTML = `<div class="calc-result">Saved: ${bpm} BPM (${type})</div>`;
   document.getElementById('hrBpm').value = '';
   renderHrHistory();
@@ -10754,7 +10921,7 @@ document.getElementById('breathingStartBtn').addEventListener('click', () => {
 });
 
 function getGratitudeEntries(){
-  try{ return JSON.parse(localStorage.getItem('hl_gratitude_log') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_gratitude_log')) || '[]'); }catch(e){ return []; }
 }
 document.getElementById('gratitudeSaveBtn').addEventListener('click', () => {
   const g1 = document.getElementById('gratitude1').value.trim();
@@ -10768,7 +10935,7 @@ document.getElementById('gratitudeSaveBtn').addEventListener('click', () => {
   }
   const entries = getGratitudeEntries();
   entries.push({ date: todayISO(), items });
-  try{ localStorage.setItem('hl_gratitude_log', JSON.stringify(entries.slice(-60))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_gratitude_log'), JSON.stringify(entries.slice(-60))); }catch(e){}
   resultEl.innerHTML = `<div class="calc-result">Saved 🙏</div>`;
   document.getElementById('gratitude1').value = '';
   document.getElementById('gratitude2').value = '';
@@ -10787,7 +10954,7 @@ function renderGratitudeHistory(){
 
 const HABIT_LIST = ['Study', 'Water', 'Exercise', 'Meditation', 'Reading', 'Sleep'];
 function getHabitLog(){
-  try{ return JSON.parse(localStorage.getItem('hl_habit_log') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_habit_log')) || '{}'); }catch(e){ return {}; }
 }
 function calculateHabitStreak(log, habitName){
   let streak = 0;
@@ -10828,7 +10995,7 @@ function toggleHabit(habitName){
   if(!log[today]) log[today] = [];
   if(log[today].includes(habitName)) log[today] = log[today].filter(h => h !== habitName);
   else log[today].push(habitName);
-  try{ localStorage.setItem('hl_habit_log', JSON.stringify(log)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_habit_log'), JSON.stringify(log)); }catch(e){}
   renderHabitList();
 }
 
@@ -11757,33 +11924,33 @@ let mnemonicActiveCategory = null; // null = all categories
 let mnemonicActiveFilter = 'all'; // all | saved | popular | recent
 
 function getMnemonicBookmarks(){
-  try{ return JSON.parse(localStorage.getItem('hl_mnemonic_bookmarks') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_mnemonic_bookmarks')) || '[]'); }catch(e){ return []; }
 }
 function isMnemonicBookmarked(id){ return getMnemonicBookmarks().includes(id); }
 function toggleMnemonicBookmark(id){
   let list = getMnemonicBookmarks();
   if(list.includes(id)) list = list.filter(x => x !== id);
   else list.unshift(id);
-  try{ localStorage.setItem('hl_mnemonic_bookmarks', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_mnemonic_bookmarks'), JSON.stringify(list)); }catch(e){}
 }
 function getMnemonicHelpfulVoted(){
-  try{ return JSON.parse(localStorage.getItem('hl_mnemonic_helpful_voted') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_mnemonic_helpful_voted')) || '[]'); }catch(e){ return []; }
 }
 function markMnemonicHelpfulVoted(id){
   const list = getMnemonicHelpfulVoted();
   if(!list.includes(id)){
     list.push(id);
-    try{ localStorage.setItem('hl_mnemonic_helpful_voted', JSON.stringify(list)); }catch(e){}
+    try{ localStorage.setItem(uk('hl_mnemonic_helpful_voted'), JSON.stringify(list)); }catch(e){}
   }
 }
 // ---------- User-created mnemonics: stored locally (not submitted to the shared Sheet — these
 // are personal, not published content), merged into the same list/search/category/filter system
 // as the official ones rather than living in a separate parallel screen. ----------
 function getCustomMnemonics(){
-  try{ return JSON.parse(localStorage.getItem('hl_custom_mnemonics') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_custom_mnemonics')) || '[]'); }catch(e){ return []; }
 }
 function saveCustomMnemonics(list){
-  try{ localStorage.setItem('hl_custom_mnemonics', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_custom_mnemonics'), JSON.stringify(list)); }catch(e){}
 }
 function getAllMnemonics(){
   return [...MNEMONICS, ...getCustomMnemonics()];
@@ -13006,6 +13173,51 @@ document.getElementById('goToRevision').addEventListener('click', async (e) => {
 });
 // ---------- Revision Mode spaced-repetition schedule: 1 → 3 → 7 → 15 → 30 days ----------
 const REVISION_INTERVALS_DAYS = [1, 3, 7, 15, 30];
+// ---------- Real per-account data isolation: every "study data" localStorage key below is now
+// namespaced by the logged-in account's UID, so switching accounts on the same device shows each
+// account's own separate progress, mistakes, weak subjects, notes, etc. — not one shared pool.
+// Device-level settings (theme, App Lock, cached public Sheet content) deliberately stay
+// unnamespaced, since those genuinely belong to the device/browser, not to a specific account.
+// A one-time migration claims any pre-existing unnamespaced data for whichever account happens to
+// log in first after this update — the only fair thing to do, since there's no way to know in
+// hindsight which account that old, unlabeled data actually belonged to. ----------
+const PER_ACCOUNT_STORAGE_KEYS = [
+  'hl_bookmark_collection_map','hl_bookmark_collections','hl_bookmarks','hl_custom_bookmarks',
+  'hl_healthday_bookmarks','hl_mnemonic_bookmarks','hl_pdf_bookmarks','hl_quickref_bookmarks',
+  'hl_chapter_stats','hl_chat_history','hl_custom_mnemonics',
+  'hl_daily_activity','hl_dailyfire_last_date','hl_dailyfire_streak',
+  'hl_earned_badges','hl_fc_cards','hl_fc_decks','hl_focus_sessions',
+  'hl_learning_points','hl_longest_streak','hl_mistakes_mastered_count','hl_mnemonic_helpful_voted',
+  'hl_mock_test_history','hl_monthly_tournament_best_rank','hl_monthly_tournament_history',
+  'hl_mood_entries','hl_mood_last_shown','hl_notes','hl_notif_seen_count',
+  'hl_past_question_history','hl_pending_plan_months','hl_premium_status',
+  'hl_progress','hl_progress_goals','hl_question_count_log','hl_read_carefully_dismissed_date',
+  'hl_reminder_pref','hl_reward_month_marker','hl_reward_week_marker','hl_saved_news',
+  'hl_screentime_goals','hl_screentime_log','hl_streak_count','hl_streak_last_date',
+  'hl_study_minutes_log','hl_study_planner_settings','hl_study_planner_today',
+  'hl_tournament_best_rank','hl_tournament_history','hl_update_read_counts',
+  'hl_water_log','hl_wrong_questions','hl_bp_log','hl_glucose_log','hl_gratitude_log',
+  'hl_habit_log','hl_hr_log','hl_sleep_log','hl_last_known_rank_month_overall',
+  'hl_last_known_rank_week_overall','hl_selected_posts','hl_exam_type',
+  'hl_onboarding_done','hl_onboarding_answers',
+];
+function uk(baseKey){
+  const uid = (window.currentUser && window.currentUser.uid) || 'guest';
+  return baseKey + '__u_' + uid;
+}
+function migrateToPerAccountStorage(){
+  try{
+    if(localStorage.getItem('hl_per_account_migration_claimed') === 'true') return; // already claimed by whichever account logged in first
+    PER_ACCOUNT_STORAGE_KEYS.forEach(baseKey => {
+      const oldValue = localStorage.getItem(baseKey);
+      if(oldValue !== null && localStorage.getItem(uk(baseKey)) === null){
+        localStorage.setItem(uk(baseKey), oldValue);
+      }
+    });
+    localStorage.setItem('hl_per_account_migration_claimed', 'true');
+  }catch(e){}
+}
+
 function todayISO(){
   return new Date().toISOString().slice(0, 10);
 }
@@ -13031,12 +13243,12 @@ const MOOD_EMOTIONS = ['Joyful','Hopeful','Amazed','Relieved','Confident','Conte
 const MOOD_CAUSES = ['Health','Sleep','Exercise','Food','Hobby','Money','Identity','Partner','Friends','Pet','Family','Coworkers','Dating','Work','Home','School','Outdoors','Travel','Weather'];
 
 function getMoodEntries(){
-  try{ return JSON.parse(localStorage.getItem('hl_mood_entries') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_mood_entries')) || '[]'); }catch(e){ return []; }
 }
 function saveMoodEntry(entry){
   const entries = getMoodEntries();
   entries.push(entry);
-  try{ localStorage.setItem('hl_mood_entries', JSON.stringify(entries.slice(-200))); }catch(e){} // cap — avoid unbounded growth
+  try{ localStorage.setItem(uk('hl_mood_entries'), JSON.stringify(entries.slice(-200))); }catch(e){} // cap — avoid unbounded growth
 }
 
 let moodDraft = { level:null, emotions:[], causes:[], note:'' };
@@ -13045,7 +13257,7 @@ let moodFlowFromHome = false; // true when triggered from Home's "+ Check In", n
 function initMoodCheckin(){
   const today = todayISO();
   let lastShown = null;
-  try{ lastShown = localStorage.getItem('hl_mood_last_shown'); }catch(e){}
+  try{ lastShown = localStorage.getItem(uk('hl_mood_last_shown')); }catch(e){}
   if(lastShown === today){
     // Already handled today's gate — skip straight to the post-gate screen, no flash of the mood prompt
     showScreen(postGateScreen);
@@ -13141,7 +13353,7 @@ document.getElementById('moodSaveBtn').addEventListener('click', () => {
 // Skip abandons the whole check-in for today (not just the current step) — matches the
 // original single-tap mood feature's meaning, so it stays a genuinely quick opt-out.
 function finishMoodCheckin(){
-  try{ localStorage.setItem('hl_mood_last_shown', todayISO()); }catch(e){}
+  try{ localStorage.setItem(uk('hl_mood_last_shown'), todayISO()); }catch(e){}
   if(moodFlowFromHome){
     showScreen(homeScreen);
     renderHomeMoodRow();
@@ -13232,7 +13444,7 @@ function startOnboardingWizard(editMode){
   onboardingEditMode = !!editMode;
   onboardingStep = 0;
   if(editMode){
-    try{ onboardingAnswers = JSON.parse(localStorage.getItem('hl_onboarding_answers') || '{}'); }catch(e){ onboardingAnswers = {}; }
+    try{ onboardingAnswers = JSON.parse(localStorage.getItem(uk('hl_onboarding_answers')) || '{}'); }catch(e){ onboardingAnswers = {}; }
   } else {
     onboardingAnswers = {};
   }
@@ -13316,8 +13528,8 @@ document.getElementById('onboardingSkipLink').addEventListener('click', () => {
 });
 function finishOnboardingWizard(){
   try{
-    localStorage.setItem('hl_onboarding_answers', JSON.stringify(onboardingAnswers));
-    localStorage.setItem('hl_onboarding_done', '1');
+    localStorage.setItem(uk('hl_onboarding_answers'), JSON.stringify(onboardingAnswers));
+    localStorage.setItem(uk('hl_onboarding_done'), '1');
   }catch(e){}
   if(window.syncToCloud) window.syncToCloud({ onboardingAnswers });
   if(onboardingEditMode){
@@ -13349,7 +13561,7 @@ document.getElementById('editPreferencesBtn').addEventListener('click', () => {
 // This is a brand-new tracking system starting from today — existing users will see a mostly
 // empty chart at first, which is honest (there's no real history to show), not a bug. ----------
 function getDailyActivityLog(){
-  try{ return JSON.parse(localStorage.getItem('hl_daily_activity') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_daily_activity')) || '{}'); }catch(e){ return {}; }
 }
 function recordDailyActivity(questionsCount, correctCount){
   if(!questionsCount) return;
@@ -13358,7 +13570,7 @@ function recordDailyActivity(questionsCount, correctCount){
   if(!log[today]) log[today] = { questions: 0, correct: 0 };
   log[today].questions += questionsCount;
   log[today].correct += correctCount;
-  try{ localStorage.setItem('hl_daily_activity', JSON.stringify(log)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_daily_activity'), JSON.stringify(log)); }catch(e){}
 }
 function bucketActivity(mode){
   const log = getDailyActivityLog();
@@ -13369,53 +13581,153 @@ function bucketActivity(mode){
       const d = new Date(now); d.setDate(d.getDate() - i);
       const key = d.toISOString().slice(0, 10);
       const entry = log[key] || { questions: 0, correct: 0 };
-      buckets.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), questions: entry.questions, correct: entry.correct });
+      buckets.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), questions: entry.questions, correct: entry.correct, studyTimeSec: getStudyTimeForDate(key) });
     }
   } else if(mode === 'weekly'){
     for(let i = 7; i >= 0; i--){
-      let qSum = 0, cSum = 0;
+      let qSum = 0, cSum = 0, tSum = 0;
       for(let d = 0; d < 7; d++){
         const day = new Date(now); day.setDate(day.getDate() - (i * 7 + d));
-        const entry = log[day.toISOString().slice(0, 10)];
+        const key = day.toISOString().slice(0, 10);
+        const entry = log[key];
         if(entry){ qSum += entry.questions; cSum += entry.correct; }
+        tSum += getStudyTimeForDate(key);
       }
-      buckets.push({ label: `W${8 - i}`, questions: qSum, correct: cSum });
+      buckets.push({ label: `W${8 - i}`, questions: qSum, correct: cSum, studyTimeSec: tSum });
     }
   } else if(mode === 'monthly'){
     for(let i = 11; i >= 0; i--){
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthKey = d.toISOString().slice(0, 7);
-      let qSum = 0, cSum = 0;
+      let qSum = 0, cSum = 0, tSum = 0;
       Object.keys(log).forEach(k => { if(k.startsWith(monthKey)){ qSum += log[k].questions; cSum += log[k].correct; } });
-      buckets.push({ label: d.toLocaleDateString('en-US', { month: 'short' }), questions: qSum, correct: cSum });
+      // Study time log is pruned to ~35 days, so monthly/yearly buckets beyond that window
+      // honestly show 0 study time rather than a fabricated estimate for periods with no real data
+      for(let dd = 1; dd <= 31; dd++){
+        const dayKey = monthKey + '-' + String(dd).padStart(2, '0');
+        tSum += getStudyTimeForDate(dayKey);
+      }
+      buckets.push({ label: d.toLocaleDateString('en-US', { month: 'short' }), questions: qSum, correct: cSum, studyTimeSec: tSum });
     }
   } else { // yearly
     for(let i = 4; i >= 0; i--){
       const year = String(now.getFullYear() - i);
       let qSum = 0, cSum = 0;
       Object.keys(log).forEach(k => { if(k.startsWith(year)){ qSum += log[k].questions; cSum += log[k].correct; } });
-      buckets.push({ label: year, questions: qSum, correct: cSum });
+      buckets.push({ label: year, questions: qSum, correct: cSum, studyTimeSec: 0 }); // no year-scale study time history retained
     }
   }
   return buckets;
 }
+// ---------- Study Performance card: 4 metrics (Accuracy/Questions/Study Time/Topics Completed),
+// each period compared against the previous comparable period for a real, calculated trend —
+// never a guessed direction. Topics Completed has one honest limitation: chapter completion
+// isn't date-stamped anywhere, so there's no way to show a real per-period history for it — the
+// chart is skipped for that metric specifically with a plain explanation, rather than faking a
+// trend line from data that doesn't exist. ----------
+let currentHomeMetric = 'accuracy';
+function getMetricValue(bucket, metric){
+  if(metric === 'accuracy') return bucket.questions > 0 ? Math.round((bucket.correct / bucket.questions) * 100) : 0;
+  if(metric === 'questions') return bucket.questions;
+  if(metric === 'studyTime') return Math.round(bucket.studyTimeSec / 60); // minutes
+  return 0;
+}
 function renderHomeChart(mode){
-  const buckets = bucketActivity(mode);
-  const maxQ = Math.max(1, ...buckets.map(b => b.questions));
-  const w = 300, h = 80, pad = 6;
-  const stepX = (w - pad * 2) / (buckets.length - 1 || 1);
-  const coords = buckets.map((b, i) => ({
-    x: pad + i * stepX,
-    y: h - pad - ((b.questions / maxQ) * (h - pad * 2))
-  }));
-  const points = coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
-  const dots = coords.map(c => `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.5" fill="#0D9488"/>`).join('');
-  document.getElementById('homeChartSvg').innerHTML = `<polyline points="${points}" fill="none" stroke="#0D9488" stroke-width="2.5"/>${dots}`;
+  document.querySelectorAll('.home-chart-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  const svg = document.getElementById('homeChartSvg');
 
-  const totalQ = buckets.reduce((s, b) => s + b.questions, 0);
-  const totalC = buckets.reduce((s, b) => s + b.correct, 0);
-  document.getElementById('homeChartQ').textContent = totalQ;
-  document.getElementById('homeChartAcc').textContent = (totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0) + '%';
+  if(currentHomeMetric === 'topics'){
+    const chapters = Object.values(getChapterStats());
+    const completed = chapters.filter(isChapterComplete).length;
+    svg.innerHTML = `<text x="160" y="55" text-anchor="middle" fill="var(--ink-soft)" font-size="11" font-family="Inter,sans-serif">${completed} topic${completed === 1 ? '' : 's'} completed so far</text><text x="160" y="72" text-anchor="middle" fill="var(--ink-soft)" font-size="9" font-family="Inter,sans-serif" opacity="0.7">History isn't tracked by date yet</text>`;
+    updateHomeStatsAndInsight(mode, null);
+    return;
+  }
+
+  const buckets = bucketActivity(mode);
+  const values = buckets.map(b => getMetricValue(b, currentHomeMetric));
+  const maxV = Math.max(1, ...values);
+  const w = 320, h = 120, padX = 26, padTop = 12, padBottom = 24;
+  const chartH = h - padTop - padBottom;
+  const stepX = (w - padX * 2) / (buckets.length - 1 || 1);
+  const coords = values.map((v, i) => ({
+    x: padX + i * stepX,
+    y: padTop + chartH - ((v / maxV) * chartH)
+  }));
+
+  // Subtle horizontal gridlines only — no vertical lines, matching a clean, uncluttered look
+  let gridLines = '';
+  for(let g = 0; g <= 3; g++){
+    const gy = padTop + (chartH / 3) * g;
+    gridLines += `<line x1="${padX}" y1="${gy.toFixed(1)}" x2="${w - padX}" y2="${gy.toFixed(1)}" stroke="var(--line)" stroke-width="1" opacity="0.5"/>`;
+  }
+  const points = coords.map(c => `${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(' ');
+  const dots = coords.map((c, i) => {
+    const isLast = i === coords.length - 1;
+    return isLast
+      ? `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="6" fill="#0D9488" opacity="0.25"/><circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="#0D9488"/>`
+      : `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.5" fill="#0D9488"/>`;
+  }).join('');
+  const labels = buckets.map((b, i) => `<text x="${coords[i].x.toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="var(--ink-soft)" font-size="8.5" font-family="Inter,sans-serif">${b.label}</text>`).join('');
+
+  svg.innerHTML = `${gridLines}<polyline points="${points}" fill="none" stroke="#0D9488" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${dots}${labels}`;
+
+  updateHomeStatsAndInsight(mode, buckets);
+}
+function computeTrend(current, previous, lowerIsBetter){
+  if(previous === 0 && current === 0) return { dir: 'neutral', pct: 0 };
+  if(previous === 0) return { dir: 'up', pct: 100 };
+  const pctChange = Math.round(((current - previous) / previous) * 100);
+  if(Math.abs(pctChange) < 3) return { dir: 'neutral', pct: pctChange }; // small enough to not be a meaningful trend
+  const improved = lowerIsBetter ? pctChange < 0 : pctChange > 0;
+  return { dir: improved ? 'up' : 'down', pct: Math.abs(pctChange) };
+}
+function renderTrendEl(elId, trend, periodLabel){
+  const el = document.getElementById(elId);
+  if(trend.dir === 'neutral'){
+    el.className = 'hsc-trend trend-neutral';
+    el.textContent = '→ No change';
+  } else {
+    el.className = 'hsc-trend trend-' + trend.dir;
+    el.textContent = (trend.dir === 'up' ? '↑ ' : '↓ ') + trend.pct + '% ' + periodLabel;
+  }
+}
+function updateHomeStatsAndInsight(mode, buckets){
+  const periodLabels = { daily: 'from last week', weekly: 'from last period', monthly: 'from last month', yearly: 'from last year' };
+  const periodLabel = periodLabels[mode] || '';
+
+  let totalQ = 0, totalC = 0, totalTimeSec = 0, prevQ = 0, prevC = 0, prevTimeSec = 0;
+  if(buckets){
+    const half = Math.ceil(buckets.length / 2);
+    const currentHalf = buckets.slice(half);
+    const prevHalf = buckets.slice(0, half);
+    currentHalf.forEach(b => { totalQ += b.questions; totalC += b.correct; totalTimeSec += b.studyTimeSec; });
+    prevHalf.forEach(b => { prevQ += b.questions; prevC += b.correct; prevTimeSec += b.studyTimeSec; });
+  }
+  const acc = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0;
+  const prevAcc = prevQ > 0 ? Math.round((prevC / prevQ) * 100) : 0;
+
+  document.getElementById('homeStatQNum').textContent = totalQ;
+  document.getElementById('homeStatAccNum').textContent = acc + '%';
+  document.getElementById('homeStatTimeNum').textContent = fmtDuration(totalTimeSec);
+
+  renderTrendEl('homeStatQTrend', computeTrend(totalQ, prevQ, false), periodLabel);
+  renderTrendEl('homeStatAccTrend', computeTrend(acc, prevAcc, false), periodLabel);
+  renderTrendEl('homeStatTimeTrend', computeTrend(totalTimeSec, prevTimeSec, false), periodLabel);
+
+  // Insight: generated from the same real numbers above, never invented — accuracy is used as
+  // the headline metric since it's the most meaningful single signal for a student
+  const accTrend = computeTrend(acc, prevAcc, false);
+  const insightEl = document.getElementById('homeInsightText');
+  if(totalQ === 0){
+    insightEl.textContent = 'Keep practicing to see your first insight here.';
+  } else if(accTrend.dir === 'up'){
+    insightEl.textContent = `Your accuracy improved by ${accTrend.pct}% this period. Keep practicing your weak areas.`;
+  } else if(accTrend.dir === 'down'){
+    insightEl.textContent = `Your accuracy dropped by ${accTrend.pct}% this period. Review your recent mistakes before attempting another difficult set.`;
+  } else {
+    insightEl.textContent = `Your accuracy is steady at ${acc}% this period. Consistency is progress too.`;
+  }
 }
 function renderHomeMoodRow(){
   const entries = getMoodEntries();
@@ -13538,6 +13850,29 @@ document.querySelectorAll('.home-chart-tab').forEach(tab => {
     renderHomeChart(tab.dataset.mode);
   });
 });
+// ---------- Metric selector dropdown ----------
+const METRIC_LABELS = { accuracy: 'Accuracy', questions: 'Questions', studyTime: 'Study Time', topics: 'Topics Completed' };
+document.getElementById('homeMetricSelectBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const dropdown = document.getElementById('homeMetricDropdown');
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+});
+document.querySelectorAll('.home-metric-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    currentHomeMetric = opt.dataset.metric;
+    document.getElementById('homeMetricSelectBtn').textContent = METRIC_LABELS[currentHomeMetric] + ' ▾';
+    document.getElementById('homeMetricDropdown').style.display = 'none';
+    const activeTab = document.querySelector('.home-chart-tab.active');
+    renderHomeChart(activeTab ? activeTab.dataset.mode : 'daily');
+  });
+});
+document.addEventListener('click', () => {
+  document.getElementById('homeMetricDropdown').style.display = 'none';
+});
+document.getElementById('homeViewFullProgressLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('navProgress').click();
+});
 document.querySelectorAll('#homeSwipeDots span').forEach(dot => {
   dot.addEventListener('click', () => showHomeSwipePanel(parseInt(dot.dataset.panel, 10)));
 });
@@ -13555,11 +13890,11 @@ document.querySelectorAll('#homeSwipeDots span').forEach(dot => {
 renderHomeChart('daily'); // initial paint on page load
 
 function getWrongQuestions(){
-  try{ return JSON.parse(localStorage.getItem('hl_wrong_questions') || '[]'); }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_wrong_questions')) || '[]'); }
   catch(e){ return []; }
 }
 function saveWrongQuestions(list){
-  try{ localStorage.setItem('hl_wrong_questions', JSON.stringify(list.slice(0, 200))); }catch(e){} // cap to avoid unbounded growth
+  try{ localStorage.setItem(uk('hl_wrong_questions'), JSON.stringify(list.slice(0, 200))); }catch(e){} // cap to avoid unbounded growth
 }
 // Wrong answer (any session) — (re)starts the question at day-1 of the schedule
 // Wrong answer (any session) — (re)starts the question at day-1 of the schedule, tracks how
@@ -13603,8 +13938,8 @@ function advanceRevisionSchedule(q){
   if(nextIntervalIndex >= REVISION_INTERVALS_DAYS.length){
     list.splice(idx, 1); // survived the full schedule — mastered
     try{
-      const mastered = parseInt(localStorage.getItem('hl_mistakes_mastered_count') || '0', 10);
-      localStorage.setItem('hl_mistakes_mastered_count', String(mastered + 1));
+      const mastered = parseInt(localStorage.getItem(uk('hl_mistakes_mastered_count')) || '0', 10);
+      localStorage.setItem(uk('hl_mistakes_mastered_count'), String(mastered + 1));
     }catch(e){}
   } else {
     list[idx] = { ...current, intervalIndex: nextIntervalIndex, nextRevisionDate: addDaysISO(REVISION_INTERVALS_DAYS[nextIntervalIndex]), correctReviews: (current.correctReviews || 0) + 1 };
@@ -13943,11 +14278,11 @@ document.getElementById('examRevisionStartBtn').addEventListener('click', startE
 // fresh each calendar day but preserving that day's own customizations (added/deleted items)
 // until the date actually changes. ----------
 function getStudyPlannerSettings(){
-  try{ return JSON.parse(localStorage.getItem('hl_study_planner_settings') || 'null'); }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_study_planner_settings')) || 'null'); }
   catch(e){ return null; }
 }
 function saveStudyPlannerSettings(settings){
-  try{ localStorage.setItem('hl_study_planner_settings', JSON.stringify(settings)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_study_planner_settings'), JSON.stringify(settings)); }catch(e){}
 }
 function generateTodaysStudyPlan(settings){
   const totalMinutes = Math.round((settings.hoursPerDay || 2) * 60);
@@ -13967,7 +14302,7 @@ function getTodaysStudyPlan(){
   const settings = getStudyPlannerSettings();
   if(!settings) return null;
   let plan = null;
-  try{ plan = JSON.parse(localStorage.getItem('hl_study_planner_today') || 'null'); }catch(e){}
+  try{ plan = JSON.parse(localStorage.getItem(uk('hl_study_planner_today')) || 'null'); }catch(e){}
   if(!plan || plan.date !== todayISO()){
     plan = generateTodaysStudyPlan(settings); // new day — fresh plan, yesterday's custom edits don't carry over
     saveTodaysStudyPlan(plan);
@@ -13975,7 +14310,7 @@ function getTodaysStudyPlan(){
   return plan;
 }
 function saveTodaysStudyPlan(plan){
-  try{ localStorage.setItem('hl_study_planner_today', JSON.stringify(plan)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_study_planner_today'), JSON.stringify(plan)); }catch(e){}
 }
 
 document.getElementById('goToStudyPlannerFromPractice') && document.getElementById('goToStudyPlannerFromPractice').addEventListener('click', (e) => {
@@ -14180,7 +14515,7 @@ function renderMistakeBook(){
   const dueList = list.filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
   const strugglingCount = list.filter(q => getMistakeCategory(q).key === 'struggling').length;
   let mastered = 0;
-  try{ mastered = parseInt(localStorage.getItem('hl_mistakes_mastered_count') || '0', 10); }catch(e){}
+  try{ mastered = parseInt(localStorage.getItem(uk('hl_mistakes_mastered_count')) || '0', 10); }catch(e){}
 
   document.getElementById('mistakeProgressCard').innerHTML = `
     <div class="content-card" style="background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff; margin-bottom:10px;">
@@ -14273,7 +14608,7 @@ document.getElementById('practiceMistakesBtn').addEventListener('click', () => {
 
 function renderReminderSettings(){
   let saved = null;
-  try{ saved = JSON.parse(localStorage.getItem('hl_reminder_pref') || 'null'); }catch(err){}
+  try{ saved = JSON.parse(localStorage.getItem(uk('hl_reminder_pref')) || 'null'); }catch(err){}
 
   const timeInput = document.getElementById('reminderTimeInput');
   const statusMsg = document.getElementById('reminderStatusMsg');
@@ -14310,7 +14645,7 @@ document.getElementById('saveReminderBtn').addEventListener('click', async () =>
 
   // Save the preference locally, and to Firestore if signed in (so it's ready for real delivery later)
   const pref = { enabled: true, time };
-  try{ localStorage.setItem('hl_reminder_pref', JSON.stringify(pref)); }catch(err){}
+  try{ localStorage.setItem(uk('hl_reminder_pref'), JSON.stringify(pref)); }catch(err){}
   if(window.saveReminderPreference){
     window.saveReminderPreference(time);
   }
@@ -14470,14 +14805,14 @@ function migrateOldNote(n){
 }
 function getNotes(){
   try{
-    const raw = JSON.parse(localStorage.getItem('hl_notes') || '[]');
+    const raw = JSON.parse(localStorage.getItem(uk('hl_notes')) || '[]');
     const migrated = raw.map(migrateOldNote);
     saveNotes(migrated); // persist the migration so it only happens once
     return migrated;
   }catch(e){ return []; }
 }
 function saveNotes(list){
-  try{ localStorage.setItem('hl_notes', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_notes'), JSON.stringify(list)); }catch(e){}
 }
 function getActiveNotes(){ return getNotes().filter(n => !n.deletedAt); }
 function getTrashedNotes(){ return getNotes().filter(n => n.deletedAt); }
@@ -15087,14 +15422,14 @@ const QUICK_REF_EXTERNAL_LINKS = {
 let QUICK_REFERENCES = [];
 let quickRefLoaded = false;
 function getQuickRefBookmarks(){
-  try{ return JSON.parse(localStorage.getItem('hl_quickref_bookmarks') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_quickref_bookmarks')) || '[]'); }catch(e){ return []; }
 }
 function isQuickRefBookmarked(subtopic){ return getQuickRefBookmarks().includes(subtopic); }
 function toggleQuickRefBookmark(subtopic){
   let list = getQuickRefBookmarks();
   if(list.includes(subtopic)) list = list.filter(x => x !== subtopic);
   else list.unshift(subtopic);
-  try{ localStorage.setItem('hl_quickref_bookmarks', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_quickref_bookmarks'), JSON.stringify(list)); }catch(e){}
 }
 function renderQuickRefHub(){
   const wrap = document.getElementById('quickRefCategoryWrap');
@@ -16940,7 +17275,7 @@ function renderRevisionProgress(){
   const overdue = wrong.filter(w => w.nextRevisionDate && w.nextRevisionDate < today);
   const upcoming = wrong.filter(w => w.nextRevisionDate && w.nextRevisionDate > today);
   let mastered = 0;
-  try{ mastered = parseInt(localStorage.getItem('hl_mistakes_mastered_count') || '0', 10); }catch(e){}
+  try{ mastered = parseInt(localStorage.getItem(uk('hl_mistakes_mastered_count')) || '0', 10); }catch(e){}
 
   document.getElementById('rpStatsGrid').innerHTML = `
     <div class="stat-tile"><div class="st-num">${dueToday.length}</div><div class="st-label">Due Today</div></div>
@@ -17408,7 +17743,7 @@ function generateEscalatingTiers(baseValues, doubleAfter, currentValue){
 }
 function computeAchievements(stats, streak){
   let mastered = 0;
-  try{ mastered = parseInt(localStorage.getItem('hl_mistakes_mastered_count') || '0', 10); }catch(e){}
+  try{ mastered = parseInt(localStorage.getItem(uk('hl_mistakes_mastered_count')) || '0', 10); }catch(e){}
 
   const questionTiers = generateEscalatingTiers([10, 100, 500, 1000], 1000, stats.totalAttempted);
   const streakTiers = generateEscalatingTiers([7, 30], 30, getLongestStreak());
@@ -17631,20 +17966,20 @@ const MBH_TYPE_META = {
 // the app's existing types — e.g. a concept or an external link a student wants to keep. Both
 // are dedicated local stores, same pattern as every other bookmark type here. ----------
 function getPdfBookmarks(){
-  try{ return JSON.parse(localStorage.getItem('hl_pdf_bookmarks') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_pdf_bookmarks')) || '[]'); }catch(e){ return []; }
 }
 function isPdfBookmarked(link){ return getPdfBookmarks().some(p => p.link === link); }
 function togglePdfBookmark(title, link){
   let list = getPdfBookmarks();
   if(list.some(p => p.link === link)) list = list.filter(p => p.link !== link);
   else list.unshift({ title, link });
-  try{ localStorage.setItem('hl_pdf_bookmarks', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_pdf_bookmarks'), JSON.stringify(list)); }catch(e){}
 }
 function getCustomBookmarks(){
-  try{ return JSON.parse(localStorage.getItem('hl_custom_bookmarks') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_custom_bookmarks')) || '[]'); }catch(e){ return []; }
 }
 function saveCustomBookmarks(list){
-  try{ localStorage.setItem('hl_custom_bookmarks', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_custom_bookmarks'), JSON.stringify(list)); }catch(e){}
 }
 function refreshDocViewerBookmarkBtn(){
   const btn = document.getElementById('docViewerBookmarkBtn');
@@ -17664,16 +17999,16 @@ document.getElementById('docViewerBookmarkBtn').addEventListener('click', () => 
 // document's explicit rule. Stored as a simple {itemKey: collectionName} map, keyed by each
 // item's stable key (built fresh below for every type so collection tags survive re-renders). ----
 function getBookmarkCollections(){
-  try{ return JSON.parse(localStorage.getItem('hl_bookmark_collections') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_bookmark_collections')) || '[]'); }catch(e){ return []; }
 }
 function saveBookmarkCollections(list){
-  try{ localStorage.setItem('hl_bookmark_collections', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_bookmark_collections'), JSON.stringify(list)); }catch(e){}
 }
 function getBookmarkCollectionMap(){
-  try{ return JSON.parse(localStorage.getItem('hl_bookmark_collection_map') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_bookmark_collection_map')) || '{}'); }catch(e){ return {}; }
 }
 function setBookmarkCollectionMap(map){
-  try{ localStorage.setItem('hl_bookmark_collection_map', JSON.stringify(map)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_bookmark_collection_map'), JSON.stringify(map)); }catch(e){}
 }
 function getItemCollection(key){ return getBookmarkCollectionMap()[key] || null; }
 function setItemCollection(key, collectionName){
@@ -18045,7 +18380,7 @@ document.getElementById('upgradeNowBtn').addEventListener('click', () => {
 // ---------- Premium status checking (Path B: manual activation via eSewa) ----------
 async function isPremiumUser(){
   try{
-    const cached = JSON.parse(localStorage.getItem('hl_premium_status') || 'null');
+    const cached = JSON.parse(localStorage.getItem(uk('hl_premium_status')) || 'null');
     if(cached !== null) return cached;
   }catch(e){}
   return false;
@@ -18053,7 +18388,7 @@ async function isPremiumUser(){
 async function refreshPremiumStatus(){
   if(!window.checkPremiumStatus) return false;
   const isPremium = await window.checkPremiumStatus();
-  try{ localStorage.setItem('hl_premium_status', JSON.stringify(isPremium)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_premium_status'), JSON.stringify(isPremium)); }catch(e){}
   return isPremium;
 }
 async function renderPremiumStatus(){
@@ -18171,7 +18506,7 @@ function selectPricingPlan(index){
 // repeat-practice flows where this would just become something to dismiss reflexively every time.
 async function showReadCarefullyReminder(){
   let dismissedDate = null;
-  try{ dismissedDate = localStorage.getItem('hl_read_carefully_dismissed_date'); }catch(e){}
+  try{ dismissedDate = localStorage.getItem(uk('hl_read_carefully_dismissed_date')); }catch(e){}
   if(dismissedDate === todayISO()) return; // already acknowledged today
 
   document.getElementById('readCarefullyBackdrop').style.display = 'block';
@@ -18180,7 +18515,7 @@ async function showReadCarefullyReminder(){
   return new Promise((resolve) => {
     document.getElementById('readCarefullyContinueBtn').onclick = () => {
       if(document.getElementById('readCarefullyDontShowToday').checked){
-        try{ localStorage.setItem('hl_read_carefully_dismissed_date', todayISO()); }catch(e){}
+        try{ localStorage.setItem(uk('hl_read_carefully_dismissed_date'), todayISO()); }catch(e){}
       }
       document.getElementById('readCarefullyBackdrop').style.display = 'none';
       document.getElementById('readCarefullyModal').style.display = 'none';
@@ -18245,7 +18580,7 @@ document.getElementById('esewaPayBtn').addEventListener('click', async () => {
     const planForPayment = selectedPricingPlan || FALLBACK_PRICING_PLAN;
     // Stash the chosen plan's duration so activation (after eSewa redirects back) knows how
     // many months of Premium to grant — eSewa's own redirect data doesn't carry this for us.
-    try{ localStorage.setItem('hl_pending_plan_months', String(planForPayment.months)); }catch(e){}
+    try{ localStorage.setItem(uk('hl_pending_plan_months'), String(planForPayment.months)); }catch(e){}
 
     const res = await fetch(`${SHEET_API_URL}?action=initiateEsewaPayment&uid=${encodeURIComponent(userInfo.uid)}&amount=${encodeURIComponent(planForPayment.finalPrice)}`);
     const fields = await res.json();
@@ -18305,11 +18640,11 @@ async function checkForEsewaReturnAndActivate(){
 
     if(window.activatePremiumAfterPayment){
       let planMonths = 1;
-      try{ planMonths = Number(localStorage.getItem('hl_pending_plan_months')) || 1; }catch(e){}
+      try{ planMonths = Number(localStorage.getItem(uk('hl_pending_plan_months'))) || 1; }catch(e){}
       await window.activatePremiumAfterPayment(planMonths);
-      try{ localStorage.removeItem('hl_pending_plan_months'); }catch(e){}
+      try{ localStorage.removeItem(uk('hl_pending_plan_months')); }catch(e){}
       alert('🎉 Payment successful! ✅ Premium Active — thank you for joining Health Loksewa!');
-      try{ localStorage.setItem('hl_premium_status', 'true'); }catch(e){}
+      try{ localStorage.setItem(uk('hl_premium_status'), 'true'); }catch(e){}
     }
   }catch(err){
     alert('Payment verification failed due to a connection issue. If you were charged, please contact support.');
@@ -18561,18 +18896,18 @@ const EXAM_TYPES = [
 // Selecting/deselecting in either place updates both immediately, so they never drift apart. ----------
 function getSelectedPosts(){
   try{
-    const raw = localStorage.getItem('hl_selected_posts');
+    const raw = localStorage.getItem(uk('hl_selected_posts'));
     if(raw){
       const arr = JSON.parse(raw);
       return Array.isArray(arr) ? arr : [];
     }
     // Migrate the old single-select preference, if present, so existing users don't lose it
-    const legacy = localStorage.getItem('hl_exam_type');
+    const legacy = localStorage.getItem(uk('hl_exam_type'));
     return legacy ? [legacy] : [];
   }catch(e){ return []; }
 }
 function setSelectedPosts(arr){
-  try{ localStorage.setItem('hl_selected_posts', JSON.stringify(arr)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_selected_posts'), JSON.stringify(arr)); }catch(e){}
 }
 function summarizeSelectedPosts(){
   const selected = getSelectedPosts();
@@ -18647,7 +18982,7 @@ function renderMyPreparationCard(){
   document.getElementById('myPrepGoal').textContent = summarizeSelectedPosts();
   let dailyGoal = '—';
   try{
-    const answers = JSON.parse(localStorage.getItem('hl_onboarding_answers') || '{}');
+    const answers = JSON.parse(localStorage.getItem(uk('hl_onboarding_answers')) || '{}');
     if(answers.dailyTime) dailyGoal = DAILY_GOAL_LABELS[answers.dailyTime] || answers.dailyTime;
   }catch(e){}
   document.getElementById('myPrepDailyGoal').textContent = dailyGoal;
@@ -18679,6 +19014,62 @@ document.getElementById('menuMySavedNews').addEventListener('click', () => {
 document.getElementById('menuScreenTime').addEventListener('click', () => {
   showScreen(screenTimeScreen);
   renderScreenTimeDashboard();
+});
+// ---------- Notification Preferences ----------
+document.getElementById('menuNotificationPrefs').addEventListener('click', async () => {
+  showScreen(notificationPrefsScreen);
+  document.getElementById('npStatusMsg').textContent = '';
+  const existing = window.getMyNotificationPrefs ? await window.getMyNotificationPrefs() : null;
+  const enabled = existing && existing.enabled;
+  document.getElementById('npMasterToggle').textContent = enabled ? 'On' : 'Off';
+  document.getElementById('npCategoriesWrap').style.display = enabled ? 'block' : 'none';
+  if(existing && existing.prefs){
+    document.querySelectorAll('.np-cat').forEach(cb => {
+      cb.checked = existing.prefs[cb.dataset.cat] !== false; // default checked unless explicitly turned off before
+    });
+  }
+});
+document.getElementById('npMasterToggle').addEventListener('click', async () => {
+  const btn = document.getElementById('npMasterToggle');
+  const currentlyOn = btn.textContent === 'On';
+  if(currentlyOn){
+    if(!confirm('Turn off all notifications?')) return;
+    btn.disabled = true;
+    await window.disablePushNotifications();
+    btn.disabled = false;
+    btn.textContent = 'Off';
+    document.getElementById('npCategoriesWrap').style.display = 'none';
+  } else {
+    document.getElementById('npCategoriesWrap').style.display = 'block';
+    // Don't actually register yet — wait for Save, so the category choices made below are what
+    // actually gets sent to the permission/registration step, not a second, separate action
+  }
+});
+document.getElementById('npSaveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('npSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const prefs = {};
+  document.querySelectorAll('.np-cat').forEach(cb => { prefs[cb.dataset.cat] = cb.checked; });
+  const result = await window.registerForPushNotifications(prefs);
+  btn.disabled = false; btn.textContent = 'Save Preferences';
+  const msg = document.getElementById('npStatusMsg');
+  if(result.success){
+    msg.style.color = 'var(--correct)';
+    msg.textContent = 'Notifications enabled — you\'re all set.';
+    document.getElementById('npMasterToggle').textContent = 'On';
+  } else if(result.reason === 'permission_denied'){
+    msg.style.color = 'var(--wrong)';
+    msg.textContent = 'Notification permission was denied — enable it in your browser/device settings to turn this on.';
+  } else if(result.reason === 'unsupported'){
+    msg.style.color = 'var(--wrong)';
+    msg.textContent = 'Notifications aren\'t supported on this browser/device.';
+  } else if(result.reason === 'not_configured'){
+    msg.style.color = 'var(--wrong)';
+    msg.textContent = 'Notifications aren\'t fully set up yet on our end — please check back soon.';
+  } else {
+    msg.style.color = 'var(--wrong)';
+    msg.textContent = 'Could not save right now — please try again.';
+  }
 });
 // ---------- Shared re-authentication for sensitive App Lock actions (disable, change PIN,
 // change method) — tries biometric first if that's the active method, falls back to a PIN
@@ -18990,7 +19381,7 @@ document.getElementById('postGateContinueBtn').addEventListener('click', () => {
     return;
   }
   let onboardingDone = false;
-  try{ onboardingDone = localStorage.getItem('hl_onboarding_done') === '1'; }catch(e){}
+  try{ onboardingDone = localStorage.getItem(uk('hl_onboarding_done')) === '1'; }catch(e){}
   if(onboardingDone){
     checkAndShowHealthDayStartupCard();
   } else {
@@ -19549,7 +19940,7 @@ async function loadNotifications(){
     paintNotifications(allEntries);
 
     // Mark all as "seen" now that the user has opened this screen — clears the badge
-    try{ localStorage.setItem('hl_notif_seen_count', String(allEntries.length)); }catch(e){}
+    try{ localStorage.setItem(uk('hl_notif_seen_count'), String(allEntries.length)); }catch(e){}
     updateNotificationBadge();
   }catch(err){
     // Keep showing cached/instant data — no need to alarm the user
@@ -19562,10 +19953,10 @@ async function loadNotifications(){
 // visits it moves to Archive, but the entry itself is NEVER deleted, only reclassified, so
 // nothing an admin wrote is ever actually lost. ----------
 function getUpdateReadCounts(){
-  try{ return JSON.parse(localStorage.getItem('hl_update_read_counts') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_update_read_counts')) || '{}'); }catch(e){ return {}; }
 }
 function saveUpdateReadCounts(counts){
-  try{ localStorage.setItem('hl_update_read_counts', JSON.stringify(counts)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_update_read_counts'), JSON.stringify(counts)); }catch(e){}
 }
 function updateKeyFor(u){ return String(u.ID || u.Title || ''); }
 async function renderWhatsNew(){
@@ -19632,7 +20023,7 @@ document.getElementById('whatsNewArchiveToggle').addEventListener('click', () =>
 // ---------- Unread notification badge (red count on the bell icon) ----------
 async function updateNotificationBadge(){
   let seenCount = 0;
-  try{ seenCount = parseInt(localStorage.getItem('hl_notif_seen_count') || '0', 10); }catch(e){}
+  try{ seenCount = parseInt(localStorage.getItem(uk('hl_notif_seen_count')) || '0', 10); }catch(e){}
 
   const revisionBonus = getTodaysRevisionEntry() ? 1 : 0; // QOTD is always present; Revision only counts when something's actually due
   let totalCount = 1 + revisionBonus;
@@ -19730,7 +20121,7 @@ setInterval(showQuoteOfDay, 60 * 1000);
 // ---------- Question of the Day ----------
 async function loadQuestionOfDay(){
   const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, resets at midnight (device time)
-  const answeredKey = 'hl_qotd_answered_' + todayKey;
+  const answeredKey = uk('hl_qotd_answered_' + todayKey);
 
   let answeredData = null;
   try{ answeredData = JSON.parse(localStorage.getItem(answeredKey) || 'null'); }catch(e){}
@@ -19775,7 +20166,7 @@ function paintQotdQuestion(q, todayKey){
       const chosen = btn.dataset.letter;
       const correct = chosen === q.CorrectAnswer;
       const answeredData = { question: q, chosen, correct };
-      try{ localStorage.setItem('hl_qotd_answered_' + todayKey, JSON.stringify(answeredData)); }catch(e){}
+      try{ localStorage.setItem(uk('hl_qotd_answered_' + todayKey), JSON.stringify(answeredData)); }catch(e){}
       paintQotdAnswered(answeredData);
     });
   });
@@ -20179,7 +20570,7 @@ async function loadNewsPortalSource(key, sources){
   renderNewsArticleCards(articles, source.Name);
 }
 function getSavedNews(){
-  try{ return JSON.parse(localStorage.getItem('hl_saved_news') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_saved_news')) || '[]'); }catch(e){ return []; }
 }
 function isNewsSaved(link){
   return getSavedNews().some(a => a.Link === link);
@@ -20192,7 +20583,7 @@ function toggleSaveNews(article, sourceName){
     saved.unshift({ ...article, SourceName: sourceName || '' });
     saved = saved.slice(0, 100); // cap so localStorage doesn't grow unbounded
   }
-  try{ localStorage.setItem('hl_saved_news', JSON.stringify(saved)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_saved_news'), JSON.stringify(saved)); }catch(e){}
 }
 function loadSavedNews(){
   newsPortalSelectedKey = '__saved__';
@@ -20796,6 +21187,24 @@ function renderMockPosts(){
 
 // Small reusable loading overlay — shown while Mock Test / a Set's questions load from the
 // server, since that fetch can genuinely take a few seconds and users tapped blind before this.
+// ---------- In-app foreground notification banner — auto-dismisses, tap to open What's New
+// (a reasonable default landing spot; specific deep-linking per notification type is a natural
+// future refinement once real usage shows which destinations matter most) ----------
+let inAppNotifTimeout = null;
+window.showInAppNotificationBanner = function(title, body){
+  document.getElementById('inAppNotifTitle').textContent = title;
+  document.getElementById('inAppNotifBody').textContent = body;
+  const banner = document.getElementById('inAppNotifBanner');
+  banner.style.display = 'block';
+  clearTimeout(inAppNotifTimeout);
+  inAppNotifTimeout = setTimeout(() => { banner.style.display = 'none'; }, 6000);
+};
+document.getElementById('inAppNotifBanner').addEventListener('click', () => {
+  document.getElementById('inAppNotifBanner').style.display = 'none';
+  showScreen(whatsNewScreen);
+  renderWhatsNew();
+});
+
 function showQuizLoading(message){
   document.getElementById('quizLoadingText').textContent = message || 'Please wait, loading your questions… this may take a moment.';
   document.getElementById('quizLoadingOverlay').classList.add('active');
@@ -21067,11 +21476,11 @@ function renderSubjectPick(){
 
 // ---------- Progress tracking (saved on-device AND synced to the cloud when signed in) ----------
 function loadProgress(){
-  try{ return JSON.parse(localStorage.getItem('hl_progress') || '{}'); }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_progress')) || '{}'); }
   catch(e){ return {}; }
 }
 function saveProgress(p){
-  try{ localStorage.setItem('hl_progress', JSON.stringify(p)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_progress'), JSON.stringify(p)); }catch(e){}
   if(window.syncToCloud) window.syncToCloud({ progress: p });
 }
 function isSetUnlocked(subject, setNumber){
@@ -21105,8 +21514,8 @@ function updateStudyStreak(){
   const todayKey = new Date().toISOString().slice(0, 10);
   let lastDate = null, streak = 0;
   try{
-    lastDate = localStorage.getItem('hl_streak_last_date');
-    streak = parseInt(localStorage.getItem('hl_streak_count') || '0', 10);
+    lastDate = localStorage.getItem(uk('hl_streak_last_date'));
+    streak = parseInt(localStorage.getItem(uk('hl_streak_count')) || '0', 10);
   }catch(e){}
 
   if(lastDate === todayKey) return; // already counted today, no change
@@ -21121,19 +21530,19 @@ function updateStudyStreak(){
   }
 
   try{
-    localStorage.setItem('hl_streak_count', String(streak));
-    localStorage.setItem('hl_streak_last_date', todayKey);
-    const longest = parseInt(localStorage.getItem('hl_longest_streak') || '0', 10);
-    if(streak > longest) localStorage.setItem('hl_longest_streak', String(streak));
+    localStorage.setItem(uk('hl_streak_count'), String(streak));
+    localStorage.setItem(uk('hl_streak_last_date'), todayKey);
+    const longest = parseInt(localStorage.getItem(uk('hl_longest_streak')) || '0', 10);
+    if(streak > longest) localStorage.setItem(uk('hl_longest_streak'), String(streak));
   }catch(e){}
 }
 function getLongestStreak(){
-  try{ return Math.max(parseInt(localStorage.getItem('hl_longest_streak') || '0', 10), getStudyStreak()); }catch(e){ return getStudyStreak(); }
+  try{ return Math.max(parseInt(localStorage.getItem(uk('hl_longest_streak')) || '0', 10), getStudyStreak()); }catch(e){ return getStudyStreak(); }
 }
 function getStudyStreak(){
   try{
-    const lastDate = localStorage.getItem('hl_streak_last_date');
-    const streak = parseInt(localStorage.getItem('hl_streak_count') || '0', 10);
+    const lastDate = localStorage.getItem(uk('hl_streak_last_date'));
+    const streak = parseInt(localStorage.getItem(uk('hl_streak_count')) || '0', 10);
     if(!lastDate) return 0;
     const todayKey = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
@@ -21167,10 +21576,10 @@ const LP_LOG_RETENTION_DAYS = 35; // enough to always compute "this month" for t
 // only reflects activity from this point forward, not retroactively — there's no historical
 // chapter data to recover, and pretending otherwise would be dishonest about what's known. ----
 function getChapterStats(){
-  try{ return JSON.parse(localStorage.getItem('hl_chapter_stats') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_chapter_stats')) || '{}'); }catch(e){ return {}; }
 }
 function saveChapterStats(stats){
-  try{ localStorage.setItem('hl_chapter_stats', JSON.stringify(stats)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_chapter_stats'), JSON.stringify(stats)); }catch(e){}
 }
 function recordChapterAnswer(subject, chapter, isCorrect){
   if(!subject || !chapter) return; // some question sources may not have Chapter populated
@@ -21222,7 +21631,7 @@ function getChapterStatus(c){
 // Learning Points daily log: LP only awards on correct answers and at varying rates per activity
 // type, so it doesn't map 1:1 to "questions answered" and would give a misleading trend line. ----
 function getQuestionCountLog(){
-  try{ return JSON.parse(localStorage.getItem('hl_question_count_log') || '{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_question_count_log')) || '{}'); }catch(e){ return {}; }
 }
 function recordQuestionAnswered(){
   const log = getQuestionCountLog();
@@ -21231,7 +21640,7 @@ function recordQuestionAnswered(){
   const cutoff = addDaysISO(-35);
   const pruned = {};
   Object.keys(log).forEach(d => { if(d >= cutoff) pruned[d] = log[d]; });
-  try{ localStorage.setItem('hl_question_count_log', JSON.stringify(pruned)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_question_count_log'), JSON.stringify(pruned)); }catch(e){}
 }
 function getQuestionCountForDate(dateISO){
   return getQuestionCountLog()[dateISO] || 0;
@@ -21242,24 +21651,24 @@ function getQuestionCountForDate(dateISO){
 // recorded at the exact moment its existing completion flag/marker fires, so results feed real
 // dedicated summaries instead of disappearing into generic Set/quiz stats. ----------
 function getMockTestHistory(){
-  try{ return JSON.parse(localStorage.getItem('hl_mock_test_history') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_mock_test_history')) || '[]'); }catch(e){ return []; }
 }
 function logMockTestResult(score, total){
   const log = getMockTestHistory();
   log.unshift({ date: todayISO(), score, total, pct: total > 0 ? Math.round((score/total)*100) : 0 });
-  try{ localStorage.setItem('hl_mock_test_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_mock_test_history'), JSON.stringify(log.slice(0, 100))); }catch(e){}
 }
 function getPastQuestionHistory(){
-  try{ return JSON.parse(localStorage.getItem('hl_past_question_history') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_past_question_history')) || '[]'); }catch(e){ return []; }
 }
 function logPastQuestionResult(paperName, score, total){
   const yearMatch = paperName.match(/\d{4}/);
   const log = getPastQuestionHistory();
   log.unshift({ date: todayISO(), paperName, year: yearMatch ? yearMatch[0] : null, score, total, pct: total > 0 ? Math.round((score/total)*100) : 0 });
-  try{ localStorage.setItem('hl_past_question_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_past_question_history'), JSON.stringify(log.slice(0, 100))); }catch(e){}
 }
 function getTournamentHistory(){
-  try{ return JSON.parse(localStorage.getItem('hl_tournament_history') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_tournament_history')) || '[]'); }catch(e){ return []; }
 }
 // ---------- Tournament Points: a dedicated scoring system, separate from Learning Points,
 // matching the document's own scoring table (correct=+10, wrong/skipped=0, completion bonus=+20).
@@ -21272,14 +21681,14 @@ function logTournamentResult(weekKey, score, total){
   const log = getTournamentHistory();
   const points = (score * TOURNAMENT_POINTS_PER_CORRECT) + (total > 0 ? TOURNAMENT_COMPLETION_BONUS : 0);
   log.unshift({ date: todayISO(), weekKey, score, total, pct: total > 0 ? Math.round((score/total)*100) : 0, points });
-  try{ localStorage.setItem('hl_tournament_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_tournament_history'), JSON.stringify(log.slice(0, 100))); }catch(e){}
 }
 function getTournamentStats(){
   const history = getTournamentHistory();
   const totalPoints = history.reduce((sum, h) => sum + (h.points || 0), 0);
   const wins = history.filter(h => h.pct === 100).length; // genuine local signal — a true "win" (rank #1) needs a per-entry rank check, tracked separately below as bestRank
   let bestRank = null;
-  try{ bestRank = JSON.parse(localStorage.getItem('hl_tournament_best_rank') || 'null'); }catch(e){}
+  try{ bestRank = JSON.parse(localStorage.getItem(uk('hl_tournament_best_rank')) || 'null'); }catch(e){}
   return { totalPoints, tournamentsPlayed: history.length, wins, bestRank };
 }
 // Called whenever a fresh rank is actually fetched (never invented) — builds up "best rank ever"
@@ -21287,37 +21696,37 @@ function getTournamentStats(){
 function updateBestTournamentRank(rank){
   if(!rank) return;
   let best = null;
-  try{ best = JSON.parse(localStorage.getItem('hl_tournament_best_rank') || 'null'); }catch(e){}
+  try{ best = JSON.parse(localStorage.getItem(uk('hl_tournament_best_rank')) || 'null'); }catch(e){}
   if(!best || rank < best){
-    try{ localStorage.setItem('hl_tournament_best_rank', JSON.stringify(rank)); }catch(e){}
+    try{ localStorage.setItem(uk('hl_tournament_best_rank'), JSON.stringify(rank)); }catch(e){}
   }
 }
 
 // ---------- Monthly Tournament local tracking — a genuinely separate history/points/best-rank
 // store from Weekly's, not a shared one distinguished by a type flag ----------
 function getMonthlyTournamentHistory(){
-  try{ return JSON.parse(localStorage.getItem('hl_monthly_tournament_history') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_monthly_tournament_history')) || '[]'); }catch(e){ return []; }
 }
 function logMonthlyTournamentResult(monthKey, score, total){
   const log = getMonthlyTournamentHistory();
   const points = (score * TOURNAMENT_POINTS_PER_CORRECT) + (total > 0 ? TOURNAMENT_COMPLETION_BONUS : 0);
   log.unshift({ date: todayISO(), monthKey, score, total, pct: total > 0 ? Math.round((score/total)*100) : 0, points });
-  try{ localStorage.setItem('hl_monthly_tournament_history', JSON.stringify(log.slice(0, 100))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_monthly_tournament_history'), JSON.stringify(log.slice(0, 100))); }catch(e){}
 }
 function getMonthlyTournamentStats(){
   const history = getMonthlyTournamentHistory();
   const totalPoints = history.reduce((sum, h) => sum + (h.points || 0), 0);
   const wins = history.filter(h => h.pct === 100).length;
   let bestRank = null;
-  try{ bestRank = JSON.parse(localStorage.getItem('hl_monthly_tournament_best_rank') || 'null'); }catch(e){}
+  try{ bestRank = JSON.parse(localStorage.getItem(uk('hl_monthly_tournament_best_rank')) || 'null'); }catch(e){}
   return { totalPoints, tournamentsPlayed: history.length, wins, bestRank };
 }
 function updateBestMonthlyTournamentRank(rank){
   if(!rank) return;
   let best = null;
-  try{ best = JSON.parse(localStorage.getItem('hl_monthly_tournament_best_rank') || 'null'); }catch(e){}
+  try{ best = JSON.parse(localStorage.getItem(uk('hl_monthly_tournament_best_rank')) || 'null'); }catch(e){}
   if(!best || rank < best){
-    try{ localStorage.setItem('hl_monthly_tournament_best_rank', JSON.stringify(rank)); }catch(e){}
+    try{ localStorage.setItem(uk('hl_monthly_tournament_best_rank'), JSON.stringify(rank)); }catch(e){}
   }
 }
 function startMonthlyTournament(questions, monthKey, minutes){
@@ -21331,12 +21740,12 @@ function startMonthlyTournament(questions, monthKey, minutes){
 function getLpData(){
   const fallback = { total: 0, dailyMcqEarned: 0, dailyMcqDate: todayISO(), dailyLog: {}, subjectPoints: {} };
   try{
-    const saved = JSON.parse(localStorage.getItem('hl_learning_points') || 'null');
+    const saved = JSON.parse(localStorage.getItem(uk('hl_learning_points')) || 'null');
     return saved ? { ...fallback, ...saved } : fallback; // merge so older saves without dailyLog/subjectPoints still work
   }catch(e){ return fallback; }
 }
 function saveLpData(data){
-  try{ localStorage.setItem('hl_learning_points', JSON.stringify(data)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_learning_points'), JSON.stringify(data)); }catch(e){}
 }
 function pruneLpLog(dailyLog){
   const cutoff = addDaysISO(-LP_LOG_RETENTION_DAYS);
@@ -21382,21 +21791,21 @@ const WEEKLY_REWARD_TIERS = [
   { maxRank: 10, badge: '⭐ Elite', bonus: 10 },
 ];
 function getEarnedBadges(){
-  try{ return JSON.parse(localStorage.getItem('hl_earned_badges') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_earned_badges')) || '[]'); }catch(e){ return []; }
 }
 function saveEarnedBadges(list){
-  try{ localStorage.setItem('hl_earned_badges', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_earned_badges'), JSON.stringify(list)); }catch(e){}
 }
 function checkWeeklyRewards(){
   const currentWeekKey = getWeekKey(new Date());
   let lastCheckedWeek = null;
-  try{ lastCheckedWeek = localStorage.getItem('hl_reward_week_marker'); }catch(e){}
+  try{ lastCheckedWeek = localStorage.getItem(uk('hl_reward_week_marker')); }catch(e){}
   if(lastCheckedWeek === currentWeekKey) return; // already checked this week, nothing to do yet
-  try{ localStorage.setItem('hl_reward_week_marker', currentWeekKey); }catch(e){}
+  try{ localStorage.setItem(uk('hl_reward_week_marker'), currentWeekKey); }catch(e){}
   if(!lastCheckedWeek) return; // first time ever opening the leaderboard — nothing to reward retroactively
 
   let lastRank = null;
-  try{ lastRank = JSON.parse(localStorage.getItem('hl_last_known_rank_week_overall') || 'null'); }catch(e){}
+  try{ lastRank = JSON.parse(localStorage.getItem(uk('hl_last_known_rank_week_overall')) || 'null'); }catch(e){}
   if(!lastRank) return;
 
   const tier = WEEKLY_REWARD_TIERS.find(t => lastRank <= t.maxRank);
@@ -21432,13 +21841,13 @@ const MONTHLY_REWARD_TIERS = [
 function checkMonthlyChampionship(){
   const currentMonthKey = getMonthKey(new Date());
   let lastCheckedMonth = null;
-  try{ lastCheckedMonth = localStorage.getItem('hl_reward_month_marker'); }catch(e){}
+  try{ lastCheckedMonth = localStorage.getItem(uk('hl_reward_month_marker')); }catch(e){}
   if(lastCheckedMonth === currentMonthKey) return; // already checked this month, nothing to do yet
-  try{ localStorage.setItem('hl_reward_month_marker', currentMonthKey); }catch(e){}
+  try{ localStorage.setItem(uk('hl_reward_month_marker'), currentMonthKey); }catch(e){}
   if(!lastCheckedMonth) return; // first time ever opening the leaderboard — nothing to reward retroactively
 
   let lastRank = null;
-  try{ lastRank = JSON.parse(localStorage.getItem('hl_last_known_rank_month_overall') || 'null'); }catch(e){}
+  try{ lastRank = JSON.parse(localStorage.getItem(uk('hl_last_known_rank_month_overall')) || 'null'); }catch(e){}
   if(!lastRank) return;
 
   const tier = MONTHLY_REWARD_TIERS.find(t => lastRank <= t.maxRank);
@@ -21571,28 +21980,28 @@ function getLastNDates(n){
   return dates;
 }
 function getScreenTimeGoals(){
-  try{ return JSON.parse(localStorage.getItem('hl_screentime_goals') || 'null') || { dailySec: 4 * 3600, weeklySec: 28 * 3600 }; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_screentime_goals')) || 'null') || { dailySec: 4 * 3600, weeklySec: 28 * 3600 }; }
   catch(e){ return { dailySec: 4 * 3600, weeklySec: 28 * 3600 }; }
 }
 function saveScreenTimeGoals(goals){
-  try{ localStorage.setItem('hl_screentime_goals', JSON.stringify(goals)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_screentime_goals'), JSON.stringify(goals)); }catch(e){}
 }
 // Questions + Topics goals — kept separate from Screen Time's time-only goal since they're a
 // different concept (a count target, not a duration), reused together on the Goals screen
 function getProgressGoals(){
-  try{ return JSON.parse(localStorage.getItem('hl_progress_goals') || 'null') || { dailyQuestions: 100, weeklyQuestions: 500, dailyTopics: 3 }; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_progress_goals')) || 'null') || { dailyQuestions: 100, weeklyQuestions: 500, dailyTopics: 3 }; }
   catch(e){ return { dailyQuestions: 100, weeklyQuestions: 500, dailyTopics: 3 }; }
 }
 function saveProgressGoals(goals){
-  try{ localStorage.setItem('hl_progress_goals', JSON.stringify(goals)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_progress_goals'), JSON.stringify(goals)); }catch(e){}
 }
 function getFocusSessionLog(){
-  try{ return JSON.parse(localStorage.getItem('hl_focus_sessions') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_focus_sessions')) || '[]'); }catch(e){ return []; }
 }
 function logFocusSession(minutes){
   const log = getFocusSessionLog();
   log.unshift({ date: todayISO(), minutes, completedAt: new Date().toISOString() });
-  try{ localStorage.setItem('hl_focus_sessions', JSON.stringify(log.slice(0, 200))); }catch(e){} // cap — a rolling recent history, not unbounded
+  try{ localStorage.setItem(uk('hl_focus_sessions'), JSON.stringify(log.slice(0, 200))); }catch(e){} // cap — a rolling recent history, not unbounded
 }
 function getFocusSessionsForDate(dateISO){
   return getFocusSessionLog().filter(s => s.date === dateISO).length;
@@ -21998,16 +22407,16 @@ async function startSpeedChallenge(){
 // duplicating deck info on every card. Scheduling uses a simplified SM-2-style algorithm —
 // genuine spaced repetition with real due-dates, not cosmetic rating buttons. ----------
 function getFcDecks(){
-  try{ return JSON.parse(localStorage.getItem('hl_fc_decks') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_fc_decks')) || '[]'); }catch(e){ return []; }
 }
 function saveFcDecks(decks){
-  try{ localStorage.setItem('hl_fc_decks', JSON.stringify(decks)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_fc_decks'), JSON.stringify(decks)); }catch(e){}
 }
 function getFcCards(){
-  try{ return JSON.parse(localStorage.getItem('hl_fc_cards') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_fc_cards')) || '[]'); }catch(e){ return []; }
 }
 function saveFcCards(cards){
-  try{ localStorage.setItem('hl_fc_cards', JSON.stringify(cards)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_fc_cards'), JSON.stringify(cards)); }catch(e){}
 }
 function todayDateOnly(){
   const d = new Date();
@@ -23276,7 +23685,7 @@ function updateRapidFirePreview(){
   const previewCard = document.getElementById('rapidFirePreviewCard');
   if(rapidFireSelectedMode === 'daily'){
     let streak = 0;
-    try{ streak = parseInt(localStorage.getItem('hl_dailyfire_streak') || '0', 10); }catch(e){}
+    try{ streak = parseInt(localStorage.getItem(uk('hl_dailyfire_streak')) || '0', 10); }catch(e){}
     previewCard.style.display = 'block';
     document.getElementById('rapidFirePreviewLabel').textContent = "Today's Fire";
     document.getElementById('rapidFirePreviewCount').textContent = '10 Questions';
@@ -23364,14 +23773,14 @@ function updateDailyFireStreak(){
   const today = todayISO();
   let lastDate = null, streak = 0;
   try{
-    lastDate = localStorage.getItem('hl_dailyfire_last_date');
-    streak = parseInt(localStorage.getItem('hl_dailyfire_streak') || '0', 10);
+    lastDate = localStorage.getItem(uk('hl_dailyfire_last_date'));
+    streak = parseInt(localStorage.getItem(uk('hl_dailyfire_streak')) || '0', 10);
   }catch(e){}
   if(lastDate === today) return; // already completed today — don't double-count
   streak = (lastDate === addDaysISO(-1)) ? streak + 1 : 1;
   try{
-    localStorage.setItem('hl_dailyfire_streak', String(streak));
-    localStorage.setItem('hl_dailyfire_last_date', today);
+    localStorage.setItem(uk('hl_dailyfire_streak'), String(streak));
+    localStorage.setItem(uk('hl_dailyfire_last_date'), today);
   }catch(e){}
 }
 
@@ -23628,11 +24037,11 @@ function renderQuestion(){
 
 // ---------- Bookmarks: save questions for later review ----------
 function getBookmarks(){
-  try{ return JSON.parse(localStorage.getItem('hl_bookmarks') || '[]'); }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_bookmarks')) || '[]'); }
   catch(e){ return []; }
 }
 function saveBookmarks(list){
-  try{ localStorage.setItem('hl_bookmarks', JSON.stringify(list)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_bookmarks'), JSON.stringify(list)); }catch(e){}
 }
 function questionKey(q){
   return (q.Subject || '') + '::' + (q.Question || '').slice(0, 80);
@@ -23893,7 +24302,7 @@ function finishQuiz(){
     let streakLine = '';
     if(mode.key === 'daily'){
       let streak = 0;
-      try{ streak = parseInt(localStorage.getItem('hl_dailyfire_streak') || '0', 10); }catch(e){}
+      try{ streak = parseInt(localStorage.getItem(uk('hl_dailyfire_streak')) || '0', 10); }catch(e){}
       streakLine = `<p style="font-size:12.5px; color:var(--gold); font-weight:700; margin-top:8px;">🔥 ${streak}-day Daily Fire streak</p>`;
     }
     const box = document.getElementById('rapidFireResultBox');
@@ -23988,7 +24397,7 @@ function initChat(){
   chatInitialized = true;
 
   try{
-    const saved = JSON.parse(localStorage.getItem('hl_chat_history') || '[]');
+    const saved = JSON.parse(localStorage.getItem(uk('hl_chat_history')) || '[]');
     chatHistory = saved;
   }catch(e){ chatHistory = []; }
 
@@ -24059,7 +24468,7 @@ function initChat(){
     document.getElementById('chatMenuDropdown').classList.remove('open');
     if(confirm('Delete this entire chat conversation? This cannot be undone.')){
       chatHistory = [];
-      try{ localStorage.removeItem('hl_chat_history'); }catch(err){}
+      try{ localStorage.removeItem(uk('hl_chat_history')); }catch(err){}
       if(window.syncToCloud) window.syncToCloud({ chatHistory: [] });
       document.getElementById('chatMessages').innerHTML = '';
       appendBubble('ai', CHAT_GREETING);
@@ -24191,7 +24600,7 @@ async function sendChatMessage(){
     addSaveToNotesButtonToBubble(thinkingBubble, reply);
     chatHistory.push({role:'assistant', content:reply});
     const trimmedHistory = chatHistory.slice(-20);
-    try{ localStorage.setItem('hl_chat_history', JSON.stringify(trimmedHistory)); }catch(e){}
+    try{ localStorage.setItem(uk('hl_chat_history'), JSON.stringify(trimmedHistory)); }catch(e){}
     if(window.syncToCloud) window.syncToCloud({ chatHistory: trimmedHistory });
   }catch(err){
     thinkingBubble.textContent = "Sorry, I couldn't connect right now. Please check your internet and try again.";
@@ -24262,6 +24671,14 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+  <!-- In-app foreground notification banner — shown when a push notification arrives while the
+       app is already open (browsers only auto-show system notifications for background/closed
+       apps by default; this covers the case where the app is actively in use) -->
+  <div id="inAppNotifBanner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9998; background:var(--panel-elevated); padding:14px 16px; box-shadow:0 4px 12px rgba(0,0,0,0.3); cursor:pointer;">
+    <div style="font-size:13px; font-weight:700; color:var(--ink-on-elevated);" id="inAppNotifTitle"></div>
+    <div style="font-size:12px; color:var(--ink-on-elevated); opacity:0.85; margin-top:2px;" id="inAppNotifBody"></div>
+  </div>
+
   <!-- Loading overlay — shown while Mock Test / a Set's questions are being fetched -->
   <div class="quiz-loading-overlay" id="quizLoadingOverlay">
     <div class="app-loading-spinner"></div>
