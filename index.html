@@ -6288,6 +6288,7 @@
         <div class="score-big" id="finalScore">0.0</div>
         <div class="score-label">Final Score (with negative marking)</div>
       </div>
+      <div id="resultTrendIndicator" style="display:none; text-align:center; font-size:12.5px; font-weight:700; margin:-8px 0 14px;"></div>
       <div class="stat-row">
         <div class="stat"><div class="stat-num" id="statCorrect" style="color:var(--correct)">0</div><div class="stat-label">Correct</div></div>
         <div class="stat"><div class="stat-num" id="statWrong" style="color:var(--wrong)">0</div><div class="stat-label">Wrong</div></div>
@@ -24202,6 +24203,39 @@ function finishQuiz(){
   document.getElementById('reviewList').innerHTML = reviewHtml.join('');
   renderSubjectBreakdown();
   recordDailyActivity(correct + wrong, correct); // powers the Home screen's Daily/Weekly/Monthly/Yearly chart — skipped questions don't count as "answered"
+
+  // ---- Real trend indicator, same green/up=improved / red/down=declined / neutral logic as the
+  // Home screen's Study Performance card — compares this Set's accuracy against this subject's
+  // own average across every OTHER previously completed Set (never this one, and never against
+  // an absolute "good/bad" threshold, matching the document's own explicit distinction between a
+  // low score and a declining trend). Only shown for actual Sets with real prior history in this
+  // exact subject — Mock Test/Tournament/Revision/Battle don't have this per-subject Set
+  // progression concept, so nothing is shown for those rather than a misleading comparison. ----
+  const trendBox = document.getElementById('resultTrendIndicator');
+  trendBox.style.display = 'none';
+  if(currentSetInfo && currentSetInfo.subject && quizQuestions.length > 0){
+    const progressData = loadProgress();
+    const subjKey = progressKey(currentSetInfo.subject);
+    const priorScores = (progressData[subjKey] && progressData[subjKey].scores) ? Object.values(progressData[subjKey].scores) : [];
+    if(priorScores.length > 0){
+      let priorCorrect = 0, priorTotal = 0;
+      priorScores.forEach(s => { priorCorrect += s.correct; priorTotal += s.correct + s.wrong + s.skipped; });
+      const priorAvgPct = priorTotal > 0 ? Math.round((priorCorrect / priorTotal) * 100) : 0;
+      const thisPct = Math.round((correct / quizQuestions.length) * 100);
+      const trend = computeTrend(thisPct, priorAvgPct, false);
+      trendBox.style.display = 'block';
+      if(trend.dir === 'neutral'){
+        trendBox.style.color = 'var(--ink-soft)';
+        trendBox.textContent = `→ About the same as your ${currentSetInfo.subject} average (${priorAvgPct}%)`;
+      } else if(trend.dir === 'up'){
+        trendBox.style.color = '#4ADE80';
+        trendBox.textContent = `↑ ${trend.pct}% better than your ${currentSetInfo.subject} average`;
+      } else {
+        trendBox.style.color = '#F87171';
+        trendBox.textContent = `↓ ${trend.pct}% below your ${currentSetInfo.subject} average`;
+      }
+    }
+  }
 
   currentMarksPerQuestion = 1; // reset back to default for the next quiz (Sets/GK always use 1)
 
