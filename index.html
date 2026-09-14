@@ -21531,26 +21531,48 @@ const EXAM_MARKS_BY_POST = {
 
 function renderSubjectPick(){
   // Purely instant — just names, no counts, no network call, no waiting.
-  const marksForThisPost = EXAM_MARKS_BY_POST[currentMcqPost] || {};
-  const subjectsForThisPost = (KNOWN_SUBJECTS_BY_POST[currentMcqPost] || KNOWN_SUBJECTS).map(name => ({name}));
-  document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => {
-    const marks = marksForThisPost[s.name];
-    const marksLabel = marks ? ` (${marks} marks)` : '';
-    return `
-    <a class="link-card" href="#" data-subject="${s.name}">
-      <div class="lc-text"><h4>${s.name}${marksLabel}</h4><p>Tap to begin</p></div>
-      <div class="lc-arrow">→</div>
-    </a>
-  `;
-  }).join('');
+  try{
+    const marksForThisPost = EXAM_MARKS_BY_POST[currentMcqPost] || {};
+    const subjectsForThisPost = (KNOWN_SUBJECTS_BY_POST[currentMcqPost] || KNOWN_SUBJECTS).map(name => ({name}));
 
-  document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
-      setSelectBackTarget = subjectPickScreen;
-      openSetSelect(card.dataset.subject);
+    if(subjectsForThisPost.length === 0){
+      // This should never genuinely happen — KNOWN_SUBJECTS is a large, always-populated
+      // hardcoded list. If this shows, it's strong evidence the deployed file itself is
+      // incomplete/corrupted (e.g. a truncated upload), not a data or network problem.
+      document.getElementById('subjectPickList').innerHTML = `
+        <div style="padding:20px; background:#2a0a0a; border:2px solid #F87171; border-radius:12px;">
+          <p style="color:#F87171; font-weight:800; margin-bottom:8px;">⚠️ Diagnostic: subject list came back empty</p>
+          <p style="color:#fca5a5; font-size:12px; font-family:monospace;">currentMcqPost = "${currentMcqPost}"<br>KNOWN_SUBJECTS_BY_POST[currentMcqPost] exists = ${!!KNOWN_SUBJECTS_BY_POST[currentMcqPost]}<br>KNOWN_SUBJECTS.length = ${typeof KNOWN_SUBJECTS !== 'undefined' ? KNOWN_SUBJECTS.length : 'KNOWN_SUBJECTS IS UNDEFINED'}</p>
+          <p style="color:#fca5a5; font-size:11px; margin-top:8px;">This should never be empty — please screenshot this box, it likely means the uploaded file is incomplete.</p>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('subjectPickList').innerHTML = subjectsForThisPost.map(s => {
+      const marks = marksForThisPost[s.name];
+      const marksLabel = marks ? ` (${marks} marks)` : '';
+      return `
+      <a class="link-card" href="#" data-subject="${s.name}">
+        <div class="lc-text"><h4>${s.name}${marksLabel}</h4><p>Tap to begin</p></div>
+        <div class="lc-arrow">→</div>
+      </a>
+    `;
+    }).join('');
+
+    document.querySelectorAll('#subjectPickList .link-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        setSelectBackTarget = subjectPickScreen;
+        openSetSelect(card.dataset.subject);
+      });
     });
-  });
+  }catch(err){
+    document.getElementById('subjectPickList').innerHTML = `
+      <div style="padding:20px; background:#2a0a0a; border:2px solid #F87171; border-radius:12px;">
+        <p style="color:#F87171; font-weight:800; margin-bottom:8px;">⚠️ Diagnostic: renderSubjectPick threw an error</p>
+        <p style="color:#fca5a5; font-size:12px; font-family:monospace; white-space:pre-wrap;">${err && err.message ? err.message : String(err)}</p>
+      </div>`;
+  }
 }
 
 // ---------- Progress tracking (saved on-device AND synced to the cloud when signed in) ----------
