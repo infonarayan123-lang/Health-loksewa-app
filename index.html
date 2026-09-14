@@ -6490,6 +6490,7 @@
       // reads it — must run before the verification gate and everything after it, since several
       // of those paths read per-account data (streaks, progress, etc.)
       if(window.migrateToPerAccountStorage) window.migrateToPerAccountStorage();
+      if(window.mergeGuestDataIntoAccount) window.mergeGuestDataIntoAccount();
       // Email verification gate — only for brand-new, recently-created email/password accounts.
       // Google Sign-In accounts are already verified by Google itself (checked via providerId),
       // and any account older than 30 days is grandfathered in regardless of its verification
@@ -13217,6 +13218,41 @@ function migrateToPerAccountStorage(){
     });
     localStorage.setItem('hl_per_account_migration_claimed', 'true');
   }catch(e){}
+}
+// Safety net, runs every login (not gated by a one-time flag): if anything was ever written under
+// the 'guest' namespace — e.g. a brief window before Firebase auth actually resolves on a given
+// page load, if any code happened to read/write per-account data during that window — this
+// merges it into the now-logged-in real account rather than leaving it silently stranded there
+// forever. Only fills in gaps (never overwrites real data the account already has).
+function mergeGuestDataIntoAccount(){
+  try{
+    const uid = (window.currentUser && window.currentUser.uid);
+    if(!uid) return; // only makes sense once we have a real, logged-in account to merge into
+    PER_ACCOUNT_STORAGE_KEYS.forEach(baseKey => {
+      const guestKey = baseKey + '__u_guest';
+      const guestValue = localStorage.getItem(guestKey);
+      if(guestValue !== null && localStorage.getItem(uk(baseKey)) === null){
+        localStorage.setItem(uk(baseKey), guestValue);
+      }
+    });
+  }catch(e){}
+}
+
+// ---------- Real timeout protection for the app's fetch calls to the backend. Without this, a
+// hung/very slow request (a real possibility given how large this app's Sheet has grown) leaves
+// a loading screen stuck forever with no error ever thrown — the exact "nothing happens, nothing
+// shows, can't open" symptom that's much harder to diagnose than an actual error message. This
+// makes a stall fail loudly and clearly after a reasonable wait instead of hanging silently. ----
+function fetchWithTimeout(url, timeoutMs = 20000){
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+}
+// Turns a raw error into a message someone can actually understand and act on — an AbortError's
+// real .message is a cryptic browser-internal string, so this names what actually happened instead.
+function friendlyFetchError(err){
+  if(err && err.name === 'AbortError') return 'The request timed out after 20 seconds — the server took too long to respond. Please try again.';
+  return (err && err.message) ? err.message : String(err);
 }
 
 function todayISO(){
@@ -21262,7 +21298,7 @@ async function startMockTest(post){
   showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
   try{
     const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}&post=${post.key}`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     const pool = await res.json();
 
     if(pool.length === 0){
@@ -21284,7 +21320,7 @@ async function startMockTest(post){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not load the mock test. Please check your internet connection and try again.');
+    alert('Could not load the mock test.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 
@@ -21397,7 +21433,7 @@ async function startPastQuestionPaper(paperName){
   showQuizLoading('Please wait, loading this paper… this may take a moment.');
   try{
     const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=${currentMcqPost}`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     const pool = await res.json();
 
     if(pool.length === 0){
@@ -21419,7 +21455,7 @@ async function startPastQuestionPaper(paperName){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not load this paper. Please check your internet connection and try again.');
+    alert('Could not load this paper.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 
@@ -22342,7 +22378,7 @@ async function startSet(subject, setNumber, totalSets){
     const baseUrl = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
 
     // Phase 1: fetch just the first few questions — small payload, shows up fast
-    const firstRes = await fetch(`${baseUrl}&offset=0&limit=${FIRST_BATCH}`);
+    const firstRes = await fetchWithTimeout(`${baseUrl}&offset=0&limit=${FIRST_BATCH}`);
     let firstBatch = await firstRes.json();
 
     if(firstBatch.length === 0){
@@ -22361,7 +22397,7 @@ async function startSet(subject, setNumber, totalSets){
       // This Set only had FIRST_BATCH questions total anyway — nothing more to fetch
       try{ localStorage.setItem(cacheKey, JSON.stringify(firstBatch)); }catch(e){}
     } else {
-      fetch(`${baseUrl}&offset=${FIRST_BATCH}`).then(r => r.json()).then(restBatch => {
+      fetchWithTimeout(`${baseUrl}&offset=${FIRST_BATCH}`).then(r => r.json()).then(restBatch => {
         if(restBatch && restBatch.length > 0){
           restBatch = shuffle([...restBatch]); // vary display order each attempt, within this batch
           quizQuestions = quizQuestions.concat(restBatch);
@@ -22386,7 +22422,7 @@ async function startSet(subject, setNumber, totalSets){
       alert('📴 You appear to be offline — loading this Set from your last saved copy instead.');
       launchQuiz(shuffle([...cachedPool]), subject, setNumber, totalSets);
     } else {
-      alert('Could not load this set. Please check your internet connection and try again. (This Set hasn\'t been downloaded before, so it isn\'t available offline yet.)');
+      alert('Could not load this set.\n\nReal error: ' + friendlyFetchError(err) + '\n\n(This Set hasn\'t been downloaded before, so it isn\'t available offline yet.)');
     }
   }
 }
@@ -22408,7 +22444,7 @@ function launchQuiz(pool, subject, setNumber, totalSets){
 async function startSpeedChallenge(){
   showQuizLoading('Loading Speed Challenge…');
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=random&count=50&post=${currentMcqPost}`);
+    const res = await fetchWithTimeout(`${SHEET_API_URL}?action=random&count=50&post=${currentMcqPost}`);
     const pool = await res.json();
     if(!pool || pool.length === 0){
       hideQuizLoading();
@@ -22429,7 +22465,7 @@ async function startSpeedChallenge(){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not load Speed Challenge questions. Check your connection and try again.');
+    alert('Could not load Speed Challenge questions.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 
@@ -23749,7 +23785,7 @@ async function startRapidFire(){
   try{
     let pool = [];
     if(mode === 'quick' || mode === 'daily'){
-      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${post}`)).json();
+      pool = await (await fetchWithTimeout(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${post}`)).json();
     } else if(mode === 'weak'){
       const weakSubject = getBestWeakSubject();
       if(!weakSubject){
@@ -23758,7 +23794,7 @@ async function startRapidFire(){
         return;
       }
       const weakPost = findPostForSubject(weakSubject) || post;
-      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${weakPost}&subject=${encodeURIComponent(weakSubject)}`)).json();
+      pool = await (await fetchWithTimeout(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${weakPost}&subject=${encodeURIComponent(weakSubject)}`)).json();
     } else if(mode === 'mistake'){
       pool = getWrongQuestions().slice(0, questionCount);
       if(pool.length === 0){ hideQuizLoading(); alert('No mistakes tracked yet — this mode needs some practice history first.'); return; }
@@ -23768,11 +23804,11 @@ async function startRapidFire(){
     } else if(mode === 'random'){
       const posts = getSelectedPosts().length > 0 ? getSelectedPosts() : [post];
       const perPost = Math.max(1, Math.ceil(questionCount / posts.length));
-      const results = await Promise.all(posts.map(p => fetch(`${SHEET_API_URL}?action=random&count=${perPost}&post=${p}`).then(r => r.json())));
+      const results = await Promise.all(posts.map(p => fetchWithTimeout(`${SHEET_API_URL}?action=random&count=${perPost}&post=${p}`).then(r => r.json())));
       pool = results.flat().sort(() => Math.random() - 0.5).slice(0, questionCount);
     } else if(mode === 'concept' || mode === 'topic'){
       const subject = document.getElementById('rapidFireSubjectSelect').value;
-      pool = await (await fetch(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${post}&subject=${encodeURIComponent(subject)}`)).json();
+      pool = await (await fetchWithTimeout(`${SHEET_API_URL}?action=random&count=${questionCount}&post=${post}&subject=${encodeURIComponent(subject)}`)).json();
     }
 
     if(!pool || pool.length === 0){
@@ -23797,7 +23833,7 @@ async function startRapidFire(){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not start Rapid Fire. Check your connection and try again.');
+    alert('Could not start Rapid Fire.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 function updateDailyFireStreak(){
