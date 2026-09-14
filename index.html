@@ -21212,6 +21212,30 @@ document.getElementById('inAppNotifBanner').addEventListener('click', () => {
   renderWhatsNew();
 });
 
+// ---------- TEMPORARY diagnostic tool: catches any real, uncaught JavaScript error anywhere in
+// the app — both thrown errors and unhandled promise rejections (many async functions in this
+// app can fail inside a Promise without ever reaching a visible catch block) — and displays the
+// actual message on screen. This exists specifically because a user reported "empty"/"can't
+// open" symptoms with no visible cause, and there was no way to get real browser error details
+// without a computer and DevTools. Safe to remove later once the underlying issue is confirmed
+// found and fixed — this is a diagnostic aid, not a permanent feature. ----------
+function showDebugError(message){
+  document.getElementById('debugErrorText').textContent = message;
+  document.getElementById('debugErrorOverlay').style.display = 'block';
+}
+window.addEventListener('error', (event) => {
+  showDebugError(`${event.message}\n\nFile: ${(event.filename || '').split('/').pop()}:${event.lineno}:${event.colno}`);
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  const message = (reason && reason.message) ? reason.message : String(reason);
+  const stack = (reason && reason.stack) ? '\n\n' + reason.stack.split('\n').slice(0, 3).join('\n') : '';
+  showDebugError(`Unhandled promise error: ${message}${stack}`);
+});
+document.getElementById('debugErrorDismissBtn').addEventListener('click', () => {
+  document.getElementById('debugErrorOverlay').style.display = 'none';
+});
+
 function showQuizLoading(message){
   document.getElementById('quizLoadingText').textContent = message || 'Please wait, loading your questions… this may take a moment.';
   document.getElementById('quizLoadingOverlay').classList.add('active');
@@ -24717,6 +24741,17 @@ if ('serviceWorker' in navigator) {
   <div id="inAppNotifBanner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9998; background:var(--panel-elevated); padding:14px 16px; box-shadow:0 4px 12px rgba(0,0,0,0.3); cursor:pointer;">
     <div style="font-size:13px; font-weight:700; color:var(--ink-on-elevated);" id="inAppNotifTitle"></div>
     <div style="font-size:12px; color:var(--ink-on-elevated); opacity:0.85; margin-top:2px;" id="inAppNotifBody"></div>
+  </div>
+
+  <!-- Temporary diagnostic tool: catches any real, uncaught error anywhere in the app (both
+       thrown errors and unhandled promise rejections) and shows the actual technical message
+       directly on screen — so a real problem is visible and screenshot-able immediately,
+       without needing a computer, DevTools, or a second test account. Stays until tapped away,
+       since a fast auto-dismiss defeats the purpose of being able to actually read/copy it. -->
+  <div id="debugErrorOverlay" style="display:none; position:fixed; left:12px; right:12px; bottom:80px; z-index:9999; background:#2a0a0a; border:2px solid #F87171; border-radius:12px; padding:14px; max-height:40vh; overflow-y:auto;">
+    <div style="font-size:12px; font-weight:800; color:#F87171; margin-bottom:6px;">⚠️ A real error occurred — please screenshot this:</div>
+    <div id="debugErrorText" style="font-size:11px; color:#fca5a5; font-family:monospace; white-space:pre-wrap; word-break:break-word;"></div>
+    <button id="debugErrorDismissBtn" style="margin-top:10px; width:100%; padding:8px; background:#F87171; color:#2a0a0a; border:none; border-radius:8px; font-weight:700; font-size:12px;">Dismiss</button>
   </div>
 
   <!-- Loading overlay — shown while Mock Test / a Set's questions are being fetched -->
