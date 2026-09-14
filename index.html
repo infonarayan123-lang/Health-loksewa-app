@@ -18549,7 +18549,7 @@ async function showReadCarefullyReminder(){
   document.getElementById('readCarefullyBackdrop').style.display = 'block';
   document.getElementById('readCarefullyModal').style.display = 'block';
   document.getElementById('readCarefullyDontShowToday').checked = false;
-  return new Promise((resolve) => {
+  const continuePromise = new Promise((resolve) => {
     document.getElementById('readCarefullyContinueBtn').onclick = () => {
       if(document.getElementById('readCarefullyDontShowToday').checked){
         try{ localStorage.setItem(uk('hl_read_carefully_dismissed_date'), todayISO()); }catch(e){}
@@ -18559,6 +18559,18 @@ async function showReadCarefullyReminder(){
       resolve();
     };
   });
+  // Failsafe: if this modal's button is ever untappable for any reason on a given device (a
+  // rendering issue this code can't see or predict), this guarantees the flow can never be
+  // permanently stuck here forever with zero error and zero way forward — it just proceeds after
+  // a genuinely generous wait, same as if the person had tapped Continue themselves.
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => {
+      document.getElementById('readCarefullyBackdrop').style.display = 'none';
+      document.getElementById('readCarefullyModal').style.display = 'none';
+      resolve();
+    }, 45000);
+  });
+  return Promise.race([continuePromise, timeoutPromise]);
 }
 async function showPremiumLockModal(message){
   document.getElementById('premiumLockMessage').textContent = message;
@@ -21320,7 +21332,7 @@ async function startMockTest(post){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not load the mock test.\n\nReal error: ' + friendlyFetchError(err));
+    showDebugError('Could not load the mock test.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 
@@ -21455,7 +21467,7 @@ async function startPastQuestionPaper(paperName){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not load this paper.\n\nReal error: ' + friendlyFetchError(err));
+    showDebugError('Could not load this paper.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 
@@ -22422,7 +22434,7 @@ async function startSet(subject, setNumber, totalSets){
       alert('📴 You appear to be offline — loading this Set from your last saved copy instead.');
       launchQuiz(shuffle([...cachedPool]), subject, setNumber, totalSets);
     } else {
-      alert('Could not load this set.\n\nReal error: ' + friendlyFetchError(err) + '\n\n(This Set hasn\'t been downloaded before, so it isn\'t available offline yet.)');
+      showDebugError('Could not load this set.\n\nReal error: ' + friendlyFetchError(err) + '\n\n(This Set hasn\'t been downloaded before, so it isn\'t available offline yet.)');
     }
   }
 }
@@ -22465,7 +22477,7 @@ async function startSpeedChallenge(){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not load Speed Challenge questions.\n\nReal error: ' + friendlyFetchError(err));
+    showDebugError('Could not load Speed Challenge questions.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 
@@ -23833,7 +23845,7 @@ async function startRapidFire(){
     renderQuestion();
   }catch(err){
     hideQuizLoading();
-    alert('Could not start Rapid Fire.\n\nReal error: ' + friendlyFetchError(err));
+    showDebugError('Could not start Rapid Fire.\n\nReal error: ' + friendlyFetchError(err));
   }
 }
 function updateDailyFireStreak(){
