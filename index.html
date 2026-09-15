@@ -10484,7 +10484,7 @@ function renderStudyTimerToday(){
   const mins = todayMinutes % 60;
   document.getElementById('studyTimerTodayTotal').textContent = `Today's study time: ${hrs > 0 ? hrs + 'h ' : ''}${mins}m`;
 }
-updateStudyTimerDisplay();
+try{ updateStudyTimerDisplay(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: updateStudyTimerDisplay();\n\n' + (err && err.message ? err.message : String(err))); }
 
 // ---------- My Health: Water Tracker, Sleep Log, BP Log — all manual entry, kept on-device,
 // with clear "not a diagnosis, look at the trend" language throughout. ----------
@@ -10884,7 +10884,7 @@ document.getElementById('meditationResetBtn').addEventListener('click', () => {
   document.getElementById('meditationStartBtn').textContent = 'Start';
   updateMeditationDisplay();
 });
-updateMeditationDisplay();
+try{ updateMeditationDisplay(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: updateMeditationDisplay();\n\n' + (err && err.message ? err.message : String(err))); }
 
 let breathingRunning = false;
 let breathingTimeout = null;
@@ -13924,7 +13924,7 @@ document.querySelectorAll('#homeSwipeDots span').forEach(dot => {
     else if(delta > 0 && currentPanel === 1){ currentPanel = 0; showHomeSwipePanel(0); }
   }, { passive: true });
 })();
-renderHomeChart('daily'); // initial paint on page load
+try{ renderHomeChart('daily'); }catch(err){ if(window.showDebugError) showDebugError("Startup step failed: renderHomeChart('daily')\n\n" + (err && err.message ? err.message : String(err))); }  // initial paint on page load
 
 function getWrongQuestions(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_wrong_questions')) || '[]'); }
@@ -18868,7 +18868,7 @@ document.getElementById('headerDarkBtn').addEventListener('click', () => {
   document.getElementById('headerDarkBtn').textContent = isLight ? '🌙' : '☀️';
   try{ localStorage.setItem('hl_dark_mode', isLight ? '0' : '1'); }catch(e){}
 });
-applyDarkModePreference();
+try{ applyDarkModePreference(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: applyDarkModePreference();\n\n' + (err && err.message ? err.message : String(err))); }
 
 // ---------- Accent Color: one navy background for everyone, pick your own accent tint ----------
 const APP_THEMES = [
@@ -19488,7 +19488,7 @@ function renderCalendarPrefPicker(){
     });
   });
 }
-renderLanguagePicker();
+try{ renderLanguagePicker(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: renderLanguagePicker();\n\n' + (err && err.message ? err.message : String(err))); }
 
 // ---------- Dark Mode toggle, inside Profile (kept in sync with the Home header's toggle) ----------
 function renderProfileDarkModeToggle(){
@@ -19834,7 +19834,7 @@ function startCarouselAutoPlay(){
     goToCarouselSlide(nextIndex);
   }, 4000);
 }
-loadCarouselSlides();
+try{ loadCarouselSlides(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: loadCarouselSlides();\n\n' + (err && err.message ? err.message : String(err))); }
 
 // ---------- Provincial & Federal Exam Countdown Slideshow ----------
 // Fully Sheet-driven: add/edit/remove rows anytime in the "Exam Dates" tab (Name | Date columns) —
@@ -19932,7 +19932,7 @@ async function loadExamDates(){
     }
   }catch(err){ /* keep showing cached value — no error shown to user */ }
 }
-loadExamDates();
+try{ loadExamDates(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: loadExamDates();\n\n' + (err && err.message ? err.message : String(err))); }
 // Recompute days-remaining hourly (covers the app staying open across midnight) without refetching the Sheet
 setInterval(() => { computeUpcomingExams(); paintExamSlide(); renderHomeHealthDayCard(); }, 60 * 60 * 1000);
 
@@ -20138,7 +20138,7 @@ function updateLiveClock(){
   document.getElementById('liveClockLine').innerHTML =
     `📅 ${dateStr} &nbsp;·&nbsp; ⏰ ${h}:${m}:<span class="clock-seconds">${s}</span> ${ampm}`;
 }
-updateLiveClock();
+try{ updateLiveClock(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: updateLiveClock();\n\n' + (err && err.message ? err.message : String(err))); }
 setInterval(updateLiveClock, 1000); // genuinely live — ticks every single second
 
 // ---------- Quote of the Day (changes every day at midnight, same quote for everyone that day) ----------
@@ -20169,7 +20169,7 @@ async function showQuoteOfDay(){
   document.getElementById('quoteText').textContent = displayText;
   document.getElementById('quoteTextShimmer').textContent = displayText;
 }
-showQuoteOfDay();
+try{ showQuoteOfDay(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: showQuoteOfDay();\n\n' + (err && err.message ? err.message : String(err))); }
 // Re-fetch every minute so a new random quote from your Sheet shows each time
 setInterval(showQuoteOfDay, 60 * 1000);
 
@@ -20250,7 +20250,7 @@ function paintQotdAnswered(data){
   `;
 }
 // Load the day's question automatically as soon as the dashboard is ready — no tap needed
-loadQuestionOfDay();
+try{ loadQuestionOfDay(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: loadQuestionOfDay();\n\n' + (err && err.message ? err.message : String(err))); }
 
 document.querySelectorAll('.back-link').forEach(b => {
   b.addEventListener('click', () => {
@@ -20998,8 +20998,8 @@ async function renderCurrentAffairs(){
     // Already showing cached or fallback data — nothing more to do, no need to alarm the user
   }
 }
-loadSyllabusData();
-renderGkCategories();
+try{ loadSyllabusData(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: loadSyllabusData();\n\n' + (err && err.message ? err.message : String(err))); }
+try{ renderGkCategories(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: renderGkCategories();\n\n' + (err && err.message ? err.message : String(err))); }
 // renderCurrentAffairs() now loads on demand when the New Update card is tapped (see click handler above)
 
 // ---------- Subject-wise MCQs: subjects with live counts (loaded ONLY when this section is opened) ----------
