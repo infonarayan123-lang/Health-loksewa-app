@@ -7444,6 +7444,66 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 
 <script>
+  // EXAM_MARKS_BY_POST: placed here, at the very top of the script, specifically because
+  // this exact constant was confirmed (via a real user's exact error report) to fall into
+  // JavaScript's temporal dead zone when something earlier in the script throws — this
+  // guarantees it's always initialized before anything else can possibly need it, regardless
+  // of what else fails later. Deliberately small and targeted (just this one constant, not
+  // the surrounding config block) to minimize risk after an earlier, larger version of this
+  // same fix caused a different, more severe regression.
+const EXAM_MARKS_BY_POST = {
+  // Verified from the Federal PSC (Nepal) "Public Health Officer" syllabus — Paper I, 100 MCQs,
+  // 1 mark each. Names match this post's existing 12 subject tabs exactly.
+  pho: {
+    "Health and Public Health": 5,
+    "Health Planning and Management": 20,
+    "General Epidemiology": 10,
+    "Health Statistics": 5,
+    "Demography": 5,
+    "Applied Epidemiology and Disease Control": 20,
+    "Food and Nutrition": 5,
+    "Environmental Health": 5,
+    "Occupational Health": 5,
+    "Health Education and Promotion": 10,
+    "PHC, EHCS and MDGs": 5,
+    "International Health": 5
+  },
+  ha: {
+    "General Awareness": 10, "Public Management": 10,
+    "Public Health Programmes and Policy": 5, "Planning and Management": 2,
+    "Organizational Structure and Functions": 2, "Community Mobilization and Local Governance": 2,
+    "Epidemiology and Disease Control": 2, "Environmental Sanitation": 2, "Child Health": 2,
+    "General Medicine": 2, "First Aid and Emergency Management": 2, "Skin Diseases": 2,
+    "Elementary Surgery": 2, "Eye, Ear, Nose and Throat Diseases": 1,
+    "Oral Health and Mental Health": 1, "Reproductive Health": 2, "Acts and Regulations": 1
+  },
+  ahw: {
+    "General Awareness": 10, "Public Management": 10, "Anatomy and Physiology": 3,
+    "Health Education and Community Diagnosis": 2, "Community Health": 2,
+    "First Aid and Basic Medical Procedures": 2, "Vector Borne Diseases": 4,
+    "Maternal and Child Health, Family Planning and Nutrition": 2,
+    "Communicable Disease and Microbiology": 2, "Medicine": 5, "Surgery": 2,
+    "Pharmacy and Pharmacology": 2, "Health Culture and Communication": 2, "Health Management": 2
+  },
+  ha_license: {
+    "Anatomy and Physiology": 10, "Community Health": 25, "General Medicine": 25,
+    "Pharmacology and Pharmacy": 10, "General Surgery": 25, "Clinical Pathology": 5
+  },
+  sn: {
+    "General Awareness": 10, "Public Management": 10, "Fundamentals of Nursing": 4,
+    "Applied Science": 4, "Medical/Surgical Nursing": 6, "Community Health Nursing": 5,
+    "Midwifery": 3, "Nursing Care of Gynaecological Problems": 2, "Pediatric Nursing": 2,
+    "Mental Health": 2, "Leadership and Management in Nursing Planning": 2
+  },
+  anm: {
+    "General Awareness": 10, "Public Management": 10,
+    "Anatomy and Physiology (Structure and Functions)": 3, "Mechanism of the Different System": 3,
+    "Fundamentals of Nursing": 3, "Treatment of Simple Diseases and Disorders": 3,
+    "Community Health Nursing": 3, "Midwifery: Antenatal Care": 5,
+    "Midwifery: Intranatal Care (Labor)": 5, "Midwifery: Postnatal Care": 5
+  }
+};
+
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
@@ -22094,58 +22154,6 @@ async function startPastQuestionPaper(paperName){
 // name on the Subject-wise MCQs picker, straight from each post's own verified syllabus.
 // A post/subject not listed here (PHO, BPH License, General Awareness/Public Management-less
 // posts, etc.) simply shows no bracket — nothing is guessed.
-const EXAM_MARKS_BY_POST = {
-  // Verified from the Federal PSC (Nepal) "Public Health Officer" syllabus — Paper I, 100 MCQs,
-  // 1 mark each. Names match this post's existing 12 subject tabs exactly.
-  pho: {
-    "Health and Public Health": 5,
-    "Health Planning and Management": 20,
-    "General Epidemiology": 10,
-    "Health Statistics": 5,
-    "Demography": 5,
-    "Applied Epidemiology and Disease Control": 20,
-    "Food and Nutrition": 5,
-    "Environmental Health": 5,
-    "Occupational Health": 5,
-    "Health Education and Promotion": 10,
-    "PHC, EHCS and MDGs": 5,
-    "International Health": 5
-  },
-  ha: {
-    "General Awareness": 10, "Public Management": 10,
-    "Public Health Programmes and Policy": 5, "Planning and Management": 2,
-    "Organizational Structure and Functions": 2, "Community Mobilization and Local Governance": 2,
-    "Epidemiology and Disease Control": 2, "Environmental Sanitation": 2, "Child Health": 2,
-    "General Medicine": 2, "First Aid and Emergency Management": 2, "Skin Diseases": 2,
-    "Elementary Surgery": 2, "Eye, Ear, Nose and Throat Diseases": 1,
-    "Oral Health and Mental Health": 1, "Reproductive Health": 2, "Acts and Regulations": 1
-  },
-  ahw: {
-    "General Awareness": 10, "Public Management": 10, "Anatomy and Physiology": 3,
-    "Health Education and Community Diagnosis": 2, "Community Health": 2,
-    "First Aid and Basic Medical Procedures": 2, "Vector Borne Diseases": 4,
-    "Maternal and Child Health, Family Planning and Nutrition": 2,
-    "Communicable Disease and Microbiology": 2, "Medicine": 5, "Surgery": 2,
-    "Pharmacy and Pharmacology": 2, "Health Culture and Communication": 2, "Health Management": 2
-  },
-  ha_license: {
-    "Anatomy and Physiology": 10, "Community Health": 25, "General Medicine": 25,
-    "Pharmacology and Pharmacy": 10, "General Surgery": 25, "Clinical Pathology": 5
-  },
-  sn: {
-    "General Awareness": 10, "Public Management": 10, "Fundamentals of Nursing": 4,
-    "Applied Science": 4, "Medical/Surgical Nursing": 6, "Community Health Nursing": 5,
-    "Midwifery": 3, "Nursing Care of Gynaecological Problems": 2, "Pediatric Nursing": 2,
-    "Mental Health": 2, "Leadership and Management in Nursing Planning": 2
-  },
-  anm: {
-    "General Awareness": 10, "Public Management": 10,
-    "Anatomy and Physiology (Structure and Functions)": 3, "Mechanism of the Different System": 3,
-    "Fundamentals of Nursing": 3, "Treatment of Simple Diseases and Disorders": 3,
-    "Community Health Nursing": 3, "Midwifery: Antenatal Care": 5,
-    "Midwifery: Intranatal Care (Labor)": 5, "Midwifery: Postnatal Care": 5
-  }
-};
 
 function openSetSelect(subjectName){
   selectedSubject = subjectName === 'All Subjects (Mixed)' ? '__ALL__' : subjectName;
