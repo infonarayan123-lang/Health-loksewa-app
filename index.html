@@ -7444,539 +7444,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 
 <script>
-  // ==========================================================================================
-  // EXAM CONFIGURATION — deliberately placed at the very top of this script, executed before
-  // anything else, so these constants are ALWAYS guaranteed to be initialized before any code
-  // anywhere else in this file can possibly need them — regardless of whether some unrelated
-  // startup function later in the file throws an error. This is a root-cause fix for a real,
-  // confirmed bug: these were previously declared very late in the file, and an unrelated
-  // earlier startup failure (reading a real user's actual accumulated data, which a clean test
-  // environment never reproduces) could halt top-level script execution before reaching their
-  // declaration, leaving them permanently stuck in the temporal dead zone for the rest of the
-  // session even though the rest of the page looked functional.
-  // ==========================================================================================
-const KNOWN_SUBJECTS = [
-  "All Subjects (Mixed)",
-  "Health and Public Health",
-  "Health Planning and Management",
-  "General Epidemiology",
-  "Health Statistics",
-  "Demography",
-  "Applied Epidemiology and Disease Control",
-  "Food and Nutrition",
-  "Environmental Health",
-  "Occupational Health",
-  "Health Education and Promotion",
-  "PHC, EHCS and MDGs",
-  "International Health",
-];
-// HA's Paper I subject units — lives in its own separate Google Sheet (see POST_SHEET_IDS
-// on the Apps Script side).
-const KNOWN_SUBJECTS_HA = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Public Health Programmes and Policy",
-  "Planning and Management",
-  "Organizational Structure and Functions",
-  "Community Mobilization and Local Governance",
-  "Epidemiology and Disease Control",
-  "Environmental Sanitation",
-  "Child Health",
-  "General Medicine",
-  "First Aid and Emergency Management",
-  "Skin Diseases",
-  "Elementary Surgery",
-  "Eye, Ear, Nose and Throat Diseases",
-  "Oral Health and Mental Health",
-  "Reproductive Health",
-  "Acts and Regulations",
-];
-// BPH License's syllabus — lives in its own separate Google Sheet (see POST_SHEET_IDS on the
-// Apps Script side). Note: this syllabus only gives percentage weights per subject, not exact
-// question counts, so Mock Test/Tournament use simple flat random mixing for this post for now.
-const KNOWN_SUBJECTS_BPH_LICENSE = [
-  "All Subjects (Mixed)",
-  "Basic Science",
-  "Basic and Applied Epidemiology",
-  "Research, Biostatistics and Population Studies",
-  "Public Health and Primary Health Care",
-  "Health Promotion, Education and Mental Health",
-  "Health System Development and Management",
-  "Family Health, Child Health and Nutrition",
-  "Environmental and Occupational Health",
-  "Sociology and Anthropology",
-];
-// AHW (Central Loksewa) syllabus — lives in its own separate Google Sheet.
-const KNOWN_SUBJECTS_AHW = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Anatomy and Physiology",
-  "Health Education and Community Diagnosis",
-  "Community Health",
-  "First Aid and Basic Medical Procedures",
-  "Vector Borne Diseases",
-  "Maternal and Child Health, Family Planning and Nutrition",
-  "Communicable Disease and Microbiology",
-  "Medicine",
-  "Surgery",
-  "Pharmacy and Pharmacology",
-  "Health Culture and Communication",
-  "Health Management",
-];
-// HA License (NHPC) syllabus — lives in its own separate Google Sheet. Verified official
-// weighted distribution (100 MCQs, 1 mark each, from NHPC's licensing syllabus's own table).
-const KNOWN_SUBJECTS_HA_LICENSE = [
-  "All Subjects (Mixed)",
-  "Anatomy and Physiology",
-  "Community Health",
-  "General Medicine",
-  "Pharmacology and Pharmacy",
-  "General Surgery",
-  "Clinical Pathology",
-];
-// Staff Nurse (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified
-// official weighted distribution (50 MCQs, 2 marks each).
-const KNOWN_SUBJECTS_SN = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Fundamentals of Nursing",
-  "Applied Science",
-  "Medical/Surgical Nursing",
-  "Community Health Nursing",
-  "Midwifery",
-  "Nursing Care of Gynaecological Problems",
-  "Pediatric Nursing",
-  "Mental Health",
-  "Leadership and Management in Nursing Planning",
-];
-// ANM (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified official
-// weighted distribution (50 MCQs, 2 marks each).
-const KNOWN_SUBJECTS_ANM = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Anatomy and Physiology (Structure and Functions)",
-  "Mechanism of the Different System",
-  "Fundamentals of Nursing",
-  "Treatment of Simple Diseases and Disorders",
-  "Community Health Nursing",
-  "Midwifery: Antenatal Care",
-  "Midwifery: Intranatal Care (Labor)",
-  "Midwifery: Postnatal Care",
-];
-// Lookup used by renderSubjectPick — add a new post's array here (and above) whenever a new
-// post gets its own Sheet, instead of growing a long if/else chain.
-const KNOWN_SUBJECTS_BY_POST = {
-  ha: KNOWN_SUBJECTS_HA,
-  bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
-  ahw: KNOWN_SUBJECTS_AHW,
-  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
-  sn: KNOWN_SUBJECTS_SN,
-  anm: KNOWN_SUBJECTS_ANM,
-};
-// Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
-// post card, and read by every subject/question fetch onward so it hits the right Sheet.
-let currentMcqPost = 'pho';
-let currentTournamentPost = 'pho';
-
-// Distinguishes "All Subjects (Mixed)" progress/cache between different posts (PHO vs HA, etc.) —
-// they'd otherwise collide since every post's "mixed" mode uses the same "__ALL__" identifier.
-// Real subject names never collide between posts, so this only ever touches that one shared
-// value, and only for posts other than PHO — existing PHO users' saved progress is unaffected.
-// Resolves which post's subject list a given weak/strong subject name belongs to, so the
-// Progress screen's "Practice Now" button can route straight into the right post's quiz —
-// PHO's list has no post prefix (it's the default), every other post is in KNOWN_SUBJECTS_BY_POST.
-function findPostForSubject(subjectName){
-  if(KNOWN_SUBJECTS.includes(subjectName)) return 'pho';
-  for(const post in KNOWN_SUBJECTS_BY_POST){
-    if(KNOWN_SUBJECTS_BY_POST[post].includes(subjectName)) return post;
-  }
-  return null;
-}
-function progressKey(subject){
-  if(subject === '__ALL__' && currentMcqPost && currentMcqPost !== 'pho'){
-    return subject + '::' + currentMcqPost;
-  }
-  return subject;
-}
-
-let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
-
-// ---------- Subject-wise MCQs: Step 0 — pick a post (same pattern as Syllabus) ----------
-const MCQ_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
-];
-function renderMcqPosts(){
-  const selected = getSelectedPosts();
-  const posts = selected.length > 0 ? MCQ_POSTS.filter(p => selected.includes(p.key)) : MCQ_POSTS;
-  document.getElementById('mcqPostGrid').innerHTML = posts.map(post => `
-    <button class="dash-card ${post.css} mcq-post-btn" data-key="${post.key}">
-      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${post.label}</div>
-      <div class="dc-sub">Subject-wise MCQs</div>
-    </button>
-  `).join('');
-
-  document.querySelectorAll('.mcq-post-btn').forEach(card => {
-    card.addEventListener('click', () => {
-      const post = MCQ_POSTS.find(p => p.key === card.dataset.key);
-      if(post.ready){
-        currentMcqPost = post.key;
-        showScreen(subjectPickScreen);
-        renderSubjectPick();
-      } else {
-        document.getElementById('comingSoonTitle').textContent = post.label + ' — Subject-wise MCQs';
-        comingSoonBackTarget = mcqPostScreen;
-        showScreen(comingSoonScreen);
-      }
-    });
-  });
-}
-
-// ---------- Mock Test: Step 0 — pick a post (same pattern as Syllabus / Subject-wise MCQs) ----------
-// Exam format per post: Public Health Officer uses 100 questions worth 1 mark each;
-// other posts use 50 questions worth 2 marks each — both total 100 marks either way.
-const TOURNAMENT_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
-];
-
-const MOCK_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1, minutes:75},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2, minutes:45},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2, minutes:45},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2, minutes:45},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2, minutes:45},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1, minutes:60},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:100, marksEach:1, minutes:60},
-];
-function renderMockPosts(){
-  const selected = getSelectedPosts();
-  const posts = selected.length > 0 ? MOCK_POSTS.filter(p => selected.includes(p.key)) : MOCK_POSTS;
-  document.getElementById('mockPostGrid').innerHTML = posts.map(post => `
-    <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}">
-      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${post.label}</div>
-      <div class="dc-sub">${post.questionCount} Qs · ${post.minutes} min · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
-    </button>
-  `).join('');
-
-  document.querySelectorAll('.mock-post-btn').forEach(card => {
-    card.addEventListener('click', () => {
-      const post = MOCK_POSTS.find(p => p.key === card.dataset.key);
-      if(post.ready){
-        startMockTest(post);
-      } else {
-        document.getElementById('comingSoonTitle').textContent = post.label + ' — Mock Test';
-        comingSoonBackTarget = mockPostScreen;
-        showScreen(comingSoonScreen);
-      }
-    });
-  });
-}
-
-// Small reusable loading overlay — shown while Mock Test / a Set's questions load from the
-// server, since that fetch can genuinely take a few seconds and users tapped blind before this.
-// ---------- In-app foreground notification banner — auto-dismisses, tap to open What's New
-// (a reasonable default landing spot; specific deep-linking per notification type is a natural
-// future refinement once real usage shows which destinations matter most) ----------
-let inAppNotifTimeout = null;
-window.showInAppNotificationBanner = function(title, body){
-  document.getElementById('inAppNotifTitle').textContent = title;
-  document.getElementById('inAppNotifBody').textContent = body;
-  const banner = document.getElementById('inAppNotifBanner');
-  banner.style.display = 'block';
-  clearTimeout(inAppNotifTimeout);
-  inAppNotifTimeout = setTimeout(() => { banner.style.display = 'none'; }, 6000);
-};
-document.getElementById('inAppNotifBanner').addEventListener('click', () => {
-  document.getElementById('inAppNotifBanner').style.display = 'none';
-  showScreen(whatsNewScreen);
-  renderWhatsNew();
-});
-
-// ---------- TEMPORARY diagnostic tool: catches any real, uncaught JavaScript error anywhere in
-// the app — both thrown errors and unhandled promise rejections (many async functions in this
-// app can fail inside a Promise without ever reaching a visible catch block) — and displays the
-// actual message on screen. This exists specifically because a user reported "empty"/"can't
-// open" symptoms with no visible cause, and there was no way to get real browser error details
-// without a computer and DevTools. Safe to remove later once the underlying issue is confirmed
-// found and fixed — this is a diagnostic aid, not a permanent feature. ----------
-function showDebugError(message){
-  document.getElementById('debugErrorText').textContent = message;
-  document.getElementById('debugErrorOverlay').style.display = 'block';
-}
-window.addEventListener('error', (event) => {
-  showDebugError(`${event.message}\n\nFile: ${(event.filename || '').split('/').pop()}:${event.lineno}:${event.colno}`);
-});
-window.addEventListener('unhandledrejection', (event) => {
-  const reason = event.reason;
-  const message = (reason && reason.message) ? reason.message : String(reason);
-  const stack = (reason && reason.stack) ? '\n\n' + reason.stack.split('\n').slice(0, 3).join('\n') : '';
-  showDebugError(`Unhandled promise error: ${message}${stack}`);
-});
-document.getElementById('debugErrorDismissBtn').addEventListener('click', () => {
-  document.getElementById('debugErrorOverlay').style.display = 'none';
-});
-
-function showQuizLoading(message){
-  document.getElementById('quizLoadingText').textContent = message || 'Please wait, loading your questions… this may take a moment.';
-  document.getElementById('quizLoadingOverlay').classList.add('active');
-}
-function hideQuizLoading(){
-  document.getElementById('quizLoadingOverlay').classList.remove('active');
-}
-
-async function startMockTest(post){
-  if(window.checkAndIncrementMockTestUsage){
-    const usage = await window.checkAndIncrementMockTestUsage();
-    if(!usage.allowed){
-      if(await showPremiumLockModal('🏆 You\'ve used your free Mock Test for this week. Upgrade to Premium for unlimited Mock Tests?')){
-        premiumBackTarget = mockPostScreen;
-        showScreen(upgradeScreen);
-        renderPremiumStatus();
-      }
-      return;
-    }
-  }
-  await showReadCarefullyReminder();
-  currentSetInfo = null;
-  mockTestActive = true;
-  showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
-  try{
-    const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}&post=${post.key}`;
-    const res = await fetchWithTimeout(url);
-    const pool = await res.json();
-
-    if(pool.length === 0){
-      hideQuizLoading();
-      alert('No questions available yet. Add MCQs to your Google Sheet first!');
-      return;
-    }
-
-    quizQuestions = pool;
-    currentIndex = 0;
-    answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = post.minutes * 60; // per-post official exam timing, not a fixed value
-    currentMarksPerQuestion = post.marksEach;
-
-    buildOmrStrip();
-    hideQuizLoading();
-    showScreen(quizScreen);
-    startTimer();
-    renderQuestion();
-  }catch(err){
-    hideQuizLoading();
-    showDebugError('Could not load the mock test.\n\nReal error: ' + friendlyFetchError(err));
-  }
-}
-
-// ---------- Past Questions: real exam papers, own dashboard section (not part of Subject-wise MCQs) ----------
-// Post-picker, same style as Mock Test — only PHO has real papers uploaded so far.
-const PAST_QUESTIONS_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📄", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
-];
-
-// Populated per-post from each post's own "Past Questions List" tab — see loadPastQuestionsList()
-// below. Add/remove a row there anytime to add/remove a paper — no code changes needed.
-let PAST_QUESTIONS_BY_POST = {};
-
-function renderPastQuestionsPosts(){
-  const selected = getSelectedPosts();
-  const posts = selected.length > 0 ? PAST_QUESTIONS_POSTS.filter(p => selected.includes(p.key)) : PAST_QUESTIONS_POSTS;
-  document.getElementById('pastQuestionsPostGrid').innerHTML = posts.map(post => `
-    <button class="dash-card ${post.css} pq-post-btn" data-key="${post.key}">
-      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${post.label}</div>
-      <div class="dc-sub">Real past exam papers</div>
-    </button>
-  `).join('');
-
-  document.querySelectorAll('.pq-post-btn').forEach(card => {
-    card.addEventListener('click', () => {
-      const post = PAST_QUESTIONS_POSTS.find(p => p.key === card.dataset.key);
-      if(post.ready){
-        currentMcqPost = post.key; // ensures startSet/startPastQuestionPaper fetch the correct Sheet
-        showScreen(pastQuestionsYearScreen);
-        loadPastQuestionsList(post.key);
-      } else {
-        document.getElementById('comingSoonTitle').textContent = post.label + ' — Past Questions';
-        comingSoonBackTarget = pastQuestionsPostScreen;
-        showScreen(comingSoonScreen);
-      }
-    });
-  });
-}
-
-function renderPastQuestionsList(){
-  const papers = PAST_QUESTIONS_BY_POST[currentMcqPost] || [];
-  if(papers.length === 0){
-    document.getElementById('pastQuestionsYearList').innerHTML =
-      `<p style="color:var(--ink-soft); font-size:13.5px;">No past papers added yet — check back soon!</p>`;
-    return;
-  }
-  document.getElementById('pastQuestionsYearList').innerHTML = papers.map(paper => `
-    <a class="link-card" href="#" data-paper="${paper}">
-      <div class="lc-text"><h4>${paper}</h4><p>Real past exam questions</p></div>
-      <div class="lc-arrow">→</div>
-    </a>
-  `).join('');
-  document.querySelectorAll('#pastQuestionsYearList .link-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
-      startPastQuestionPaper(card.dataset.paper);
-    });
-  });
-}
-
-async function loadPastQuestionsList(postKey){
-  const cacheKey = 'hl_cache_pastquestions_' + postKey;
-
-  // Instant: paint from cache immediately (or empty-state), never left waiting with nothing
-  try{
-    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-    if(Array.isArray(cached) && cached.length > 0) PAST_QUESTIONS_BY_POST[postKey] = cached;
-  }catch(e){}
-  renderPastQuestionsList();
-
-  // Quietly refresh in the background from that post's own "Past Questions List" Sheet tab
-  try{
-    const res = await fetch(`${SHEET_API_URL}?action=subjects&list=pastquestions&post=${postKey}`);
-    const fresh = await res.json();
-    if(Array.isArray(fresh)){
-      const names = fresh.map(r => r.name).filter(Boolean);
-      if(names.length > 0){
-        PAST_QUESTIONS_BY_POST[postKey] = names;
-        try{ localStorage.setItem(cacheKey, JSON.stringify(names)); }catch(e){}
-        renderPastQuestionsList();
-      }
-    }
-  }catch(err){ /* keep showing cached/empty-state — no error shown to user */ }
-}
-
-// Runs a full past paper in one sitting, just like Mock Test — NOT Set-locked, since a real past
-// paper (~100 questions) is meant to be taken as one continuous exam, not split into 50-Q chunks.
-async function startPastQuestionPaper(paperName){
-  if(window.checkAndRecordPastQuestionAccess){
-    const usage = await window.checkAndRecordPastQuestionAccess(paperName);
-    if(!usage.allowed){
-      if(await showPremiumLockModal('📜 You\'ve used your 2 free Past Question papers. Upgrade to Premium for unlimited access?')){
-        premiumBackTarget = pastQuestionsYearScreen;
-        showScreen(upgradeScreen);
-        renderPremiumStatus();
-      }
-      return;
-    }
-  }
-  await showReadCarefullyReminder();
-  currentSetInfo = null; // no Set-locking/progress-tracking for past papers, same as Mock Test
-  pastQuestionActive = true;
-  showQuizLoading('Please wait, loading this paper… this may take a moment.');
-  try{
-    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=${currentMcqPost}`;
-    const res = await fetchWithTimeout(url);
-    const pool = await res.json();
-
-    if(pool.length === 0){
-      hideQuizLoading();
-      alert('No questions found in this paper yet.');
-      return;
-    }
-
-    quizQuestions = pool.map(q => ({ ...q, PastPaper: paperName }));
-    currentIndex = 0;
-    answers = new Array(quizQuestions.length).fill(null);
-    secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
-    currentMarksPerQuestion = 1; // matches PHO Paper I: 1 mark per question
-
-    buildOmrStrip();
-    hideQuizLoading();
-    showScreen(quizScreen);
-    startTimer();
-    renderQuestion();
-  }catch(err){
-    hideQuizLoading();
-    showDebugError('Could not load this paper.\n\nReal error: ' + friendlyFetchError(err));
-  }
-}
-
-// Official marks each subject carries in the real written exam, per post — mirrors
-// POST_EXAM_DISTRIBUTION on the Apps Script side. Shown in brackets next to each subject
-// name on the Subject-wise MCQs picker, straight from each post's own verified syllabus.
-// A post/subject not listed here (PHO, BPH License, General Awareness/Public Management-less
-// posts, etc.) simply shows no bracket — nothing is guessed.
-const EXAM_MARKS_BY_POST = {
-  // Verified from the Federal PSC (Nepal) "Public Health Officer" syllabus — Paper I, 100 MCQs,
-  // 1 mark each. Names match this post's existing 12 subject tabs exactly.
-  pho: {
-    "Health and Public Health": 5,
-    "Health Planning and Management": 20,
-    "General Epidemiology": 10,
-    "Health Statistics": 5,
-    "Demography": 5,
-    "Applied Epidemiology and Disease Control": 20,
-    "Food and Nutrition": 5,
-    "Environmental Health": 5,
-    "Occupational Health": 5,
-    "Health Education and Promotion": 10,
-    "PHC, EHCS and MDGs": 5,
-    "International Health": 5
-  },
-  ha: {
-    "General Awareness": 10, "Public Management": 10,
-    "Public Health Programmes and Policy": 5, "Planning and Management": 2,
-    "Organizational Structure and Functions": 2, "Community Mobilization and Local Governance": 2,
-    "Epidemiology and Disease Control": 2, "Environmental Sanitation": 2, "Child Health": 2,
-    "General Medicine": 2, "First Aid and Emergency Management": 2, "Skin Diseases": 2,
-    "Elementary Surgery": 2, "Eye, Ear, Nose and Throat Diseases": 1,
-    "Oral Health and Mental Health": 1, "Reproductive Health": 2, "Acts and Regulations": 1
-  },
-  ahw: {
-    "General Awareness": 10, "Public Management": 10, "Anatomy and Physiology": 3,
-    "Health Education and Community Diagnosis": 2, "Community Health": 2,
-    "First Aid and Basic Medical Procedures": 2, "Vector Borne Diseases": 4,
-    "Maternal and Child Health, Family Planning and Nutrition": 2,
-    "Communicable Disease and Microbiology": 2, "Medicine": 5, "Surgery": 2,
-    "Pharmacy and Pharmacology": 2, "Health Culture and Communication": 2, "Health Management": 2
-  },
-  ha_license: {
-    "Anatomy and Physiology": 10, "Community Health": 25, "General Medicine": 25,
-    "Pharmacology and Pharmacy": 10, "General Surgery": 25, "Clinical Pathology": 5
-  },
-  sn: {
-    "General Awareness": 10, "Public Management": 10, "Fundamentals of Nursing": 4,
-    "Applied Science": 4, "Medical/Surgical Nursing": 6, "Community Health Nursing": 5,
-    "Midwifery": 3, "Nursing Care of Gynaecological Problems": 2, "Pediatric Nursing": 2,
-    "Mental Health": 2, "Leadership and Management in Nursing Planning": 2
-  },
-  anm: {
-    "General Awareness": 10, "Public Management": 10,
-    "Anatomy and Physiology (Structure and Functions)": 3, "Mechanism of the Different System": 3,
-    "Fundamentals of Nursing": 3, "Treatment of Simple Diseases and Disorders": 3,
-    "Community Health Nursing": 3, "Midwifery: Antenatal Care": 5,
-    "Midwifery: Intranatal Care (Labor)": 5, "Midwifery: Postnatal Care": 5
-  }
-};
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
@@ -22157,6 +21624,529 @@ function computeProgressStats(){
 // We always show Set 1 (and any already-completed sets from your saved progress) right away.
 // The real question count is only checked in the background, purely to reveal whether
 // further sets exist — it never blocks you from starting Set 1 immediately.
+const KNOWN_SUBJECTS = [
+  "All Subjects (Mixed)",
+  "Health and Public Health",
+  "Health Planning and Management",
+  "General Epidemiology",
+  "Health Statistics",
+  "Demography",
+  "Applied Epidemiology and Disease Control",
+  "Food and Nutrition",
+  "Environmental Health",
+  "Occupational Health",
+  "Health Education and Promotion",
+  "PHC, EHCS and MDGs",
+  "International Health",
+];
+// HA's Paper I subject units — lives in its own separate Google Sheet (see POST_SHEET_IDS
+// on the Apps Script side).
+const KNOWN_SUBJECTS_HA = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Public Health Programmes and Policy",
+  "Planning and Management",
+  "Organizational Structure and Functions",
+  "Community Mobilization and Local Governance",
+  "Epidemiology and Disease Control",
+  "Environmental Sanitation",
+  "Child Health",
+  "General Medicine",
+  "First Aid and Emergency Management",
+  "Skin Diseases",
+  "Elementary Surgery",
+  "Eye, Ear, Nose and Throat Diseases",
+  "Oral Health and Mental Health",
+  "Reproductive Health",
+  "Acts and Regulations",
+];
+// BPH License's syllabus — lives in its own separate Google Sheet (see POST_SHEET_IDS on the
+// Apps Script side). Note: this syllabus only gives percentage weights per subject, not exact
+// question counts, so Mock Test/Tournament use simple flat random mixing for this post for now.
+const KNOWN_SUBJECTS_BPH_LICENSE = [
+  "All Subjects (Mixed)",
+  "Basic Science",
+  "Basic and Applied Epidemiology",
+  "Research, Biostatistics and Population Studies",
+  "Public Health and Primary Health Care",
+  "Health Promotion, Education and Mental Health",
+  "Health System Development and Management",
+  "Family Health, Child Health and Nutrition",
+  "Environmental and Occupational Health",
+  "Sociology and Anthropology",
+];
+// AHW (Central Loksewa) syllabus — lives in its own separate Google Sheet.
+const KNOWN_SUBJECTS_AHW = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology",
+  "Health Education and Community Diagnosis",
+  "Community Health",
+  "First Aid and Basic Medical Procedures",
+  "Vector Borne Diseases",
+  "Maternal and Child Health, Family Planning and Nutrition",
+  "Communicable Disease and Microbiology",
+  "Medicine",
+  "Surgery",
+  "Pharmacy and Pharmacology",
+  "Health Culture and Communication",
+  "Health Management",
+];
+// HA License (NHPC) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (100 MCQs, 1 mark each, from NHPC's licensing syllabus's own table).
+const KNOWN_SUBJECTS_HA_LICENSE = [
+  "All Subjects (Mixed)",
+  "Anatomy and Physiology",
+  "Community Health",
+  "General Medicine",
+  "Pharmacology and Pharmacy",
+  "General Surgery",
+  "Clinical Pathology",
+];
+// Staff Nurse (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified
+// official weighted distribution (50 MCQs, 2 marks each).
+const KNOWN_SUBJECTS_SN = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Fundamentals of Nursing",
+  "Applied Science",
+  "Medical/Surgical Nursing",
+  "Community Health Nursing",
+  "Midwifery",
+  "Nursing Care of Gynaecological Problems",
+  "Pediatric Nursing",
+  "Mental Health",
+  "Leadership and Management in Nursing Planning",
+];
+// ANM (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified official
+// weighted distribution (50 MCQs, 2 marks each).
+const KNOWN_SUBJECTS_ANM = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology (Structure and Functions)",
+  "Mechanism of the Different System",
+  "Fundamentals of Nursing",
+  "Treatment of Simple Diseases and Disorders",
+  "Community Health Nursing",
+  "Midwifery: Antenatal Care",
+  "Midwifery: Intranatal Care (Labor)",
+  "Midwifery: Postnatal Care",
+];
+// Lookup used by renderSubjectPick — add a new post's array here (and above) whenever a new
+// post gets its own Sheet, instead of growing a long if/else chain.
+const KNOWN_SUBJECTS_BY_POST = {
+  ha: KNOWN_SUBJECTS_HA,
+  bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
+  ahw: KNOWN_SUBJECTS_AHW,
+  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
+  sn: KNOWN_SUBJECTS_SN,
+  anm: KNOWN_SUBJECTS_ANM,
+};
+// Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
+// post card, and read by every subject/question fetch onward so it hits the right Sheet.
+let currentMcqPost = 'pho';
+let currentTournamentPost = 'pho';
+
+// Distinguishes "All Subjects (Mixed)" progress/cache between different posts (PHO vs HA, etc.) —
+// they'd otherwise collide since every post's "mixed" mode uses the same "__ALL__" identifier.
+// Real subject names never collide between posts, so this only ever touches that one shared
+// value, and only for posts other than PHO — existing PHO users' saved progress is unaffected.
+// Resolves which post's subject list a given weak/strong subject name belongs to, so the
+// Progress screen's "Practice Now" button can route straight into the right post's quiz —
+// PHO's list has no post prefix (it's the default), every other post is in KNOWN_SUBJECTS_BY_POST.
+function findPostForSubject(subjectName){
+  if(KNOWN_SUBJECTS.includes(subjectName)) return 'pho';
+  for(const post in KNOWN_SUBJECTS_BY_POST){
+    if(KNOWN_SUBJECTS_BY_POST[post].includes(subjectName)) return post;
+  }
+  return null;
+}
+function progressKey(subject){
+  if(subject === '__ALL__' && currentMcqPost && currentMcqPost !== 'pho'){
+    return subject + '::' + currentMcqPost;
+  }
+  return subject;
+}
+
+let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
+
+// ---------- Subject-wise MCQs: Step 0 — pick a post (same pattern as Syllabus) ----------
+const MCQ_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
+];
+function renderMcqPosts(){
+  const selected = getSelectedPosts();
+  const posts = selected.length > 0 ? MCQ_POSTS.filter(p => selected.includes(p.key)) : MCQ_POSTS;
+  document.getElementById('mcqPostGrid').innerHTML = posts.map(post => `
+    <button class="dash-card ${post.css} mcq-post-btn" data-key="${post.key}">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">Subject-wise MCQs</div>
+    </button>
+  `).join('');
+
+  document.querySelectorAll('.mcq-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
+      const post = MCQ_POSTS.find(p => p.key === card.dataset.key);
+      if(post.ready){
+        currentMcqPost = post.key;
+        showScreen(subjectPickScreen);
+        renderSubjectPick();
+      } else {
+        document.getElementById('comingSoonTitle').textContent = post.label + ' — Subject-wise MCQs';
+        comingSoonBackTarget = mcqPostScreen;
+        showScreen(comingSoonScreen);
+      }
+    });
+  });
+}
+
+// ---------- Mock Test: Step 0 — pick a post (same pattern as Syllabus / Subject-wise MCQs) ----------
+// Exam format per post: Public Health Officer uses 100 questions worth 1 mark each;
+// other posts use 50 questions worth 2 marks each — both total 100 marks either way.
+const TOURNAMENT_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
+];
+
+const MOCK_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1, minutes:75},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2, minutes:45},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2, minutes:45},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2, minutes:45},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2, minutes:45},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1, minutes:60},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:100, marksEach:1, minutes:60},
+];
+function renderMockPosts(){
+  const selected = getSelectedPosts();
+  const posts = selected.length > 0 ? MOCK_POSTS.filter(p => selected.includes(p.key)) : MOCK_POSTS;
+  document.getElementById('mockPostGrid').innerHTML = posts.map(post => `
+    <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">${post.questionCount} Qs · ${post.minutes} min · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
+    </button>
+  `).join('');
+
+  document.querySelectorAll('.mock-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
+      const post = MOCK_POSTS.find(p => p.key === card.dataset.key);
+      if(post.ready){
+        startMockTest(post);
+      } else {
+        document.getElementById('comingSoonTitle').textContent = post.label + ' — Mock Test';
+        comingSoonBackTarget = mockPostScreen;
+        showScreen(comingSoonScreen);
+      }
+    });
+  });
+}
+
+// Small reusable loading overlay — shown while Mock Test / a Set's questions load from the
+// server, since that fetch can genuinely take a few seconds and users tapped blind before this.
+// ---------- In-app foreground notification banner — auto-dismisses, tap to open What's New
+// (a reasonable default landing spot; specific deep-linking per notification type is a natural
+// future refinement once real usage shows which destinations matter most) ----------
+let inAppNotifTimeout = null;
+window.showInAppNotificationBanner = function(title, body){
+  document.getElementById('inAppNotifTitle').textContent = title;
+  document.getElementById('inAppNotifBody').textContent = body;
+  const banner = document.getElementById('inAppNotifBanner');
+  banner.style.display = 'block';
+  clearTimeout(inAppNotifTimeout);
+  inAppNotifTimeout = setTimeout(() => { banner.style.display = 'none'; }, 6000);
+};
+document.getElementById('inAppNotifBanner').addEventListener('click', () => {
+  document.getElementById('inAppNotifBanner').style.display = 'none';
+  showScreen(whatsNewScreen);
+  renderWhatsNew();
+});
+
+// ---------- TEMPORARY diagnostic tool: catches any real, uncaught JavaScript error anywhere in
+// the app — both thrown errors and unhandled promise rejections (many async functions in this
+// app can fail inside a Promise without ever reaching a visible catch block) — and displays the
+// actual message on screen. This exists specifically because a user reported "empty"/"can't
+// open" symptoms with no visible cause, and there was no way to get real browser error details
+// without a computer and DevTools. Safe to remove later once the underlying issue is confirmed
+// found and fixed — this is a diagnostic aid, not a permanent feature. ----------
+function showDebugError(message){
+  document.getElementById('debugErrorText').textContent = message;
+  document.getElementById('debugErrorOverlay').style.display = 'block';
+}
+window.addEventListener('error', (event) => {
+  showDebugError(`${event.message}\n\nFile: ${(event.filename || '').split('/').pop()}:${event.lineno}:${event.colno}`);
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  const message = (reason && reason.message) ? reason.message : String(reason);
+  const stack = (reason && reason.stack) ? '\n\n' + reason.stack.split('\n').slice(0, 3).join('\n') : '';
+  showDebugError(`Unhandled promise error: ${message}${stack}`);
+});
+document.getElementById('debugErrorDismissBtn').addEventListener('click', () => {
+  document.getElementById('debugErrorOverlay').style.display = 'none';
+});
+
+function showQuizLoading(message){
+  document.getElementById('quizLoadingText').textContent = message || 'Please wait, loading your questions… this may take a moment.';
+  document.getElementById('quizLoadingOverlay').classList.add('active');
+}
+function hideQuizLoading(){
+  document.getElementById('quizLoadingOverlay').classList.remove('active');
+}
+
+async function startMockTest(post){
+  if(window.checkAndIncrementMockTestUsage){
+    const usage = await window.checkAndIncrementMockTestUsage();
+    if(!usage.allowed){
+      if(await showPremiumLockModal('🏆 You\'ve used your free Mock Test for this week. Upgrade to Premium for unlimited Mock Tests?')){
+        premiumBackTarget = mockPostScreen;
+        showScreen(upgradeScreen);
+        renderPremiumStatus();
+      }
+      return;
+    }
+  }
+  await showReadCarefullyReminder();
+  currentSetInfo = null;
+  mockTestActive = true;
+  showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
+  try{
+    const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}&post=${post.key}`;
+    const res = await fetchWithTimeout(url);
+    const pool = await res.json();
+
+    if(pool.length === 0){
+      hideQuizLoading();
+      alert('No questions available yet. Add MCQs to your Google Sheet first!');
+      return;
+    }
+
+    quizQuestions = pool;
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = post.minutes * 60; // per-post official exam timing, not a fixed value
+    currentMarksPerQuestion = post.marksEach;
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    showDebugError('Could not load the mock test.\n\nReal error: ' + friendlyFetchError(err));
+  }
+}
+
+// ---------- Past Questions: real exam papers, own dashboard section (not part of Subject-wise MCQs) ----------
+// Post-picker, same style as Mock Test — only PHO has real papers uploaded so far.
+const PAST_QUESTIONS_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📄", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
+];
+
+// Populated per-post from each post's own "Past Questions List" tab — see loadPastQuestionsList()
+// below. Add/remove a row there anytime to add/remove a paper — no code changes needed.
+let PAST_QUESTIONS_BY_POST = {};
+
+function renderPastQuestionsPosts(){
+  const selected = getSelectedPosts();
+  const posts = selected.length > 0 ? PAST_QUESTIONS_POSTS.filter(p => selected.includes(p.key)) : PAST_QUESTIONS_POSTS;
+  document.getElementById('pastQuestionsPostGrid').innerHTML = posts.map(post => `
+    <button class="dash-card ${post.css} pq-post-btn" data-key="${post.key}">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-sub">Real past exam papers</div>
+    </button>
+  `).join('');
+
+  document.querySelectorAll('.pq-post-btn').forEach(card => {
+    card.addEventListener('click', () => {
+      const post = PAST_QUESTIONS_POSTS.find(p => p.key === card.dataset.key);
+      if(post.ready){
+        currentMcqPost = post.key; // ensures startSet/startPastQuestionPaper fetch the correct Sheet
+        showScreen(pastQuestionsYearScreen);
+        loadPastQuestionsList(post.key);
+      } else {
+        document.getElementById('comingSoonTitle').textContent = post.label + ' — Past Questions';
+        comingSoonBackTarget = pastQuestionsPostScreen;
+        showScreen(comingSoonScreen);
+      }
+    });
+  });
+}
+
+function renderPastQuestionsList(){
+  const papers = PAST_QUESTIONS_BY_POST[currentMcqPost] || [];
+  if(papers.length === 0){
+    document.getElementById('pastQuestionsYearList').innerHTML =
+      `<p style="color:var(--ink-soft); font-size:13.5px;">No past papers added yet — check back soon!</p>`;
+    return;
+  }
+  document.getElementById('pastQuestionsYearList').innerHTML = papers.map(paper => `
+    <a class="link-card" href="#" data-paper="${paper}">
+      <div class="lc-text"><h4>${paper}</h4><p>Real past exam questions</p></div>
+      <div class="lc-arrow">→</div>
+    </a>
+  `).join('');
+  document.querySelectorAll('#pastQuestionsYearList .link-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      startPastQuestionPaper(card.dataset.paper);
+    });
+  });
+}
+
+async function loadPastQuestionsList(postKey){
+  const cacheKey = 'hl_cache_pastquestions_' + postKey;
+
+  // Instant: paint from cache immediately (or empty-state), never left waiting with nothing
+  try{
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if(Array.isArray(cached) && cached.length > 0) PAST_QUESTIONS_BY_POST[postKey] = cached;
+  }catch(e){}
+  renderPastQuestionsList();
+
+  // Quietly refresh in the background from that post's own "Past Questions List" Sheet tab
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=subjects&list=pastquestions&post=${postKey}`);
+    const fresh = await res.json();
+    if(Array.isArray(fresh)){
+      const names = fresh.map(r => r.name).filter(Boolean);
+      if(names.length > 0){
+        PAST_QUESTIONS_BY_POST[postKey] = names;
+        try{ localStorage.setItem(cacheKey, JSON.stringify(names)); }catch(e){}
+        renderPastQuestionsList();
+      }
+    }
+  }catch(err){ /* keep showing cached/empty-state — no error shown to user */ }
+}
+
+// Runs a full past paper in one sitting, just like Mock Test — NOT Set-locked, since a real past
+// paper (~100 questions) is meant to be taken as one continuous exam, not split into 50-Q chunks.
+async function startPastQuestionPaper(paperName){
+  if(window.checkAndRecordPastQuestionAccess){
+    const usage = await window.checkAndRecordPastQuestionAccess(paperName);
+    if(!usage.allowed){
+      if(await showPremiumLockModal('📜 You\'ve used your 2 free Past Question papers. Upgrade to Premium for unlimited access?')){
+        premiumBackTarget = pastQuestionsYearScreen;
+        showScreen(upgradeScreen);
+        renderPremiumStatus();
+      }
+      return;
+    }
+  }
+  await showReadCarefullyReminder();
+  currentSetInfo = null; // no Set-locking/progress-tracking for past papers, same as Mock Test
+  pastQuestionActive = true;
+  showQuizLoading('Please wait, loading this paper… this may take a moment.');
+  try{
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=${currentMcqPost}`;
+    const res = await fetchWithTimeout(url);
+    const pool = await res.json();
+
+    if(pool.length === 0){
+      hideQuizLoading();
+      alert('No questions found in this paper yet.');
+      return;
+    }
+
+    quizQuestions = pool.map(q => ({ ...q, PastPaper: paperName }));
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = 75 * 60; // fixed 1hr 15min, matching real PSC Paper I timing
+    currentMarksPerQuestion = 1; // matches PHO Paper I: 1 mark per question
+
+    buildOmrStrip();
+    hideQuizLoading();
+    showScreen(quizScreen);
+    startTimer();
+    renderQuestion();
+  }catch(err){
+    hideQuizLoading();
+    showDebugError('Could not load this paper.\n\nReal error: ' + friendlyFetchError(err));
+  }
+}
+
+// Official marks each subject carries in the real written exam, per post — mirrors
+// POST_EXAM_DISTRIBUTION on the Apps Script side. Shown in brackets next to each subject
+// name on the Subject-wise MCQs picker, straight from each post's own verified syllabus.
+// A post/subject not listed here (PHO, BPH License, General Awareness/Public Management-less
+// posts, etc.) simply shows no bracket — nothing is guessed.
+const EXAM_MARKS_BY_POST = {
+  // Verified from the Federal PSC (Nepal) "Public Health Officer" syllabus — Paper I, 100 MCQs,
+  // 1 mark each. Names match this post's existing 12 subject tabs exactly.
+  pho: {
+    "Health and Public Health": 5,
+    "Health Planning and Management": 20,
+    "General Epidemiology": 10,
+    "Health Statistics": 5,
+    "Demography": 5,
+    "Applied Epidemiology and Disease Control": 20,
+    "Food and Nutrition": 5,
+    "Environmental Health": 5,
+    "Occupational Health": 5,
+    "Health Education and Promotion": 10,
+    "PHC, EHCS and MDGs": 5,
+    "International Health": 5
+  },
+  ha: {
+    "General Awareness": 10, "Public Management": 10,
+    "Public Health Programmes and Policy": 5, "Planning and Management": 2,
+    "Organizational Structure and Functions": 2, "Community Mobilization and Local Governance": 2,
+    "Epidemiology and Disease Control": 2, "Environmental Sanitation": 2, "Child Health": 2,
+    "General Medicine": 2, "First Aid and Emergency Management": 2, "Skin Diseases": 2,
+    "Elementary Surgery": 2, "Eye, Ear, Nose and Throat Diseases": 1,
+    "Oral Health and Mental Health": 1, "Reproductive Health": 2, "Acts and Regulations": 1
+  },
+  ahw: {
+    "General Awareness": 10, "Public Management": 10, "Anatomy and Physiology": 3,
+    "Health Education and Community Diagnosis": 2, "Community Health": 2,
+    "First Aid and Basic Medical Procedures": 2, "Vector Borne Diseases": 4,
+    "Maternal and Child Health, Family Planning and Nutrition": 2,
+    "Communicable Disease and Microbiology": 2, "Medicine": 5, "Surgery": 2,
+    "Pharmacy and Pharmacology": 2, "Health Culture and Communication": 2, "Health Management": 2
+  },
+  ha_license: {
+    "Anatomy and Physiology": 10, "Community Health": 25, "General Medicine": 25,
+    "Pharmacology and Pharmacy": 10, "General Surgery": 25, "Clinical Pathology": 5
+  },
+  sn: {
+    "General Awareness": 10, "Public Management": 10, "Fundamentals of Nursing": 4,
+    "Applied Science": 4, "Medical/Surgical Nursing": 6, "Community Health Nursing": 5,
+    "Midwifery": 3, "Nursing Care of Gynaecological Problems": 2, "Pediatric Nursing": 2,
+    "Mental Health": 2, "Leadership and Management in Nursing Planning": 2
+  },
+  anm: {
+    "General Awareness": 10, "Public Management": 10,
+    "Anatomy and Physiology (Structure and Functions)": 3, "Mechanism of the Different System": 3,
+    "Fundamentals of Nursing": 3, "Treatment of Simple Diseases and Disorders": 3,
+    "Community Health Nursing": 3, "Midwifery: Antenatal Care": 5,
+    "Midwifery: Intranatal Care (Labor)": 5, "Midwifery: Postnatal Care": 5
+  }
+};
+
 function openSetSelect(subjectName){
   selectedSubject = subjectName === 'All Subjects (Mixed)' ? '__ALL__' : subjectName;
   document.getElementById('setSelectTitle').textContent = subjectName;
