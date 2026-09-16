@@ -13303,7 +13303,7 @@ function mergeGuestDataIntoAccount(){
 // a loading screen stuck forever with no error ever thrown — the exact "nothing happens, nothing
 // shows, can't open" symptom that's much harder to diagnose than an actual error message. This
 // makes a stall fail loudly and clearly after a reasonable wait instead of hanging silently. ----
-function fetchWithTimeout(url, timeoutMs = 20000){
+function fetchWithTimeout(url, timeoutMs = 35000){
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timeoutId));
@@ -13311,7 +13311,7 @@ function fetchWithTimeout(url, timeoutMs = 20000){
 // Turns a raw error into a message someone can actually understand and act on — an AbortError's
 // real .message is a cryptic browser-internal string, so this names what actually happened instead.
 function friendlyFetchError(err){
-  if(err && err.name === 'AbortError') return 'The request timed out after 20 seconds — the server took too long to respond. Please try again.';
+  if(err && err.name === 'AbortError') return 'The request timed out after 35 seconds — the server took too long to respond. Please try again.';
   return (err && err.message) ? err.message : String(err);
 }
 
