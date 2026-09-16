@@ -7504,6 +7504,136 @@ const EXAM_MARKS_BY_POST = {
   }
 };
 
+const TOURNAMENT_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
+];
+const MOCK_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1, minutes:75},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2, minutes:45},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2, minutes:45},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2, minutes:45},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2, minutes:45},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1, minutes:60},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:100, marksEach:1, minutes:60},
+];
+const KNOWN_SUBJECTS = [
+  "All Subjects (Mixed)",
+  "Health and Public Health",
+  "Health Planning and Management",
+  "General Epidemiology",
+  "Health Statistics",
+  "Demography",
+  "Applied Epidemiology and Disease Control",
+  "Food and Nutrition",
+  "Environmental Health",
+  "Occupational Health",
+  "Health Education and Promotion",
+  "PHC, EHCS and MDGs",
+  "International Health",
+];
+const KNOWN_SUBJECTS_HA = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Public Health Programmes and Policy",
+  "Planning and Management",
+  "Organizational Structure and Functions",
+  "Community Mobilization and Local Governance",
+  "Epidemiology and Disease Control",
+  "Environmental Sanitation",
+  "Child Health",
+  "General Medicine",
+  "First Aid and Emergency Management",
+  "Skin Diseases",
+  "Elementary Surgery",
+  "Eye, Ear, Nose and Throat Diseases",
+  "Oral Health and Mental Health",
+  "Reproductive Health",
+  "Acts and Regulations",
+];
+const KNOWN_SUBJECTS_BPH_LICENSE = [
+  "All Subjects (Mixed)",
+  "Basic Science",
+  "Basic and Applied Epidemiology",
+  "Research, Biostatistics and Population Studies",
+  "Public Health and Primary Health Care",
+  "Health Promotion, Education and Mental Health",
+  "Health System Development and Management",
+  "Family Health, Child Health and Nutrition",
+  "Environmental and Occupational Health",
+  "Sociology and Anthropology",
+];
+const KNOWN_SUBJECTS_AHW = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology",
+  "Health Education and Community Diagnosis",
+  "Community Health",
+  "First Aid and Basic Medical Procedures",
+  "Vector Borne Diseases",
+  "Maternal and Child Health, Family Planning and Nutrition",
+  "Communicable Disease and Microbiology",
+  "Medicine",
+  "Surgery",
+  "Pharmacy and Pharmacology",
+  "Health Culture and Communication",
+  "Health Management",
+];
+const KNOWN_SUBJECTS_HA_LICENSE = [
+  "All Subjects (Mixed)",
+  "Anatomy and Physiology",
+  "Community Health",
+  "General Medicine",
+  "Pharmacology and Pharmacy",
+  "General Surgery",
+  "Clinical Pathology",
+];
+const KNOWN_SUBJECTS_SN = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Fundamentals of Nursing",
+  "Applied Science",
+  "Medical/Surgical Nursing",
+  "Community Health Nursing",
+  "Midwifery",
+  "Nursing Care of Gynaecological Problems",
+  "Pediatric Nursing",
+  "Mental Health",
+  "Leadership and Management in Nursing Planning",
+];
+const KNOWN_SUBJECTS_ANM = [
+  "All Subjects (Mixed)",
+  "General Awareness",
+  "Public Management",
+  "Anatomy and Physiology (Structure and Functions)",
+  "Mechanism of the Different System",
+  "Fundamentals of Nursing",
+  "Treatment of Simple Diseases and Disorders",
+  "Community Health Nursing",
+  "Midwifery: Antenatal Care",
+  "Midwifery: Intranatal Care (Labor)",
+  "Midwifery: Postnatal Care",
+];
+
+const KNOWN_SUBJECTS_BY_POST = {
+  ha: KNOWN_SUBJECTS_HA,
+  bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
+  ahw: KNOWN_SUBJECTS_AHW,
+  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
+  sn: KNOWN_SUBJECTS_SN,
+  anm: KNOWN_SUBJECTS_ANM,
+};
+const CHAPTER_COMPLETE_MIN_ACCURACY = 70;
+const RAPID_FIRE_PACE_SEC = { pho: 45, ha: 54, ahw: 54, anm: 54, sn: 54, bph_license: 36, ha_license: 36 };
+
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
@@ -21237,7 +21367,6 @@ function getChaptersForSubject(subject){
 // a judgment call, not a value handed down by any existing system, since nothing like this was
 // tracked before
 const CHAPTER_COMPLETE_MIN_ATTEMPTS = 5;
-const CHAPTER_COMPLETE_MIN_ACCURACY = 70;
 function isChapterComplete(c){
   return c.attempted >= CHAPTER_COMPLETE_MIN_ATTEMPTS && Math.round((c.correct / c.attempted) * 100) >= CHAPTER_COMPLETE_MIN_ACCURACY;
 }
@@ -21684,128 +21813,20 @@ function computeProgressStats(){
 // We always show Set 1 (and any already-completed sets from your saved progress) right away.
 // The real question count is only checked in the background, purely to reveal whether
 // further sets exist — it never blocks you from starting Set 1 immediately.
-const KNOWN_SUBJECTS = [
-  "All Subjects (Mixed)",
-  "Health and Public Health",
-  "Health Planning and Management",
-  "General Epidemiology",
-  "Health Statistics",
-  "Demography",
-  "Applied Epidemiology and Disease Control",
-  "Food and Nutrition",
-  "Environmental Health",
-  "Occupational Health",
-  "Health Education and Promotion",
-  "PHC, EHCS and MDGs",
-  "International Health",
-];
 // HA's Paper I subject units — lives in its own separate Google Sheet (see POST_SHEET_IDS
 // on the Apps Script side).
-const KNOWN_SUBJECTS_HA = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Public Health Programmes and Policy",
-  "Planning and Management",
-  "Organizational Structure and Functions",
-  "Community Mobilization and Local Governance",
-  "Epidemiology and Disease Control",
-  "Environmental Sanitation",
-  "Child Health",
-  "General Medicine",
-  "First Aid and Emergency Management",
-  "Skin Diseases",
-  "Elementary Surgery",
-  "Eye, Ear, Nose and Throat Diseases",
-  "Oral Health and Mental Health",
-  "Reproductive Health",
-  "Acts and Regulations",
-];
 // BPH License's syllabus — lives in its own separate Google Sheet (see POST_SHEET_IDS on the
 // Apps Script side). Note: this syllabus only gives percentage weights per subject, not exact
 // question counts, so Mock Test/Tournament use simple flat random mixing for this post for now.
-const KNOWN_SUBJECTS_BPH_LICENSE = [
-  "All Subjects (Mixed)",
-  "Basic Science",
-  "Basic and Applied Epidemiology",
-  "Research, Biostatistics and Population Studies",
-  "Public Health and Primary Health Care",
-  "Health Promotion, Education and Mental Health",
-  "Health System Development and Management",
-  "Family Health, Child Health and Nutrition",
-  "Environmental and Occupational Health",
-  "Sociology and Anthropology",
-];
 // AHW (Central Loksewa) syllabus — lives in its own separate Google Sheet.
-const KNOWN_SUBJECTS_AHW = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Anatomy and Physiology",
-  "Health Education and Community Diagnosis",
-  "Community Health",
-  "First Aid and Basic Medical Procedures",
-  "Vector Borne Diseases",
-  "Maternal and Child Health, Family Planning and Nutrition",
-  "Communicable Disease and Microbiology",
-  "Medicine",
-  "Surgery",
-  "Pharmacy and Pharmacology",
-  "Health Culture and Communication",
-  "Health Management",
-];
 // HA License (NHPC) syllabus — lives in its own separate Google Sheet. Verified official
 // weighted distribution (100 MCQs, 1 mark each, from NHPC's licensing syllabus's own table).
-const KNOWN_SUBJECTS_HA_LICENSE = [
-  "All Subjects (Mixed)",
-  "Anatomy and Physiology",
-  "Community Health",
-  "General Medicine",
-  "Pharmacology and Pharmacy",
-  "General Surgery",
-  "Clinical Pathology",
-];
 // Staff Nurse (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified
 // official weighted distribution (50 MCQs, 2 marks each).
-const KNOWN_SUBJECTS_SN = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Fundamentals of Nursing",
-  "Applied Science",
-  "Medical/Surgical Nursing",
-  "Community Health Nursing",
-  "Midwifery",
-  "Nursing Care of Gynaecological Problems",
-  "Pediatric Nursing",
-  "Mental Health",
-  "Leadership and Management in Nursing Planning",
-];
 // ANM (Central Loksewa) syllabus — lives in its own separate Google Sheet. Verified official
 // weighted distribution (50 MCQs, 2 marks each).
-const KNOWN_SUBJECTS_ANM = [
-  "All Subjects (Mixed)",
-  "General Awareness",
-  "Public Management",
-  "Anatomy and Physiology (Structure and Functions)",
-  "Mechanism of the Different System",
-  "Fundamentals of Nursing",
-  "Treatment of Simple Diseases and Disorders",
-  "Community Health Nursing",
-  "Midwifery: Antenatal Care",
-  "Midwifery: Intranatal Care (Labor)",
-  "Midwifery: Postnatal Care",
-];
 // Lookup used by renderSubjectPick — add a new post's array here (and above) whenever a new
 // post gets its own Sheet, instead of growing a long if/else chain.
-const KNOWN_SUBJECTS_BY_POST = {
-  ha: KNOWN_SUBJECTS_HA,
-  bph_license: KNOWN_SUBJECTS_BPH_LICENSE,
-  ahw: KNOWN_SUBJECTS_AHW,
-  ha_license: KNOWN_SUBJECTS_HA_LICENSE,
-  sn: KNOWN_SUBJECTS_SN,
-  anm: KNOWN_SUBJECTS_ANM,
-};
 // Which post's Subject-wise MCQs the user is currently browsing — set the moment they tap a
 // post card, and read by every subject/question fetch onward so it hits the right Sheet.
 let currentMcqPost = 'pho';
@@ -21874,25 +21895,7 @@ function renderMcqPosts(){
 // ---------- Mock Test: Step 0 — pick a post (same pattern as Syllabus / Subject-wise MCQs) ----------
 // Exam format per post: Public Health Officer uses 100 questions worth 1 mark each;
 // other posts use 50 questions worth 2 marks each — both total 100 marks either way.
-const TOURNAMENT_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🏆", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
-];
 
-const MOCK_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho", questionCount:100, marksEach:1, minutes:75},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2", questionCount:50, marksEach:2, minutes:45},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3", questionCount:50, marksEach:2, minutes:45},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4", questionCount:50, marksEach:2, minutes:45},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5", questionCount:50, marksEach:2, minutes:45},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7", questionCount:100, marksEach:1, minutes:60},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8", questionCount:100, marksEach:1, minutes:60},
-];
 function renderMockPosts(){
   const selected = getSelectedPosts();
   const posts = selected.length > 0 ? MOCK_POSTS.filter(p => selected.includes(p.key)) : MOCK_POSTS;
@@ -23696,7 +23699,6 @@ document.getElementById('dbResultDoneBtn').addEventListener('click', () => {
 // Weak Topic) draw from the same pools as Mistake Book/Revision Mode/Progress — the
 // differentiator is the time-boxing, not a new data source. Battle Fire delegates straight
 // to the real Battle Challenge screen rather than rebuilding it. ----------
-const RAPID_FIRE_PACE_SEC = { pho: 45, ha: 54, ahw: 54, anm: 54, sn: 54, bph_license: 36, ha_license: 36 };
 const RAPID_FIRE_TIME_PRESETS = [1, 2, 5, 10, 15, 20, 30, 45, 60];
 const RAPID_FIRE_MODES = [
   { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
