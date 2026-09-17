@@ -22471,6 +22471,13 @@ async function startSet(subject, setNumber, totalSets){
           secondsLeft += restBatch.length * (RAPID_FIRE_PACE_SEC[currentMcqPost] || 45); // extend the timer to match the full set, at this post's real exam pace
           buildOmrStrip();
           refreshOmrStrip();
+          // Real fix: quizQuestions.length grows here, but the visible "Q X / Y" counter text
+          // is only ever set inside renderQuestion() — which doesn't run again until the user
+          // navigates to a new question. Someone sitting on Question 1 while this Phase 2 load
+          // completes would see the OMR dots update but the counter itself stay frozen at the
+          // old, stale total (e.g. "Q 1 / 5") even once the real count reaches 50.
+          const qCounterEl = document.getElementById('qCounter');
+          if(qCounterEl) qCounterEl.textContent = `Q ${currentIndex + 1} / ${quizQuestions.length}`;
         }
         try{ localStorage.setItem(cacheKey, JSON.stringify(quizQuestions)); }catch(e){}
       }).catch((err) => {
