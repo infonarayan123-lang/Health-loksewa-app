@@ -7651,6 +7651,14 @@ const KNOWN_SUBJECTS_BY_POST = {
 };
 const CHAPTER_COMPLETE_MIN_ACCURACY = 70;
 const RAPID_FIRE_PACE_SEC = { pho: 45, ha: 54, ahw: 54, anm: 54, sn: 54, bph_license: 36, ha_license: 36 };
+const RAPID_FIRE_TIME_PRESETS = [1, 2, 5, 10, 15, 20, 30, 45, 60];
+const RAPID_FIRE_MODES = [
+  { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
+  { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject', shortDesc:'Your weak subject' },
+  { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths', shortDesc:'Past mistakes' },
+  { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject', shortDesc:'Pick a subject' },
+  { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend', shortDesc:'Challenge a friend' },
+];
 
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
@@ -8275,6 +8283,16 @@ safeOn('goToRapidFireFromPractice', 'click', (e) => {
 safeOn('cardQuiz', 'click', () => {
   showScreen(mcqPostScreen);
   renderMcqPosts();
+});
+
+safeOn('cardMock', 'click', () => {
+  showScreen(mockPostScreen);
+  renderMockPosts();
+});
+
+safeOn('cardPastQuestions', 'click', () => {
+  showScreen(pastQuestionsPostScreen);
+  renderPastQuestionsPosts();
 });
 
 // ---------- Fixed Bottom Navigation Bar ----------
@@ -23762,14 +23780,6 @@ safeOn('dbResultDoneBtn', 'click', () => {
 // Weak Topic) draw from the same pools as Mistake Book/Revision Mode/Progress — the
 // differentiator is the time-boxing, not a new data source. Battle Fire delegates straight
 // to the real Battle Challenge screen rather than rebuilding it. ----------
-const RAPID_FIRE_TIME_PRESETS = [1, 2, 5, 10, 15, 20, 30, 45, 60];
-const RAPID_FIRE_MODES = [
-  { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
-  { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject', shortDesc:'Your weak subject' },
-  { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths', shortDesc:'Past mistakes' },
-  { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject', shortDesc:'Pick a subject' },
-  { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend', shortDesc:'Challenge a friend' },
-];
 let rapidFireSelectedMode = null;
 let rapidFireSelectedMinutes = 10;
 let currentRapidFireMode = null;
@@ -24119,15 +24129,6 @@ function shuffle(arr){
 }
 
 // ---------- Mock Test (real exam pattern: 100 Qs, 75 min, mixed subjects) ----------
-safeOn('cardMock', 'click', () => {
-  showScreen(mockPostScreen);
-  renderMockPosts();
-});
-
-safeOn('cardPastQuestions', 'click', () => {
-  showScreen(pastQuestionsPostScreen);
-  renderPastQuestionsPosts();
-});
 
 // ---------- Timer ----------
 function startTimer(){
