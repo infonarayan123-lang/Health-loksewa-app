@@ -7451,6 +7451,24 @@
   // of what else fails later. Deliberately small and targeted (just this one constant, not
   // the surrounding config block) to minimize risk after an earlier, larger version of this
   // same fix caused a different, more severe regression.
+// ---------- Real, definitive fix for a recurring bug class: hundreds of buttons throughout this
+// app are wired up via top-level "document.getElementById('X').addEventListener(...)" statements.
+// If document.getElementById ever returns null for ANY ONE of them — on some specific real
+// device/data combination this code can't predict or reproduce in testing — calling
+// .addEventListener on that null throws, and every single one of the hundreds of statements
+// coming AFTER it in the file simply never executes, silently leaving every button after that
+// point completely unwired with zero visible error. This safe wrapper prevents any one missing
+// element from ever blocking anything else in the file from registering correctly again. ----------
+function safeOn(id, event, handler){
+  try{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener(event, handler);
+    else if(window.showDebugError) showDebugError('A button could not be wired up — its element ("' + id + '") was not found on this page.');
+  }catch(err){
+    if(window.showDebugError) showDebugError('Failed to wire up a button ("' + id + '").\n\nReal error: ' + (err && err.message ? err.message : String(err)));
+  }
+}
+
 const EXAM_MARKS_BY_POST = {
   // Verified from the Federal PSC (Nepal) "Public Health Officer" syllabus — Paper I, 100 MCQs,
   // 1 mark each. Names match this post's existing 12 subject tabs exactly.
@@ -7879,7 +7897,7 @@ let navHistoryStack = [];
 // listeners simply never get attached — the buttons look and render correctly, but silently
 // do nothing when tapped, with zero visible error anywhere. Placing them here, right after
 // their required variables exist, makes them functional regardless of what else fails later.
-document.getElementById('nextBtn').addEventListener('click', () => {
+safeOn('nextBtn', 'click', () => {
   if(currentIndex < quizQuestions.length - 1){
     currentIndex++;
     renderQuestion();
@@ -7892,7 +7910,7 @@ document.getElementById('nextBtn').addEventListener('click', () => {
 // finishQuiz()'s existing results loop already treats any null answer as "Skipped" with no score
 // deduction and no chapter/accuracy tracking, so nothing new was needed there, only a real way
 // for the user to reach that state mid-quiz rather than only via running out of time
-document.getElementById('skipQuestionBtn').addEventListener('click', () => {
+safeOn('skipQuestionBtn', 'click', () => {
   if(answers[currentIndex] !== null) return; // already answered — nothing to skip
   if(currentIndex < quizQuestions.length - 1){
     currentIndex++;
@@ -7904,7 +7922,7 @@ document.getElementById('skipQuestionBtn').addEventListener('click', () => {
 });
 
 // ---------- Exit quiz early (with confirmation, so progress isn't lost by accident) ----------
-document.getElementById('quizExitBtn').addEventListener('click', async () => {
+safeOn('quizExitBtn', 'click', async () => {
   const confirmed = await customConfirm('Are you sure you want to quit? Your progress in this set will be lost.');
   if(confirmed){
     clearInterval(timerInterval);
@@ -8164,141 +8182,141 @@ function updateBottomNav(activeScreen){
 
 // ---------- Learn hub — each link delegates to the exact existing trigger, so behavior
 // (including any gating logic) is identical to opening it from Home ----------
-document.getElementById('goToSyllabusFromLearn').addEventListener('click', (e) => {
+safeOn('goToSyllabusFromLearn', 'click', (e) => {
   e.preventDefault();
   document.getElementById('cardSyllabus').click();
 });
-document.getElementById('goToGkFromLearn').addEventListener('click', (e) => {
+safeOn('goToGkFromLearn', 'click', (e) => {
   e.preventDefault();
   showScreen(gkScreen);
   renderGkCategories();
 });
-document.getElementById('goToVideoFromLearn').addEventListener('click', (e) => {
+safeOn('goToVideoFromLearn', 'click', (e) => {
   e.preventDefault();
   showScreen(videoScreen);
   renderVideoLessons();
 });
-document.getElementById('goToStudyResourcesFromLearn').addEventListener('click', (e) => {
+safeOn('goToStudyResourcesFromLearn', 'click', (e) => {
   e.preventDefault();
   showScreen(studyResourcesScreen);
 });
-document.getElementById('goToSmartToolsFromLearn').addEventListener('click', (e) => {
+safeOn('goToSmartToolsFromLearn', 'click', (e) => {
   e.preventDefault();
   showScreen(calculatorScreen);
 });
-document.getElementById('goToHealthGuideFromLearn').addEventListener('click', (e) => {
+safeOn('goToHealthGuideFromLearn', 'click', (e) => {
   e.preventDefault();
   document.getElementById('cardHealthGuide').click();
 });
 
 // ---------- Practice hub — same delegation pattern ----------
-document.getElementById('goToMcqFromPractice').addEventListener('click', (e) => {
+safeOn('goToMcqFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('cardQuiz').click();
 });
-document.getElementById('goToMockFromPractice').addEventListener('click', (e) => {
+safeOn('goToMockFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('cardMock').click();
 });
-document.getElementById('goToPastQuestionsFromPractice').addEventListener('click', (e) => {
+safeOn('goToPastQuestionsFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('cardPastQuestions').click();
 });
-document.getElementById('goToTournamentFromPractice').addEventListener('click', (e) => {
+safeOn('goToTournamentFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('cardTournament').click();
 });
-document.getElementById('goToRevisionFromPractice').addEventListener('click', (e) => {
+safeOn('goToRevisionFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('goToRevision').click();
 });
-document.getElementById('goToBookmarksFromPractice').addEventListener('click', (e) => {
+safeOn('goToBookmarksFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('goToBookmarks').click();
 });
-document.getElementById('goToReminderFromPractice').addEventListener('click', (e) => {
+safeOn('goToReminderFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('goToReminder').click();
 });
-document.getElementById('goToStudyGroupsFromPractice').addEventListener('click', (e) => {
+safeOn('goToStudyGroupsFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('goToStudyGroups').click();
 });
-document.getElementById('goToNotesFromPractice').addEventListener('click', (e) => {
+safeOn('goToNotesFromPractice', 'click', (e) => {
   e.preventDefault();
   document.getElementById('goToNotes').click();
 });
-document.getElementById('goToMistakeBookFromPractice').addEventListener('click', (e) => {
+safeOn('goToMistakeBookFromPractice', 'click', (e) => {
   e.preventDefault();
   showScreen(mistakeBookScreen);
   renderMistakeBook();
 });
-document.getElementById('goToFlashcardsFromPractice').addEventListener('click', (e) => {
+safeOn('goToFlashcardsFromPractice', 'click', (e) => {
   e.preventDefault();
   showScreen(flashcardsScreen);
   renderFlashcardsHome();
 });
-document.getElementById('goToAnswerCheckerFromPractice').addEventListener('click', (e) => {
+safeOn('goToAnswerCheckerFromPractice', 'click', (e) => {
   e.preventDefault();
   showScreen(answerCheckerScreen);
 });
-document.getElementById('goToBattleFromPractice').addEventListener('click', (e) => {
+safeOn('goToBattleFromPractice', 'click', (e) => {
   e.preventDefault();
   showScreen(battleScreen);
   renderDailyBattleCard();
 });
-document.getElementById('goToRapidFireFromPractice').addEventListener('click', (e) => {
+safeOn('goToRapidFireFromPractice', 'click', (e) => {
   e.preventDefault();
   showScreen(rapidFireScreen);
   renderRapidFireModes();
 });
 
 // ---------- Dashboard navigation ----------
-document.getElementById('cardQuiz').addEventListener('click', () => {
+safeOn('cardQuiz', 'click', () => {
   showScreen(mcqPostScreen);
   renderMcqPosts();
 });
 
 // ---------- Fixed Bottom Navigation Bar ----------
-document.getElementById('navHome').addEventListener('click', () => {
+safeOn('navHome', 'click', () => {
   showScreen(homeScreen);
 });
-document.getElementById('navLearn').addEventListener('click', () => {
+safeOn('navLearn', 'click', () => {
   showScreen(learnScreen);
   loadStudyResourcesData(); // ensures Formulas/Mnemonics/Health Days/FAQs are ready to search
 });
-document.getElementById('navPractice').addEventListener('click', () => {
+safeOn('navPractice', 'click', () => {
   showScreen(practiceScreen);
 });
-document.getElementById('navProgress').addEventListener('click', () => {
+safeOn('navProgress', 'click', () => {
   showScreen(progressScreen);
   renderProgressScreen();
 });
-document.getElementById('navProfile').addEventListener('click', () => {
+safeOn('navProfile', 'click', () => {
   showScreen(profileScreen);
   refreshProfileData();
 });
 
-document.getElementById('cardSyllabus').addEventListener('click', () => showScreen(syllabusScreen));
-document.getElementById('cardCurrent').addEventListener('click', () => {
+safeOn('cardSyllabus', 'click', () => showScreen(syllabusScreen));
+safeOn('cardCurrent', 'click', () => {
   showScreen(currentAffairsScreen);
   renderCurrentAffairs();
 });
-document.getElementById('cardRapidFire').addEventListener('click', () => {
+safeOn('cardRapidFire', 'click', () => {
   showScreen(rapidFireScreen);
   renderRapidFireModes();
 });
-document.getElementById('cardHandbookHome').addEventListener('click', () => {
+safeOn('cardHandbookHome', 'click', () => {
   showScreen(studyResourcesScreen);
 });
-document.getElementById('cardAi').addEventListener('click', () => {
+safeOn('cardAi', 'click', () => {
   showScreen(aiChatScreen);
   initChat();
 });
-document.getElementById('cardSmartToolsHome').addEventListener('click', () => {
+safeOn('cardSmartToolsHome', 'click', () => {
   showScreen(calculatorScreen);
 });
-document.getElementById('cardHealthGuide').addEventListener('click', () => {
+safeOn('cardHealthGuide', 'click', () => {
   showScreen(healthGuideScreen);
   renderHealthGuide();
 });
@@ -8306,24 +8324,24 @@ document.getElementById('cardHealthGuide').addEventListener('click', () => {
 // (see loadQuestionOfDay() call further below, which runs automatically on page load)
 
 // ---------- My Progress hub ----------
-document.getElementById('goToLeaderboard').addEventListener('click', (e) => {
+safeOn('goToLeaderboard', 'click', (e) => {
   e.preventDefault();
   showScreen(leaderboardScreen);
   renderLeaderboard();
 });
-document.getElementById('goToBookmarks').addEventListener('click', (e) => {
+safeOn('goToBookmarks', 'click', (e) => {
   e.preventDefault();
   showScreen(myBookmarksHubScreen);
   renderMyBookmarksHub();
 });
-document.getElementById('goToNotes').addEventListener('click', (e) => {
+safeOn('goToNotes', 'click', (e) => {
   e.preventDefault();
   showScreen(notesScreen);
   renderNotes();
 });
 
 // ---------- Study Groups ----------
-document.getElementById('goToStudyGroups').addEventListener('click', (e) => {
+safeOn('goToStudyGroups', 'click', (e) => {
   e.preventDefault();
   showScreen(studyGroupsScreen);
   renderMyGroups();
@@ -8334,7 +8352,7 @@ document.getElementById('goToStudyGroups').addEventListener('click', (e) => {
 // joining methods (Public=instant, Private=request+approval, Invite Only=code, hidden from
 // search) + a real Preview shown before joining, per the document's own "don't require joining
 // just to see basic information" rule. ----------
-document.getElementById('openCreateGroupBtn').addEventListener('click', () => {
+safeOn('openCreateGroupBtn', 'click', () => {
   document.getElementById('gcName').value = '';
   document.getElementById('gcDescription').value = '';
   document.getElementById('gcGoal').value = '';
@@ -8342,12 +8360,12 @@ document.getElementById('openCreateGroupBtn').addEventListener('click', () => {
   document.getElementById('groupCreateStep2').style.display = 'none';
   showScreen(groupCreateScreen);
 });
-document.getElementById('gcContinueBtn').addEventListener('click', () => {
+safeOn('gcContinueBtn', 'click', () => {
   if(!document.getElementById('gcName').value.trim()){ alert('Please enter a group name first.'); return; }
   document.getElementById('groupCreateStep1').style.display = 'none';
   document.getElementById('groupCreateStep2').style.display = 'block';
 });
-document.getElementById('gcCreateBtn').addEventListener('click', async () => {
+safeOn('gcCreateBtn', 'click', async () => {
   if(!window.createStudyGroup) return;
   const btn = document.getElementById('gcCreateBtn');
   btn.disabled = true; btn.textContent = 'Creating…';
@@ -8391,7 +8409,7 @@ async function openGroupPreview(code){
   else { joinBtn.textContent = 'Join Group'; }
   showScreen(groupPreviewScreen);
 }
-document.getElementById('gpJoinBtn').addEventListener('click', async () => {
+safeOn('gpJoinBtn', 'click', async () => {
   if(!currentPreviewCode) return;
   const btn = document.getElementById('gpJoinBtn');
   if(btn.textContent === 'Open Group →'){ openGroupDetail(currentPreviewCode); return; }
@@ -8414,7 +8432,7 @@ document.getElementById('gpJoinBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('joinGroupBtn').addEventListener('click', () => {
+safeOn('joinGroupBtn', 'click', () => {
   const code = document.getElementById('joinGroupCodeInput').value.trim();
   if(!code){ alert('Please enter a group code first.'); return; }
   openGroupPreview(code);
@@ -8434,7 +8452,7 @@ document.querySelectorAll('.group-cat-chip').forEach(btn => {
     renderDiscoverGroups();
   });
 });
-document.getElementById('groupSearchBox').addEventListener('input', () => renderDiscoverGroups());
+safeOn('groupSearchBox', 'input', () => renderDiscoverGroups());
 async function renderDiscoverGroups(){
   const wrap = document.getElementById('discoverGroupsList');
   wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
@@ -8534,7 +8552,7 @@ function switchGroupTab(tab){
 document.querySelectorAll('.gd-tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchGroupTab(btn.dataset.tab));
 });
-document.getElementById('gdMemberSearchBox').addEventListener('input', () => renderGroupMembers(currentGroupDetailGroup));
+safeOn('gdMemberSearchBox', 'input', () => renderGroupMembers(currentGroupDetailGroup));
 function renderGroupMembers(group){
   const wrap = document.getElementById('gdMembersList');
   if(!group){ wrap.innerHTML = ''; return; }
@@ -8579,11 +8597,11 @@ function renderGroupMembers(group){
     });
   });
 }
-document.getElementById('gdInviteBtn').addEventListener('click', async () => {
+safeOn('gdInviteBtn', 'click', async () => {
   if(!currentGroupDetailCode) return;
   try{ await navigator.clipboard.writeText(currentGroupDetailCode); alert('Invite code copied!'); }catch(e){}
 });
-document.getElementById('gdLeaveBtn').addEventListener('click', async () => {
+safeOn('gdLeaveBtn', 'click', async () => {
   if(!currentGroupDetailCode || !(await customConfirm('Leave this group?'))) return;
   const result = await window.leaveStudyGroup(currentGroupDetailCode);
   if(result.reason === 'admin_cannot_leave'){
@@ -8787,7 +8805,7 @@ async function renderGroupResources(){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">Could not load shared resources.</p>`;
   }
 }
-document.getElementById('gdShareResourceBtn').addEventListener('click', async () => {
+safeOn('gdShareResourceBtn', 'click', async () => {
   const notes = getNotes().filter(n => !n.deletedAt);
   if(notes.length === 0){ alert('You don\'t have any notes yet to share.'); return; }
   const options = notes.map((n, i) => `${i + 1}. ${n.title || 'Untitled'}`).join('\n');
@@ -8842,13 +8860,13 @@ async function renderGroupDiscussions(){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">Could not load discussions.</p>`;
   }
 }
-document.getElementById('gdStartDiscussionBtn').addEventListener('click', () => {
+safeOn('gdStartDiscussionBtn', 'click', () => {
   document.getElementById('sdTitle').value = '';
   document.getElementById('sdContent').value = '';
   document.getElementById('sdType').value = 'Question';
   showScreen(startDiscussionScreen);
 });
-document.getElementById('sdPostBtn').addEventListener('click', async () => {
+safeOn('sdPostBtn', 'click', async () => {
   const title = document.getElementById('sdTitle').value.trim();
   if(!title){ alert('Please enter a title first.'); return; }
   try{
@@ -8906,7 +8924,7 @@ async function openDiscussionThread(discussionId){
       </div>
     `).join('');
 }
-document.getElementById('dtLikeBtn').addEventListener('click', async () => {
+safeOn('dtLikeBtn', 'click', async () => {
   if(!currentDiscussionId || !window.currentUser) return;
   try{
     const { doc, getDoc, setDoc } = window.hlFirestoreFns;
@@ -8921,7 +8939,7 @@ document.getElementById('dtLikeBtn').addEventListener('click', async () => {
     openDiscussionThread(currentDiscussionId);
   }catch(e){}
 });
-document.getElementById('dtReplySendBtn').addEventListener('click', async () => {
+safeOn('dtReplySendBtn', 'click', async () => {
   const input = document.getElementById('dtReplyInput');
   const content = input.value.trim();
   if(!content || !currentDiscussionId || !window.currentUser) return;
@@ -8940,7 +8958,7 @@ document.getElementById('dtReplySendBtn').addEventListener('click', async () => 
     alert('Could not post your reply. Please try again.');
   }
 });
-document.getElementById('dtPinBtn').addEventListener('click', async () => {
+safeOn('dtPinBtn', 'click', async () => {
   if(!currentDiscussionId) return;
   try{
     const { doc, getDoc, setDoc } = window.hlFirestoreFns;
@@ -9004,7 +9022,7 @@ document.querySelectorAll('.gd-period-btn').forEach(btn => {
 });
 
 // ---------- Weekly Tournament ----------
-document.getElementById('cardTournament').addEventListener('click', () => {
+safeOn('cardTournament', 'click', () => {
   showScreen(tournamentPostScreen);
   renderTournamentPosts();
 });
@@ -9115,7 +9133,7 @@ function renderTournamentStats(){
     <div class="stat-tile"><div class="st-num">${stats.wins}</div><div class="st-label">Perfect Scores</div></div>
   `;
 }
-document.getElementById('goToMonthlyTournamentBtn').addEventListener('click', () => {
+safeOn('goToMonthlyTournamentBtn', 'click', () => {
   showScreen(monthlyTournamentScreen);
   renderMonthlyTournamentScreen();
 });
@@ -9210,7 +9228,7 @@ function startTournament(questions, weekKey, minutes){
   if(minutes) secondsLeft = minutes * 60;
 }
 
-document.getElementById('goToFormulaFromHub').addEventListener('click', (e) => {
+safeOn('goToFormulaFromHub', 'click', (e) => {
   e.preventDefault();
   showScreen(formulaScreen);
   renderFormulas('');
@@ -9219,7 +9237,7 @@ document.getElementById('goToFormulaFromHub').addEventListener('click', (e) => {
 // ---------- Video Lessons ----------
 
 // ---------- Mnemonics Library ----------
-document.getElementById('goToMnemonicsFromHub').addEventListener('click', async (e) => {
+safeOn('goToMnemonicsFromHub', 'click', async (e) => {
   e.preventDefault();
   showScreen(mnemonicsScreen);
   mnemonicsUserIsPremium = await refreshPremiumStatus();
@@ -9227,7 +9245,7 @@ document.getElementById('goToMnemonicsFromHub').addEventListener('click', async 
 });
 
 // ---------- Health Days ----------
-document.getElementById('goToHealthDaysFromHub').addEventListener('click', (e) => {
+safeOn('goToHealthDaysFromHub', 'click', (e) => {
   e.preventDefault();
   showScreen(healthDaysScreen);
   renderHealthDays('');
@@ -9333,13 +9351,13 @@ function checkAndShowHealthDayStartupCard(){
   document.getElementById('healthDayStartupBackdrop').style.display = 'block';
   document.getElementById('healthDayStartupCard').style.display = 'block';
 }
-document.getElementById('hdStartupSkipBtn').addEventListener('click', () => {
+safeOn('hdStartupSkipBtn', 'click', () => {
   if(currentHealthDayDetail) markHealthDayStartupShown(currentHealthDayDetail.title);
   document.getElementById('healthDayStartupBackdrop').style.display = 'none';
   document.getElementById('healthDayStartupCard').style.display = 'none';
   showScreen(homeScreen);
 });
-document.getElementById('hdStartupLearnMoreBtn').addEventListener('click', () => {
+safeOn('hdStartupLearnMoreBtn', 'click', () => {
   if(currentHealthDayDetail) markHealthDayStartupShown(currentHealthDayDetail.title);
   document.getElementById('healthDayStartupBackdrop').style.display = 'none';
   document.getElementById('healthDayStartupCard').style.display = 'none';
@@ -9413,7 +9431,7 @@ function openHealthDayDetail(day){
 
   showScreen(healthDayDetailScreen);
 }
-document.getElementById('hdBookmarkBtn').addEventListener('click', () => {
+safeOn('hdBookmarkBtn', 'click', () => {
   if(!currentHealthDayDetail) return;
   toggleHealthDayBookmark(currentHealthDayDetail.title);
   const bookmarkBtn = document.getElementById('hdBookmarkBtn');
@@ -9421,7 +9439,7 @@ document.getElementById('hdBookmarkBtn').addEventListener('click', () => {
   bookmarkBtn.textContent = nowBookmarked ? '🔖' : '🏷️';
   bookmarkBtn.style.color = nowBookmarked ? 'var(--gold)' : 'var(--ink)';
 });
-document.getElementById('hdNotifyBtn').addEventListener('click', async () => {
+safeOn('hdNotifyBtn', 'click', async () => {
   if(!currentHealthDayDetail) return;
   const wasEnabled = isHealthDayNotifyEnabled(currentHealthDayDetail.title);
   if(!wasEnabled && 'Notification' in window){
@@ -9439,7 +9457,7 @@ document.getElementById('hdNotifyBtn').addEventListener('click', async () => {
   notifyBtn.textContent = nowEnabled ? '🔔' : '🔕';
   notifyBtn.style.color = nowEnabled ? 'var(--gold)' : 'var(--ink)';
 });
-document.getElementById('hdShareBtn').addEventListener('click', async () => {
+safeOn('hdShareBtn', 'click', async () => {
   if(!currentHealthDayDetail) return;
   const shareText = `${currentHealthDayDetail.title} — ${currentHealthDayDetail.date}\n\n${currentHealthDayDetail.desc || ''}`;
   if(navigator.share){
@@ -9448,7 +9466,7 @@ document.getElementById('hdShareBtn').addEventListener('click', async () => {
     try{ await navigator.clipboard.writeText(shareText); alert('Copied — paste it anywhere to share.'); }catch(e){}
   }
 });
-document.getElementById('hdExploreGoogleBtn').addEventListener('click', () => {
+safeOn('hdExploreGoogleBtn', 'click', () => {
   if(!currentHealthDayDetail) return;
   const query = currentHealthDayDetail.searchQuery || currentHealthDayDetail.title;
   window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
@@ -9483,7 +9501,7 @@ function renderHealthDays(searchTerm){
     row.addEventListener('click', () => openHealthDayDetail(filtered[parseInt(row.dataset.index, 10)]));
   });
 }
-document.getElementById('healthDaysSearchBox').addEventListener('input', (e) => renderHealthDays(e.target.value));
+safeOn('healthDaysSearchBox', 'input', (e) => renderHealthDays(e.target.value));
 
 // ---------- Year Calendar: the reference/browse layer — reuses the same HEALTH_DAYS data and
 // the Engine's date parsing, just grouped by month instead of filtered by search text or
@@ -9540,21 +9558,21 @@ function showHealthDayMonthList(monthIndex){
     row.addEventListener('click', () => openHealthDayDetail(monthDays[parseInt(row.dataset.index, 10)]));
   });
 }
-document.getElementById('healthDaysCalendarBtn').addEventListener('click', () => {
+safeOn('healthDaysCalendarBtn', 'click', () => {
   showScreen(healthDayCalendarScreen);
   renderHealthDayCalendarGrid();
 });
-document.getElementById('hdCalendarBackToGridBtn').addEventListener('click', renderHealthDayCalendarGrid);
+safeOn('hdCalendarBackToGridBtn', 'click', renderHealthDayCalendarGrid);
 
 // ---------- Health Dictionary ----------
-document.getElementById('goToDictionaryFromHub').addEventListener('click', (e) => {
+safeOn('goToDictionaryFromHub', 'click', (e) => {
   e.preventDefault();
   showScreen(dictionaryScreen);
 });
 // ---------- English-Nepali Dictionary: cached-first (matching the app's established pattern for
 // Sheet-driven reference content — instant from cache, quietly refreshed in the background) ----
 let enNpTerms = [];
-document.getElementById('goToEnNpDictionaryFromHub').addEventListener('click', async (e) => {
+safeOn('goToEnNpDictionaryFromHub', 'click', async (e) => {
   e.preventDefault();
   showScreen(enNpDictionaryScreen);
   document.getElementById('enNpSearchBox').value = '';
@@ -9599,137 +9617,137 @@ function renderEnNpResults(term){
     </div>
   `).join('') + googleTranslateBtn;
 }
-document.getElementById('enNpSearchBox').addEventListener('input', (e) => renderEnNpResults(e.target.value));
+safeOn('enNpSearchBox', 'input', (e) => renderEnNpResults(e.target.value));
 // ---------- Calculator Hub ----------
-document.getElementById('goToBasicCalc').addEventListener('click', (e) => {
+safeOn('goToBasicCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(basicCalcScreen);
   renderBasicCalcKeys();
 });
-document.getElementById('goToHealthCalc').addEventListener('click', (e) => {
+safeOn('goToHealthCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(healthCalcScreen);
 });
-document.getElementById('goToHcBmr').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcBmrScreen); });
-document.getElementById('goToHcIbw').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcIbwScreen); });
-document.getElementById('goToHcWhr').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcWhrScreen); });
-document.getElementById('goToHcWhtr').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcWhtrScreen); });
-document.getElementById('goToHcBsa').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcBsaScreen); });
-document.getElementById('goToHcBf').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcBfScreen); });
-document.getElementById('goToHcEdd').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcEddScreen); });
-document.getElementById('goToHcAge').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcAgeScreen); });
-document.getElementById('goToHcChildGrowth').addEventListener('click', (e) => { e.preventDefault(); showScreen(hcChildGrowthScreen); });
-document.getElementById('goToBmiCalc').addEventListener('click', (e) => {
+safeOn('goToHcBmr', 'click', (e) => { e.preventDefault(); showScreen(hcBmrScreen); });
+safeOn('goToHcIbw', 'click', (e) => { e.preventDefault(); showScreen(hcIbwScreen); });
+safeOn('goToHcWhr', 'click', (e) => { e.preventDefault(); showScreen(hcWhrScreen); });
+safeOn('goToHcWhtr', 'click', (e) => { e.preventDefault(); showScreen(hcWhtrScreen); });
+safeOn('goToHcBsa', 'click', (e) => { e.preventDefault(); showScreen(hcBsaScreen); });
+safeOn('goToHcBf', 'click', (e) => { e.preventDefault(); showScreen(hcBfScreen); });
+safeOn('goToHcEdd', 'click', (e) => { e.preventDefault(); showScreen(hcEddScreen); });
+safeOn('goToHcAge', 'click', (e) => { e.preventDefault(); showScreen(hcAgeScreen); });
+safeOn('goToHcChildGrowth', 'click', (e) => { e.preventDefault(); showScreen(hcChildGrowthScreen); });
+safeOn('goToBmiCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(bmiCalcScreen);
 });
-document.getElementById('goToIndicatorCalc').addEventListener('click', (e) => {
+safeOn('goToIndicatorCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(indicatorCalcScreen);
 });
-document.getElementById('goToIcImr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icImrScreen); });
-document.getElementById('goToIcMmr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icMmrScreen); });
-document.getElementById('goToIcCfr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icCfrScreen); });
-document.getElementById('goToIcAttack').addEventListener('click', (e) => { e.preventDefault(); showScreen(icAttackScreen); });
-document.getElementById('goToIcCbr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icCbrScreen); });
-document.getElementById('goToIcCdr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icCdrScreen); });
-document.getElementById('goToIcNmr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icNmrScreen); });
-document.getElementById('goToIcU5mr').addEventListener('click', (e) => { e.preventDefault(); showScreen(icU5mrScreen); });
-document.getElementById('goToEpiCalc').addEventListener('click', (e) => {
+safeOn('goToIcImr', 'click', (e) => { e.preventDefault(); showScreen(icImrScreen); });
+safeOn('goToIcMmr', 'click', (e) => { e.preventDefault(); showScreen(icMmrScreen); });
+safeOn('goToIcCfr', 'click', (e) => { e.preventDefault(); showScreen(icCfrScreen); });
+safeOn('goToIcAttack', 'click', (e) => { e.preventDefault(); showScreen(icAttackScreen); });
+safeOn('goToIcCbr', 'click', (e) => { e.preventDefault(); showScreen(icCbrScreen); });
+safeOn('goToIcCdr', 'click', (e) => { e.preventDefault(); showScreen(icCdrScreen); });
+safeOn('goToIcNmr', 'click', (e) => { e.preventDefault(); showScreen(icNmrScreen); });
+safeOn('goToIcU5mr', 'click', (e) => { e.preventDefault(); showScreen(icU5mrScreen); });
+safeOn('goToEpiCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(epiCalcScreen);
 });
-document.getElementById('goToEpiScreening').addEventListener('click', (e) => {
+safeOn('goToEpiScreening', 'click', (e) => {
   e.preventDefault();
   showScreen(epiScreeningScreen);
 });
-document.getElementById('goToEpiIncidence').addEventListener('click', (e) => {
+safeOn('goToEpiIncidence', 'click', (e) => {
   e.preventDefault();
   showScreen(epiIncidenceScreen);
 });
-document.getElementById('goToEpiPrevalence').addEventListener('click', (e) => {
+safeOn('goToEpiPrevalence', 'click', (e) => {
   e.preventDefault();
   showScreen(epiPrevalenceScreen);
 });
-document.getElementById('goToEpiRiskOdds').addEventListener('click', (e) => {
+safeOn('goToEpiRiskOdds', 'click', (e) => {
   e.preventDefault();
   showScreen(epiRiskOddsScreen);
 });
-document.getElementById('goToEpiCfr').addEventListener('click', (e) => {
+safeOn('goToEpiCfr', 'click', (e) => {
   e.preventDefault();
   showScreen(epiCfrScreen);
 });
-document.getElementById('goToEpiVe').addEventListener('click', (e) => {
+safeOn('goToEpiVe', 'click', (e) => {
   e.preventDefault();
   showScreen(epiVeScreen);
 });
-document.getElementById('goToEpiSar').addEventListener('click', (e) => { e.preventDefault(); showScreen(epiSarScreen); });
-document.getElementById('goToEpiPar').addEventListener('click', (e) => { e.preventDefault(); showScreen(epiParScreen); });
-document.getElementById('goToEpiNnh').addEventListener('click', (e) => { e.preventDefault(); showScreen(epiNnhScreen); });
-document.getElementById('goToStatsCalc').addEventListener('click', (e) => {
+safeOn('goToEpiSar', 'click', (e) => { e.preventDefault(); showScreen(epiSarScreen); });
+safeOn('goToEpiPar', 'click', (e) => { e.preventDefault(); showScreen(epiParScreen); });
+safeOn('goToEpiNnh', 'click', (e) => { e.preventDefault(); showScreen(epiNnhScreen); });
+safeOn('goToStatsCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(statsCalcScreen);
 });
-document.getElementById('goToStatsDescriptive').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsDescriptiveScreen); });
-document.getElementById('goToStatsZ').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsZScreen); });
-document.getElementById('goToStatsSampleSize').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsSampleSizeScreen); });
-document.getElementById('goToStatsCi').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsCiScreen); });
-document.getElementById('goToStatsChi').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsChiScreen); });
-document.getElementById('goToStatsRng').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsRngScreen); });
-document.getElementById('goToStatsTtest').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsTtestScreen); });
-document.getElementById('goToStatsAnova').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsAnovaScreen); });
-document.getElementById('goToStatsCorr').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsCorrScreen); });
-document.getElementById('goToStatsAlpha').addEventListener('click', (e) => { e.preventDefault(); showScreen(statsAlphaScreen); });
-document.getElementById('goToStudyToolsCalc').addEventListener('click', (e) => {
+safeOn('goToStatsDescriptive', 'click', (e) => { e.preventDefault(); showScreen(statsDescriptiveScreen); });
+safeOn('goToStatsZ', 'click', (e) => { e.preventDefault(); showScreen(statsZScreen); });
+safeOn('goToStatsSampleSize', 'click', (e) => { e.preventDefault(); showScreen(statsSampleSizeScreen); });
+safeOn('goToStatsCi', 'click', (e) => { e.preventDefault(); showScreen(statsCiScreen); });
+safeOn('goToStatsChi', 'click', (e) => { e.preventDefault(); showScreen(statsChiScreen); });
+safeOn('goToStatsRng', 'click', (e) => { e.preventDefault(); showScreen(statsRngScreen); });
+safeOn('goToStatsTtest', 'click', (e) => { e.preventDefault(); showScreen(statsTtestScreen); });
+safeOn('goToStatsAnova', 'click', (e) => { e.preventDefault(); showScreen(statsAnovaScreen); });
+safeOn('goToStatsCorr', 'click', (e) => { e.preventDefault(); showScreen(statsCorrScreen); });
+safeOn('goToStatsAlpha', 'click', (e) => { e.preventDefault(); showScreen(statsAlphaScreen); });
+safeOn('goToStudyToolsCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(studyToolsCalcScreen);
 });
-document.getElementById('goToStudyTimer').addEventListener('click', (e) => {
+safeOn('goToStudyTimer', 'click', (e) => {
   e.preventDefault();
   showScreen(studyTimerScreen);
   renderStudyTimerToday();
 });
-document.getElementById('goToMyHealth').addEventListener('click', (e) => {
+safeOn('goToMyHealth', 'click', (e) => {
   e.preventDefault();
   showScreen(myHealthScreen);
   renderWaterTracker();
   renderSleepHistory();
   renderBpHistory();
 });
-document.getElementById('goToEverydayTools').addEventListener('click', (e) => {
+safeOn('goToEverydayTools', 'click', (e) => {
   e.preventDefault();
   showScreen(everydayToolsScreen);
   renderWorldClock();
 });
-document.getElementById('goToWellness').addEventListener('click', (e) => {
+safeOn('goToWellness', 'click', (e) => {
   e.preventDefault();
   showScreen(wellnessScreen);
   renderGratitudeHistory();
   renderHabitList();
 });
-document.getElementById('goToSafetySignal').addEventListener('click', (e) => {
+safeOn('goToSafetySignal', 'click', (e) => {
   e.preventDefault();
   showScreen(safetySignalScreen);
 });
-document.getElementById('goToImmunization').addEventListener('click', (e) => {
+safeOn('goToImmunization', 'click', (e) => {
   e.preventDefault();
   showScreen(immunizationScreen);
   renderImmunization();
 });
-document.getElementById('goToPension').addEventListener('click', (e) => {
+safeOn('goToPension', 'click', (e) => {
   e.preventDefault();
   showScreen(pensionScreen);
 });
-document.getElementById('goToTaxCalc').addEventListener('click', (e) => {
+safeOn('goToTaxCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(taxCalcScreen);
 });
-document.getElementById('goToSalaryCalc').addEventListener('click', (e) => {
+safeOn('goToSalaryCalc', 'click', (e) => {
   e.preventDefault();
   showScreen(salaryCalcScreen);
   loadSalaryScaleOptions();
 });
-document.getElementById('goToSalaryComparison').addEventListener('click', async (e) => {
+safeOn('goToSalaryComparison', 'click', async (e) => {
   e.preventDefault();
   showScreen(salaryComparisonScreen);
   await loadSalaryScaleOptions(); // ensures salaryScaleCache is populated
@@ -9737,7 +9755,7 @@ document.getElementById('goToSalaryComparison').addEventListener('click', async 
   document.getElementById('compPostA').innerHTML = options;
   document.getElementById('compPostB').innerHTML = options;
 });
-document.getElementById('goToRealSalary').addEventListener('click', (e) => {
+safeOn('goToRealSalary', 'click', (e) => {
   e.preventDefault();
   showScreen(realSalaryScreen);
 });
@@ -9749,7 +9767,7 @@ function resetToolsSearch(){
   document.querySelectorAll('#toolsGrid .tool-tile').forEach(tile => tile.classList.remove('tool-hidden'));
   document.getElementById('toolsNoResults').style.display = 'none';
 }
-document.getElementById('toolsSearchBox').addEventListener('input', (e) => {
+safeOn('toolsSearchBox', 'input', (e) => {
   const q = e.target.value.trim().toLowerCase();
   const tiles = document.querySelectorAll('#toolsGrid .tool-tile');
   let visibleCount = 0;
@@ -9819,7 +9837,7 @@ function handleBasicCalcKey(key){
   display.value = basicCalcExpression;
 }
 
-document.getElementById('calcBmiBtn').addEventListener('click', () => {
+safeOn('calcBmiBtn', 'click', () => {
   const w = parseFloat(document.getElementById('bmiWeight').value);
   const hCm = parseFloat(document.getElementById('bmiHeight').value);
   const resultEl = document.getElementById('bmiResult');
@@ -9837,7 +9855,7 @@ document.getElementById('calcBmiBtn').addEventListener('click', () => {
 });
 
 // ---------- Health Calculators (Phase A) ----------
-document.getElementById('calcBmrBtn').addEventListener('click', () => {
+safeOn('calcBmrBtn', 'click', () => {
   const sex = document.getElementById('bmrSex').value;
   const age = parseFloat(document.getElementById('bmrAge').value);
   const weight = parseFloat(document.getElementById('bmrWeight').value);
@@ -9855,7 +9873,7 @@ document.getElementById('calcBmrBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcIbwBtn').addEventListener('click', () => {
+safeOn('calcIbwBtn', 'click', () => {
   const sex = document.getElementById('ibwSex').value;
   const heightCm = parseFloat(document.getElementById('ibwHeight').value);
   const resultEl = document.getElementById('ibwResult');
@@ -9872,7 +9890,7 @@ document.getElementById('calcIbwBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcWhrBtn').addEventListener('click', () => {
+safeOn('calcWhrBtn', 'click', () => {
   const sex = document.getElementById('whrSex').value;
   const waist = parseFloat(document.getElementById('whrWaist').value);
   const hip = parseFloat(document.getElementById('whrHip').value);
@@ -9888,7 +9906,7 @@ document.getElementById('calcWhrBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">WHR: ${whr.toFixed(2)} — ${risk}</div>`;
 });
 
-document.getElementById('calcWhtrBtn').addEventListener('click', () => {
+safeOn('calcWhtrBtn', 'click', () => {
   const waist = parseFloat(document.getElementById('whtrWaist').value);
   const height = parseFloat(document.getElementById('whtrHeight').value);
   const resultEl = document.getElementById('whtrResult');
@@ -9901,7 +9919,7 @@ document.getElementById('calcWhtrBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">Waist-to-Height Ratio: ${ratio.toFixed(2)}</div><div class="calc-result" style="font-size:11.5px; opacity:0.85;">${flag}</div>`;
 });
 
-document.getElementById('calcBsaBtn').addEventListener('click', () => {
+safeOn('calcBsaBtn', 'click', () => {
   const height = parseFloat(document.getElementById('bsaHeight').value);
   const weight = parseFloat(document.getElementById('bsaWeight').value);
   const resultEl = document.getElementById('bsaResult');
@@ -9913,10 +9931,10 @@ document.getElementById('calcBsaBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">BSA: ${bsa.toFixed(2)} m²</div>`;
 });
 
-document.getElementById('bfSex').addEventListener('change', (e) => {
+safeOn('bfSex', 'change', (e) => {
   document.getElementById('bfHipField').style.display = (e.target.value === 'female') ? 'block' : 'none';
 });
-document.getElementById('calcBfBtn').addEventListener('click', () => {
+safeOn('calcBfBtn', 'click', () => {
   const sex = document.getElementById('bfSex').value;
   const height = parseFloat(document.getElementById('bfHeight').value);
   const neck = parseFloat(document.getElementById('bfNeck').value);
@@ -9943,7 +9961,7 @@ document.getElementById('calcBfBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcEddBtn').addEventListener('click', () => {
+safeOn('calcEddBtn', 'click', () => {
   const lmpStr = document.getElementById('eddLmp').value;
   const resultEl = document.getElementById('eddResult');
   if(!lmpStr){
@@ -9970,7 +9988,7 @@ document.getElementById('calcEddBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcChildAgeBtn').addEventListener('click', () => {
+safeOn('calcChildAgeBtn', 'click', () => {
   let dobStr = document.getElementById('childDob').value;
   const bsYear = document.getElementById('childDobBsYear').value;
   const bsMonth = document.getElementById('childDobBsMonth').value;
@@ -10046,7 +10064,7 @@ function classifyPercentMedian(pct){
   if(pct >= 70) return { label:'Moderate', color:'var(--wrong)' };
   return { label:'Severe', color:'var(--wrong)' };
 }
-document.getElementById('calcChildGrowthBtn').addEventListener('click', () => {
+safeOn('calcChildGrowthBtn', 'click', () => {
   const ageMonths = parseFloat(document.getElementById('cgAgeMonths').value);
   const sex = document.getElementById('cgSex').value;
   const weight = parseFloat(document.getElementById('cgWeight').value);
@@ -10086,7 +10104,7 @@ document.getElementById('calcChildGrowthBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcImrBtn').addEventListener('click', () => {
+safeOn('calcImrBtn', 'click', () => {
   const deaths = parseFloat(document.getElementById('imrDeaths').value);
   const births = parseFloat(document.getElementById('imrBirths').value);
   const resultEl = document.getElementById('imrResult');
@@ -10097,7 +10115,7 @@ document.getElementById('calcImrBtn').addEventListener('click', () => {
   const imr = (deaths / births) * 1000;
   resultEl.innerHTML = `<div class="calc-result">IMR: ${imr.toFixed(2)} per 1000 live births</div>`;
 });
-document.getElementById('calcMmrBtn').addEventListener('click', () => {
+safeOn('calcMmrBtn', 'click', () => {
   const deaths = parseFloat(document.getElementById('mmrDeaths').value);
   const births = parseFloat(document.getElementById('mmrBirths').value);
   const resultEl = document.getElementById('mmrResult');
@@ -10108,7 +10126,7 @@ document.getElementById('calcMmrBtn').addEventListener('click', () => {
   const mmr = (deaths / births) * 100000;
   resultEl.innerHTML = `<div class="calc-result">MMR: ${mmr.toFixed(1)} per 100,000 live births</div>`;
 });
-document.getElementById('calcCfrBtn').addEventListener('click', () => {
+safeOn('calcCfrBtn', 'click', () => {
   const deaths = parseFloat(document.getElementById('cfrDeaths').value);
   const cases = parseFloat(document.getElementById('cfrCases').value);
   const resultEl = document.getElementById('cfrResult');
@@ -10119,7 +10137,7 @@ document.getElementById('calcCfrBtn').addEventListener('click', () => {
   const cfr = (deaths / cases) * 100;
   resultEl.innerHTML = `<div class="calc-result">CFR: ${cfr.toFixed(2)}%</div>`;
 });
-document.getElementById('calcAttackBtn').addEventListener('click', () => {
+safeOn('calcAttackBtn', 'click', () => {
   const cases = parseFloat(document.getElementById('attackCases').value);
   const population = parseFloat(document.getElementById('attackPopulation').value);
   const resultEl = document.getElementById('attackResult');
@@ -10130,7 +10148,7 @@ document.getElementById('calcAttackBtn').addEventListener('click', () => {
   const attackRate = (cases / population) * 100;
   resultEl.innerHTML = `<div class="calc-result">Attack Rate: ${attackRate.toFixed(2)}%</div>`;
 });
-document.getElementById('calcCbrBtn').addEventListener('click', () => {
+safeOn('calcCbrBtn', 'click', () => {
   const births = parseFloat(document.getElementById('cbrBirths').value);
   const population = parseFloat(document.getElementById('cbrPopulation').value);
   const resultEl = document.getElementById('cbrResult');
@@ -10141,7 +10159,7 @@ document.getElementById('calcCbrBtn').addEventListener('click', () => {
   const cbr = (births / population) * 1000;
   resultEl.innerHTML = `<div class="calc-result">CBR: ${cbr.toFixed(2)} per 1000 population</div>`;
 });
-document.getElementById('calcCdrBtn').addEventListener('click', () => {
+safeOn('calcCdrBtn', 'click', () => {
   const deaths = parseFloat(document.getElementById('cdrDeaths').value);
   const population = parseFloat(document.getElementById('cdrPopulation').value);
   const resultEl = document.getElementById('cdrResult');
@@ -10153,7 +10171,7 @@ document.getElementById('calcCdrBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">CDR: ${cdr.toFixed(2)} per 1000 population</div>`;
 });
 
-document.getElementById('calcNmrBtn').addEventListener('click', () => {
+safeOn('calcNmrBtn', 'click', () => {
   const deaths = parseFloat(document.getElementById('nmrDeaths').value);
   const births = parseFloat(document.getElementById('nmrBirths').value);
   const resultEl = document.getElementById('nmrResult');
@@ -10164,7 +10182,7 @@ document.getElementById('calcNmrBtn').addEventListener('click', () => {
   const nmr = (deaths / births) * 1000;
   resultEl.innerHTML = `<div class="calc-result">NMR: ${nmr.toFixed(2)} per 1000 live births</div>`;
 });
-document.getElementById('calcU5mrBtn').addEventListener('click', () => {
+safeOn('calcU5mrBtn', 'click', () => {
   const deaths = parseFloat(document.getElementById('u5mrDeaths').value);
   const births = parseFloat(document.getElementById('u5mrBirths').value);
   const resultEl = document.getElementById('u5mrResult');
@@ -10177,7 +10195,7 @@ document.getElementById('calcU5mrBtn').addEventListener('click', () => {
 });
 
 // ---------- Epidemiology Calculator ----------
-document.getElementById('calcScreeningBtn').addEventListener('click', () => {
+safeOn('calcScreeningBtn', 'click', () => {
   const tp = parseFloat(document.getElementById('epiTP').value);
   const fp = parseFloat(document.getElementById('epiFP').value);
   const fn = parseFloat(document.getElementById('epiFN').value);
@@ -10205,7 +10223,7 @@ document.getElementById('calcScreeningBtn').addEventListener('click', () => {
     <div class="calc-result">LR−: ${isFinite(lrMinus) ? lrMinus.toFixed(2) : '—'}</div>
   `;
 });
-document.getElementById('calcIncidenceBtn').addEventListener('click', () => {
+safeOn('calcIncidenceBtn', 'click', () => {
   const newCases = parseFloat(document.getElementById('incidenceNewCases').value);
   const population = parseFloat(document.getElementById('incidencePopulation').value);
   const resultEl = document.getElementById('incidenceResult');
@@ -10216,7 +10234,7 @@ document.getElementById('calcIncidenceBtn').addEventListener('click', () => {
   const incidence = (newCases / population) * 1000;
   resultEl.innerHTML = `<div class="calc-result">Incidence Rate: ${incidence.toFixed(2)} per 1000 population at risk</div>`;
 });
-document.getElementById('calcPrevalenceBtn').addEventListener('click', () => {
+safeOn('calcPrevalenceBtn', 'click', () => {
   const cases = parseFloat(document.getElementById('prevalenceCases').value);
   const population = parseFloat(document.getElementById('prevalencePopulation').value);
   const resultEl = document.getElementById('prevalenceResult');
@@ -10229,7 +10247,7 @@ document.getElementById('calcPrevalenceBtn').addEventListener('click', () => {
 });
 
 // ---------- Risk & Odds (Cohort / Case-Control) ----------
-document.getElementById('calcRiskOddsBtn').addEventListener('click', () => {
+safeOn('calcRiskOddsBtn', 'click', () => {
   const A = parseFloat(document.getElementById('roA').value);
   const B = parseFloat(document.getElementById('roB').value);
   const C = parseFloat(document.getElementById('roC').value);
@@ -10252,7 +10270,7 @@ document.getElementById('calcRiskOddsBtn').addEventListener('click', () => {
     <div class="calc-result">NNT: ${isFinite(nnt) ? Math.ceil(nnt) : '—'}</div>
   `;
 });
-document.getElementById('calcEpiCfrBtn').addEventListener('click', () => {
+safeOn('calcEpiCfrBtn', 'click', () => {
   const deaths = parseFloat(document.getElementById('epiCfrDeaths').value);
   const cases = parseFloat(document.getElementById('epiCfrCases').value);
   const resultEl = document.getElementById('epiCfrResult');
@@ -10264,7 +10282,7 @@ document.getElementById('calcEpiCfrBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">CFR: ${cfr.toFixed(2)}%</div>`;
 });
 
-document.getElementById('calcVeBtn').addEventListener('click', () => {
+safeOn('calcVeBtn', 'click', () => {
   const casesVax = parseFloat(document.getElementById('veCasesVax').value);
   const totalVax = parseFloat(document.getElementById('veTotalVax').value);
   const casesUnvax = parseFloat(document.getElementById('veCasesUnvax').value);
@@ -10284,7 +10302,7 @@ document.getElementById('calcVeBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">Vaccine Efficacy: ${ve.toFixed(2)}%</div>`;
 });
 
-document.getElementById('calcSarBtn').addEventListener('click', () => {
+safeOn('calcSarBtn', 'click', () => {
   const cases = parseFloat(document.getElementById('sarCases').value);
   const contacts = parseFloat(document.getElementById('sarContacts').value);
   const resultEl = document.getElementById('sarResult');
@@ -10296,7 +10314,7 @@ document.getElementById('calcSarBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">Secondary Attack Rate: ${sar.toFixed(2)}%</div>`;
 });
 
-document.getElementById('calcParBtn').addEventListener('click', () => {
+safeOn('calcParBtn', 'click', () => {
   const total = parseFloat(document.getElementById('parTotal').value);
   const unexposed = parseFloat(document.getElementById('parUnexposed').value);
   const resultEl = document.getElementById('parResult');
@@ -10312,7 +10330,7 @@ document.getElementById('calcParBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcNnhBtn').addEventListener('click', () => {
+safeOn('calcNnhBtn', 'click', () => {
   const A = parseFloat(document.getElementById('nnhA').value);
   const B = parseFloat(document.getElementById('nnhB').value);
   const C = parseFloat(document.getElementById('nnhC').value);
@@ -10338,7 +10356,7 @@ document.getElementById('calcNnhBtn').addEventListener('click', () => {
 
 // ---------- Statistics & Research ----------
 
-document.getElementById('calcStatsBtn').addEventListener('click', () => {
+safeOn('calcStatsBtn', 'click', () => {
   const raw = document.getElementById('statsInput').value;
   const resultEl = document.getElementById('statsResult');
   const nums = raw.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
@@ -10364,7 +10382,7 @@ document.getElementById('calcStatsBtn').addEventListener('click', () => {
     <div class="calc-result">Standard Deviation: ${sd.toFixed(2)}</div>
   `;
 });
-document.getElementById('calcZScoreBtn').addEventListener('click', () => {
+safeOn('calcZScoreBtn', 'click', () => {
   const value = parseFloat(document.getElementById('zValue').value);
   const mean = parseFloat(document.getElementById('zMean').value);
   const sd = parseFloat(document.getElementById('zSD').value);
@@ -10376,7 +10394,7 @@ document.getElementById('calcZScoreBtn').addEventListener('click', () => {
   const z = (value - mean) / sd;
   resultEl.innerHTML = `<div class="calc-result">Z-score: ${z.toFixed(2)}</div><div class="calc-result" style="font-size:11.5px; opacity:0.85;">${Math.abs(z).toFixed(2)} SD ${z >= 0 ? 'above' : 'below'} the mean</div>`;
 });
-document.getElementById('calcSampleSizeBtn').addEventListener('click', () => {
+safeOn('calcSampleSizeBtn', 'click', () => {
   const population = parseFloat(document.getElementById('ssPopulation').value);
   const pPct = parseFloat(document.getElementById('ssProportion').value) || 50;
   const marginPct = parseFloat(document.getElementById('ssMargin').value) || 5;
@@ -10401,7 +10419,7 @@ document.getElementById('calcSampleSizeBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcCiBtn').addEventListener('click', () => {
+safeOn('calcCiBtn', 'click', () => {
   const mean = parseFloat(document.getElementById('ciMean').value);
   const sd = parseFloat(document.getElementById('ciSD').value);
   const n = parseFloat(document.getElementById('ciN').value);
@@ -10421,7 +10439,7 @@ document.getElementById('calcCiBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcChiBtn').addEventListener('click', () => {
+safeOn('calcChiBtn', 'click', () => {
   const A = parseFloat(document.getElementById('chiA').value);
   const B = parseFloat(document.getElementById('chiB').value);
   const C = parseFloat(document.getElementById('chiC').value);
@@ -10448,7 +10466,7 @@ document.getElementById('calcChiBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcRngBtn').addEventListener('click', () => {
+safeOn('calcRngBtn', 'click', () => {
   const min = parseFloat(document.getElementById('rngMin').value);
   const max = parseFloat(document.getElementById('rngMax').value);
   const count = parseInt(document.getElementById('rngCount').value, 10) || 5;
@@ -10483,7 +10501,7 @@ function getTCritical(df){
   return 1.960;
 }
 
-document.getElementById('calcTtestBtn').addEventListener('click', () => {
+safeOn('calcTtestBtn', 'click', () => {
   const g1 = parseNumberList(document.getElementById('tGroup1').value);
   const g2 = parseNumberList(document.getElementById('tGroup2').value);
   const resultEl = document.getElementById('ttestResult');
@@ -10511,7 +10529,7 @@ document.getElementById('calcTtestBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcAnovaBtn').addEventListener('click', () => {
+safeOn('calcAnovaBtn', 'click', () => {
   const a = parseNumberList(document.getElementById('anovaA').value);
   const b = parseNumberList(document.getElementById('anovaB').value);
   const c = parseNumberList(document.getElementById('anovaC').value);
@@ -10547,7 +10565,7 @@ document.getElementById('calcAnovaBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcCorrBtn').addEventListener('click', () => {
+safeOn('calcCorrBtn', 'click', () => {
   const x = parseNumberList(document.getElementById('corrX').value);
   const y = parseNumberList(document.getElementById('corrY').value);
   const resultEl = document.getElementById('corrResult');
@@ -10577,7 +10595,7 @@ document.getElementById('calcCorrBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcAlphaBtn').addEventListener('click', () => {
+safeOn('calcAlphaBtn', 'click', () => {
   const raw = document.getElementById('alphaInput').value.trim();
   const resultEl = document.getElementById('alphaResult');
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
@@ -10608,7 +10626,7 @@ document.getElementById('calcAlphaBtn').addEventListener('click', () => {
 });
 
 // ---------- Study & Exam Tools ----------
-document.getElementById('calcNegativeMarkingBtn').addEventListener('click', () => {
+safeOn('calcNegativeMarkingBtn', 'click', () => {
   const total = parseFloat(document.getElementById('nmTotal').value);
   const correct = parseFloat(document.getElementById('nmCorrect').value);
   const wrong = parseFloat(document.getElementById('nmWrong').value);
@@ -10662,7 +10680,7 @@ document.querySelectorAll('#studyTimerPresets .rf-time-chip').forEach(chip => {
     }
   });
 });
-document.getElementById('studyTimerCustomMin').addEventListener('input', (e) => {
+safeOn('studyTimerCustomMin', 'input', (e) => {
   const min = parseFloat(e.target.value);
   if(min > 0){
     studyTimerTotalSeconds = Math.round(min * 60);
@@ -10670,7 +10688,7 @@ document.getElementById('studyTimerCustomMin').addEventListener('input', (e) => 
     updateStudyTimerDisplay();
   }
 });
-document.getElementById('studyTimerStartBtn').addEventListener('click', () => {
+safeOn('studyTimerStartBtn', 'click', () => {
   const btn = document.getElementById('studyTimerStartBtn');
   if(studyTimerRunning){
     clearInterval(studyTimerInterval);
@@ -10694,7 +10712,7 @@ document.getElementById('studyTimerStartBtn').addEventListener('click', () => {
     }
   }, 1000);
 });
-document.getElementById('studyTimerResetBtn').addEventListener('click', () => {
+safeOn('studyTimerResetBtn', 'click', () => {
   clearInterval(studyTimerInterval);
   studyTimerRunning = false;
   studyTimerSecondsLeft = studyTimerTotalSeconds;
@@ -10734,13 +10752,13 @@ function renderWaterTracker(){
     <span style="font-size:24px; opacity:${i < count ? 1 : 0.25};">🥛</span>
   `).join('') + `<span style="align-self:center; margin-left:6px; font-size:13px; color:var(--ink-soft);">${count} / ${goal}</span>`;
 }
-document.getElementById('waterGoalInput').addEventListener('change', (e) => {
+safeOn('waterGoalInput', 'change', (e) => {
   const log = getWaterLog();
   log.goal = Math.max(1, parseInt(e.target.value, 10) || 8);
   try{ localStorage.setItem(uk('hl_water_log'), JSON.stringify(log)); }catch(err){}
   renderWaterTracker();
 });
-document.getElementById('waterAddGlassBtn').addEventListener('click', () => {
+safeOn('waterAddGlassBtn', 'click', () => {
   const log = getWaterLog();
   const today = todayISO();
   log[today] = (log[today] || 0) + 1;
@@ -10751,7 +10769,7 @@ document.getElementById('waterAddGlassBtn').addEventListener('click', () => {
 function getSleepEntries(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_sleep_log')) || '[]'); }catch(e){ return []; }
 }
-document.getElementById('sleepSaveBtn').addEventListener('click', () => {
+safeOn('sleepSaveBtn', 'click', () => {
   const bedtime = document.getElementById('sleepBedtime').value;
   const waketime = document.getElementById('sleepWaketime').value;
   const resultEl = document.getElementById('sleepResult');
@@ -10790,7 +10808,7 @@ function renderSleepHistory(){
 function getBpEntries(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_bp_log')) || '[]'); }catch(e){ return []; }
 }
-document.getElementById('bpSaveBtn').addEventListener('click', () => {
+safeOn('bpSaveBtn', 'click', () => {
   const systolic = parseFloat(document.getElementById('bpSystolic').value);
   const diastolic = parseFloat(document.getElementById('bpDiastolic').value);
   const pulse = parseFloat(document.getElementById('bpPulse').value);
@@ -10828,7 +10846,7 @@ function renderBpHistory(){
 function getGlucoseEntries(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_glucose_log')) || '[]'); }catch(e){ return []; }
 }
-document.getElementById('glucoseSaveBtn').addEventListener('click', () => {
+safeOn('glucoseSaveBtn', 'click', () => {
   const reading = parseFloat(document.getElementById('glucoseReading').value);
   const type = document.getElementById('glucoseType').value;
   const resultEl = document.getElementById('glucoseResult');
@@ -10857,7 +10875,7 @@ function renderGlucoseHistory(){
 function getHrEntries(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_hr_log')) || '[]'); }catch(e){ return []; }
 }
-document.getElementById('hrSaveBtn').addEventListener('click', () => {
+safeOn('hrSaveBtn', 'click', () => {
   const bpm = parseFloat(document.getElementById('hrBpm').value);
   const type = document.getElementById('hrType').value;
   const resultEl = document.getElementById('hrResult');
@@ -10886,7 +10904,7 @@ function renderHrHistory(){
 function getSpo2Entries(){
   try{ return JSON.parse(localStorage.getItem('hl_spo2_log') || '[]'); }catch(e){ return []; }
 }
-document.getElementById('spo2SaveBtn').addEventListener('click', () => {
+safeOn('spo2SaveBtn', 'click', () => {
   const value = parseFloat(document.getElementById('spo2Value').value);
   const pulse = parseFloat(document.getElementById('spo2Pulse').value);
   const resultEl = document.getElementById('spo2Result');
@@ -10914,7 +10932,7 @@ function renderSpo2History(){
 }
 
 // ---------- Everyday Tools: Date math, EMI, unit converters, world clock ----------
-document.getElementById('calcDateDiffBtn').addEventListener('click', () => {
+safeOn('calcDateDiffBtn', 'click', () => {
   const fromStr = document.getElementById('dateDiffFrom').value;
   const toStr = document.getElementById('dateDiffTo').value;
   const resultEl = document.getElementById('dateDiffResult');
@@ -10932,7 +10950,7 @@ document.getElementById('calcDateDiffBtn').addEventListener('click', () => {
     <div class="calc-result" style="font-size:11.5px; opacity:0.85;">${weeks} weeks, ${remDays} days</div>
   `;
 });
-document.getElementById('calcDateAddBtn').addEventListener('click', () => {
+safeOn('calcDateAddBtn', 'click', () => {
   const startStr = document.getElementById('dateAddStart').value;
   const days = parseInt(document.getElementById('dateAddDays').value, 10);
   const resultEl = document.getElementById('dateAddResult');
@@ -10947,7 +10965,7 @@ document.getElementById('calcDateAddBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">${formatted}</div>`;
 });
 
-document.getElementById('calcEmiBtn').addEventListener('click', () => {
+safeOn('calcEmiBtn', 'click', () => {
   const principal = parseFloat(document.getElementById('emiAmount').value);
   const annualRate = parseFloat(document.getElementById('emiRate').value);
   const years = parseFloat(document.getElementById('emiYears').value);
@@ -10973,7 +10991,7 @@ document.getElementById('calcEmiBtn').addEventListener('click', () => {
 });
 
 const LENGTH_TO_METERS = { km:1000, mi:1609.344, m:1, ft:0.3048, cm:0.01, in:0.0254 };
-document.getElementById('calcLenBtn').addEventListener('click', () => {
+safeOn('calcLenBtn', 'click', () => {
   const value = parseFloat(document.getElementById('lenValue').value);
   const from = document.getElementById('lenFrom').value;
   const to = document.getElementById('lenTo').value;
@@ -10988,7 +11006,7 @@ document.getElementById('calcLenBtn').addEventListener('click', () => {
 });
 
 const WEIGHT_TO_KG = { kg:1, lb:0.453592, g:0.001, oz:0.0283495 };
-document.getElementById('calcWtBtn').addEventListener('click', () => {
+safeOn('calcWtBtn', 'click', () => {
   const value = parseFloat(document.getElementById('wtValue').value);
   const from = document.getElementById('wtFrom').value;
   const to = document.getElementById('wtTo').value;
@@ -11002,7 +11020,7 @@ document.getElementById('calcWtBtn').addEventListener('click', () => {
   resultEl.innerHTML = `<div class="calc-result">${converted.toFixed(4)}</div>`;
 });
 
-document.getElementById('calcTempBtn').addEventListener('click', () => {
+safeOn('calcTempBtn', 'click', () => {
   const value = parseFloat(document.getElementById('tempValue').value);
   const from = document.getElementById('tempFrom').value;
   const to = document.getElementById('tempTo').value;
@@ -11040,7 +11058,7 @@ function renderWorldClock(){
 
 // ---------- QR Code Generator: uses the CDN-loaded QRCode.js library. Guards against the
 // script failing to load (e.g. no internet on first load) rather than throwing a silent error. ----------
-document.getElementById('calcQrBtn').addEventListener('click', () => {
+safeOn('calcQrBtn', 'click', () => {
   const text = document.getElementById('qrTextInput').value.trim();
   const displayEl = document.getElementById('qrCodeDisplay');
   const downloadLink = document.getElementById('qrDownloadLink');
@@ -11089,7 +11107,7 @@ document.querySelectorAll('#meditationPresets .rf-time-chip').forEach(chip => {
     updateMeditationDisplay();
   });
 });
-document.getElementById('meditationStartBtn').addEventListener('click', () => {
+safeOn('meditationStartBtn', 'click', () => {
   const btn = document.getElementById('meditationStartBtn');
   if(meditationRunning){
     clearInterval(meditationInterval);
@@ -11110,7 +11128,7 @@ document.getElementById('meditationStartBtn').addEventListener('click', () => {
     }
   }, 1000);
 });
-document.getElementById('meditationResetBtn').addEventListener('click', () => {
+safeOn('meditationResetBtn', 'click', () => {
   clearInterval(meditationInterval);
   meditationRunning = false;
   meditationSecondsLeft = meditationTotalSeconds;
@@ -11137,7 +11155,7 @@ function runBreathingPhase(){
   breathingPhaseIndex = (breathingPhaseIndex + 1) % BREATHING_PHASES.length;
   breathingTimeout = setTimeout(runBreathingPhase, phase.duration);
 }
-document.getElementById('breathingStartBtn').addEventListener('click', () => {
+safeOn('breathingStartBtn', 'click', () => {
   const btn = document.getElementById('breathingStartBtn');
   const circle = document.getElementById('breathingCircle');
   if(breathingRunning){
@@ -11158,7 +11176,7 @@ document.getElementById('breathingStartBtn').addEventListener('click', () => {
 function getGratitudeEntries(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_gratitude_log')) || '[]'); }catch(e){ return []; }
 }
-document.getElementById('gratitudeSaveBtn').addEventListener('click', () => {
+safeOn('gratitudeSaveBtn', 'click', () => {
   const g1 = document.getElementById('gratitude1').value.trim();
   const g2 = document.getElementById('gratitude2').value.trim();
   const g3 = document.getElementById('gratitude3').value.trim();
@@ -11256,7 +11274,7 @@ function runSosStep(){
   sosStepIndex = (sosStepIndex + 1) % SOS_SEQUENCE.length;
   sosTimeout = setTimeout(runSosStep, duration);
 }
-document.getElementById('sosSignalBtn').addEventListener('click', () => {
+safeOn('sosSignalBtn', 'click', () => {
   const btn = document.getElementById('sosSignalBtn');
   const box = document.getElementById('sosSignalBox');
   if(sosRunning){
@@ -11302,7 +11320,7 @@ function playTone(freq, type){
   emergencyOscillators.push(osc);
   return osc;
 }
-document.getElementById('soundLoudAlarmBtn').addEventListener('click', () => {
+safeOn('soundLoudAlarmBtn', 'click', () => {
   stopAllEmergencySounds();
   let high = true;
   const osc = playTone(800, 'square');
@@ -11313,7 +11331,7 @@ document.getElementById('soundLoudAlarmBtn').addEventListener('click', () => {
   emergencyIntervals.push(id);
   document.getElementById('soundStopBtn').style.display = 'block';
 });
-document.getElementById('soundSirenBtn').addEventListener('click', () => {
+safeOn('soundSirenBtn', 'click', () => {
   stopAllEmergencySounds();
   const osc = playTone(500, 'sine');
   let rising = true;
@@ -11327,17 +11345,17 @@ document.getElementById('soundSirenBtn').addEventListener('click', () => {
   emergencyIntervals.push(id);
   document.getElementById('soundStopBtn').style.display = 'block';
 });
-document.getElementById('soundWhistleBtn').addEventListener('click', () => {
+safeOn('soundWhistleBtn', 'click', () => {
   stopAllEmergencySounds();
   playTone(2200, 'sine');
   document.getElementById('soundStopBtn').style.display = 'block';
 });
-document.getElementById('soundContinuousBtn').addEventListener('click', () => {
+safeOn('soundContinuousBtn', 'click', () => {
   stopAllEmergencySounds();
   playTone(700, 'square');
   document.getElementById('soundStopBtn').style.display = 'block';
 });
-document.getElementById('soundStopBtn').addEventListener('click', stopAllEmergencySounds);
+safeOn('soundStopBtn', 'click', stopAllEmergencySounds);
 
 // ---------- Step Counter: session-only (while this screen is open), using accelerometer
 // peak detection. Cannot run in the background — that needs a native app, not a PWA. ----------
@@ -11362,7 +11380,7 @@ function handleStepMotion(event){
     document.getElementById('stepDistanceDisplay').textContent = `≈ ${km.toFixed(2)} km`;
   }
 }
-document.getElementById('stepCounterBtn').addEventListener('click', async () => {
+safeOn('stepCounterBtn', 'click', async () => {
   const btn = document.getElementById('stepCounterBtn');
   const noteEl = document.getElementById('stepPermissionNote');
   if(stepRunning){
@@ -11398,7 +11416,7 @@ document.getElementById('stepCounterBtn').addEventListener('click', async () => 
 
 // ---------- Pension Estimator: Legacy scheme, standard accrual formula. Clearly labeled as
 // an estimate — see the disclaimer card on the screen itself for what this doesn't account for. ----------
-document.getElementById('calcPensionBtn').addEventListener('click', () => {
+safeOn('calcPensionBtn', 'click', () => {
   const years = parseFloat(document.getElementById('pensionYears').value);
   const salary = parseFloat(document.getElementById('pensionSalary').value);
   const denominator = parseFloat(document.getElementById('pensionCategory').value);
@@ -11423,7 +11441,7 @@ document.getElementById('calcPensionBtn').addEventListener('click', () => {
 // ---------- SSF Contribution Calculator: rates per Social Security Act 2074 & Regulations
 // 2075 — Employee 11%, Employer 20% (split: Medical 1%, Accident/Disability 1.4%,
 // Life Insurance 0.27%, Old Age Pension 17.33%), calculated on basic salary only. ----------
-document.getElementById('calcSsfBtn').addEventListener('click', () => {
+safeOn('calcSsfBtn', 'click', () => {
   const salary = parseFloat(document.getElementById('ssfSalary').value);
   const resultEl = document.getElementById('ssfResult');
   if(!salary || salary <= 0){
@@ -11446,7 +11464,7 @@ document.getElementById('calcSsfBtn').addEventListener('click', () => {
 });
 
 // ---------- SIP Calculator: standard compound-growth formula for monthly investments ----------
-document.getElementById('calcSipBtn').addEventListener('click', () => {
+safeOn('calcSipBtn', 'click', () => {
   const monthly = parseFloat(document.getElementById('sipAmount').value);
   const annualReturn = parseFloat(document.getElementById('sipReturn').value);
   const years = parseFloat(document.getElementById('sipYears').value);
@@ -11476,7 +11494,7 @@ document.getElementById('calcSipBtn').addEventListener('click', () => {
 // (TaxSlabs / TaxDeductionLimits tabs), never hardcoded — Nepal's Finance Act changes these
 // every fiscal year. The first slab is treated as Social Security Tax, waived for SSF
 // contributors, matching how Nepal's current tax structure actually works. ----------
-document.getElementById('calcTaxBtn').addEventListener('click', async () => {
+safeOn('calcTaxBtn', 'click', async () => {
   const grossIncome = parseFloat(document.getElementById('taxGrossIncome').value);
   const isSsfContributor = document.getElementById('taxSsfContributor').value === 'yes';
   const retirementContribution = parseFloat(document.getElementById('taxRetirementContribution').value) || 0;
@@ -11586,7 +11604,7 @@ function getPayrollRate(rates, type, fallback){
   const row = rates.find(r => r.RateType === type);
   return row && row.Rate ? parseFloat(row.Rate) : fallback;
 }
-document.getElementById('swService').addEventListener('change', (e) => {
+safeOn('swService', 'change', (e) => {
   const svc = e.target.value;
   const postEl = document.getElementById('swPost');
   if(!svc || !salaryServiceGroups[svc]){
@@ -11595,7 +11613,7 @@ document.getElementById('swService').addEventListener('change', (e) => {
   }
   postEl.innerHTML = `<option value="">-- पद छान्नुहोस् --</option>` + salaryServiceGroups[svc].map((r, i) => `<option value="${i}">${r.Post}${r.MaxGrade ? ' (अधिकतम ' + r.MaxGrade + ' ग्रेड)' : ''}</option>`).join('');
 });
-document.getElementById('swManualSalaryToggle').addEventListener('change', (e) => {
+safeOn('swManualSalaryToggle', 'change', (e) => {
   document.getElementById('swManualSalaryField').style.display = e.target.checked ? 'block' : 'none';
 });
 
@@ -11623,7 +11641,7 @@ function getSelectedSwPost(){
   return salaryServiceGroups[svc][idx];
 }
 
-document.getElementById('calcGradeProjectionBtn').addEventListener('click', () => {
+safeOn('calcGradeProjectionBtn', 'click', () => {
   const post = getSelectedSwPost();
   const gradeCount = parseFloat(document.getElementById('swGrade').value) || 0;
   const resultEl = document.getElementById('gradeProjectionResult');
@@ -11648,7 +11666,7 @@ document.getElementById('calcGradeProjectionBtn').addEventListener('click', () =
   resultEl.innerHTML = html;
 });
 
-document.getElementById('calcSalaryBtn').addEventListener('click', async () => {
+safeOn('calcSalaryBtn', 'click', async () => {
   const resultEl = document.getElementById('salaryCalcResult');
   const manualMode = document.getElementById('swManualSalaryToggle').checked;
   const post = getSelectedSwPost();
@@ -11816,7 +11834,7 @@ document.getElementById('calcSalaryBtn').addEventListener('click', async () => {
 });
 
 let lastPayslipData = null;
-document.getElementById('copyPayslipBtn').addEventListener('click', () => {
+safeOn('copyPayslipBtn', 'click', () => {
   if(!lastPayslipData) return;
   const d = lastPayslipData;
   const text = `Health Loksewa — Estimated Payslip\n${d.post}\n\nBasic Salary: Rs. ${d.basicSalary.toFixed(0)}\nGross Monthly: Rs. ${d.grossMonthly.toFixed(0)}\n${d.retirementLabel !== '—' ? `${d.retirementLabel}: − Rs. ${d.employeeRetirement.toFixed(0)}\n` : ''}${d.insuranceMonthly > 0 ? `Life Insurance: − Rs. ${d.insuranceMonthly.toFixed(0)}\n` : ''}${d.citMonthly > 0 ? `CIT: − Rs. ${d.citMonthly.toFixed(0)}\n` : ''}Income Tax: − Rs. ${d.monthlyTax.toFixed(0)}\n\nNet Take-Home: Rs. ${d.netMonthly.toFixed(0)}/month\nAnnual Net: Rs. ${d.netAnnual.toFixed(0)}\n\n(Estimate only — verify against official sources)`;
@@ -11830,7 +11848,7 @@ document.getElementById('copyPayslipBtn').addEventListener('click', () => {
   });
 });
 
-document.getElementById('calcComparisonBtn').addEventListener('click', () => {
+safeOn('calcComparisonBtn', 'click', () => {
   const idxA = document.getElementById('compPostA').value;
   const idxB = document.getElementById('compPostB').value;
   const gradeA = parseFloat(document.getElementById('compGradeA').value) || 0;
@@ -11871,7 +11889,7 @@ document.getElementById('calcComparisonBtn').addEventListener('click', () => {
   `;
 });
 
-document.getElementById('calcRealSalaryBtn').addEventListener('click', () => {
+safeOn('calcRealSalaryBtn', 'click', () => {
   const current = parseFloat(document.getElementById('realSalaryCurrent').value);
   const inflationRate = parseFloat(document.getElementById('realSalaryInflation').value);
   const years = parseFloat(document.getElementById('realSalaryYears').value);
@@ -11890,7 +11908,7 @@ document.getElementById('calcRealSalaryBtn').addEventListener('click', () => {
 });
 
 // ---------- FAQs ----------
-document.getElementById('goToFaqsFromHub').addEventListener('click', (e) => {
+safeOn('goToFaqsFromHub', 'click', (e) => {
   e.preventDefault();
   showScreen(faqsScreen);
   renderFaqs();
@@ -11898,7 +11916,7 @@ document.getElementById('goToFaqsFromHub').addEventListener('click', (e) => {
 // ---------- Inspiration Hub: manually-curated success stories/history, cached-first matching the
 // app's established pattern for Sheet-driven reference content ----------
 let inspirationStories = [];
-document.getElementById('goToInspirationHubFromHub').addEventListener('click', async (e) => {
+safeOn('goToInspirationHubFromHub', 'click', async (e) => {
   e.preventDefault();
   showScreen(inspirationHubScreen);
   const wrap = document.getElementById('inspirationHubList');
@@ -12105,25 +12123,25 @@ function renderDictionaryTerms(searchTerm){
   }
   externalWrap.style.display = 'block';
 }
-document.getElementById('dictionarySearchBox').addEventListener('input', (e) => {
+safeOn('dictionarySearchBox', 'input', (e) => {
   renderDictionaryTerms(e.target.value);
 });
-document.getElementById('dictionarySearchBox').addEventListener('change', (e) => {
+safeOn('dictionarySearchBox', 'change', (e) => {
   if(e.target.value.trim()) addDictionaryRecentSearch(e.target.value.trim());
 });
-document.getElementById('dictionaryGoogleBtn').addEventListener('click', () => {
+safeOn('dictionaryGoogleBtn', 'click', () => {
   const query = document.getElementById('dictionarySearchBox').value.trim();
   if(!query) return;
   addDictionaryRecentSearch(query);
   window.open(`https://www.google.com/search?q=${encodeURIComponent(query + ' health loksewa nepal')}`, '_blank');
 });
-document.getElementById('dictionaryGoogleBooksBtn').addEventListener('click', () => {
+safeOn('dictionaryGoogleBooksBtn', 'click', () => {
   const query = document.getElementById('dictionarySearchBox').value.trim();
   if(!query) return;
   addDictionaryRecentSearch(query);
   window.open(`https://www.google.com/search?tbm=bks&q=${encodeURIComponent(query)}`, '_blank');
 });
-document.getElementById('dictionaryDotComBtn').addEventListener('click', () => {
+safeOn('dictionaryDotComBtn', 'click', () => {
   const query = document.getElementById('dictionarySearchBox').value.trim();
   if(!query) return;
   addDictionaryRecentSearch(query);
@@ -12282,7 +12300,7 @@ function renderMnemonics(searchTerm){
     });
   });
 }
-document.getElementById('mnemonicsSearchBox').addEventListener('input', (e) => {
+safeOn('mnemonicsSearchBox', 'input', (e) => {
   renderMnemonics(e.target.value);
 });
 
@@ -12308,15 +12326,15 @@ function openMnemonicDetail(m){
   helpfulBtn.disabled = voted;
   showScreen(mnemonicDetailScreen);
 }
-document.getElementById('mnDetailEditBtn').addEventListener('click', () => {
+safeOn('mnDetailEditBtn', 'click', () => {
   if(currentMnemonicDetail) openMnemonicCreate(currentMnemonicDetail);
 });
-document.getElementById('mnSaveBtn').addEventListener('click', () => {
+safeOn('mnSaveBtn', 'click', () => {
   if(!currentMnemonicDetail) return;
   toggleMnemonicBookmark(currentMnemonicDetail.id);
   document.getElementById('mnSaveBtn').textContent = isMnemonicBookmarked(currentMnemonicDetail.id) ? '⭐ Saved' : '🔖 Save';
 });
-document.getElementById('mnHelpfulBtn').addEventListener('click', async () => {
+safeOn('mnHelpfulBtn', 'click', async () => {
   if(!currentMnemonicDetail || getMnemonicHelpfulVoted().includes(currentMnemonicDetail.id)) return;
   markMnemonicHelpfulVoted(currentMnemonicDetail.id);
   MNEMONIC_HELPFUL_COUNTS[currentMnemonicDetail.id] = (MNEMONIC_HELPFUL_COUNTS[currentMnemonicDetail.id] || 0) + 1;
@@ -12330,16 +12348,16 @@ document.getElementById('mnHelpfulBtn').addEventListener('click', async () => {
     });
   }catch(e){}
 });
-document.getElementById('mnCopyBtn').addEventListener('click', async () => {
+safeOn('mnCopyBtn', 'click', async () => {
   if(!currentMnemonicDetail) return;
   const text = `${currentMnemonicDetail.topic}\n${currentMnemonicDetail.trick}\n${currentMnemonicDetail.explain}`;
   try{ await navigator.clipboard.writeText(text); alert('Copied!'); }catch(e){}
 });
-document.getElementById('mnListenBtn').addEventListener('click', (e) => {
+safeOn('mnListenBtn', 'click', (e) => {
   if(!currentMnemonicDetail) return;
   speakText(`${currentMnemonicDetail.topic}. ${currentMnemonicDetail.trick}. ${currentMnemonicDetail.explain}`, e.currentTarget);
 });
-document.getElementById('mnToFlashcardBtn').addEventListener('click', () => {
+safeOn('mnToFlashcardBtn', 'click', () => {
   if(!currentMnemonicDetail) return;
   const decks = ensureDefaultFcDeck();
   const cards = getFcCards();
@@ -12353,7 +12371,7 @@ document.getElementById('mnToFlashcardBtn').addEventListener('click', () => {
   saveFcCards(cards);
   alert(`Added to Flash Cards → "${decks[0].name}" deck.`);
 });
-document.getElementById('mnSaveToNotesBtn').addEventListener('click', () => {
+safeOn('mnSaveToNotesBtn', 'click', () => {
   if(!currentMnemonicDetail) return;
   const m = currentMnemonicDetail;
   const notes = getNotes();
@@ -12393,8 +12411,8 @@ function openMnemonicCreate(existing){
   }
   showScreen(mnemonicCreateScreen);
 }
-document.getElementById('mnCreateBtn').addEventListener('click', () => openMnemonicCreate(null));
-document.getElementById('mnCreateSaveBtn').addEventListener('click', () => {
+safeOn('mnCreateBtn', 'click', () => openMnemonicCreate(null));
+safeOn('mnCreateSaveBtn', 'click', () => {
   const topic = document.getElementById('mnCreateTopic').value.trim();
   const trick = document.getElementById('mnCreateTrick').value.trim();
   if(!topic || !trick){ alert('Please fill in at least the Topic and the Mnemonic.'); return; }
@@ -12416,7 +12434,7 @@ document.getElementById('mnCreateSaveBtn').addEventListener('click', () => {
   showScreen(mnemonicsScreen);
   renderMnemonics(document.getElementById('mnemonicsSearchBox').value);
 });
-document.getElementById('mnCreateDeleteBtn').addEventListener('click', async () => {
+safeOn('mnCreateDeleteBtn', 'click', async () => {
   if(!mnemonicEditingId || !(await customConfirm('Delete this mnemonic?'))) return;
   saveCustomMnemonics(getCustomMnemonics().filter(m => m.id !== mnemonicEditingId));
   showScreen(mnemonicsScreen);
@@ -12431,7 +12449,7 @@ document.getElementById('mnCreateDeleteBtn').addEventListener('click', async () 
 let mnPracticePool = [];
 let mnPracticeIndex = 0;
 let mnPracticeResults = { yes: 0, no: 0 };
-document.getElementById('mnPracticeBtn').addEventListener('click', () => {
+safeOn('mnPracticeBtn', 'click', () => {
   const filtered = getFilteredMnemonics(document.getElementById('mnemonicsSearchBox').value);
   // Respect the same free-tier limit as the list view — position within THIS filtered set,
   // not a separate unrelated query
@@ -13267,9 +13285,9 @@ function cprGoToStep(index){
   cprResetRescuerPose();
   if(cprInitialized && step.play) step.play();
 }
-document.getElementById('cprPrevBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep - 1));
-document.getElementById('cprNextBtn').addEventListener('click', () => cprGoToStep(cprCurrentStep + 1));
-document.getElementById('cprPlayBtn').addEventListener('click', () => {
+safeOn('cprPrevBtn', 'click', () => cprGoToStep(cprCurrentStep - 1));
+safeOn('cprNextBtn', 'click', () => cprGoToStep(cprCurrentStep + 1));
+safeOn('cprPlayBtn', 'click', () => {
   // Compressions and the 30:2 cycle are continuous loops — Play becomes a real play/pause
   // toggle for them, once the step has actually settled into position (HUD visible). Every
   // other step just replays.
@@ -13283,7 +13301,7 @@ document.getElementById('cprPlayBtn').addEventListener('click', () => {
     cprGoToStep(cprCurrentStep);
   }
 });
-document.getElementById('cprReplayBtn').addEventListener('click', () => {
+safeOn('cprReplayBtn', 'click', () => {
   if(cprCurrentStep === 3 && document.getElementById('cprCompressionHud').style.display === 'block'){
     cprRestartCompressions();
   } else if(cprCurrentStep === 5 && document.getElementById('cprCycleHud').style.display === 'flex'){
@@ -13293,7 +13311,7 @@ document.getElementById('cprReplayBtn').addEventListener('click', () => {
     cprGoToStep(cprCurrentStep);
   }
 });
-document.getElementById('cprSlowMoBtn').addEventListener('click', (e) => {
+safeOn('cprSlowMoBtn', 'click', (e) => {
   cprSlowMotion = !cprSlowMotion;
   e.target.classList.toggle('active-slow', cprSlowMotion);
   e.target.style.background = cprSlowMotion ? 'var(--teal)' : 'var(--panel)';
@@ -13335,7 +13353,7 @@ function openCprDemoScreen(){
   };
   tryInit();
 }
-document.getElementById('goToCprDemoBtn').addEventListener('click', (e) => {
+safeOn('goToCprDemoBtn', 'click', (e) => {
   e.preventDefault();
   openCprDemoScreen();
 });
@@ -13383,14 +13401,14 @@ async function renderImmunization(){
 }
 
 // ---------- Daily Study Reminder (foundation: preference + permission; full delivery needs FCM setup) ----------
-document.getElementById('goToReminder').addEventListener('click', (e) => {
+safeOn('goToReminder', 'click', (e) => {
   e.preventDefault();
   showScreen(reminderScreen);
   renderReminderSettings();
 });
 
 // ---------- Revision Mode ----------
-document.getElementById('goToRevision').addEventListener('click', async (e) => {
+safeOn('goToRevision', 'click', async (e) => {
   e.preventDefault();
   if(window.checkRevisionAccess){
     const access = await window.checkRevisionAccess();
@@ -13546,7 +13564,7 @@ function startMoodCheckinFromHome(){
   showScreen(moodCheckinScreen);
   renderMoodLevelStep();
 }
-document.getElementById('homeMoodCheckInBtn').addEventListener('click', startMoodCheckinFromHome);
+safeOn('homeMoodCheckInBtn', 'click', startMoodCheckinFromHome);
 
 function renderMoodLevelStep(){
   document.getElementById('moodLevelList').innerHTML = MOOD_LEVELS.map(m => `
@@ -13566,7 +13584,7 @@ function renderMoodLevelStep(){
   });
   document.getElementById('moodLevelNextBtn').disabled = true;
 }
-document.getElementById('moodLevelNextBtn').addEventListener('click', () => {
+safeOn('moodLevelNextBtn', 'click', () => {
   if(!moodDraft.level) return;
   showScreen(moodEmotionsScreen);
   renderMoodEmotionsStep();
@@ -13585,7 +13603,7 @@ function renderMoodEmotionsStep(){
     });
   });
 }
-document.getElementById('moodEmotionsNextBtn').addEventListener('click', () => {
+safeOn('moodEmotionsNextBtn', 'click', () => {
   showScreen(moodCausesScreen);
   renderMoodCausesStep();
 });
@@ -13604,10 +13622,10 @@ function renderMoodCausesStep(){
   });
   document.getElementById('moodNoteInput').value = moodDraft.note || '';
 }
-document.getElementById('moodNoteInput').addEventListener('input', (e) => {
+safeOn('moodNoteInput', 'input', (e) => {
   moodDraft.note = e.target.value;
 });
-document.getElementById('moodSaveBtn').addEventListener('click', () => {
+safeOn('moodSaveBtn', 'click', () => {
   const now = new Date();
   saveMoodEntry({
     date: todayISO(),
@@ -13632,9 +13650,9 @@ function finishMoodCheckin(){
     if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
   }
 }
-document.getElementById('moodSkipLink').addEventListener('click', finishMoodCheckin);
-document.getElementById('moodEmotionsSkipLink').addEventListener('click', finishMoodCheckin);
-document.getElementById('moodCausesSkipLink').addEventListener('click', finishMoodCheckin);
+safeOn('moodSkipLink', 'click', finishMoodCheckin);
+safeOn('moodEmotionsSkipLink', 'click', finishMoodCheckin);
+safeOn('moodCausesSkipLink', 'click', finishMoodCheckin);
 
 // ---------- Personalized Study Plan onboarding — one-time only, right after the first-ever
 // post-gate completion. Question 1 (which exam) is deliberately skipped here since the
@@ -13773,7 +13791,7 @@ function renderOnboardingStep(){
 
   document.getElementById('onboardingNextBtn').textContent = (onboardingStep === ONBOARDING_QUESTIONS.length - 1) ? 'Finish' : 'Next';
 }
-document.getElementById('onboardingNextBtn').addEventListener('click', () => {
+safeOn('onboardingNextBtn', 'click', () => {
   const q = ONBOARDING_QUESTIONS[onboardingStep];
   const answer = onboardingAnswers[q.key];
   const hasAnswer = q.multi ? (answer && answer.length > 0) : !!answer;
@@ -13788,7 +13806,7 @@ document.getElementById('onboardingNextBtn').addEventListener('click', () => {
     finishOnboardingWizard();
   }
 });
-document.getElementById('onboardingSkipLink').addEventListener('click', () => {
+safeOn('onboardingSkipLink', 'click', () => {
   if(onboardingStep < ONBOARDING_QUESTIONS.length - 1){
     onboardingStep++;
     renderOnboardingStep();
@@ -13820,10 +13838,10 @@ function showOnboardingSummary(){
   `;
   showScreen(onboardingSummaryScreen);
 }
-document.getElementById('onboardingStartBtn').addEventListener('click', () => {
+safeOn('onboardingStartBtn', 'click', () => {
   showScreen(homeScreen);
 });
-document.getElementById('editPreferencesBtn').addEventListener('click', () => {
+safeOn('editPreferencesBtn', 'click', () => {
   startOnboardingWizard(true);
 });
 
@@ -14075,7 +14093,7 @@ function renderHomeFocusRow(){
   document.getElementById('homeFocusValue').textContent = `${stats.weakest.subject} (${stats.weakest.pct}%)`;
   row.style.display = 'flex';
 }
-document.getElementById('homeFocusRow').addEventListener('click', () => {
+safeOn('homeFocusRow', 'click', () => {
   const stats = computeProgressStats();
   if(!stats.weakest) return;
   const post = findPostForSubject(stats.weakest.subject);
@@ -14090,19 +14108,19 @@ document.getElementById('homeFocusRow').addEventListener('click', () => {
 
 // ---------- Home Resources row: delegates to the exact same existing screens/handlers as
 // Study Resources hub — no duplicated logic, just a faster shortcut from Home. ----------
-document.getElementById('webPortalGovt').addEventListener('click', () => {
+safeOn('webPortalGovt', 'click', () => {
   showScreen(webPortalScreen);
   renderWebPortalScreen('Nepal Health Gov');
 });
-document.getElementById('webPortalIntl').addEventListener('click', () => {
+safeOn('webPortalIntl', 'click', () => {
   showScreen(webPortalScreen);
   renderWebPortalScreen('International');
 });
-document.getElementById('webPortalExam').addEventListener('click', () => {
+safeOn('webPortalExam', 'click', () => {
   showScreen(webPortalScreen);
   renderWebPortalScreen('Lok Sewa Aayog');
 });
-document.getElementById('webPortalResearch').addEventListener('click', () => {
+safeOn('webPortalResearch', 'click', () => {
   showScreen(webPortalScreen);
   renderWebPortalScreen('Research and Education');
 });
@@ -14122,7 +14140,7 @@ document.querySelectorAll('.home-chart-tab').forEach(tab => {
 });
 // ---------- Metric selector dropdown ----------
 const METRIC_LABELS = { accuracy: 'Accuracy', questions: 'Questions', studyTime: 'Study Time', topics: 'Topics Completed' };
-document.getElementById('homeMetricSelectBtn').addEventListener('click', (e) => {
+safeOn('homeMetricSelectBtn', 'click', (e) => {
   e.stopPropagation();
   const dropdown = document.getElementById('homeMetricDropdown');
   dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
@@ -14139,7 +14157,7 @@ document.querySelectorAll('.home-metric-opt').forEach(opt => {
 document.addEventListener('click', () => {
   document.getElementById('homeMetricDropdown').style.display = 'none';
 });
-document.getElementById('homeViewFullProgressLink').addEventListener('click', (e) => {
+safeOn('homeViewFullProgressLink', 'click', (e) => {
   e.preventDefault();
   document.getElementById('navProgress').click();
 });
@@ -14342,8 +14360,8 @@ function startSmartRevision(quickMode){
     revisionPendingFlashCards = [];
   }
 }
-document.getElementById('startRevisionBtn').addEventListener('click', () => startSmartRevision(false));
-document.getElementById('startQuickRevisionBtn').addEventListener('click', () => startSmartRevision(true));
+safeOn('startRevisionBtn', 'click', () => startSmartRevision(false));
+safeOn('startQuickRevisionBtn', 'click', () => startSmartRevision(true));
 
 // ---------- Subject & Topic Revision: scoped to the MCQ revision pool (mistakes + bookmarks)
 // specifically — Flash Cards don't share a Subject/Chapter concept with MCQs (they're organized
@@ -14377,7 +14395,7 @@ function renderRevisionSubjectPicker(){
     btn.addEventListener('click', () => openRevisionTopicPicker(btn.dataset.subject));
   });
 }
-document.getElementById('startSubjectRevisionBtn').addEventListener('click', () => {
+safeOn('startSubjectRevisionBtn', 'click', () => {
   showScreen(revisionSubjectPickScreen);
   renderRevisionSubjectPicker();
 });
@@ -14427,7 +14445,7 @@ function startTopicRevision(subject, topic){
   revisionPendingFlashCards = [];
   launchQuiz(pool, 'Revision', 0, 0);
 }
-document.getElementById('revisionWholeSubjectBtn').addEventListener('click', () => {
+safeOn('revisionWholeSubjectBtn', 'click', () => {
   if(revisionPickedSubject) startSubjectRevision(revisionPickedSubject);
 });
 
@@ -14495,7 +14513,7 @@ function renderRevisionCalendar(){
     });
   });
 }
-document.getElementById('revisionCalendarBtn').addEventListener('click', () => {
+safeOn('revisionCalendarBtn', 'click', () => {
   showScreen(revisionCalendarScreen);
   renderRevisionCalendar();
 });
@@ -14535,11 +14553,11 @@ function startExamRevision(){
   revisionPendingFlashCards = getDueFlashCardsForRevision();
   launchQuiz(pool, 'Revision', 0, 0);
 }
-document.getElementById('examRevisionBtn').addEventListener('click', () => {
+safeOn('examRevisionBtn', 'click', () => {
   showScreen(examRevisionScreen);
   renderExamRevisionPlan();
 });
-document.getElementById('examRevisionStartBtn').addEventListener('click', startExamRevision);
+safeOn('examRevisionStartBtn', 'click', startExamRevision);
 
 // ---------- Personal Study Planner: a real, configurable daily plan (exam date, hours/day,
 // chosen subjects, target score) — deliberately kept separate from the 7-Day Plan above, which
@@ -14588,7 +14606,7 @@ document.getElementById('goToStudyPlannerFromPractice') && document.getElementBy
   if(getStudyPlannerSettings()){ showScreen(studyPlannerScreen); renderStudyPlanner(); }
   else { showScreen(studyPlannerSetupScreen); renderStudyPlannerSetup(); }
 });
-document.getElementById('spEditSettingsBtn').addEventListener('click', () => {
+safeOn('spEditSettingsBtn', 'click', () => {
   showScreen(studyPlannerSetupScreen);
   renderStudyPlannerSetup();
 });
@@ -14604,7 +14622,7 @@ function renderStudyPlannerSetup(){
     </label>
   `).join('');
 }
-document.getElementById('spGeneratePlanBtn').addEventListener('click', () => {
+safeOn('spGeneratePlanBtn', 'click', () => {
   const hoursPerDay = parseFloat(document.getElementById('spHoursPerDay').value);
   if(!hoursPerDay || hoursPerDay <= 0){ alert('Please enter how many hours you can study per day.'); return; }
   const subjects = Array.from(document.querySelectorAll('.sp-subject-check:checked')).map(cb => cb.value);
@@ -14682,7 +14700,7 @@ function renderStudyPlanner(){
     });
   });
 }
-document.getElementById('spAddCustomBtn').addEventListener('click', () => {
+safeOn('spAddCustomBtn', 'click', () => {
   const label = prompt('What do you want to add to today\'s plan?');
   if(!label) return;
   const minutes = parseInt(prompt('How many minutes?', '30'), 10);
@@ -14748,11 +14766,11 @@ function start7DayItem(day){
   revisionPendingFlashCards = day.type === 'full' ? getDueFlashCardsForRevision() : [];
   launchQuiz(pool, 'Revision', 0, 0);
 }
-document.getElementById('sevenDayRevisionBtn').addEventListener('click', () => {
+safeOn('sevenDayRevisionBtn', 'click', () => {
   showScreen(sevenDayRevisionScreen);
   render7DayPlan();
 });
-document.getElementById('sevenDayResetBtn').addEventListener('click', async () => {
+safeOn('sevenDayResetBtn', 'click', async () => {
   if(!(await customConfirm('Regenerate your 7-day plan from today, based on your current weak subjects?'))) return;
   generate7DayPlan();
   render7DayPlan();
@@ -14867,7 +14885,7 @@ document.querySelectorAll('.mistake-filter-btn').forEach(btn => {
     renderMistakeBook();
   });
 });
-document.getElementById('practiceMistakesBtn').addEventListener('click', () => {
+safeOn('practiceMistakesBtn', 'click', () => {
   const today = todayISO();
   const dueList = getWrongQuestions().filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
   if(dueList.length === 0){ alert('Nothing due right now — check back later or browse "All" below.'); return; }
@@ -14894,7 +14912,7 @@ function renderReminderSettings(){
   }
 }
 
-document.getElementById('saveReminderBtn').addEventListener('click', async () => {
+safeOn('saveReminderBtn', 'click', async () => {
   const time = document.getElementById('reminderTimeInput').value;
   const statusMsg = document.getElementById('reminderStatusMsg');
 
@@ -14970,7 +14988,7 @@ function renderFormulas(searchTerm){
     });
   });
 }
-document.getElementById('formulaSearchBox').addEventListener('input', (e) => {
+safeOn('formulaSearchBox', 'input', (e) => {
   renderFormulas(e.target.value);
 });
 
@@ -15163,11 +15181,11 @@ function renderNotes(){
   });
 }
 
-document.getElementById('notesSearchInput').addEventListener('input', (e) => {
+safeOn('notesSearchInput', 'input', (e) => {
   notesSearchQuery = e.target.value;
   renderNotes();
 });
-document.getElementById('notesViewGridBtn').addEventListener('click', () => {
+safeOn('notesViewGridBtn', 'click', () => {
   notesViewMode = 'grid';
   document.getElementById('notesViewGridBtn').style.background = 'var(--crimson)';
   document.getElementById('notesViewGridBtn').style.color = '#fff';
@@ -15177,7 +15195,7 @@ document.getElementById('notesViewGridBtn').addEventListener('click', () => {
   document.getElementById('notesViewListBtn').style.border = '1.5px solid var(--line)';
   renderNotes();
 });
-document.getElementById('notesViewListBtn').addEventListener('click', () => {
+safeOn('notesViewListBtn', 'click', () => {
   notesViewMode = 'list';
   document.getElementById('notesViewListBtn').style.background = 'var(--crimson)';
   document.getElementById('notesViewListBtn').style.color = '#fff';
@@ -15187,7 +15205,7 @@ document.getElementById('notesViewListBtn').addEventListener('click', () => {
   document.getElementById('notesViewGridBtn').style.border = '1.5px solid var(--line)';
   renderNotes();
 });
-document.getElementById('notesTrashBtn').addEventListener('click', () => {
+safeOn('notesTrashBtn', 'click', () => {
   showScreen(noteTrashScreen);
   renderNoteTrash();
 });
@@ -15418,13 +15436,13 @@ function noteDrawRestoreFromHistory(){
   };
   img.src = noteDrawHistory[noteDrawHistoryIndex];
 }
-document.getElementById('noteDrawPrevPageBtn').addEventListener('click', () => {
+safeOn('noteDrawPrevPageBtn', 'click', () => {
   if(noteDrawPageIndex > 0) noteDrawGoToPage(noteDrawPageIndex - 1);
 });
-document.getElementById('noteDrawNextPageBtn').addEventListener('click', () => {
+safeOn('noteDrawNextPageBtn', 'click', () => {
   if(noteDrawPageIndex < noteDrawPages.length - 1) noteDrawGoToPage(noteDrawPageIndex + 1);
 });
-document.getElementById('noteDrawAddPageBtn').addEventListener('click', () => {
+safeOn('noteDrawAddPageBtn', 'click', () => {
   if(noteDrawPages.length >= NOTE_DRAW_MAX_PAGES){
     alert(`A handwritten note can hold up to ${NOTE_DRAW_MAX_PAGES} pages.`);
     return;
@@ -15433,7 +15451,7 @@ document.getElementById('noteDrawAddPageBtn').addEventListener('click', () => {
   noteDrawPages.push(null);
   noteDrawGoToPage(noteDrawPages.length - 1);
 });
-document.getElementById('noteDrawToggleBtn').addEventListener('click', async () => {
+safeOn('noteDrawToggleBtn', 'click', async () => {
   if(!noteDrawingOn){
     // Turning ON — hide the textarea, show the canvas
     noteDrawingOn = true;
@@ -15487,20 +15505,20 @@ document.querySelectorAll('.note-draw-color-btn').forEach(btn => {
 });
 // Full color wheel — the browser's native color input gives a genuine full-spectrum picker
 // (hue/saturation/brightness/custom) without building a custom color-wheel component.
-document.getElementById('noteDrawColorWheel').addEventListener('input', (e) => {
+safeOn('noteDrawColorWheel', 'input', (e) => {
   noteDrawColor = e.target.value;
   document.querySelectorAll('.note-draw-color-btn').forEach(b => b.classList.remove('active'));
 });
-document.getElementById('noteDrawWidthSlider').addEventListener('input', (e) => {
+safeOn('noteDrawWidthSlider', 'input', (e) => {
   noteDrawWidth = parseInt(e.target.value, 10);
 });
-document.getElementById('noteDrawUndoBtn').addEventListener('click', () => {
+safeOn('noteDrawUndoBtn', 'click', () => {
   if(noteDrawHistoryIndex > 0){ noteDrawHistoryIndex--; noteDrawRestoreFromHistory(); }
 });
-document.getElementById('noteDrawRedoBtn').addEventListener('click', () => {
+safeOn('noteDrawRedoBtn', 'click', () => {
   if(noteDrawHistoryIndex < noteDrawHistory.length - 1){ noteDrawHistoryIndex++; noteDrawRestoreFromHistory(); }
 });
-document.getElementById('noteDrawClearBtn').addEventListener('click', async () => {
+safeOn('noteDrawClearBtn', 'click', async () => {
   if(!(await customConfirm('Clear this drawing?'))) return;
   const rect = noteDrawCanvasEl.getBoundingClientRect();
   noteDrawCtx.globalCompositeOperation = 'source-over';
@@ -15523,10 +15541,10 @@ function closeNoteMoreDrawer(){
   document.getElementById('noteMoreDrawerBackdrop').style.display = 'none';
   document.getElementById('noteMoreDrawer').style.display = 'none';
 }
-document.getElementById('noteMoreBtn').addEventListener('click', openNoteMoreDrawer);
-document.getElementById('noteMoreDrawerBackdrop').addEventListener('click', closeNoteMoreDrawer);
+safeOn('noteMoreBtn', 'click', openNoteMoreDrawer);
+safeOn('noteMoreDrawerBackdrop', 'click', closeNoteMoreDrawer);
 
-document.getElementById('drawerShareBtn').addEventListener('click', async () => {
+safeOn('drawerShareBtn', 'click', async () => {
   closeNoteMoreDrawer();
   const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
   const body = document.getElementById('noteBodyInput').value;
@@ -15540,17 +15558,17 @@ document.getElementById('drawerShareBtn').addEventListener('click', async () => 
     }catch(e){}
   }
 });
-document.getElementById('drawerAddImageBtn').addEventListener('click', () => {
+safeOn('drawerAddImageBtn', 'click', () => {
   closeNoteMoreDrawer();
   document.getElementById('noteImageFileInput').click();
 });
-document.getElementById('drawerExportBtn').addEventListener('click', () => {
+safeOn('drawerExportBtn', 'click', () => {
   closeNoteMoreDrawer();
   const card = document.getElementById('noteExportCard');
   card.style.display = 'block';
   card.scrollIntoView({ behavior:'smooth', block:'center' });
 });
-document.getElementById('drawerAddLinkBtn').addEventListener('click', () => {
+safeOn('drawerAddLinkBtn', 'click', () => {
   closeNoteMoreDrawer();
   const url = prompt('Paste a link to add to this note:');
   if(!url || !url.trim()) return;
@@ -15558,7 +15576,7 @@ document.getElementById('drawerAddLinkBtn').addEventListener('click', () => {
   textarea.value = textarea.value + (textarea.value ? '\n' : '') + url.trim();
   scheduleAutoSave();
 });
-document.getElementById('drawerPrintBtn').addEventListener('click', () => {
+safeOn('drawerPrintBtn', 'click', () => {
   closeNoteMoreDrawer();
   const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
   const body = document.getElementById('noteBodyInput').value;
@@ -15737,18 +15755,18 @@ function openQuickRefSubtopic(subtopic){
   bookmarkBtn.dataset.subtopic = subtopic;
   showScreen(quickRefDetailScreen);
 }
-document.getElementById('qrBookmarkBtn').addEventListener('click', (e) => {
+safeOn('qrBookmarkBtn', 'click', (e) => {
   const subtopic = e.currentTarget.dataset.subtopic;
   if(!subtopic) return;
   toggleQuickRefBookmark(subtopic);
   e.currentTarget.textContent = isQuickRefBookmarked(subtopic) ? '🔖' : '🏷️';
   e.currentTarget.style.color = isQuickRefBookmarked(subtopic) ? 'var(--gold)' : 'var(--ink)';
 });
-document.getElementById('qrCopyBtn').addEventListener('click', async () => {
+safeOn('qrCopyBtn', 'click', async () => {
   const text = document.getElementById('qrDetailContent').innerText;
   try{ await navigator.clipboard.writeText(text); alert('Copied!'); }catch(e){}
 });
-document.getElementById('qrListenBtn').addEventListener('click', (e) => {
+safeOn('qrListenBtn', 'click', (e) => {
   speakText(document.getElementById('qrDetailContent').innerText, e.currentTarget);
 });
 function renderQuickRefSearch(term){
@@ -15782,7 +15800,7 @@ function renderQuickRefSearch(term){
     btn.addEventListener('click', () => openQuickRefSubtopic(btn.dataset.subtopic));
   });
 }
-document.getElementById('quickRefSearchBox').addEventListener('input', (e) => renderQuickRefSearch(e.target.value));
+safeOn('quickRefSearchBox', 'input', (e) => renderQuickRefSearch(e.target.value));
 async function openQuickRefScreen(){
   showScreen(quickRefScreen);
   renderQuickRefHub();
@@ -15793,7 +15811,7 @@ async function openQuickRefScreen(){
     quickRefLoaded = true;
   }catch(e){}
 }
-document.getElementById('goToQuickRefFromHub').addEventListener('click', (e) => {
+safeOn('goToQuickRefFromHub', 'click', (e) => {
   e.preventDefault();
   openQuickRefScreen();
 });
@@ -15827,7 +15845,7 @@ function applyReaderSettings(settings){
     btn.classList.toggle('active', btn.dataset.theme === settings.theme);
   });
 }
-document.getElementById('drawerReaderViewBtn').addEventListener('click', () => {
+safeOn('drawerReaderViewBtn', 'click', () => {
   closeNoteMoreDrawer();
   document.getElementById('readerTitle').textContent = document.getElementById('noteTitleInput').value || 'Untitled Note';
   document.getElementById('readerBodyContent').innerHTML = renderMarkdownToHtml(document.getElementById('noteBodyInput').value);
@@ -15835,7 +15853,7 @@ document.getElementById('drawerReaderViewBtn').addEventListener('click', () => {
   applyReaderSettings(getReaderSettings());
   showScreen(noteReaderScreen);
 });
-document.getElementById('readerSettingsBtn').addEventListener('click', () => {
+safeOn('readerSettingsBtn', 'click', () => {
   const panel = document.getElementById('readerSettingsPanel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 });
@@ -15845,17 +15863,17 @@ function updateReaderSetting(key, value){
   saveReaderSettings(settings);
   applyReaderSettings(settings);
 }
-document.getElementById('readerFontSlider').addEventListener('input', (e) => updateReaderSetting('fontSize', parseInt(e.target.value, 10)));
-document.getElementById('readerFontDownBtn').addEventListener('click', () => {
+safeOn('readerFontSlider', 'input', (e) => updateReaderSetting('fontSize', parseInt(e.target.value, 10)));
+safeOn('readerFontDownBtn', 'click', () => {
   const s = getReaderSettings();
   updateReaderSetting('fontSize', Math.max(14, s.fontSize - 1));
 });
-document.getElementById('readerFontUpBtn').addEventListener('click', () => {
+safeOn('readerFontUpBtn', 'click', () => {
   const s = getReaderSettings();
   updateReaderSetting('fontSize', Math.min(26, s.fontSize + 1));
 });
-document.getElementById('readerLineSpacingSlider').addEventListener('input', (e) => updateReaderSetting('lineSpacing', parseInt(e.target.value, 10)));
-document.getElementById('readerBrightnessSlider').addEventListener('input', (e) => updateReaderSetting('brightness', parseInt(e.target.value, 10)));
+safeOn('readerLineSpacingSlider', 'input', (e) => updateReaderSetting('lineSpacing', parseInt(e.target.value, 10)));
+safeOn('readerBrightnessSlider', 'input', (e) => updateReaderSetting('brightness', parseInt(e.target.value, 10)));
 document.querySelectorAll('.reader-theme-btn').forEach(btn => {
   btn.addEventListener('click', () => updateReaderSetting('theme', btn.dataset.theme));
 });
@@ -15898,13 +15916,13 @@ function closeVoiceRecordModal(){
     voiceMediaRecorder.stop();
   }
 }
-document.getElementById('drawerVoiceRecordBtn').addEventListener('click', () => {
+safeOn('drawerVoiceRecordBtn', 'click', () => {
   closeNoteMoreDrawer();
   openVoiceRecordModal();
 });
-document.getElementById('voiceRecordCancelBtn').addEventListener('click', closeVoiceRecordModal);
-document.getElementById('voiceRecordBackdrop').addEventListener('click', closeVoiceRecordModal);
-document.getElementById('voiceRecordStartBtn').addEventListener('click', async () => {
+safeOn('voiceRecordCancelBtn', 'click', closeVoiceRecordModal);
+safeOn('voiceRecordBackdrop', 'click', closeVoiceRecordModal);
+safeOn('voiceRecordStartBtn', 'click', async () => {
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     document.getElementById('voiceRecordStatus').textContent = 'Microphone access isn\'t available on this device/browser.';
     return;
@@ -15939,7 +15957,7 @@ document.getElementById('voiceRecordStartBtn').addEventListener('click', async (
     document.getElementById('voiceRecordStatus').textContent = 'Could not access the microphone — check permissions.';
   }
 });
-document.getElementById('voiceRecordPauseBtn').addEventListener('click', () => {
+safeOn('voiceRecordPauseBtn', 'click', () => {
   if(!voiceMediaRecorder) return;
   if(voiceMediaRecorder.state === 'recording'){
     voiceMediaRecorder.pause();
@@ -15953,14 +15971,14 @@ document.getElementById('voiceRecordPauseBtn').addEventListener('click', () => {
     document.getElementById('voiceRecordStatus').textContent = '🔴 Recording…';
   }
 });
-document.getElementById('voiceRecordStopBtn').addEventListener('click', () => {
+safeOn('voiceRecordStopBtn', 'click', () => {
   if(voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') voiceMediaRecorder.stop();
   clearInterval(voiceRecordTimerInterval);
   document.getElementById('voiceRecordStatus').textContent = 'Recording ready';
   document.getElementById('voiceRecordPauseBtn').style.display = 'none';
   document.getElementById('voiceRecordStopBtn').style.display = 'none';
 });
-document.getElementById('voiceRecordSaveBtn').addEventListener('click', async () => {
+safeOn('voiceRecordSaveBtn', 'click', async () => {
   if(!voiceRecordedBlob) return;
   const btn = document.getElementById('voiceRecordSaveBtn');
   btn.textContent = 'Saving…';
@@ -16206,7 +16224,7 @@ async function maybeOfferAppLockSetup(){
   document.getElementById('appLockOfferBackdrop').style.display = 'block';
   document.getElementById('appLockOfferModal').style.display = 'block';
 }
-document.getElementById('appLockOfferBiometricBtn').addEventListener('click', async () => {
+safeOn('appLockOfferBiometricBtn', 'click', async () => {
   const btn = document.getElementById('appLockOfferBiometricBtn');
   btn.textContent = 'Follow your device prompt…';
   const credentialId = await registerBiometric();
@@ -16227,7 +16245,7 @@ document.getElementById('appLockOfferBiometricBtn').addEventListener('click', as
   document.getElementById('appLockOfferModal').style.display = 'none';
   alert('App Lock enabled with biometric unlock and a PIN backup. Manage this anytime from Profile → Account & Privacy.');
 });
-document.getElementById('appLockOfferSetBtn').addEventListener('click', () => {
+safeOn('appLockOfferSetBtn', 'click', () => {
   const pin = document.getElementById('appLockOfferPinInput').value;
   if(pin.length !== 6 || !/^\d{6}$/.test(pin)){
     document.getElementById('appLockOfferError').textContent = 'PIN must be exactly 6 digits.';
@@ -16238,7 +16256,7 @@ document.getElementById('appLockOfferSetBtn').addEventListener('click', () => {
   document.getElementById('appLockOfferModal').style.display = 'none';
   alert('App Lock enabled! You can change or remove it anytime from Profile → Account & Privacy.');
 });
-document.getElementById('appLockOfferSkipBtn').addEventListener('click', () => {
+safeOn('appLockOfferSkipBtn', 'click', () => {
   document.getElementById('appLockOfferBackdrop').style.display = 'none';
   document.getElementById('appLockOfferModal').style.display = 'none';
 });
@@ -16257,7 +16275,7 @@ function closeLockNoteModal(){
   document.getElementById('lockNoteBackdrop').style.display = 'none';
   document.getElementById('lockNoteModal').style.display = 'none';
 }
-document.getElementById('drawerLockNoteBtn').addEventListener('click', async () => {
+safeOn('drawerLockNoteBtn', 'click', async () => {
   closeNoteMoreDrawer();
   const notes = getNotes();
   const note = notes.find(n => n.id === currentEditingNoteId);
@@ -16270,9 +16288,9 @@ document.getElementById('drawerLockNoteBtn').addEventListener('click', async () 
     openLockNoteModal('set');
   }
 });
-document.getElementById('lockNoteCancelBtn').addEventListener('click', closeLockNoteModal);
-document.getElementById('lockNoteBackdrop').addEventListener('click', closeLockNoteModal);
-document.getElementById('lockNoteConfirmBtn').addEventListener('click', () => {
+safeOn('lockNoteCancelBtn', 'click', closeLockNoteModal);
+safeOn('lockNoteBackdrop', 'click', closeLockNoteModal);
+safeOn('lockNoteConfirmBtn', 'click', () => {
   const pin = document.getElementById('lockNotePinInput').value;
   const errorEl = document.getElementById('lockNoteError');
   if(pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)){
@@ -16342,7 +16360,7 @@ function renderTableEditorGrid(){
     });
   });
 }
-document.getElementById('drawerTableBtn').addEventListener('click', () => {
+safeOn('drawerTableBtn', 'click', () => {
   closeNoteMoreDrawer();
   document.getElementById('tableSizePicker').style.display = 'block';
   document.getElementById('tableEditorWrap').style.display = 'none';
@@ -16350,11 +16368,11 @@ document.getElementById('drawerTableBtn').addEventListener('click', () => {
   document.getElementById('tableBuilderBackdrop').style.display = 'block';
   document.getElementById('tableBuilderModal').style.display = 'block';
 });
-document.getElementById('tableBuilderBackdrop').addEventListener('click', () => {
+safeOn('tableBuilderBackdrop', 'click', () => {
   document.getElementById('tableBuilderBackdrop').style.display = 'none';
   document.getElementById('tableBuilderModal').style.display = 'none';
 });
-document.getElementById('tableCancelBtn').addEventListener('click', () => {
+safeOn('tableCancelBtn', 'click', () => {
   document.getElementById('tableBuilderBackdrop').style.display = 'none';
   document.getElementById('tableBuilderModal').style.display = 'none';
 });
@@ -16371,23 +16389,23 @@ document.querySelectorAll('.table-size-preset').forEach(btn => {
     renderTableEditorGrid();
   });
 });
-document.getElementById('tableAddRowBtn').addEventListener('click', () => {
+safeOn('tableAddRowBtn', 'click', () => {
   tableData.push(tableData[0].map(() => ''));
   renderTableEditorGrid();
 });
-document.getElementById('tableRemoveRowBtn').addEventListener('click', () => {
+safeOn('tableRemoveRowBtn', 'click', () => {
   if(tableData.length > 1) tableData.pop();
   renderTableEditorGrid();
 });
-document.getElementById('tableAddColBtn').addEventListener('click', () => {
+safeOn('tableAddColBtn', 'click', () => {
   tableData.forEach(row => row.push(''));
   renderTableEditorGrid();
 });
-document.getElementById('tableRemoveColBtn').addEventListener('click', () => {
+safeOn('tableRemoveColBtn', 'click', () => {
   if(tableData[0].length > 1) tableData.forEach(row => row.pop());
   renderTableEditorGrid();
 });
-document.getElementById('tableInsertBtn').addEventListener('click', () => {
+safeOn('tableInsertBtn', 'click', () => {
   const header = '| ' + tableData[0].join(' | ') + ' |';
   const separator = '| ' + tableData[0].map(() => '---').join(' | ') + ' |';
   const rows = tableData.slice(1).map(row => '| ' + row.join(' | ') + ' |').join('\n');
@@ -16404,17 +16422,17 @@ document.getElementById('tableInsertBtn').addEventListener('click', () => {
 // possible within a plain textarea, so this is a real distinct visual element, not a draggable
 // one — an honest scope-down from a full freeform sticky-note canvas. ----------
 let stickyNoteColor = 'yellow';
-document.getElementById('drawerStickyNoteBtn').addEventListener('click', () => {
+safeOn('drawerStickyNoteBtn', 'click', () => {
   closeNoteMoreDrawer();
   document.getElementById('stickyNoteTextInput').value = '';
   document.getElementById('stickyNoteBackdrop').style.display = 'block';
   document.getElementById('stickyNoteModal').style.display = 'block';
 });
-document.getElementById('stickyNoteBackdrop').addEventListener('click', () => {
+safeOn('stickyNoteBackdrop', 'click', () => {
   document.getElementById('stickyNoteBackdrop').style.display = 'none';
   document.getElementById('stickyNoteModal').style.display = 'none';
 });
-document.getElementById('stickyNoteCancelBtn').addEventListener('click', () => {
+safeOn('stickyNoteCancelBtn', 'click', () => {
   document.getElementById('stickyNoteBackdrop').style.display = 'none';
   document.getElementById('stickyNoteModal').style.display = 'none';
 });
@@ -16425,7 +16443,7 @@ document.querySelectorAll('.sticky-color-btn').forEach(btn => {
     btn.classList.add('active');
   });
 });
-document.getElementById('stickyNoteInsertBtn').addEventListener('click', () => {
+safeOn('stickyNoteInsertBtn', 'click', () => {
   const text = document.getElementById('stickyNoteTextInput').value.trim();
   if(!text) return;
   const textarea = document.getElementById('noteBodyInput');
@@ -16487,11 +16505,11 @@ async function renderNoteAttachments(note){
     });
   });
 }
-document.getElementById('drawerAttachFileBtn').addEventListener('click', () => {
+safeOn('drawerAttachFileBtn', 'click', () => {
   closeNoteMoreDrawer();
   document.getElementById('noteAttachFileInput').click();
 });
-document.getElementById('noteAttachFileInput').addEventListener('change', async (e) => {
+safeOn('noteAttachFileInput', 'change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if(!file) return;
@@ -16516,10 +16534,10 @@ document.getElementById('noteAttachFileInput').addEventListener('change', async 
   }
 });
 
-document.getElementById('noteAddImageBtn').addEventListener('click', () => {
+safeOn('noteAddImageBtn', 'click', () => {
   document.getElementById('noteImageFileInput').click();
 });
-document.getElementById('noteImageFileInput').addEventListener('change', async (e) => {
+safeOn('noteImageFileInput', 'change', async (e) => {
   const file = e.target.files[0];
   e.target.value = ''; // reset so selecting the same file again still fires 'change'
   if(!file) return;
@@ -16547,7 +16565,7 @@ function updateNoteReviewDateDual(){
   const val = document.getElementById('noteReviewDateInput').value;
   document.getElementById('noteReviewDateDual').textContent = val ? formatDualDate(val) : '';
 }
-document.getElementById('noteReviewDateInput').addEventListener('change', updateNoteReviewDateDual);
+safeOn('noteReviewDateInput', 'change', updateNoteReviewDateDual);
 
 function autoSaveCurrentNote(){
   if(!currentEditingNoteId) return;
@@ -16583,7 +16601,7 @@ function scheduleAutoSave(){
 ['noteFolderSelect','notePinnedCheckbox','noteReviewDateInput'].forEach(id => {
   document.getElementById(id).addEventListener('change', scheduleAutoSave);
 });
-document.getElementById('noteFolderSelect').addEventListener('change', (e) => {
+safeOn('noteFolderSelect', 'change', (e) => {
   if(e.target.value === '__new__'){
     const name = prompt('New folder name:');
     if(name && name.trim()){
@@ -16634,7 +16652,7 @@ document.querySelectorAll('.note-fmt-btn').forEach(btn => {
 
 // ---------- AI actions inside a note: reuses the same chat backend as the AI Assistant —
 // not a second AI system, just a different prompt sent to the same endpoint. ----------
-document.getElementById('noteAiBtn').addEventListener('click', () => {
+safeOn('noteAiBtn', 'click', () => {
   const panel = document.getElementById('noteAiPanel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 });
@@ -16684,7 +16702,7 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
 });
 
 // ---------- Delete (soft) / Trash / Restore / Permanent delete ----------
-document.getElementById('noteDeleteBtn').addEventListener('click', async () => {
+safeOn('noteDeleteBtn', 'click', async () => {
   if(!(await customConfirm('Move this note to Trash?'))) return;
   const notes = getNotes();
   const idx = notes.findIndex(n => n.id === currentEditingNoteId);
@@ -16746,17 +16764,17 @@ function downloadTextFile(filename, content){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-document.getElementById('noteExportTxtBtn').addEventListener('click', () => {
+safeOn('noteExportTxtBtn', 'click', () => {
   const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
   const body = document.getElementById('noteBodyInput').value;
   downloadTextFile(`${title}.txt`, `${title}\n\n${body}`);
 });
-document.getElementById('noteExportMdBtn').addEventListener('click', () => {
+safeOn('noteExportMdBtn', 'click', () => {
   const title = document.getElementById('noteTitleInput').value || 'Untitled Note';
   const body = document.getElementById('noteBodyInput').value;
   downloadTextFile(`${title}.md`, `# ${title}\n\n${body}`);
 });
-document.getElementById('noteExportPdfBtn').addEventListener('click', () => {
+safeOn('noteExportPdfBtn', 'click', () => {
   if(typeof window.jspdf === 'undefined'){
     alert('PDF tool is still loading — please try again in a moment.');
     return;
@@ -16785,11 +16803,11 @@ document.getElementById('noteExportPdfBtn').addEventListener('click', () => {
   pdf.save(`${title}.pdf`);
 });
 
-document.getElementById('addNoteBtn').addEventListener('click', () => {
+safeOn('addNoteBtn', 'click', () => {
   const menu = document.getElementById('noteCreateMenu');
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
 });
-document.getElementById('createTextNoteBtn').addEventListener('click', () => {
+safeOn('createTextNoteBtn', 'click', () => {
   document.getElementById('noteCreateMenu').style.display = 'none';
   openNoteEditor();
 });
@@ -16897,7 +16915,7 @@ document.querySelectorAll('.hw-color-btn').forEach(btn => {
     btn.classList.add('active');
   });
 });
-document.getElementById('hwWidthSlider').addEventListener('input', (e) => {
+safeOn('hwWidthSlider', 'input', (e) => {
   hwCurrentWidth = parseInt(e.target.value, 10);
 });
 function hwRestoreFromHistory(){
@@ -16911,13 +16929,13 @@ function hwRestoreFromHistory(){
   };
   img.src = hwHistory[hwHistoryIndex];
 }
-document.getElementById('hwUndoBtn').addEventListener('click', () => {
+safeOn('hwUndoBtn', 'click', () => {
   if(hwHistoryIndex > 0){ hwHistoryIndex--; hwRestoreFromHistory(); }
 });
-document.getElementById('hwRedoBtn').addEventListener('click', () => {
+safeOn('hwRedoBtn', 'click', () => {
   if(hwHistoryIndex < hwHistory.length - 1){ hwHistoryIndex++; hwRestoreFromHistory(); }
 });
-document.getElementById('hwClearBtn').addEventListener('click', async () => {
+safeOn('hwClearBtn', 'click', async () => {
   if(!(await customConfirm('Clear the whole page?'))) return;
   const rect = hwCanvas.getBoundingClientRect();
   hwCtx.globalCompositeOperation = 'source-over';
@@ -16928,7 +16946,7 @@ document.getElementById('hwClearBtn').addEventListener('click', async () => {
   hwHistory.push(hwCanvas.toDataURL());
   hwHistoryIndex = hwHistory.length - 1;
 });
-document.getElementById('handwrittenSaveBtn').addEventListener('click', async () => {
+safeOn('handwrittenSaveBtn', 'click', async () => {
   const btn = document.getElementById('handwrittenSaveBtn');
   btn.textContent = 'Saving…';
   try{
@@ -16967,7 +16985,7 @@ document.getElementById('handwrittenSaveBtn').addEventListener('click', async ()
 // which is stated plainly in the UI rather than oversold. ----------
 let scanCameraStream = null;
 let scanCapturedDataUrl = null;
-document.getElementById('createScanNoteBtn').addEventListener('click', () => {
+safeOn('createScanNoteBtn', 'click', () => {
   document.getElementById('noteCreateMenu').style.display = 'none';
   openScanNoteScreen();
 });
@@ -16993,7 +17011,7 @@ function stopScanCamera(){
     scanCameraStream = null;
   }
 }
-document.getElementById('scanStartCameraBtn').addEventListener('click', async () => {
+safeOn('scanStartCameraBtn', 'click', async () => {
   const statusText = document.getElementById('scanStatusText');
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     statusText.textContent = 'Camera access isn\'t available on this device/browser.';
@@ -17011,7 +17029,7 @@ document.getElementById('scanStartCameraBtn').addEventListener('click', async ()
     statusText.textContent = 'Could not access the camera — check your browser/app permissions.';
   }
 });
-document.getElementById('scanCaptureBtn').addEventListener('click', () => {
+safeOn('scanCaptureBtn', 'click', () => {
   const video = document.getElementById('scanVideo');
   const canvas = document.getElementById('scanCaptureCanvas');
   canvas.width = video.videoWidth;
@@ -17028,7 +17046,7 @@ document.getElementById('scanCaptureBtn').addEventListener('click', () => {
   document.getElementById('scanRetakeBtn').style.display = 'block';
   document.getElementById('scanAfterCaptureActions').style.display = 'block';
 });
-document.getElementById('scanRetakeBtn').addEventListener('click', () => {
+safeOn('scanRetakeBtn', 'click', () => {
   openScanNoteScreen();
 });
 
@@ -17037,7 +17055,7 @@ document.getElementById('scanRetakeBtn').addEventListener('click', () => {
 // rectangle) is a genuinely harder computer-vision problem — this is an honest rectangular
 // crop instead, not the full corner-warp the reference document showed. ----------
 let scanOriginalDataUrl = null;
-document.getElementById('scanRotateBtn').addEventListener('click', () => {
+safeOn('scanRotateBtn', 'click', () => {
   const canvas = document.getElementById('scanCaptureCanvas');
   const img = new Image();
   img.onload = () => {
@@ -17074,12 +17092,12 @@ function scanApplyBrightnessContrast(){
   };
   img.src = scanOriginalDataUrl; // always re-apply from the unmodified original, not cumulatively
 }
-document.getElementById('scanBrightnessSlider').addEventListener('input', scanApplyBrightnessContrast);
-document.getElementById('scanContrastSlider').addEventListener('input', scanApplyBrightnessContrast);
+safeOn('scanBrightnessSlider', 'input', scanApplyBrightnessContrast);
+safeOn('scanContrastSlider', 'input', scanApplyBrightnessContrast);
 
 // ---- Crop: a draggable rectangle with 2 corner handles over the captured image ----
 let scanCropDraggingCorner = null;
-document.getElementById('scanCropToggleBtn').addEventListener('click', () => {
+safeOn('scanCropToggleBtn', 'click', () => {
   const controls = document.getElementById('scanCropControls');
   const overlay = document.getElementById('scanCropOverlay');
   const isOpen = controls.style.display !== 'none';
@@ -17124,7 +17142,7 @@ document.addEventListener('pointermove', (e) => {
   }
 });
 document.addEventListener('pointerup', () => { scanCropDraggingCorner = null; });
-document.getElementById('scanApplyCropBtn').addEventListener('click', () => {
+safeOn('scanApplyCropBtn', 'click', () => {
   const canvas = document.getElementById('scanCaptureCanvas');
   const overlay = document.getElementById('scanCropOverlay');
   const wrapRect = document.getElementById('scanCameraWrap').getBoundingClientRect();
@@ -17154,7 +17172,7 @@ document.getElementById('scanApplyCropBtn').addEventListener('click', () => {
   img.src = scanCapturedDataUrl;
 });
 
-document.getElementById('scanExtractTextBtn').addEventListener('click', async () => {
+safeOn('scanExtractTextBtn', 'click', async () => {
   const resultEl = document.getElementById('scanOcrResult');
   if(typeof Tesseract === 'undefined'){
     resultEl.innerHTML = `<p style="color:var(--wrong); font-size:11.5px;">OCR is still loading — please try again in a moment.</p>`;
@@ -17177,7 +17195,7 @@ document.getElementById('scanExtractTextBtn').addEventListener('click', async ()
   }
 });
 let scanExtractedText = '';
-document.getElementById('scanSaveBtn').addEventListener('click', async () => {
+safeOn('scanSaveBtn', 'click', async () => {
   const btn = document.getElementById('scanSaveBtn');
   btn.textContent = 'Saving…';
   try{
@@ -17210,7 +17228,7 @@ document.getElementById('scanSaveBtn').addEventListener('click', async () => {
   }
 });
 // Stop the camera if the user backs out mid-capture, so it doesn't keep running in the background
-document.getElementById('scanBackLink').addEventListener('click', stopScanCamera);
+safeOn('scanBackLink', 'click', stopScanCamera);
 
 // ---------- PDF Annotation: PDF.js renders each page onto a canvas; a second transparent
 // canvas on top handles drawing (same pen/highlighter/eraser pattern as Handwritten Notes).
@@ -17232,7 +17250,7 @@ let pdfAnnotationHistory = [];
 let pdfAnnotationHistoryIndex = -1;
 let pdfNoteId = null; // the one running note this PDF's saved pages accumulate into
 
-document.getElementById('createPdfNoteBtn').addEventListener('click', () => {
+safeOn('createPdfNoteBtn', 'click', () => {
   document.getElementById('noteCreateMenu').style.display = 'none';
   openPdfAnnotateScreen();
 });
@@ -17243,10 +17261,10 @@ function openPdfAnnotateScreen(){
   pdfCurrentDoc = null;
   pdfNoteId = null;
 }
-document.getElementById('pdfImportBtn').addEventListener('click', () => {
+safeOn('pdfImportBtn', 'click', () => {
   document.getElementById('pdfFileInput').click();
 });
-document.getElementById('pdfFileInput').addEventListener('change', async (e) => {
+safeOn('pdfFileInput', 'change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if(!file) return;
@@ -17355,7 +17373,7 @@ document.querySelectorAll('.pdf-color-btn').forEach(btn => {
     btn.classList.add('active');
   });
 });
-document.getElementById('pdfUndoBtn').addEventListener('click', () => {
+safeOn('pdfUndoBtn', 'click', () => {
   if(pdfAnnotationHistoryIndex > 0){
     pdfAnnotationHistoryIndex--;
     const img = new Image();
@@ -17368,19 +17386,19 @@ document.getElementById('pdfUndoBtn').addEventListener('click', () => {
     img.src = pdfAnnotationHistory[pdfAnnotationHistoryIndex];
   }
 });
-document.getElementById('pdfClearBtn').addEventListener('click', () => {
+safeOn('pdfClearBtn', 'click', () => {
   pdfAnnotationCtx.clearRect(0, 0, pdfAnnotationCanvasEl.width, pdfAnnotationCanvasEl.height);
   pdfAnnotationHistory = pdfAnnotationHistory.slice(0, pdfAnnotationHistoryIndex + 1);
   pdfAnnotationHistory.push(pdfAnnotationCanvasEl.toDataURL());
   pdfAnnotationHistoryIndex = pdfAnnotationHistory.length - 1;
 });
-document.getElementById('pdfPrevPageBtn').addEventListener('click', async () => {
+safeOn('pdfPrevPageBtn', 'click', async () => {
   if(pdfCurrentPageNum > 1){ pdfCurrentPageNum--; await pdfRenderCurrentPage(); }
 });
-document.getElementById('pdfNextPageBtn').addEventListener('click', async () => {
+safeOn('pdfNextPageBtn', 'click', async () => {
   if(pdfCurrentPageNum < pdfTotalPages){ pdfCurrentPageNum++; await pdfRenderCurrentPage(); }
 });
-document.getElementById('pdfSavePageBtn').addEventListener('click', async () => {
+safeOn('pdfSavePageBtn', 'click', async () => {
   const btn = document.getElementById('pdfSavePageBtn');
   btn.textContent = 'Saving…';
   try{
@@ -17429,7 +17447,7 @@ document.getElementById('pdfSavePageBtn').addEventListener('click', async () => 
     btn.textContent = '✓ Save This Page to Note';
   }
 });
-document.getElementById('pdfFinishBtn').addEventListener('click', () => {
+safeOn('pdfFinishBtn', 'click', () => {
   showScreen(notesScreen);
   renderNotes();
 });
@@ -17470,27 +17488,27 @@ function renderProgressScreen(){
 function renderOverallProgressCard(){
   document.getElementById('overallProgressPct').textContent = `${computeProgressStats().overallPct}%`;
 }
-document.getElementById('goToSubjectProgress').addEventListener('click', (e) => {
+safeOn('goToSubjectProgress', 'click', (e) => {
   e.preventDefault();
   showScreen(subjectProgressScreen);
   renderSubjectProgressList();
 });
-document.getElementById('goToQuestionPerformance').addEventListener('click', (e) => {
+safeOn('goToQuestionPerformance', 'click', (e) => {
   e.preventDefault();
   showScreen(questionPerformanceScreen);
   renderQuestionPerformance();
 });
-document.getElementById('goToWeakAreas').addEventListener('click', (e) => {
+safeOn('goToWeakAreas', 'click', (e) => {
   e.preventDefault();
   showScreen(weakAreasScreen);
   renderWeakAreas();
 });
-document.getElementById('goToAchievementsScreen').addEventListener('click', (e) => {
+safeOn('goToAchievementsScreen', 'click', (e) => {
   e.preventDefault();
   showScreen(achievementsScreen);
   renderAchievements(computeProgressStats(), getStudyStreak());
 });
-document.getElementById('goToLearnHubProgress').addEventListener('click', (e) => {
+safeOn('goToLearnHubProgress', 'click', (e) => {
   e.preventDefault();
   showScreen(learnHubProgressScreen);
   renderLearnHubProgress();
@@ -17533,7 +17551,7 @@ function renderSmartInsights(){
 
 // ---------- Revision Progress: entirely reused data — the spaced-repetition schedule already
 // tracked for Mistake Book / Revision Mode, just summarized here rather than duplicated ----------
-document.getElementById('goToRevisionProgress').addEventListener('click', (e) => {
+safeOn('goToRevisionProgress', 'click', (e) => {
   e.preventDefault();
   showScreen(revisionProgressScreen);
   renderRevisionProgress();
@@ -17559,14 +17577,14 @@ function renderRevisionProgress(){
     return `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; border-top:1px solid var(--line);"><span>${stageLabels[i]}</span><span style="font-weight:700;">${count}</span></div>`;
   }).join('');
 }
-document.getElementById('rpStartBtn').addEventListener('click', () => {
+safeOn('rpStartBtn', 'click', () => {
   showScreen(revisionScreen);
   renderRevisionSummary();
 });
 
 // ---------- Study Activity: reuses the exact Screen Time daily log rather than a second time-
 // tracking system ----------
-document.getElementById('goToStudyActivity').addEventListener('click', (e) => {
+safeOn('goToStudyActivity', 'click', (e) => {
   e.preventDefault();
   showScreen(studyActivityScreen);
   renderStudyActivity();
@@ -17615,7 +17633,7 @@ document.querySelectorAll('.sa-range-btn').forEach(btn => {
 // ---------- Goals: Study Time reuses Screen Time's existing daily/weekly goal; Questions and
 // Topics are new, separate targets since they're a different kind of thing (a count, not a
 // duration) ----------
-document.getElementById('goToProgressGoals').addEventListener('click', (e) => {
+safeOn('goToProgressGoals', 'click', (e) => {
   e.preventDefault();
   showScreen(progressGoalsScreen);
   renderProgressGoals();
@@ -17646,7 +17664,7 @@ function renderProgressGoals(){
     barRow('📝 Questions', weekQuestions, progGoals.weeklyQuestions, v => v) +
     barRow('⏱️ Study Time', weekStudyTime, timeGoals.weeklySec, fmtDuration);
 }
-document.getElementById('pgEditBtn').addEventListener('click', () => {
+safeOn('pgEditBtn', 'click', () => {
   const timeGoals = getScreenTimeGoals();
   const progGoals = getProgressGoals();
   const dq = parseInt(prompt('Daily question goal:', progGoals.dailyQuestions), 10);
@@ -17661,7 +17679,7 @@ document.getElementById('pgEditBtn').addEventListener('click', () => {
 
 // ---------- History: pulls from the 3 dedicated result logs (Mock Test/Past Question/
 // Tournament) built in Phase 2 — the only activities with a real per-entry date to filter by ----
-document.getElementById('goToProgressHistory').addEventListener('click', (e) => {
+safeOn('goToProgressHistory', 'click', (e) => {
   e.preventDefault();
   showScreen(progressHistoryScreen);
   renderProgressHistory();
@@ -17835,7 +17853,7 @@ function openSubjectDetail(subject){
     ? `<p style="font-size:12.5px; color:var(--ink-soft);">No weak topics identified yet in this subject.</p>`
     : `<h4 style="margin-bottom:8px;">⚠️ Weak Topics</h4>${weakChapters.slice(0,5).map(c => `<div style="font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);">⚠ ${c.chapter}</div>`).join('')}`;
 }
-document.getElementById('sdStudyWeakBtn').addEventListener('click', () => {
+safeOn('sdStudyWeakBtn', 'click', () => {
   if(!currentSubjectDetail) return;
   const post = findPostForSubject(currentSubjectDetail);
   if(post){ currentMcqPost = post; openSetSelect(currentSubjectDetail); }
@@ -17989,7 +18007,7 @@ function renderWeakAreas(){
     ? `<p style="color:var(--ink-soft); font-size:12.5px;">No repeated mistakes yet — good sign!</p>`
     : repeated.map(w => `<div class="content-card" style="margin-bottom:6px; padding:8px 12px;"><div style="font-size:12px;">${w.Question}</div><div style="font-size:10.5px; color:var(--wrong); margin-top:2px;">Wrong ${w.wrongCount || 1}× </div></div>`).join('');
 }
-document.getElementById('waPracticeBtn').addEventListener('click', () => {
+safeOn('waPracticeBtn', 'click', () => {
   showScreen(revisionScreen);
   renderRevisionSummary();
 });
@@ -18084,7 +18102,7 @@ function renderAchievements(stats, streak){
 }
 // Bound once (not inside renderProgressScreen, which runs on every visit) — reads the
 // current weakest subject fresh at click-time so it always reflects the latest stats.
-document.getElementById('weakAreaPracticeBtn').addEventListener('click', () => {
+safeOn('weakAreaPracticeBtn', 'click', () => {
   const stats = computeProgressStats();
   if(!stats.weakest) return;
   const subjectName = stats.weakest.subject;
@@ -18259,7 +18277,7 @@ function refreshDocViewerBookmarkBtn(){
   btn.textContent = bookmarked ? '🔖' : '🏷️';
   btn.style.color = bookmarked ? 'var(--gold)' : 'var(--ink)';
 }
-document.getElementById('docViewerBookmarkBtn').addEventListener('click', () => {
+safeOn('docViewerBookmarkBtn', 'click', () => {
   if(!currentDocViewerItem) return;
   togglePdfBookmark(currentDocViewerItem.title, currentDocViewerItem.link);
   refreshDocViewerBookmarkBtn();
@@ -18391,7 +18409,7 @@ function renderMbhCollectionChips(){
     });
   });
 }
-document.getElementById('mbhNewCollectionBtn').addEventListener('click', () => {
+safeOn('mbhNewCollectionBtn', 'click', () => {
   const name = prompt('New collection name (e.g. "PHO Preparation"):');
   if(!name || !name.trim()) return;
   const collections = getBookmarkCollections();
@@ -18399,7 +18417,7 @@ document.getElementById('mbhNewCollectionBtn').addEventListener('click', () => {
   saveBookmarkCollections(collections);
   renderMbhCollectionChips();
 });
-document.getElementById('mbhAddCustomBtn').addEventListener('click', () => {
+safeOn('mbhAddCustomBtn', 'click', () => {
   const title = prompt('What do you want to save?');
   if(!title || !title.trim()) return;
   const note = prompt('Optional note or link (leave blank to skip):') || '';
@@ -18458,7 +18476,7 @@ function renderMbhList(searchTerm){
     });
   });
 }
-document.getElementById('mbhSearchBox').addEventListener('input', (e) => renderMbhList(e.target.value));
+safeOn('mbhSearchBox', 'input', (e) => renderMbhList(e.target.value));
 document.querySelectorAll('.mbh-filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     mbhActiveFilter = btn.dataset.filter;
@@ -18620,19 +18638,19 @@ async function refreshProfileData(){
   document.getElementById('premiumFeaturesTable').style.display = isPaid ? 'none' : 'block';
   document.getElementById('premiumActiveBanner').style.display = isPaid ? 'block' : 'none';
 }
-document.getElementById('headerLogoBtn').addEventListener('click', () => {
+safeOn('headerLogoBtn', 'click', () => {
   showScreen(newsPortalScreen);
   renderNewsPortal();
 });
-document.getElementById('headerNotifBtn').addEventListener('click', () => {
+safeOn('headerNotifBtn', 'click', () => {
   showScreen(notificationsScreen);
   loadNotifications();
 });
-document.getElementById('profileLogoutBtn').addEventListener('click', () => {
+safeOn('profileLogoutBtn', 'click', () => {
   window.doSignOut();
 });
 let accountStatusTableLoaded = false;
-document.getElementById('accountStatusClickTarget').addEventListener('click', () => {
+safeOn('accountStatusClickTarget', 'click', () => {
   const panel = document.getElementById('accountStatusExpanded');
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
@@ -18641,7 +18659,7 @@ document.getElementById('accountStatusClickTarget').addEventListener('click', ()
     accountStatusTableLoaded = true;
   }
 });
-document.getElementById('upgradeNowBtn').addEventListener('click', () => {
+safeOn('upgradeNowBtn', 'click', () => {
   premiumBackTarget = profileScreen;
   showScreen(upgradeScreen);
   renderPremiumStatus();
@@ -18845,7 +18863,7 @@ async function showPremiumLockModal(message){
 }
 
 // ---------- eSewa Payment: fully automatic (currently on test/sandbox credentials) ----------
-document.getElementById('esewaPayBtn').addEventListener('click', async () => {
+safeOn('esewaPayBtn', 'click', async () => {
   let userInfo = null;
   try{ userInfo = JSON.parse(localStorage.getItem('hl_user') || 'null'); }catch(e){}
   if(!userInfo || !userInfo.uid){
@@ -18955,7 +18973,7 @@ function openLegalInfo(title, htmlContent){
   showScreen(legalInfoScreen);
 }
 
-document.getElementById('menuContactUs').addEventListener('click', () => {
+safeOn('menuContactUs', 'click', () => {
   openLegalInfo('Contact Us', `
     <p>Have a question, found a bug, or need help with your account? We'd love to hear from you.</p>
 
@@ -18993,7 +19011,7 @@ document.getElementById('menuContactUs').addEventListener('click', () => {
   `);
 });
 
-document.getElementById('menuAppGuidelines').addEventListener('click', () => {
+safeOn('menuAppGuidelines', 'click', () => {
   openLegalInfo('App Guidelines', `
     <p>A quick guide to what's available in Health Loksewa and how to get the most out of it.</p>
 
@@ -19026,7 +19044,7 @@ document.getElementById('menuAppGuidelines').addEventListener('click', () => {
   `);
 });
 
-document.getElementById('menuAboutUs').addEventListener('click', () => {
+safeOn('menuAboutUs', 'click', () => {
   openLegalInfo('About Us', `
     <p>Health Loksewa is an independent educational app built to help students in Nepal prepare for government Loksewa health service examinations — Public Health Officer, Health Assistant, Staff Nurse, AHW, and ANM — as well as NHPC licensing exams for Health Assistants and BPH graduates.</p>
     <h3>Our Mission</h3>
@@ -19037,7 +19055,7 @@ document.getElementById('menuAboutUs').addEventListener('click', () => {
   `);
 });
 
-document.getElementById('menuFeedback').addEventListener('click', () => {
+safeOn('menuFeedback', 'click', () => {
   openLegalInfo('Feedback', `
     <p>Your feedback helps make Health Loksewa better for everyone. Tell us what you love, what's confusing, or what you'd like to see added.</p>
     <h3>Send Feedback</h3>
@@ -19045,11 +19063,11 @@ document.getElementById('menuFeedback').addEventListener('click', () => {
   `);
 });
 
-document.getElementById('menuRateUs').addEventListener('click', () => {
+safeOn('menuRateUs', 'click', () => {
   alert('Thank you for wanting to rate us! Once Health Loksewa is live on the Play Store, this button will take you straight there. 🙂');
 });
 
-document.getElementById('menuPrivacyPolicy').addEventListener('click', () => {
+safeOn('menuPrivacyPolicy', 'click', () => {
   openLegalInfo('Privacy Policy', `
     <p style="color:var(--ink-soft); font-size:12px;">Last updated: July 2026</p>
     <p>Health Loksewa ("the App") is an educational app for Nepal Loksewa health service exam preparation. This policy explains what we collect and how we use it.</p>
@@ -19071,7 +19089,7 @@ document.getElementById('menuPrivacyPolicy').addEventListener('click', () => {
   `);
 });
 
-document.getElementById('menuTerms').addEventListener('click', () => {
+safeOn('menuTerms', 'click', () => {
   openLegalInfo('Terms and Conditions', `
     <p style="color:var(--ink-soft); font-size:12px;">Last updated: July 2026</p>
     <p>By using Health Loksewa, you agree to these Terms.</p>
@@ -19096,7 +19114,7 @@ function applyDarkModePreference(){
   document.body.classList.toggle('light-mode', isLight);
   document.getElementById('headerDarkBtn').textContent = isLight ? '🌙' : '☀️';
 }
-document.getElementById('headerDarkBtn').addEventListener('click', () => {
+safeOn('headerDarkBtn', 'click', () => {
   const isLight = document.body.classList.toggle('light-mode');
   document.getElementById('headerDarkBtn').textContent = isLight ? '🌙' : '☀️';
   try{ localStorage.setItem('hl_dark_mode', isLight ? '0' : '1'); }catch(e){}
@@ -19271,34 +19289,34 @@ function renderMyPreparationCard(){
   const streak = typeof getStudyStreak === 'function' ? getStudyStreak() : 0;
   document.getElementById('myPrepStreak').textContent = `🔥 ${streak} day${streak === 1 ? '' : 's'}`;
 }
-document.getElementById('myPrepViewProgressBtn').addEventListener('click', () => {
+safeOn('myPrepViewProgressBtn', 'click', () => {
   showScreen(progressScreen);
   renderProgressScreen();
 });
-document.getElementById('menuMyBookmarks').addEventListener('click', () => {
+safeOn('menuMyBookmarks', 'click', () => {
   showScreen(myBookmarksHubScreen);
   renderMyBookmarksHub();
 });
-document.getElementById('menuMyNotes').addEventListener('click', () => {
+safeOn('menuMyNotes', 'click', () => {
   showScreen(notesScreen);
   renderNotes();
 });
-document.getElementById('menuMyMistakes').addEventListener('click', () => {
+safeOn('menuMyMistakes', 'click', () => {
   showScreen(mistakeBookScreen);
   renderMistakeBook();
 });
-document.getElementById('menuMySavedNews').addEventListener('click', () => {
+safeOn('menuMySavedNews', 'click', () => {
   showScreen(newsPortalScreen);
   newsPortalSelectedKey = '__saved__';
   renderNewsPortal();
 });
 
-document.getElementById('menuScreenTime').addEventListener('click', () => {
+safeOn('menuScreenTime', 'click', () => {
   showScreen(screenTimeScreen);
   renderScreenTimeDashboard();
 });
 // ---------- Notification Preferences ----------
-document.getElementById('menuNotificationPrefs').addEventListener('click', async () => {
+safeOn('menuNotificationPrefs', 'click', async () => {
   showScreen(notificationPrefsScreen);
   document.getElementById('npStatusMsg').textContent = '';
   const existing = window.getMyNotificationPrefs ? await window.getMyNotificationPrefs() : null;
@@ -19311,7 +19329,7 @@ document.getElementById('menuNotificationPrefs').addEventListener('click', async
     });
   }
 });
-document.getElementById('npMasterToggle').addEventListener('click', async () => {
+safeOn('npMasterToggle', 'click', async () => {
   const btn = document.getElementById('npMasterToggle');
   const currentlyOn = btn.textContent === 'On';
   if(currentlyOn){
@@ -19327,7 +19345,7 @@ document.getElementById('npMasterToggle').addEventListener('click', async () => 
     // actually gets sent to the permission/registration step, not a second, separate action
   }
 });
-document.getElementById('npSaveBtn').addEventListener('click', async () => {
+safeOn('npSaveBtn', 'click', async () => {
   const btn = document.getElementById('npSaveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   const prefs = {};
@@ -19368,7 +19386,7 @@ async function reauthenticateAppLock(){
   if(attempt === null) return false;
   return simplePinHash(attempt) === settings.pinHash;
 }
-document.getElementById('menuAppLock').addEventListener('click', () => {
+safeOn('menuAppLock', 'click', () => {
   showScreen(appLockSettingsScreen);
   renderAppLockSettings();
 });
@@ -19382,7 +19400,7 @@ function renderAppLockSettings(){
   document.getElementById('alsAutoLockSelect').value = String(settings.autoLockSeconds);
   document.getElementById('alsMinimizeToggle').textContent = settings.lockOnMinimize ? 'On' : 'Off';
 }
-document.getElementById('alsToggleBtn').addEventListener('click', async () => {
+safeOn('alsToggleBtn', 'click', async () => {
   const settings = getAppLockSettings();
   if(settings.enabled){
     if(!(await reauthenticateAppLock())){ alert('Incorrect PIN or authentication failed.'); return; }
@@ -19398,18 +19416,18 @@ document.getElementById('alsToggleBtn').addEventListener('click', async () => {
   }
   renderAppLockSettings();
 });
-document.getElementById('alsAutoLockSelect').addEventListener('change', (e) => {
+safeOn('alsAutoLockSelect', 'change', (e) => {
   const settings = getAppLockSettings();
   settings.autoLockSeconds = parseInt(e.target.value, 10);
   saveAppLockSettings(settings);
 });
-document.getElementById('alsMinimizeToggle').addEventListener('click', () => {
+safeOn('alsMinimizeToggle', 'click', () => {
   const settings = getAppLockSettings();
   settings.lockOnMinimize = !settings.lockOnMinimize;
   saveAppLockSettings(settings);
   renderAppLockSettings();
 });
-document.getElementById('alsChangeMethodBtn').addEventListener('click', async () => {
+safeOn('alsChangeMethodBtn', 'click', async () => {
   if(!(await reauthenticateAppLock())){ alert('Incorrect PIN or authentication failed.'); return; }
   const settings = getAppLockSettings();
   if(settings.method === 'pin'){
@@ -19428,7 +19446,7 @@ document.getElementById('alsChangeMethodBtn').addEventListener('click', async ()
   }
   renderAppLockSettings();
 });
-document.getElementById('alsChangePinBtn').addEventListener('click', async () => {
+safeOn('alsChangePinBtn', 'click', async () => {
   if(!(await reauthenticateAppLock())){ alert('Incorrect PIN or authentication failed.'); return; }
   const newPin = prompt('Enter a new 6-digit PIN:');
   if(newPin === null) return;
@@ -19438,7 +19456,7 @@ document.getElementById('alsChangePinBtn').addEventListener('click', async () =>
   saveAppLockSettings(settings);
   alert('PIN updated.');
 });
-document.getElementById('alsDisableBtn').addEventListener('click', async () => {
+safeOn('alsDisableBtn', 'click', async () => {
   if(!(await reauthenticateAppLock())){ alert('Incorrect PIN or authentication failed.'); return; }
   if(!(await customConfirm('Remove App Lock entirely? You can set it up again anytime.'))) return;
   saveAppLockSettings({ enabled: false, method: 'pin', pinHash: null, credentialId: null, autoLockSeconds: 60, lockOnMinimize: true });
@@ -19538,7 +19556,7 @@ document.querySelectorAll('.st-goal-btn').forEach(btn => {
     renderScreenTimeDashboard();
   });
 });
-document.getElementById('stGoalCustomBtn').addEventListener('click', () => {
+safeOn('stGoalCustomBtn', 'click', () => {
   const input = prompt('Set a custom daily goal in hours (e.g. 3.5):');
   const hours = parseFloat(input);
   if(!hours || hours <= 0) return;
@@ -19643,20 +19661,20 @@ function updateFocusDisplay(){
 document.querySelectorAll('.st-focus-btn').forEach(btn => {
   btn.addEventListener('click', () => startFocusSession(parseInt(btn.dataset.min, 10)));
 });
-document.getElementById('stFocusCustomBtn').addEventListener('click', () => {
+safeOn('stFocusCustomBtn', 'click', () => {
   const input = prompt('Custom focus session length in minutes:');
   const minutes = parseInt(input, 10);
   if(!minutes || minutes <= 0) return;
   startFocusSession(minutes);
 });
-document.getElementById('focusCancelBtn').addEventListener('click', async () => {
+safeOn('focusCancelBtn', 'click', async () => {
   if(!(await customConfirm('End this focus session early? It won\'t be counted as completed.'))) return;
   clearInterval(focusTimerInterval);
   showScreen(screenTimeScreen);
   renderScreenTimeDashboard();
 });
 
-document.getElementById('postGateContinueBtn').addEventListener('click', () => {
+safeOn('postGateContinueBtn', 'click', () => {
   const selected = getSelectedPosts();
   if(selected.length === 0){
     alert('Please select at least 1 exam to continue.');
@@ -19684,7 +19702,7 @@ function renderHighContrastToggle(){
   btn.textContent = on ? 'ON' : 'OFF';
   btn.classList.toggle('active', on);
 }
-document.getElementById('highContrastToggle').addEventListener('click', () => {
+safeOn('highContrastToggle', 'click', () => {
   const currentlyOn = document.body.classList.contains('high-contrast');
   try{ localStorage.setItem('hl_high_contrast', currentlyOn ? '0' : '1'); }catch(e){}
   renderHighContrastToggle();
@@ -19730,7 +19748,7 @@ function renderProfileDarkModeToggle(){
   btn.textContent = isDark ? 'ON' : 'OFF';
   btn.classList.toggle('active', isDark);
 }
-document.getElementById('profileDarkModeToggle').addEventListener('click', () => {
+safeOn('profileDarkModeToggle', 'click', () => {
   const isLight = document.body.classList.toggle('light-mode');
   try{ localStorage.setItem('hl_dark_mode', isLight ? '0' : '1'); }catch(e){}
   const headerBtn = document.getElementById('headerDarkBtn');
@@ -19752,7 +19770,7 @@ function renderEyeComfortToggle(){
   btn.textContent = isOn ? 'ON' : 'OFF';
   btn.classList.toggle('active', isOn);
 }
-document.getElementById('profileEyeComfortToggle').addEventListener('click', () => {
+safeOn('profileEyeComfortToggle', 'click', () => {
   const isOn = localStorage.getItem('hl_eye_comfort') === '1';
   try{ localStorage.setItem('hl_eye_comfort', isOn ? '0' : '1'); }catch(e){}
   renderEyeComfortToggle();
@@ -19774,7 +19792,7 @@ function renderBrightnessSlider(){
   if(slider) slider.value = val;
   if(label) label.textContent = val + '%';
 }
-document.getElementById('brightnessSlider').addEventListener('input', (e) => {
+safeOn('brightnessSlider', 'input', (e) => {
   const val = parseInt(e.target.value, 10);
   document.getElementById('brightnessValueLabel').textContent = val + '%';
   document.body.style.filter = val < 100 ? `brightness(${val}%)` : '';
@@ -19848,7 +19866,7 @@ async function refreshMyDeviceSection(){
     label.textContent = '';
   }
 }
-document.getElementById('menuLogoutOtherDevices').addEventListener('click', async () => {
+safeOn('menuLogoutOtherDevices', 'click', async () => {
   if(!window.currentUser || !window.hlFirestore) return;
   if(!(await customConfirm('This will sign out every OTHER device using this account (not this one). Those devices will be logged out the next time they open the app. Continue?'))) return;
   try{
@@ -19870,7 +19888,7 @@ document.getElementById('menuLogoutOtherDevices').addEventListener('click', asyn
 });
 
 // ---------- Change Password ----------
-document.getElementById('menuChangePassword').addEventListener('click', () => {
+safeOn('menuChangePassword', 'click', () => {
   document.getElementById('cpCurrentPassword').value = '';
   document.getElementById('cpNewPassword').value = '';
   document.getElementById('cpConfirmPassword').value = '';
@@ -19878,7 +19896,7 @@ document.getElementById('menuChangePassword').addEventListener('click', () => {
   showScreen(changePasswordScreen);
 });
 
-document.getElementById('cpSubmitBtn').addEventListener('click', async () => {
+safeOn('cpSubmitBtn', 'click', async () => {
   const errorEl = document.getElementById('cpError');
   errorEl.style.display = 'none';
 
@@ -19917,7 +19935,7 @@ document.getElementById('cpSubmitBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('cpForgotLink').addEventListener('click', async (e) => {
+safeOn('cpForgotLink', 'click', async (e) => {
   e.preventDefault();
   if(!window.currentUser || !window.currentUser.email){ alert('Could not find your account email.'); return; }
   if(!confirm(`Send a password reset link to ${window.currentUser.email}?`)) return;
@@ -19941,7 +19959,7 @@ document.querySelectorAll('.password-toggle-btn').forEach(btn => {
 });
 
 // ---------- Delete Account ----------
-document.getElementById('menuDeleteAccount').addEventListener('click', async () => {
+safeOn('menuDeleteAccount', 'click', async () => {
   const typed = prompt('This permanently deletes your account and cannot be undone.\n\nType DELETE (in capitals) to confirm:');
   if(typed !== 'DELETE') return;
   try{
@@ -20296,11 +20314,11 @@ async function renderWhatsNew(){
   const homeSub = document.getElementById('whatsNewHomeSub');
   if(homeSub) homeSub.textContent = newOnes.length > 0 ? `${newOnes.length} new` : 'App updates & features';
 }
-document.getElementById('cardWhatsNew').addEventListener('click', () => {
+safeOn('cardWhatsNew', 'click', () => {
   showScreen(whatsNewScreen);
   renderWhatsNew();
 });
-document.getElementById('whatsNewArchiveToggle').addEventListener('click', () => {
+safeOn('whatsNewArchiveToggle', 'click', () => {
   const list = document.getElementById('whatsNewArchiveList');
   const showing = list.style.display === 'block';
   list.style.display = showing ? 'none' : 'block';
@@ -21978,7 +21996,7 @@ window.showInAppNotificationBanner = function(title, body){
   clearTimeout(inAppNotifTimeout);
   inAppNotifTimeout = setTimeout(() => { banner.style.display = 'none'; }, 6000);
 };
-document.getElementById('inAppNotifBanner').addEventListener('click', () => {
+safeOn('inAppNotifBanner', 'click', () => {
   document.getElementById('inAppNotifBanner').style.display = 'none';
   showScreen(whatsNewScreen);
   renderWhatsNew();
@@ -22024,7 +22042,7 @@ window.addEventListener('unhandledrejection', (event) => {
   const stack = (reason && reason.stack) ? '\n\n' + reason.stack.split('\n').slice(0, 3).join('\n') : '';
   showDebugError(`Unhandled promise error: ${message}${stack}`);
 });
-document.getElementById('debugErrorDismissBtn').addEventListener('click', () => {
+safeOn('debugErrorDismissBtn', 'click', () => {
   document.getElementById('debugErrorOverlay').style.display = 'none';
 });
 
@@ -22664,7 +22682,7 @@ function renderFlashcardsHome(){
     btn.addEventListener('click', () => openFcDeckDetail(btn.dataset.deckId));
   });
 }
-document.getElementById('fcStartReviewBtn').addEventListener('click', () => {
+safeOn('fcStartReviewBtn', 'click', () => {
   const dueCards = fcCardsDueToday(getFcCards());
   if(dueCards.length === 0){
     alert('No cards due right now — nice work! Check back later or study a specific deck.');
@@ -22676,7 +22694,7 @@ document.getElementById('fcStartReviewBtn').addEventListener('click', () => {
 // having to decide what to study — 40% due, 30% weak (low ease-factor, struggled before),
 // 20% from recently-wrong MCQs, 10% favorited/important, per the document's suggested split.
 // Falls back to plain due-cards if there aren't enough cards to fill every category. ----------
-document.getElementById('fcSmartReviewBtn').addEventListener('click', () => {
+safeOn('fcSmartReviewBtn', 'click', () => {
   const allCards = getFcCards();
   if(allCards.length === 0){ alert('Create some cards first.'); return; }
   const dueCards = fcCardsDueToday(allCards);
@@ -22700,7 +22718,7 @@ document.getElementById('fcSmartReviewBtn').addEventListener('click', () => {
   startFlashcardStudy(shuffle(session));
 });
 // ---------- Search: filters across front/back/tags, live as you type ----------
-document.getElementById('fcSearchInput').addEventListener('input', (e) => {
+safeOn('fcSearchInput', 'input', (e) => {
   const query = e.target.value.trim().toLowerCase();
   const mainContent = document.getElementById('fcHomeMainContent');
   const resultsWrap = document.getElementById('fcSearchResults');
@@ -22731,7 +22749,7 @@ document.getElementById('fcSearchInput').addEventListener('input', (e) => {
     btn.addEventListener('click', () => openFcCardEdit(btn.dataset.cardId));
   });
 });
-document.getElementById('fcCreateDeckBtn').addEventListener('click', () => {
+safeOn('fcCreateDeckBtn', 'click', () => {
   const name = prompt('New deck name:');
   if(!name || !name.trim()) return;
   const decks = getFcDecks();
@@ -22739,8 +22757,8 @@ document.getElementById('fcCreateDeckBtn').addEventListener('click', () => {
   saveFcDecks(decks);
   renderFlashcardsHome();
 });
-document.getElementById('fcCreateCardBtn').addEventListener('click', () => openFcCardEdit(null));
-document.getElementById('fcProgressBtn').addEventListener('click', () => {
+safeOn('fcCreateCardBtn', 'click', () => openFcCardEdit(null));
+safeOn('fcProgressBtn', 'click', () => {
   showScreen(fcProgressScreen);
   renderFcProgress();
 });
@@ -22777,12 +22795,12 @@ function openFcDeckDetail(deckId){
   }
   showScreen(fcDeckDetailScreen);
 }
-document.getElementById('fcStudyThisDeckBtn').addEventListener('click', () => {
+safeOn('fcStudyThisDeckBtn', 'click', () => {
   const cards = getFcCards().filter(c => c.deckId === fcCurrentDeckId);
   if(cards.length === 0){ alert('Add some cards to this deck first.'); return; }
   startFlashcardStudy(cards);
 });
-document.getElementById('fcAddCardToDeckBtn').addEventListener('click', () => openFcCardEdit(null, fcCurrentDeckId));
+safeOn('fcAddCardToDeckBtn', 'click', () => openFcCardEdit(null, fcCurrentDeckId));
 
 // ---- Create/Edit card ----
 let fcEditingCardId = null;
@@ -22807,10 +22825,10 @@ async function fcShowCardImagePreview(imageId){
     document.getElementById('fcCardImagePreviewWrap').style.display = 'block';
   }
 }
-document.getElementById('fcCardAddImageBtn').addEventListener('click', () => {
+safeOn('fcCardAddImageBtn', 'click', () => {
   document.getElementById('fcCardImageFileInput').click();
 });
-document.getElementById('fcCardImageFileInput').addEventListener('change', async (e) => {
+safeOn('fcCardImageFileInput', 'change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if(!file) return;
@@ -22825,7 +22843,7 @@ document.getElementById('fcCardImageFileInput').addEventListener('change', async
     alert('Could not add this image — please try again.');
   }
 });
-document.getElementById('fcCardRemoveImageBtn').addEventListener('click', () => {
+safeOn('fcCardRemoveImageBtn', 'click', () => {
   fcEditingCardImageId = null;
   document.getElementById('fcCardImagePreviewWrap').style.display = 'none';
 });
@@ -22863,7 +22881,7 @@ function openFcCardEdit(cardId, presetDeckId){
   }
   showScreen(fcCardEditScreen);
 }
-document.getElementById('fcSaveCardBtn').addEventListener('click', () => {
+safeOn('fcSaveCardBtn', 'click', () => {
   const front = document.getElementById('fcCardFrontInput').value.trim();
   const back = document.getElementById('fcCardBackInput').value.trim();
   if(!front || !back){ alert('Please fill in both the front and back of the card.'); return; }
@@ -22900,7 +22918,7 @@ document.getElementById('fcSaveCardBtn').addEventListener('click', () => {
   showScreen(flashcardsScreen);
   renderFlashcardsHome();
 });
-document.getElementById('fcDeleteCardBtn').addEventListener('click', async () => {
+safeOn('fcDeleteCardBtn', 'click', async () => {
   if(!(await customConfirm('Delete this card?'))) return;
   let cards = getFcCards();
   cards = cards.filter(c => c.id !== fcEditingCardId);
@@ -23037,14 +23055,14 @@ function renderFcProgress(){
     return `<div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line); font-size:13px;"><span style="color:var(--ink-soft);">${deck.name}</span><span style="font-weight:700; color:var(--ink);">${pct}%</span></div>`;
   }).join('');
 }
-document.getElementById('fcAiGenerateBtn').addEventListener('click', () => {
+safeOn('fcAiGenerateBtn', 'click', () => {
   const decks = ensureDefaultFcDeck();
   document.getElementById('fcAiDeckSelect').innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
   document.getElementById('fcAiSetupCard').style.display = 'block';
   document.getElementById('fcAiResultsWrap').style.display = 'none';
   showScreen(fcAiGenerateScreen);
 });
-document.getElementById('fcAiSourceSelect').addEventListener('change', (e) => {
+safeOn('fcAiSourceSelect', 'change', (e) => {
   document.getElementById('fcAiTopicField').style.display = e.target.value === 'topic' ? 'block' : 'none';
 });
 document.querySelectorAll('.fc-ai-num-btn').forEach(btn => {
@@ -23063,7 +23081,7 @@ document.querySelectorAll('.fc-ai-diff-btn').forEach(btn => {
 // AI-in-Notes — not a separate AI system. Asks for strict JSON so results become real,
 // individually editable card drafts, not a wall of text the user has to copy-paste. ----------
 let fcGeneratedDrafts = [];
-document.getElementById('fcAiGenerateSubmitBtn').addEventListener('click', async () => {
+safeOn('fcAiGenerateSubmitBtn', 'click', async () => {
   const btn = document.getElementById('fcAiGenerateSubmitBtn');
   const source = document.getElementById('fcAiSourceSelect').value;
   const num = parseInt(document.querySelector('.fc-ai-num-btn.active').dataset.num, 10);
@@ -23138,7 +23156,7 @@ function renderFcAiResults(){
     input.addEventListener('input', (e) => { fcGeneratedDrafts[parseInt(e.target.dataset.idx, 10)].back = e.target.value; });
   });
 }
-document.getElementById('fcAiSaveSelectedBtn').addEventListener('click', () => {
+safeOn('fcAiSaveSelectedBtn', 'click', () => {
   const deckId = document.getElementById('fcAiDeckSelect').value;
   const included = [];
   document.querySelectorAll('.fc-ai-include-checkbox').forEach(cb => {
@@ -23167,7 +23185,7 @@ document.getElementById('fcAiSaveSelectedBtn').addEventListener('click', () => {
 // local decks (same "copy once, then it's yours" pattern as everything else Sheet-driven in
 // this app — not a live sync). No real moderation/permission system exists, so this is
 // genuinely open publishing, not verified/curated content. ----------
-document.getElementById('fcPublishDeckBtn').addEventListener('click', async () => {
+safeOn('fcPublishDeckBtn', 'click', async () => {
   const deck = getFcDecks().find(d => d.id === fcCurrentDeckId);
   const cards = getFcCards().filter(c => c.deckId === fcCurrentDeckId);
   if(!deck || cards.length === 0){ alert('This deck has no cards to publish yet.'); return; }
@@ -23197,7 +23215,7 @@ document.getElementById('fcPublishDeckBtn').addEventListener('click', async () =
   }
   btn.textContent = '📤 Publish to Community';
 });
-document.getElementById('fcCommunityDecksBtn').addEventListener('click', () => {
+safeOn('fcCommunityDecksBtn', 'click', () => {
   showScreen(fcCommunityScreen);
   renderCommunityDecks();
 });
@@ -23402,7 +23420,7 @@ async function startQuickBattleSearch(){
     alert('Could not start matchmaking. Check your connection and try again.');
   }
 }
-document.getElementById('quickBattleBtn').addEventListener('click', startQuickBattleSearch);
+safeOn('quickBattleBtn', 'click', startQuickBattleSearch);
 function battleCancelSearch(){
   battleStopListening();
   if(currentQueueUid && window.hlFirestore && window.hlFirestoreFns){
@@ -23413,7 +23431,7 @@ function battleCancelSearch(){
   showScreen(battleScreen);
   renderDailyBattleCard();
 }
-document.getElementById('qbCancelBtn').addEventListener('click', battleCancelSearch);
+safeOn('qbCancelBtn', 'click', battleCancelSearch);
 
 async function createBattle(){
   if(!window.hlFirestore || !window.hlFirestoreFns || !window.currentUser){
@@ -23453,7 +23471,7 @@ async function createBattle(){
     alert('Could not create the Battle. Check your connection and try again.');
   }
 }
-document.getElementById('createBattleBtn').addEventListener('click', createBattle);
+safeOn('createBattleBtn', 'click', createBattle);
 
 async function joinBattle(){
   const codeInput = document.getElementById('joinBattleCodeInput');
@@ -23493,7 +23511,7 @@ async function joinBattle(){
     alert('Could not join that Battle. Check your connection and try again.');
   }
 }
-document.getElementById('joinBattleBtn').addEventListener('click', joinBattle);
+safeOn('joinBattleBtn', 'click', joinBattle);
 
 // ---- Lobby: a real-time listener renders both players' status live, and transitions to the
 // Live screen for BOTH sides the moment status flips to 'live' ----
@@ -23521,7 +23539,7 @@ function battleSubscribeLobby(code, role){
     }
   });
 }
-document.getElementById('battleReadyBtn').addEventListener('click', async () => {
+safeOn('battleReadyBtn', 'click', async () => {
   if(!currentBattleCode) return;
   const { doc, getDoc, updateDoc } = window.hlFirestoreFns;
   const ref = doc(window.hlFirestore, 'battles', currentBattleCode);
@@ -23543,7 +23561,7 @@ document.getElementById('battleReadyBtn').addEventListener('click', async () => 
     }
   }
 });
-document.getElementById('battleCopyCodeBtn').addEventListener('click', async () => {
+safeOn('battleCopyCodeBtn', 'click', async () => {
   if(!currentBattleCode) return;
   try{ await navigator.clipboard.writeText(currentBattleCode); alert('Code copied!'); }catch(e){}
 });
@@ -23619,7 +23637,7 @@ function showBattleLiveResult(b, role){
   awardLearningPoints(youScore > oppScore ? 'battleWin' : 'battleParticipation');
   showScreen(battleResultScreen);
 }
-document.getElementById('battleResultDoneBtn').addEventListener('click', () => {
+safeOn('battleResultDoneBtn', 'click', () => {
   currentBattleCode = null;
   currentBattleRole = null;
   showScreen(practiceScreen);
@@ -23688,7 +23706,7 @@ async function renderDailyBattleCard(){
     btn.textContent = 'Retry';
   }
 }
-document.getElementById('dailyBattleJoinBtn').addEventListener('click', async () => {
+safeOn('dailyBattleJoinBtn', 'click', async () => {
   const btn = document.getElementById('dailyBattleJoinBtn');
   if(btn.disabled) return;
   showQuizLoading('Preparing today\'s Battle…');
@@ -23734,7 +23752,7 @@ async function submitDailyBattleResult(correct, total){
     showScreen(dailyBattleResultScreen);
   }catch(e){}
 }
-document.getElementById('dbResultDoneBtn').addEventListener('click', () => {
+safeOn('dbResultDoneBtn', 'click', () => {
   showScreen(practiceScreen);
 });
 
@@ -23829,7 +23847,7 @@ function openRapidFireSetup(modeKey){
   updateRapidFirePreview();
   showScreen(rapidFireSetupScreen);
 }
-document.getElementById('rapidFireCustomTime').addEventListener('input', (e) => {
+safeOn('rapidFireCustomTime', 'input', (e) => {
   const val = parseInt(e.target.value, 10);
   if(val >= 1 && val <= 60){
     document.querySelectorAll('.rf-time-chip').forEach(c => c.classList.remove('active'));
@@ -23837,7 +23855,7 @@ document.getElementById('rapidFireCustomTime').addEventListener('input', (e) => 
     updateRapidFirePreview();
   }
 });
-document.getElementById('rapidFireSubjectSelect').addEventListener('change', updateRapidFirePreview);
+safeOn('rapidFireSubjectSelect', 'change', updateRapidFirePreview);
 function updateRapidFirePreview(){
   const previewCard = document.getElementById('rapidFirePreviewCard');
   if(rapidFireSelectedMode === 'daily'){
@@ -23856,8 +23874,8 @@ function updateRapidFirePreview(){
   document.getElementById('rapidFirePreviewCount').textContent = `${count} Question${count !== 1 ? 's' : ''}`;
   document.getElementById('rapidFirePreviewPace').textContent = `Target pace: ~${pace} sec/question`;
 }
-document.getElementById('rapidFireStartBtn').addEventListener('click', startRapidFire);
-document.getElementById('rapidFireAllDueBtn').addEventListener('click', () => {
+safeOn('rapidFireStartBtn', 'click', startRapidFire);
+safeOn('rapidFireAllDueBtn', 'click', () => {
   const today = todayISO();
   const dueList = getWrongQuestions().filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
   if(dueList.length === 0){ alert('Nothing due right now.'); return; }
@@ -24017,10 +24035,10 @@ function runGlobalSearch(query){
     window.open(`https://www.dictionary.com/browse/${encodeURIComponent(query.trim())}`, '_blank');
   });
 }
-document.getElementById('globalSearchInput').addEventListener('input', (e) => {
+safeOn('globalSearchInput', 'input', (e) => {
   runGlobalSearch(e.target.value);
 });
-document.getElementById('globalSearchInput').addEventListener('focus', () => {
+safeOn('globalSearchInput', 'focus', () => {
   if(document.getElementById('globalSearchInput').value.trim()) return; // already searching
   const recent = getDictionaryRecentSearches();
   if(recent.length === 0) return;
@@ -24047,7 +24065,7 @@ document.getElementById('globalSearchInput').addEventListener('focus', () => {
 // so opening the app is instant and doesn't wait on network data it may not even need.
 
 // ---------- Count buttons (used by GK Quick Practice, not by locked Sets) ----------
-document.getElementById('countRow').addEventListener('click', e => {
+safeOn('countRow', 'click', e => {
   const btn = e.target.closest('.count-btn');
   if(!btn) return;
   document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
@@ -24056,7 +24074,7 @@ document.getElementById('countRow').addEventListener('click', e => {
 });
 
 // ---------- Start quiz — used ONLY by GK Quick Practice (free count, no set-locking) ----------
-document.getElementById('startBtn').addEventListener('click', async () => {
+safeOn('startBtn', 'click', async () => {
   currentSetInfo = null;
   const startBtn = document.getElementById('startBtn');
   startBtn.disabled = true;
@@ -24101,12 +24119,12 @@ function shuffle(arr){
 }
 
 // ---------- Mock Test (real exam pattern: 100 Qs, 75 min, mixed subjects) ----------
-document.getElementById('cardMock').addEventListener('click', () => {
+safeOn('cardMock', 'click', () => {
   showScreen(mockPostScreen);
   renderMockPosts();
 });
 
-document.getElementById('cardPastQuestions').addEventListener('click', () => {
+safeOn('cardPastQuestions', 'click', () => {
   showScreen(pastQuestionsPostScreen);
   renderPastQuestionsPosts();
 });
@@ -24280,7 +24298,7 @@ function handleAnswer(letter){
   nextBtn.textContent = currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question →';
   refreshOmrStrip();
 }
-document.getElementById('idkBtn').addEventListener('click', () => handleAnswer('IDK'));
+safeOn('idkBtn', 'click', () => handleAnswer('IDK'));
 
 
 // ---------- Results ----------
@@ -24542,7 +24560,7 @@ function reviewRow(q, i, status, chosen){
   </div>`;
 }
 
-document.getElementById('restartBtn').addEventListener('click', () => {
+safeOn('restartBtn', 'click', () => {
   currentSetInfo = null;
   showScreen(homeScreen);
 });
@@ -24824,7 +24842,7 @@ Give: (1) a score out of 10, (2) 2-3 short bullet points on what's good, (3) 2-3
     submitBtn.textContent = 'Check My Answer';
   }
 }
-document.getElementById('answerCheckerSubmitBtn').addEventListener('click', submitAnswerCheck);
+safeOn('answerCheckerSubmitBtn', 'click', submitAnswerCheck);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
