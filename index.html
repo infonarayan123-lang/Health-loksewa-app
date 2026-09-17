@@ -7652,19 +7652,34 @@ const KNOWN_SUBJECTS_BY_POST = {
 const CHAPTER_COMPLETE_MIN_ACCURACY = 70;
 const RAPID_FIRE_PACE_SEC = { pho: 45, ha: 54, ahw: 54, anm: 54, sn: 54, bph_license: 36, ha_license: 36 };
 const RAPID_FIRE_TIME_PRESETS = [1, 2, 5, 10, 15, 20, 30, 45, 60];
-const RAPID_FIRE_MODES = [
+const PAST_QUESTIONS_POSTS = [
+  {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
+  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
+  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
+  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
+  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
+  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📄", css:"gk-c7"},
+  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
+];
+let RAPID_FIRE_MODES;
+try{
+RAPID_FIRE_MODES = [
   { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
   { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject', shortDesc:'Your weak subject' },
   { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths', shortDesc:'Past mistakes' },
   { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject', shortDesc:'Pick a subject' },
   { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend', shortDesc:'Challenge a friend' },
 ];
+}catch(err){ RAPID_FIRE_MODES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "RAPID_FIRE_MODES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 // ============================================================
 // 🔧 STEP FOR NARAYAN: Paste your Apps Script Web App URL below
 // It looks like: https://script.google.com/macros/s/AKfyc.../exec
 // ============================================================
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwwipej_TDOXaTuQMPQp4x2PU_mqUKsm8405_kj6DA0Se0592VzgboqM1T7643U2FHwcg/exec";
+let SHEET_API_URL;
+try{
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwwipej_TDOXaTuQMPQp4x2PU_mqUKsm8405_kj6DA0Se0592VzgboqM1T7643U2FHwcg/exec";
+}catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
 let currentIndex = 0;
@@ -7856,13 +7871,19 @@ const setSelectScreen = document.getElementById('setSelectScreen');
 const setupScreen = document.getElementById('setupScreen');
 const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
-const ALL_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+let ALL_SCREENS;
+try{
+ALL_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+}catch(err){ ALL_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ALL_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 window.showScreen = showScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
-const SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen, tournament: tournamentScreen };
+let SCREEN_BY_KEY;
+try{
+SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen, tournament: tournamentScreen };
+}catch(err){ SCREEN_BY_KEY = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SCREEN_BY_KEY" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let docViewerBackTarget = homeScreen;
 let currentDocViewerItem = null;
 let setSelectBackTarget = subjectPickScreen;
@@ -7897,6 +7918,7 @@ let studyGroupsBackTarget = studyGroupsScreen;
 // track their own specific back-target (docViewer, setSelect, etc.) keep working exactly as
 // before — this only fixes the generic case that used to hard-code "home". ----------
 let navHistoryStack = [];
+let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
 
 // Moved here, very early in the script, deliberately: these three buttons (Next Question,
 // Skip, and the quiz Exit/Home button) are critical, always-needed controls during any quiz.
@@ -7949,7 +7971,10 @@ let suppressHistoryPush = false;
 // bucket whenever the user moves to a different area, via the same shared showScreen() hook
 // already used for the CPR/Battle cleanup — reused for measurement here as it's already the one
 // place every navigation passes through. ----------
-const SCREENTIME_STUDY_AREAS = ['Learn Hub', 'Practice & MCQs', 'Notes', 'Flash Cards'];
+let SCREENTIME_STUDY_AREAS;
+try{
+SCREENTIME_STUDY_AREAS = ['Learn Hub', 'Practice & MCQs', 'Notes', 'Flash Cards'];
+}catch(err){ SCREENTIME_STUDY_AREAS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SCREENTIME_STUDY_AREAS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function getFeatureArea(screenEl){
   const groups = {
     'Learn Hub': [learnScreen, currentAffairsScreen, syllabusScreen, gkScreen, videoScreen, docViewerScreen,
@@ -8087,7 +8112,9 @@ function navigateBack(target){
 // ---------- Custom pull-to-refresh: swipe down at the top of a screen refreshes THAT
 // screen's own data in place — never navigates away, never resets to Home. Screens not
 // listed here (quiz, results, login, etc.) simply do nothing on pull-down — safe no-op. ----------
-const SCREEN_REFRESH_MAP = {
+let SCREEN_REFRESH_MAP;
+try{
+SCREEN_REFRESH_MAP = {
   homeScreen: () => { if(window.loadQuestionOfDay) loadQuestionOfDay(); if(window.loadExamDates) loadExamDates(); if(window.loadNotifications) loadNotifications(); if(window.loadCarouselSlides) loadCarouselSlides(); if(window.renderHomePremiumBanner) renderHomePremiumBanner(); },
   currentAffairsScreen: () => renderCurrentAffairs(),
   syllabusScreen: () => renderSyllabusPosts(),
@@ -8117,6 +8144,7 @@ const SCREEN_REFRESH_MAP = {
   subjectPickScreen: () => renderSubjectPick(),
   profileScreen: () => refreshProfileData(),
 };
+}catch(err){ SCREEN_REFRESH_MAP = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SCREEN_REFRESH_MAP" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 (function setupPullToRefresh(){
   let startY = 0;
@@ -8159,7 +8187,10 @@ const SCREEN_REFRESH_MAP = {
   }, { passive: true });
 })();
 
-const BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
+let BOTTOM_NAV_HIDDEN_SCREENS;
+try{
+BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
+}catch(err){ BOTTOM_NAV_HIDDEN_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "BOTTOM_NAV_HIDDEN_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
@@ -8676,8 +8707,14 @@ function renderGroupPendingRequests(group){
 // weekly study challenge is a collaborative prompt, not an administrative action). Reuses the
 // existing Practice/MCQ engine (launchQuiz + quizScreen) rather than a new question runner,
 // matching the document's own explicit instruction. ----------
-const GROUP_CHALLENGE_QUESTION_COUNT = 20;
-const GROUP_CHALLENGE_DAYS = 7;
+let GROUP_CHALLENGE_QUESTION_COUNT;
+try{
+GROUP_CHALLENGE_QUESTION_COUNT = 20;
+}catch(err){ GROUP_CHALLENGE_QUESTION_COUNT = undefined; if(window.showDebugError) showDebugError("A required setting (" + "GROUP_CHALLENGE_QUESTION_COUNT" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let GROUP_CHALLENGE_DAYS;
+try{
+GROUP_CHALLENGE_DAYS = 7;
+}catch(err){ GROUP_CHALLENGE_DAYS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "GROUP_CHALLENGE_DAYS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let currentGroupChallengeId = null;
 async function fetchActiveGroupChallenge(code){
   const { collection, query, orderBy: fsOrderBy, limit: fsLimit, getDocs } = window.hlFirestoreFns;
@@ -8850,7 +8887,10 @@ safeOn('gdShareResourceBtn', 'click', async () => {
 // the document's own "avoid turning it into Facebook" instruction: a type, a title, content, a
 // single like count, and flat replies — no nested reply threads, no reactions beyond one like,
 // no feed algorithm. Pin is Admin/Moderator only, matching the document's role definitions. ----
-const DISCUSSION_TYPE_ICON = { 'Question': '❓', 'Explanation': '💡', 'Resource': '🔗', 'Study Update': '📢' };
+let DISCUSSION_TYPE_ICON;
+try{
+DISCUSSION_TYPE_ICON = { 'Question': '❓', 'Explanation': '💡', 'Resource': '🔗', 'Study Update': '📢' };
+}catch(err){ DISCUSSION_TYPE_ICON = undefined; if(window.showDebugError) showDebugError("A required setting (" + "DISCUSSION_TYPE_ICON" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 async function renderGroupDiscussions(){
   const wrap = document.getElementById('gdDiscussionsList');
   wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>`;
@@ -9527,7 +9567,10 @@ safeOn('healthDaysSearchBox', 'input', (e) => renderHealthDays(e.target.value));
 // year if already passed" behavior is specifically for countdown math, not for "which month
 // does this fall in" grouping (a January health day should still show under January even in
 // December, not silently jump to next year here). ----------
-const HD_MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+let HD_MONTH_NAMES;
+try{
+HD_MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+}catch(err){ HD_MONTH_NAMES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "HD_MONTH_NAMES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function getHealthDayMonthIndex(dateStr){
   if(!dateStr) return null;
   let attempt = new Date(`${dateStr} 2024`); // any leap-safe reference year, year itself is discarded
@@ -10056,14 +10099,20 @@ safeOn('calcChildAgeBtn', 'click', () => {
 // Z-score/LMS tables — genuinely useful as a quick screen, but explicitly labeled as an
 // estimate since it doesn't capture the exact WHO standard deviation curves. A flagged result
 // should be confirmed against full WHO growth charts by a health worker. ----------
-const WHO_WEIGHT_MEDIAN = { // kg, by age in months
+let WHO_WEIGHT_MEDIAN;
+try{
+WHO_WEIGHT_MEDIAN = { // kg, by age in months
   m: {0:3.3, 6:7.9, 12:9.6, 24:12.2, 36:14.3, 48:16.3, 60:18.3},
   f: {0:3.2, 6:7.3, 12:8.9, 24:11.5, 36:13.9, 48:16.1, 60:18.2},
 };
-const WHO_HEIGHT_MEDIAN = { // cm, by age in months
+}catch(err){ WHO_WEIGHT_MEDIAN = undefined; if(window.showDebugError) showDebugError("A required setting (" + "WHO_WEIGHT_MEDIAN" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let WHO_HEIGHT_MEDIAN;
+try{
+WHO_HEIGHT_MEDIAN = { // cm, by age in months
   m: {0:49.9, 6:67.6, 12:75.7, 24:87.1, 36:96.1, 48:103.3, 60:110.0},
   f: {0:49.1, 6:65.7, 12:74.0, 24:85.7, 36:95.1, 48:102.7, 60:109.4},
 };
+}catch(err){ WHO_HEIGHT_MEDIAN = undefined; if(window.showDebugError) showDebugError("A required setting (" + "WHO_HEIGHT_MEDIAN" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function interpolateMedian(table, sex, ageMonths){
   const points = Object.keys(table[sex]).map(Number).sort((a,b) => a-b);
   if(ageMonths <= points[0]) return table[sex][points[0]];
@@ -11008,7 +11057,10 @@ safeOn('calcEmiBtn', 'click', () => {
   `;
 });
 
-const LENGTH_TO_METERS = { km:1000, mi:1609.344, m:1, ft:0.3048, cm:0.01, in:0.0254 };
+let LENGTH_TO_METERS;
+try{
+LENGTH_TO_METERS = { km:1000, mi:1609.344, m:1, ft:0.3048, cm:0.01, in:0.0254 };
+}catch(err){ LENGTH_TO_METERS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "LENGTH_TO_METERS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 safeOn('calcLenBtn', 'click', () => {
   const value = parseFloat(document.getElementById('lenValue').value);
   const from = document.getElementById('lenFrom').value;
@@ -11023,7 +11075,10 @@ safeOn('calcLenBtn', 'click', () => {
   resultEl.innerHTML = `<div class="calc-result">${converted.toFixed(4)}</div>`;
 });
 
-const WEIGHT_TO_KG = { kg:1, lb:0.453592, g:0.001, oz:0.0283495 };
+let WEIGHT_TO_KG;
+try{
+WEIGHT_TO_KG = { kg:1, lb:0.453592, g:0.001, oz:0.0283495 };
+}catch(err){ WEIGHT_TO_KG = undefined; if(window.showDebugError) showDebugError("A required setting (" + "WEIGHT_TO_KG" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 safeOn('calcWtBtn', 'click', () => {
   const value = parseFloat(document.getElementById('wtValue').value);
   const from = document.getElementById('wtFrom').value;
@@ -11158,12 +11213,15 @@ try{ updateMeditationDisplay(); }catch(err){ if(window.showDebugError) showDebug
 let breathingRunning = false;
 let breathingTimeout = null;
 let breathingPhaseIndex = 0;
-const BREATHING_PHASES = [
+let BREATHING_PHASES;
+try{
+BREATHING_PHASES = [
   { label:'Inhale', scale:1.5, duration:4000 },
   { label:'Hold', scale:1.5, duration:4000 },
   { label:'Exhale', scale:1.0, duration:4000 },
   { label:'Hold', scale:1.0, duration:4000 },
 ];
+}catch(err){ BREATHING_PHASES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "BREATHING_PHASES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function runBreathingPhase(){
   if(!breathingRunning) return;
   const phase = BREATHING_PHASES[breathingPhaseIndex];
@@ -11223,7 +11281,10 @@ function renderGratitudeHistory(){
   `;
 }
 
-const HABIT_LIST = ['Study', 'Water', 'Exercise', 'Meditation', 'Reading', 'Sleep'];
+let HABIT_LIST;
+try{
+HABIT_LIST = ['Study', 'Water', 'Exercise', 'Meditation', 'Reading', 'Sleep'];
+}catch(err){ HABIT_LIST = undefined; if(window.showDebugError) showDebugError("A required setting (" + "HABIT_LIST" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function getHabitLog(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_habit_log')) || '{}'); }catch(e){ return {}; }
 }
@@ -11275,13 +11336,19 @@ function toggleHabit(habitName){
 // fastest element (a dot) is a 200ms flash, roughly 2.5Hz at most. ----------
 let sosRunning = false;
 let sosTimeout = null;
-const SOS_UNIT = 200; // ms
-const SOS_SEQUENCE = [
+let SOS_UNIT;
+try{
+SOS_UNIT = 200; // ms
+}catch(err){ SOS_UNIT = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SOS_UNIT" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let SOS_SEQUENCE;
+try{
+SOS_SEQUENCE = [
   // [duration_ms, isOn]
   [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT*3, false], // S
   [SOS_UNIT*3, true], [SOS_UNIT, false], [SOS_UNIT*3, true], [SOS_UNIT, false], [SOS_UNIT*3, true], [SOS_UNIT*3, false], // O
   [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT, false], [SOS_UNIT, true], [SOS_UNIT*7, false], // S + word gap
 ];
+}catch(err){ SOS_SEQUENCE = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SOS_SEQUENCE" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let sosStepIndex = 0;
 function runSosStep(){
   if(!sosRunning) return;
@@ -12190,7 +12257,10 @@ let MNEMONIC_HELPFUL_COUNTS = {};
 // Cached once per screen-open (not per keystroke) — see goToMnemonicsFromHub click handler
 let mnemonicsUserIsPremium = false;
 
-const MNEMONIC_CATEGORIES = ['Anatomy', 'Physiology', 'Epidemiology', 'Biostatistics', 'Community Health', 'Nutrition', 'MCH', 'Health Programs', 'Pharmacology', 'Microbiology', 'Health Administration'];
+let MNEMONIC_CATEGORIES;
+try{
+MNEMONIC_CATEGORIES = ['Anatomy', 'Physiology', 'Epidemiology', 'Biostatistics', 'Community Health', 'Nutrition', 'MCH', 'Health Programs', 'Pharmacology', 'Microbiology', 'Health Administration'];
+}catch(err){ MNEMONIC_CATEGORIES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MNEMONIC_CATEGORIES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let mnemonicActiveCategory = null; // null = all categories
 let mnemonicActiveFilter = 'all'; // all | saved | popular | recent
 
@@ -12980,7 +13050,10 @@ function cprRestartCompressions(){
 // start this time (not retrofitted) — a 30-beat-plus-breaths loop repeating indefinitely is
 // exactly the highest-risk case for a stray callback firing after the user has navigated away. ----------
 let cprCycleActive = false;
-const CPR_CYCLE_RING_CIRCUMFERENCE = 188.5; // 2 * PI * 30, matching the SVG ring's radius
+let CPR_CYCLE_RING_CIRCUMFERENCE;
+try{
+CPR_CYCLE_RING_CIRCUMFERENCE = 188.5; // 2 * PI * 30, matching the SVG ring's radius
+}catch(err){ CPR_CYCLE_RING_CIRCUMFERENCE = undefined; if(window.showDebugError) showDebugError("A required setting (" + "CPR_CYCLE_RING_CIRCUMFERENCE" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function cprUpdateCycleRing(current, max, phaseLabel){
   const ring = document.getElementById('cprCycleRing');
   const frac = Math.max(0, Math.min(1, current / max));
@@ -13443,7 +13516,10 @@ safeOn('goToRevision', 'click', async (e) => {
   renderRevisionSummary();
 });
 // ---------- Revision Mode spaced-repetition schedule: 1 → 3 → 7 → 15 → 30 days ----------
-const REVISION_INTERVALS_DAYS = [1, 3, 7, 15, 30];
+let REVISION_INTERVALS_DAYS;
+try{
+REVISION_INTERVALS_DAYS = [1, 3, 7, 15, 30];
+}catch(err){ REVISION_INTERVALS_DAYS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "REVISION_INTERVALS_DAYS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 // ---------- Real per-account data isolation: every "study data" localStorage key below is now
 // namespaced by the logged-in account's UID, so switching accounts on the same device shows each
 // account's own separate progress, mistakes, weak subjects, notes, etc. — not one shared pool.
@@ -13452,7 +13528,9 @@ const REVISION_INTERVALS_DAYS = [1, 3, 7, 15, 30];
 // A one-time migration claims any pre-existing unnamespaced data for whichever account happens to
 // log in first after this update — the only fair thing to do, since there's no way to know in
 // hindsight which account that old, unlabeled data actually belonged to. ----------
-const PER_ACCOUNT_STORAGE_KEYS = [
+let PER_ACCOUNT_STORAGE_KEYS;
+try{
+PER_ACCOUNT_STORAGE_KEYS = [
   'hl_bookmark_collection_map','hl_bookmark_collections','hl_bookmarks','hl_custom_bookmarks',
   'hl_healthday_bookmarks','hl_mnemonic_bookmarks','hl_pdf_bookmarks','hl_quickref_bookmarks',
   'hl_chapter_stats','hl_chat_history','hl_custom_mnemonics',
@@ -13472,6 +13550,7 @@ const PER_ACCOUNT_STORAGE_KEYS = [
   'hl_last_known_rank_week_overall','hl_selected_posts','hl_exam_type',
   'hl_onboarding_done','hl_onboarding_answers',
 ];
+}catch(err){ PER_ACCOUNT_STORAGE_KEYS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "PER_ACCOUNT_STORAGE_KEYS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function uk(baseKey){
   const uid = (window.currentUser && window.currentUser.uid) || 'guest';
   return baseKey + '__u_' + uid;
@@ -13537,16 +13616,28 @@ function addDaysISO(days){
 // Shown once per calendar day before the app reaches Home (gated), and also reachable anytime
 // via the "+ Check In" button on Home's mood panel (multiple check-ins per day are fine,
 // only the once-per-day GATE is what's actually limited). ----------
-const MOOD_LEVELS = [
+let MOOD_LEVELS;
+try{
+MOOD_LEVELS = [
   { value:'great', icon:'🤩', label:'Awesome!' },
   { value:'good', icon:'🙂', label:'Good' },
   { value:'ok', icon:'😐', label:'Fine' },
   { value:'low', icon:'😕', label:'Bad' },
   { value:'bad', icon:'😫', label:'Terrible' },
 ];
-const MOOD_LEVEL_MAP = Object.fromEntries(MOOD_LEVELS.map(m => [m.value, m]));
-const MOOD_EMOTIONS = ['Joyful','Hopeful','Amazed','Relieved','Confident','Content','Satisfied','Happy','Passionate','Enthusiastic','Excited','Brave','Proud','Calm','Curious','Grateful','Peaceful'];
-const MOOD_CAUSES = ['Health','Sleep','Exercise','Food','Hobby','Money','Identity','Partner','Friends','Pet','Family','Coworkers','Dating','Work','Home','School','Outdoors','Travel','Weather'];
+}catch(err){ MOOD_LEVELS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MOOD_LEVELS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let MOOD_LEVEL_MAP;
+try{
+MOOD_LEVEL_MAP = Object.fromEntries(MOOD_LEVELS.map(m => [m.value, m]));
+}catch(err){ MOOD_LEVEL_MAP = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MOOD_LEVEL_MAP" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let MOOD_EMOTIONS;
+try{
+MOOD_EMOTIONS = ['Joyful','Hopeful','Amazed','Relieved','Confident','Content','Satisfied','Happy','Passionate','Enthusiastic','Excited','Brave','Proud','Calm','Curious','Grateful','Peaceful'];
+}catch(err){ MOOD_EMOTIONS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MOOD_EMOTIONS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let MOOD_CAUSES;
+try{
+MOOD_CAUSES = ['Health','Sleep','Exercise','Food','Hobby','Money','Identity','Partner','Friends','Pet','Family','Coworkers','Dating','Work','Home','School','Outdoors','Travel','Weather'];
+}catch(err){ MOOD_CAUSES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MOOD_CAUSES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 function getMoodEntries(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_mood_entries')) || '[]'); }catch(e){ return []; }
@@ -13675,7 +13766,9 @@ safeOn('moodCausesSkipLink', 'click', finishMoodCheckin);
 // ---------- Personalized Study Plan onboarding — one-time only, right after the first-ever
 // post-gate completion. Question 1 (which exam) is deliberately skipped here since the
 // post-gate screen already collects that — this covers questions 2 through 6 from the plan. ----------
-const ONBOARDING_QUESTIONS = [
+let ONBOARDING_QUESTIONS;
+try{
+ONBOARDING_QUESTIONS = [
   {
     key: 'dailyTime', title: 'How much time can you realistically study each day?',
     why: 'Sets a realistic daily goal. Consistent short sessions work better than irregular long ones.',
@@ -13736,13 +13829,17 @@ const ONBOARDING_QUESTIONS = [
     ]
   },
 ];
-const ONBOARDING_LABELS = {
+}catch(err){ ONBOARDING_QUESTIONS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ONBOARDING_QUESTIONS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let ONBOARDING_LABELS;
+try{
+ONBOARDING_LABELS = {
   dailyTime: { '30min':'30 minutes', '1hr':'1 hour', '2hr':'2 hours', '3hr+':'3+ hours' },
   stage: { starting:'Just Starting', learning:'Learning', practicing:'Practicing', final:'Final Revision' },
   weakness: { mcq_accuracy:'MCQ Accuracy', memory:'Memory & Retention', speed:'Exam Speed', mistakes:'Reducing Mistakes', concept:'Concept Clarity', written:'Written Answers' },
   studyStyle: { questions_first:'Questions First', concept_first:'Concept First', mixed:'Mixed Method', short_sessions:'Short Sessions' },
   studyTime: { morning:'Morning', daytime:'Daytime', evening:'Evening', night:'Night', later:'Not set yet' },
 };
+}catch(err){ ONBOARDING_LABELS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ONBOARDING_LABELS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let onboardingStep = 0;
 let onboardingAnswers = {};
 let onboardingEditMode = false;
@@ -14157,7 +14254,10 @@ document.querySelectorAll('.home-chart-tab').forEach(tab => {
   });
 });
 // ---------- Metric selector dropdown ----------
-const METRIC_LABELS = { accuracy: 'Accuracy', questions: 'Questions', studyTime: 'Study Time', topics: 'Topics Completed' };
+let METRIC_LABELS;
+try{
+METRIC_LABELS = { accuracy: 'Accuracy', questions: 'Questions', studyTime: 'Study Time', topics: 'Topics Completed' };
+}catch(err){ METRIC_LABELS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "METRIC_LABELS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 safeOn('homeMetricSelectBtn', 'click', (e) => {
   e.stopPropagation();
   const dropdown = document.getElementById('homeMetricDropdown');
@@ -15014,8 +15114,14 @@ safeOn('formulaSearchBox', 'input', (e) => {
 // localStorage's ~5-10MB total limit, which the rest of My Notes' text data already shares.
 // Each note keeps only an array of image IDs (note.imageIds); actual image bytes live here,
 // keyed by those IDs. Deleting a note's images (or purging a note) removes them from here too. ----------
-const NOTE_IMAGE_DB_NAME = 'hl_notes_images_db';
-const NOTE_IMAGE_STORE = 'images';
+let NOTE_IMAGE_DB_NAME;
+try{
+NOTE_IMAGE_DB_NAME = 'hl_notes_images_db';
+}catch(err){ NOTE_IMAGE_DB_NAME = undefined; if(window.showDebugError) showDebugError("A required setting (" + "NOTE_IMAGE_DB_NAME" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let NOTE_IMAGE_STORE;
+try{
+NOTE_IMAGE_STORE = 'images';
+}catch(err){ NOTE_IMAGE_STORE = undefined; if(window.showDebugError) showDebugError("A required setting (" + "NOTE_IMAGE_STORE" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let noteImageDbPromise = null;
 function openNoteImageDB(){
   if(noteImageDbPromise) return noteImageDbPromise;
@@ -15311,7 +15417,10 @@ async function renderNoteImages(note){
 // every non-blank page into images, in page order, and adds them to THIS note (via the same
 // IndexedDB layer as every other note image) — drawing is a mode of one note, not a separate
 // note type. ----------
-const NOTE_DRAW_MAX_PAGES = 20;
+let NOTE_DRAW_MAX_PAGES;
+try{
+NOTE_DRAW_MAX_PAGES = 20;
+}catch(err){ NOTE_DRAW_MAX_PAGES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "NOTE_DRAW_MAX_PAGES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let noteDrawingOn = false;
 let noteDrawCanvasEl, noteDrawCtx;
 let noteDrawing = false;
@@ -15632,7 +15741,10 @@ function renderMarkdownTable(tableLines){
   html += '</tbody></table>';
   return html;
 }
-const STICKY_NOTE_COLORS = { yellow:'#F5D547', pink:'#F5A9C0', blue:'#A9D4F5', green:'#B8E6B0' };
+let STICKY_NOTE_COLORS;
+try{
+STICKY_NOTE_COLORS = { yellow:'#F5D547', pink:'#F5A9C0', blue:'#A9D4F5', green:'#B8E6B0' };
+}catch(err){ STICKY_NOTE_COLORS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "STICKY_NOTE_COLORS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function renderMarkdownToHtml(text){
   const escaped = escapeHtmlForReader(text || '');
 
@@ -15714,16 +15826,22 @@ function renderMarkdownToHtml(text){
 // invented. "Formulas" and "Immunization Schedule" subtopics deliberately link to those existing
 // screens instead of a new Sheet-driven page, so this doesn't duplicate content that's already
 // built and working elsewhere in the app. ----------
-const QUICK_REF_CATEGORIES = [
+let QUICK_REF_CATEGORIES;
+try{
+QUICK_REF_CATEGORIES = [
   { name: 'Academic', icon: '📚', subtopics: ['Normal Values', 'Epidemiological Measures', 'Biostatistics', 'Health Indicators'] },
   { name: 'Clinical & Health', icon: '🏥', subtopics: ['BMI', 'GCS', 'Vital Signs', 'Immunization Schedule', 'ANC/PNC', 'First Aid'] },
   { name: 'Nepal', icon: '🇳🇵', subtopics: ['Health Programs', 'Health Policies', 'Government Levels', 'Important Acts', 'MoHFS/DoHS Structure'] },
   { name: 'Common References', icon: '💊', subtopics: ['Drug Abbreviations', 'Medical Abbreviations', 'Laboratory Terms', 'Units & Conversions'] },
 ];
+}catch(err){ QUICK_REF_CATEGORIES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "QUICK_REF_CATEGORIES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 // Subtopics that navigate to an existing screen instead of a Sheet-driven detail page
-const QUICK_REF_EXTERNAL_LINKS = {
+let QUICK_REF_EXTERNAL_LINKS;
+try{
+QUICK_REF_EXTERNAL_LINKS = {
   'Immunization Schedule': () => { showScreen(immunizationScreen); renderImmunization(); },
 };
+}catch(err){ QUICK_REF_EXTERNAL_LINKS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "QUICK_REF_EXTERNAL_LINKS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let QUICK_REFERENCES = [];
 let quickRefLoaded = false;
@@ -15841,11 +15959,14 @@ function getReaderSettings(){
 function saveReaderSettings(settings){
   try{ localStorage.setItem('hl_reader_settings', JSON.stringify(settings)); }catch(e){}
 }
-const READER_THEMES = {
+let READER_THEMES;
+try{
+READER_THEMES = {
   dark:  { bg:'var(--bg)', text:'var(--ink)' },
   light: { bg:'#F7F5F0', text:'#2A2420' },
   sepia: { bg:'#F4ECD8', text:'#3B2F1E' },
 };
+}catch(err){ READER_THEMES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "READER_THEMES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function applyReaderSettings(settings){
   const contentEl = document.getElementById('readerContent');
   const bodyWrap = document.getElementById('noteReaderBody');
@@ -16674,13 +16795,16 @@ safeOn('noteAiBtn', 'click', () => {
   const panel = document.getElementById('noteAiPanel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 });
-const NOTE_AI_PROMPTS = {
+let NOTE_AI_PROMPTS;
+try{
+NOTE_AI_PROMPTS = {
   explain: 'Explain the following simply, for a Nepal health Loksewa exam candidate:',
   summarize: 'Summarize the following concisely, keeping the key exam-relevant points:',
   mcqs: 'Write 1 multiple-choice question (with 4 options and the correct answer marked) based on the following:',
   mnemonic: 'Create a short, memorable mnemonic to help remember the following:',
   simplify: 'Rewrite the following in simpler, easier-to-understand language:',
 };
+}catch(err){ NOTE_AI_PROMPTS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "NOTE_AI_PROMPTS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 document.querySelectorAll('[data-ai-action]').forEach(btn => {
   btn.addEventListener('click', async () => {
     const textarea = document.getElementById('noteBodyInput');
@@ -18070,13 +18194,16 @@ function computeAchievements(stats, streak){
 // document's own requirement ("XP comes from useful activities, not just opening the app") is
 // already exactly what Learning Points does, so reusing it here means Levels stay consistent
 // with everything else that already reads from the same number (Leaderboard, rewards). ----------
-const LEVEL_THRESHOLDS = [
+let LEVEL_THRESHOLDS;
+try{
+LEVEL_THRESHOLDS = [
   { level: 1, name: 'Beginner', minXp: 0 },
   { level: 2, name: 'Learner', minXp: 500 },
   { level: 3, name: 'Practitioner', minXp: 2000 },
   { level: 4, name: 'Advanced', minXp: 5000 },
   { level: 5, name: 'Lok Sewa Pro', minXp: 10000 },
 ];
+}catch(err){ LEVEL_THRESHOLDS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "LEVEL_THRESHOLDS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function getCurrentLevelInfo(xp){
   let current = LEVEL_THRESHOLDS[0];
   for(const tier of LEVEL_THRESHOLDS) if(xp >= tier.minXp) current = tier;
@@ -18257,7 +18384,9 @@ async function renderLeaderboard(){
 // saving exactly where it already does; this just reads all of them together into one view.
 // Removing an item here calls that type's own original toggle function, so the source of truth
 // never moves and nothing else in the app needs to change. ----------
-const MBH_TYPE_META = {
+let MBH_TYPE_META;
+try{
+MBH_TYPE_META = {
   question: { icon: '📚', label: 'Questions' },
   note: { icon: '📝', label: 'Notes' },
   flashcard: { icon: '🧩', label: 'Flash Cards' },
@@ -18267,6 +18396,7 @@ const MBH_TYPE_META = {
   pdf: { icon: '📄', label: 'PDFs' },
   custom: { icon: '💡', label: 'Concepts' },
 };
+}catch(err){ MBH_TYPE_META = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MBH_TYPE_META" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 // ---------- PDF bookmarks: genuinely new capability (nothing bookmarked PDFs before). Custom
 // bookmarks: a free-form "save anything else" escape hatch for content that doesn't fit any of
 // the app's existing types — e.g. a concept or an external link a student wants to keep. Both
@@ -18728,7 +18858,10 @@ async function renderPremiumStatus(){
 // and Khalti (manual). Falls back to a single NPR 299/month plan if the tab is empty/missing. ----------
 let pricingPlansList = [];
 let selectedPricingPlan = null;
-const FALLBACK_PRICING_PLAN = { planKey: 'monthly', label: 'Monthly', months: 1, basePrice: 299, discountPercent: 0, finalPrice: 299 };
+let FALLBACK_PRICING_PLAN;
+try{
+FALLBACK_PRICING_PLAN = { planKey: 'monthly', label: 'Monthly', months: 1, basePrice: 299, discountPercent: 0, finalPrice: 299 };
+}catch(err){ FALLBACK_PRICING_PLAN = undefined; if(window.showDebugError) showDebugError("A required setting (" + "FALLBACK_PRICING_PLAN" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 // Used by the premium lock modal only — caches within the session so every locked feature
 // doesn't refetch on every tap. Deliberately separate from loadPricingPlans() below, which
@@ -19140,12 +19273,15 @@ safeOn('headerDarkBtn', 'click', () => {
 try{ applyDarkModePreference(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: applyDarkModePreference();\n\n' + (err && err.message ? err.message : String(err))); }
 
 // ---------- Accent Color: one navy background for everyone, pick your own accent tint ----------
-const APP_THEMES = [
+let APP_THEMES;
+try{
+APP_THEMES = [
   { key:'teal', label:'Teal', swatch:'#0D9488' },
   { key:'blue', label:'Ocean Blue', swatch:'#42A5F5' },
   { key:'emerald', label:'Emerald', swatch:'#34D399' },
   { key:'violet', label:'Violet', swatch:'#A78BFA' },
 ];
+}catch(err){ APP_THEMES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "APP_THEMES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function applyThemePreference(){
   let theme = 'teal';
   try{ theme = localStorage.getItem('hl_theme') || 'teal'; }catch(e){}
@@ -19171,12 +19307,15 @@ function renderThemeSwatches(){
 try{ applyThemePreference(); }catch(err){ if(window.showDebugError) showDebugError("Startup step failed: applyThemePreference();\n\n" + (err && err.message ? err.message : String(err))); } // apply immediately on app load, before Profile is even opened
 
 // ---------- Font Size Control ----------
-const FONT_SIZES = [
+let FONT_SIZES;
+try{
+FONT_SIZES = [
   { key:'small', label:'Small' },
   { key:'medium', label:'Medium' },
   { key:'large', label:'Large' },
   { key:'xlarge', label:'Extra Large' },
 ];
+}catch(err){ FONT_SIZES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "FONT_SIZES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function applyFontSizePreference(){
   let size = 'medium';
   try{ size = localStorage.getItem('hl_font_size') || 'medium'; }catch(e){}
@@ -19200,7 +19339,9 @@ function renderFontSizePicker(){
 try{ applyFontSizePreference(); }catch(err){ if(window.showDebugError) showDebugError("Startup step failed: applyFontSizePreference();\n\n" + (err && err.message ? err.message : String(err))); } // apply immediately on app load
 
 // ---------- Exam Type Profile: which post the user is preparing for ----------
-const EXAM_TYPES = [
+let EXAM_TYPES;
+try{
+EXAM_TYPES = [
   { key:'pho', label:'Public Health Officer (7th Level)' },
   { key:'ha', label:'Health Assistant (5th Level)' },
   { key:'sn', label:'Staff Nurse' },
@@ -19209,6 +19350,7 @@ const EXAM_TYPES = [
   { key:'ha_license', label:'HA License (NHPC)' },
   { key:'bph_license', label:'BPH License (NHPC)' },
 ];
+}catch(err){ EXAM_TYPES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "EXAM_TYPES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 // ---------- Shared "which post(s) are you preparing for" preference — powers both the
 // Profile picker (examTypeRow) and the post-login gate screen (postGateRow). Up to 2 posts.
 // Selecting/deselecting in either place updates both immediately, so they never drift apart. ----------
@@ -19295,7 +19437,10 @@ if(examTypeClickTargetEl){
 // ---------- My Preparation card: compact summary reusing real existing data (selected exam,
 // onboarding daily-goal answer, real study streak) — no duplicate analytics, just links out
 // to the existing Progress screen. ----------
-const DAILY_GOAL_LABELS = { '30min':'30 minutes', '1hr':'1 hour', '2hr':'2 hours', '3hr+':'3+ hours' };
+let DAILY_GOAL_LABELS;
+try{
+DAILY_GOAL_LABELS = { '30min':'30 minutes', '1hr':'1 hour', '2hr':'2 hours', '3hr+':'3+ hours' };
+}catch(err){ DAILY_GOAL_LABELS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "DAILY_GOAL_LABELS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function renderMyPreparationCard(){
   document.getElementById('myPrepGoal').textContent = summarizeSelectedPosts();
   let dailyGoal = '—';
@@ -19551,7 +19696,10 @@ function renderStStudyStats(){
     <div class="stat-tile"><div class="st-num">${focusToday}</div><div class="st-label">Focus Sessions</div></div>
   `;
 }
-const FEATURE_AREA_ICON = { 'Learn Hub': '📖', 'Practice & MCQs': '📝', 'Notes': '📄', 'Flash Cards': '🧩', 'AI Assistant': '🤖', 'Study Groups': '👥', 'Tools': '🧮', 'Other': '⚙️' };
+let FEATURE_AREA_ICON;
+try{
+FEATURE_AREA_ICON = { 'Learn Hub': '📖', 'Practice & MCQs': '📝', 'Notes': '📄', 'Flash Cards': '🧩', 'AI Assistant': '🤖', 'Study Groups': '👥', 'Tools': '🧮', 'Other': '⚙️' };
+}catch(err){ FEATURE_AREA_ICON = undefined; if(window.showDebugError) showDebugError("A required setting (" + "FEATURE_AREA_ICON" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function renderStFeatureList(todayData){
   const wrap = document.getElementById('stFeatureList');
   const entries = Object.keys(todayData.byArea).map(area => ({ area, sec: todayData.byArea[area] })).sort((a, b) => b.sec - a.sec);
@@ -19727,7 +19875,10 @@ safeOn('highContrastToggle', 'click', () => {
 });
 
 // ---------- Language preference (stored only — app itself stays in English for now) ----------
-const LANGUAGE_OPTIONS = [ { key: 'en', label: 'English' }, { key: 'ne', label: 'नेपाली' } ];
+let LANGUAGE_OPTIONS;
+try{
+LANGUAGE_OPTIONS = [ { key: 'en', label: 'English' }, { key: 'ne', label: 'नेपाली' } ];
+}catch(err){ LANGUAGE_OPTIONS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "LANGUAGE_OPTIONS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function renderLanguagePicker(){
   let active = 'en';
   try{ active = localStorage.getItem('hl_language') || 'en'; }catch(e){}
@@ -19744,7 +19895,10 @@ function renderLanguagePicker(){
     });
   });
 }
-const CALENDAR_PREF_OPTIONS = [ { key:'both', label:'BS + AD' }, { key:'bs', label:'BS only' }, { key:'ad', label:'AD only' } ];
+let CALENDAR_PREF_OPTIONS;
+try{
+CALENDAR_PREF_OPTIONS = [ { key:'both', label:'BS + AD' }, { key:'bs', label:'BS only' }, { key:'ad', label:'AD only' } ];
+}catch(err){ CALENDAR_PREF_OPTIONS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "CALENDAR_PREF_OPTIONS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function renderCalendarPrefPicker(){
   const active = getDateCalendarPref();
   document.getElementById('calendarPrefRow').innerHTML = CALENDAR_PREF_OPTIONS.map(c => `
@@ -19819,7 +19973,10 @@ safeOn('brightnessSlider', 'input', (e) => {
 try{ applyBrightnessPreference(); }catch(err){ if(window.showDebugError) showDebugError("Startup step failed: applyBrightnessPreference();\n\n" + (err && err.message ? err.message : String(err))); } // apply immediately on app load
 
 // ---------- App Version ----------
-const APP_VERSION = '1.0.0';
+let APP_VERSION;
+try{
+APP_VERSION = '1.0.0';
+}catch(err){ APP_VERSION = undefined; if(window.showDebugError) showDebugError("A required setting (" + "APP_VERSION" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 document.getElementById('appVersionLine').textContent = `Health Loksewa v${APP_VERSION}`;
 
 // ---------- My Device: lightweight multi-device awareness using Firestore ----------
@@ -19990,7 +20147,9 @@ safeOn('menuDeleteAccount', 'click', async () => {
 try{ applyHighContrastPreference(); }catch(err){ if(window.showDebugError) showDebugError("Startup step failed: applyHighContrastPreference();\n\n" + (err && err.message ? err.message : String(err))); } // apply immediately on app load
 
 // ---------- Auto-sliding carousel ----------
-const DEFAULT_CAROUSEL_SLIDES = [
+let DEFAULT_CAROUSEL_SLIDES;
+try{
+DEFAULT_CAROUSEL_SLIDES = [
   { bg:'linear-gradient(135deg,#0D9488,#14B8A6)', icon:'📝', title:'Subject-wise MCQs', sub:'1000+ questions, Set-locked progression', action:() => { showScreen(mcqPostScreen); renderMcqPosts(); } },
   { bg:'linear-gradient(135deg,#1B3B6F,#0F2648)', icon:'🏆', title:'Try the Mock Test', sub:'Real Loksewa exam pattern, timed practice', action:() => { showScreen(mockPostScreen); renderMockPosts(); } },
   { bg:'linear-gradient(135deg,#0D9488,#0B4A63)', icon:'🤖', title:'Ask the AI Assistant', sub:'Get instant help with subjects and study tips', action:() => { showScreen(aiChatScreen); initChat(); } },
@@ -19998,6 +20157,7 @@ const DEFAULT_CAROUSEL_SLIDES = [
   { bg:'linear-gradient(135deg,#0D9488,#14B8A6)', icon:'🎯', title:'Question of the Day', sub:'One free question, updated every day', action:() => { document.getElementById('cardQotd').scrollIntoView({behavior:'smooth', block:'center'}); } },
   { bg:'linear-gradient(135deg,#0D9488,#0B4A63)', icon:'🌐', title:'Resources &amp; News', sub:'Official notices, e-papers &amp; documents', action:() => { showScreen(resourcesScreen); renderResources(); } },
 ];
+}catch(err){ DEFAULT_CAROUSEL_SLIDES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "DEFAULT_CAROUSEL_SLIDES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let CAROUSEL_SLIDES = DEFAULT_CAROUSEL_SLIDES;
 // These two were being used without ever being declared anywhere — relying on implicit globals
 // (bad practice that happened to work for carouselIndex only because it's always assigned before
@@ -20381,8 +20541,14 @@ try{ updateNotificationBadge(); }catch(err){ if(window.showDebugError) showDebug
 
 // ---------- Nepali (Bikram Sambat) date with day, shown on the home screen ----------
 // ---------- Live clock: date, day, and ticking time (hour:minute:second), updates every second ----------
-const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+let WEEKDAY_NAMES;
+try{
+WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+}catch(err){ WEEKDAY_NAMES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "WEEKDAY_NAMES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let MONTH_NAMES;
+try{
+MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+}catch(err){ MONTH_NAMES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MONTH_NAMES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function pad2(n){ return n.toString().padStart(2, '0'); }
 function updateLiveClock(){
   const now = new Date();
@@ -20413,11 +20579,14 @@ setInterval(updateLiveClock, 1000); // genuinely live — ticks every single sec
 // ---------- Quote of the Day (changes every day at midnight, same quote for everyone that day) ----------
 // Kept ONLY as a fallback if there's no internet — normally quotes are freshly
 // generated by AI every minute, so real users should rarely ever see this list.
-const FALLBACK_QUOTES = [
+let FALLBACK_QUOTES;
+try{
+FALLBACK_QUOTES = [
   { quote:"Success is the sum of small efforts, repeated day in and day out.", author:"Robert Collier" },
   { quote:"The expert in anything was once a beginner.", author:"Helen Hayes" },
   { quote:"Small daily improvements lead to stunning results.", author:"Robin Sharma" },
 ];
+}catch(err){ FALLBACK_QUOTES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "FALLBACK_QUOTES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 async function showQuoteOfDay(){
   let quote, author;
   try{
@@ -20589,13 +20758,16 @@ function paintResources(items){
 // first time someone ever opens the app (before any cache exists). Update this occasionally
 // to match your Sheet, but it doesn't need to be perfect — the background fetch always
 // corrects it moments later.
-const FALLBACK_RESOURCES = [
+let FALLBACK_RESOURCES;
+try{
+FALLBACK_RESOURCES = [
   {Category:"News & E-Papers", Icon:"📰", Name:"Gorkhapatra Online", Description:"Nepal's oldest national daily — includes a dedicated Loksewa section.", Link:"https://gorkhapatraonline.com/"},
   {Category:"News & E-Papers", Icon:"🩺", Name:"Swasthya Khabar", Description:"Nepal's independent health news portal — policy, budget & health sector updates.", Link:"https://swasthyakhabar.com/"},
   {Category:"Official Government Sources", Icon:"🏛️", Name:"Public Service Commission (PSC)", Description:"Official exam notices, syllabus, results & vacancy announcements.", Link:"https://psc.gov.np/"},
   {Category:"Official Government Sources", Icon:"🏥", Name:"Department of Health Services (DoHS)", Description:"Annual Health Reports, program data & official health statistics.", Link:"https://dohs.gov.np/"},
   {Category:"Official Government Sources", Icon:"⚕️", Name:"Ministry of Health & Population (MoHP)", Description:"National health policy, acts, and official publications.", Link:"https://mohp.gov.np/"},
 ];
+}catch(err){ FALLBACK_RESOURCES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "FALLBACK_RESOURCES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 // ---------- Central Date Service: single source of truth for BS↔AD conversion, used by every
 // date-based tool app-wide instead of each calculator reimplementing calendar math. Wraps the
@@ -20607,7 +20779,10 @@ function getDateCalendarPref(){
 function setDateCalendarPref(pref){
   try{ localStorage.setItem('hl_calendar_pref', pref); }catch(e){}
 }
-const BS_MONTH_NAMES = ['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'];
+let BS_MONTH_NAMES;
+try{
+BS_MONTH_NAMES = ['Baisakh','Jestha','Ashadh','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'];
+}catch(err){ BS_MONTH_NAMES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "BS_MONTH_NAMES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 // AD (Date object or 'YYYY-MM-DD' string) -> {year, month (1-12), date}. Returns null if out of
 // the library's supported range (1918-2043 AD) rather than guessing.
 // Some UMD bundles export the actual class under .default instead of directly on the global —
@@ -20680,7 +20855,9 @@ async function renderResources(){
 // ---------- Web Portal: official website directory. Only includes links independently
 // web-verified this session — not the full category list from the reference document, since
 // fabricating unverified government URLs would be worse than a smaller, trustworthy starter set. ----------
-const WEB_PORTAL_FALLBACK = {
+let WEB_PORTAL_FALLBACK;
+try{
+WEB_PORTAL_FALLBACK = {
   'Nepal Health Gov': [
     { name:'Ministry of Health & Food Hygiene', sub:'Formerly MoHP — renamed May 2026', url:'https://mohp.gov.np/' },
     { name:'Department of Health Services (DoHS)', sub:'Health service delivery', url:'https://dohs.gov.np/' },
@@ -20693,7 +20870,11 @@ const WEB_PORTAL_FALLBACK = {
     { name:'Public Service Commission (Loksewa Aayog)', sub:'Official exam notices & results', url:'https://psc.gov.np/' },
   ],
 };
-const WEB_PORTAL_FALLBACK_CATEGORIES = Object.keys(WEB_PORTAL_FALLBACK);
+}catch(err){ WEB_PORTAL_FALLBACK = undefined; if(window.showDebugError) showDebugError("A required setting (" + "WEB_PORTAL_FALLBACK" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let WEB_PORTAL_FALLBACK_CATEGORIES;
+try{
+WEB_PORTAL_FALLBACK_CATEGORIES = Object.keys(WEB_PORTAL_FALLBACK);
+}catch(err){ WEB_PORTAL_FALLBACK_CATEGORIES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "WEB_PORTAL_FALLBACK_CATEGORIES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let webPortalCategoriesCache = null;
 let webPortalCache = {}; // keyed by category — each category fetched and cached independently,
                           // never all at once, matching the "only load what's tapped" rule
@@ -21008,7 +21189,9 @@ function formatRssTime(pubDate){
 // in-app viewer link — you don't need to edit the link format yourself.
 // Icon/color lookup for Syllabus grid cards — keyed by post, matches the same visual
 // identity used for this post elsewhere in the app (Mock Test, Tournament, MCQs)
-const SYLLABUS_VISUALS = {
+let SYLLABUS_VISUALS;
+try{
+SYLLABUS_VISUALS = {
   pho: {icon:"🛡️👥", css:"mock-c-pho"},
   ha: {icon:"⚕️", css:"gk-c2"},
   sn: {icon:"💉", css:"gk-c3"},
@@ -21017,6 +21200,7 @@ const SYLLABUS_VISUALS = {
   ha_license: {icon:"📜", css:"gk-c7"},
   bph_license: {icon:"🎓", css:"gk-c8"},
 };
+}catch(err){ SYLLABUS_VISUALS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SYLLABUS_VISUALS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 // Populated from the "Syllabus" Google Sheet tab — see loadSyllabusData() below.
 // These are the fallback values shown before the first successful fetch (or if offline).
@@ -21247,9 +21431,12 @@ function paintUpdates(updates){
 // Baked directly into the app — guarantees something real shows INSTANTLY, even the very
 // first time someone ever opens the app. Update occasionally to match your Sheet; the
 // background fetch always corrects it moments later regardless.
-const FALLBACK_UPDATES = [
+let FALLBACK_UPDATES;
+try{
+FALLBACK_UPDATES = [
   {Date:"2016-2030", Title:"SDGs", Description:"Global development agenda adopted by the United Nations with 17 goals to end poverty, protect the planet, and ensure peace and prosperity for all by 2030.", Link:"https://drive.google.com/file/d/1NPHB7ttss-hI7LLkYPNppVy_8JqWX6G_/view?usp=sharing"},
 ];
+}catch(err){ FALLBACK_UPDATES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "FALLBACK_UPDATES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 async function renderCurrentAffairs(){
   let cached = null;
@@ -21272,7 +21459,10 @@ try{ renderGkCategories(); }catch(err){ if(window.showDebugError) showDebugError
 // renderCurrentAffairs() now loads on demand when the New Update card is tapped (see click handler above)
 
 // ---------- Subject-wise MCQs: subjects with live counts (loaded ONLY when this section is opened) ----------
-const SET_SIZE = 50;
+let SET_SIZE;
+try{
+SET_SIZE = 50;
+}catch(err){ SET_SIZE = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SET_SIZE" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 // Known subject names — matches your Google Sheet tabs exactly. Shown INSTANTLY,
 // so the screen never sits blank waiting on the network; counts fill in right after.
 
@@ -21408,14 +21598,23 @@ function getStudyStreak(){
 // already has its own weekly usage limit, Battle needs a real opponent or a day to pass, Daily
 // Challenge is once/day) — adding artificial caps to those would just be redundant complexity
 // the document itself warns against. ----------
-const LP_VALUES = {
+let LP_VALUES;
+try{
+LP_VALUES = {
   correctMcq: 10, correctPastQuestion: 12, mockTestComplete: 20,
   dailyChallenge: 15, revisionComplete: 10, mistakeRecovered: 10,
   battleWin: 20, battleParticipation: 5,
   weeklyReward: 1, // per-point value of 1 — the tier's exact bonus is passed as the count, not derived from a fixed rate
 };
-const LP_DAILY_CAP_MCQ = 300; // 30 correct MCQs/day worth — genuine daily practice still counts fully, endless grinding doesn't
-const LP_LOG_RETENTION_DAYS = 35; // enough to always compute "this month" for the current month plus buffer
+}catch(err){ LP_VALUES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "LP_VALUES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let LP_DAILY_CAP_MCQ;
+try{
+LP_DAILY_CAP_MCQ = 300; // 30 correct MCQs/day worth — genuine daily practice still counts fully, endless grinding doesn't
+}catch(err){ LP_DAILY_CAP_MCQ = undefined; if(window.showDebugError) showDebugError("A required setting (" + "LP_DAILY_CAP_MCQ" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let LP_LOG_RETENTION_DAYS;
+try{
+LP_LOG_RETENTION_DAYS = 35; // enough to always compute "this month" for the current month plus buffer
+}catch(err){ LP_LOG_RETENTION_DAYS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "LP_LOG_RETENTION_DAYS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 // ---------- Chapter-level performance tracking for My Progress's Subject Detail and Weak
 // Topics — Sets only ever stored subject-level correct/wrong counts, never per-chapter, so this
@@ -21445,7 +21644,10 @@ function getChaptersForSubject(subject){
 // A chapter counts as "completed" once genuinely practiced with solid accuracy — thresholds are
 // a judgment call, not a value handed down by any existing system, since nothing like this was
 // tracked before
-const CHAPTER_COMPLETE_MIN_ATTEMPTS = 5;
+let CHAPTER_COMPLETE_MIN_ATTEMPTS;
+try{
+CHAPTER_COMPLETE_MIN_ATTEMPTS = 5;
+}catch(err){ CHAPTER_COMPLETE_MIN_ATTEMPTS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "CHAPTER_COMPLETE_MIN_ATTEMPTS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function isChapterComplete(c){
   return c.attempted >= CHAPTER_COMPLETE_MIN_ATTEMPTS && Math.round((c.correct / c.attempted) * 100) >= CHAPTER_COMPLETE_MIN_ACCURACY;
 }
@@ -21522,8 +21724,14 @@ function getTournamentHistory(){
 // Difficulty bonus is deliberately not included — questions don't currently carry a difficulty
 // rating anywhere in this app, and inventing one would mean fabricating data rather than scoring
 // something real. ----------
-const TOURNAMENT_POINTS_PER_CORRECT = 10;
-const TOURNAMENT_COMPLETION_BONUS = 20;
+let TOURNAMENT_POINTS_PER_CORRECT;
+try{
+TOURNAMENT_POINTS_PER_CORRECT = 10;
+}catch(err){ TOURNAMENT_POINTS_PER_CORRECT = undefined; if(window.showDebugError) showDebugError("A required setting (" + "TOURNAMENT_POINTS_PER_CORRECT" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let TOURNAMENT_COMPLETION_BONUS;
+try{
+TOURNAMENT_COMPLETION_BONUS = 20;
+}catch(err){ TOURNAMENT_COMPLETION_BONUS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "TOURNAMENT_COMPLETION_BONUS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function logTournamentResult(weekKey, score, total){
   const log = getTournamentHistory();
   const points = (score * TOURNAMENT_POINTS_PER_CORRECT) + (total > 0 ? TOURNAMENT_COMPLETION_BONUS : 0);
@@ -21631,12 +21839,15 @@ function getWeekKey(date){
   const monday = new Date(d); monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   return monday.toISOString().slice(0, 10); // the Monday date IS the week's identifier
 }
-const WEEKLY_REWARD_TIERS = [
+let WEEKLY_REWARD_TIERS;
+try{
+WEEKLY_REWARD_TIERS = [
   { maxRank: 1, badge: '🥇 Champion', bonus: 50 },
   { maxRank: 2, badge: '🥈 Runner-up', bonus: 30 },
   { maxRank: 3, badge: '🥉 Achievement', bonus: 20 },
   { maxRank: 10, badge: '⭐ Elite', bonus: 10 },
 ];
+}catch(err){ WEEKLY_REWARD_TIERS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "WEEKLY_REWARD_TIERS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function getEarnedBadges(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_earned_badges')) || '[]'); }catch(e){ return []; }
 }
@@ -21679,12 +21890,15 @@ function getMonthKey(date){
   const d = new Date(date);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
-const MONTHLY_REWARD_TIERS = [
+let MONTHLY_REWARD_TIERS;
+try{
+MONTHLY_REWARD_TIERS = [
   { maxRank: 1, badge: '👑 Monthly Champion', bonus: 150 },
   { maxRank: 2, badge: '🥈 Monthly Runner-up', bonus: 90 },
   { maxRank: 3, badge: '🥉 Monthly Third Place', bonus: 60 },
   { maxRank: 10, badge: '⭐ Monthly Elite', bonus: 25 },
 ];
+}catch(err){ MONTHLY_REWARD_TIERS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MONTHLY_REWARD_TIERS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function checkMonthlyChampionship(){
   const currentMonthKey = getMonthKey(new Date());
   let lastCheckedMonth = null;
@@ -21935,7 +22149,9 @@ function progressKey(subject){
 let SUBJECTS_WITH_COUNTS = KNOWN_SUBJECTS.map(name => ({name}));
 
 // ---------- Subject-wise MCQs: Step 0 — pick a post (same pattern as Syllabus) ----------
-const MCQ_POSTS = [
+let MCQ_POSTS;
+try{
+MCQ_POSTS = [
   {key:"pho", label:"Public Health Officer", ready:true, icon:"🛡️👥", css:"mock-c-pho"},
   {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
   {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
@@ -21944,6 +22160,7 @@ const MCQ_POSTS = [
   {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📜", css:"gk-c7"},
   {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
 ];
+}catch(err){ MCQ_POSTS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "MCQ_POSTS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function renderMcqPosts(){
   const selected = getSelectedPosts();
   const posts = selected.length > 0 ? MCQ_POSTS.filter(p => selected.includes(p.key)) : MCQ_POSTS;
@@ -22118,15 +22335,6 @@ async function startMockTest(post){
 
 // ---------- Past Questions: real exam papers, own dashboard section (not part of Subject-wise MCQs) ----------
 // Post-picker, same style as Mock Test — only PHO has real papers uploaded so far.
-const PAST_QUESTIONS_POSTS = [
-  {key:"pho", label:"Public Health Officer", ready:true, icon:"📜", css:"mock-c-pho"},
-  {key:"ha", label:"Health Assistant", ready:true, icon:"⚕️", css:"gk-c2"},
-  {key:"sn", label:"Staff Nurse", ready:true, icon:"💉", css:"gk-c3"},
-  {key:"ahw", label:"AHW", ready:true, icon:"🏥", css:"gk-c4"},
-  {key:"anm", label:"ANM", ready:true, icon:"🤰", css:"gk-c5"},
-  {key:"ha_license", label:"HA License (NHPC)", ready:true, icon:"📄", css:"gk-c7"},
-  {key:"bph_license", label:"BPH License (NHPC)", ready:true, icon:"🎓", css:"gk-c8"},
-];
 
 // Populated per-post from each post's own "Past Questions List" tab — see loadPastQuestionsList()
 // below. Add/remove a row there anytime to add/remove a paper — no code changes needed.
@@ -23671,7 +23879,10 @@ safeOn('battleResultDoneBtn', 'click', () => {
 // document's own example numbers) would need server-side aggregation instead of a client reading
 // every participant doc, which isn't built here. ----------
 let currentDailyBattleActive = false;
-const DAILY_BATTLE_QUESTION_COUNT = 20;
+let DAILY_BATTLE_QUESTION_COUNT;
+try{
+DAILY_BATTLE_QUESTION_COUNT = 20;
+}catch(err){ DAILY_BATTLE_QUESTION_COUNT = undefined; if(window.showDebugError) showDebugError("A required setting (" + "DAILY_BATTLE_QUESTION_COUNT" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function dailyBattleDocRef(){
   const { doc } = window.hlFirestoreFns;
   return doc(window.hlFirestore, 'dailyBattles', todayISO());
@@ -24570,7 +24781,10 @@ safeOn('restartBtn', 'click', () => {
 let chatHistory = []; // [{role:'user'|'assistant', content:'...'}]
 let chatInitialized = false;
 
-const CHAT_GREETING = "नमस्ते! I'm your Health Loksewa assistant. Ask me about subjects, syllabus, how the app works, or study tips — I'm here to help. 🙂";
+let CHAT_GREETING;
+try{
+CHAT_GREETING = "नमस्ते! I'm your Health Loksewa assistant. Ask me about subjects, syllabus, how the app works, or study tips — I'm here to help. 🙂";
+}catch(err){ CHAT_GREETING = undefined; if(window.showDebugError) showDebugError("A required setting (" + "CHAT_GREETING" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 function initChat(){
   if(chatInitialized) return; // don't reset the conversation every time they revisit
@@ -24719,8 +24933,8 @@ function addSaveToNotesButtonToBubble(bubble, text){
 // (Dictionary, Health Guide, Mnemonics) without changing anything for the existing AI Chat speak
 // button, which never passed one and keeps working exactly as before. speechSynthesis only ever
 // plays one utterance at a time page-wide, so a new call always cancels whatever was playing, and
-// resets that button's icon too if it was mid-speech. ----------
-let currentSpeakingBtn = null;
+// resets that button's icon too if it was mid-speech. currentSpeakingBtn itself is declared near
+// the top of the script for safety (see ~line 7921). ----------
 function speakText(text, btn){
   if(!window.speechSynthesis) return;
   const wasThisButton = btn && currentSpeakingBtn === btn;
