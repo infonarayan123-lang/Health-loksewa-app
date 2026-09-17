@@ -22453,9 +22453,13 @@ async function startSet(subject, setNumber, totalSets){
           refreshOmrStrip();
         }
         try{ localStorage.setItem(cacheKey, JSON.stringify(quizQuestions)); }catch(e){}
-      }).catch(() => {
-        // Background fetch failed — the user keeps going with whatever loaded in Phase 1;
-        // not fatal, just means this Set has fewer questions than it should this one time.
+      }).catch((err) => {
+        // Real fix: this used to fail completely silently, leaving the user with only the first
+        // 5 questions and no idea why — they'd assume this Set genuinely just had 5 questions.
+        // Now shown honestly, matching the same real-error pattern used elsewhere in the app.
+        if(window.showDebugError){
+          showDebugError('Only loaded ' + quizQuestions.length + ' of ' + SET_SIZE + ' questions for this Set — the rest failed to load in the background.\n\nReal error: ' + friendlyFetchError(err));
+        }
       });
     }
   }catch(err){
@@ -24226,7 +24230,13 @@ function handleAnswer(letter){
     });
   }
 
-  document.getElementById('nextBtn').disabled = false;
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.disabled = false;
+  // Real fix: this button was becoming clickable but never updating its own text away from
+  // "Select an answer, then tap to continue" — meaning it looked exactly as unusable as before
+  // even once it was genuinely ready to tap, which is confusing enough that someone could
+  // reasonably assume the button itself was broken.
+  nextBtn.textContent = currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question →';
   refreshOmrStrip();
 }
 document.getElementById('idkBtn').addEventListener('click', () => handleAnswer('IDK'));
