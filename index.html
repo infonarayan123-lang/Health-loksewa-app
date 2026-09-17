@@ -7233,7 +7233,7 @@
     }
   });
   document.getElementById('verifyEmailLogoutBtn').addEventListener('click', async () => {
-    if(!confirm('Sign out and use a different account?')) return;
+    if(!(await customConfirm('Sign out and use a different account?'))) return;
     await signOut(auth);
   });
 
@@ -8530,7 +8530,7 @@ function renderGroupMembers(group){
   });
   wrap.querySelectorAll('.gd-member-remove').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if(!confirm('Remove this member from the group?')) return;
+      if(!(await customConfirm('Remove this member from the group?'))) return;
       await window.removeGroupMember(currentGroupDetailCode, btn.dataset.uid);
       openGroupDetail(currentGroupDetailCode);
     });
@@ -8541,7 +8541,7 @@ document.getElementById('gdInviteBtn').addEventListener('click', async () => {
   try{ await navigator.clipboard.writeText(currentGroupDetailCode); alert('Invite code copied!'); }catch(e){}
 });
 document.getElementById('gdLeaveBtn').addEventListener('click', async () => {
-  if(!currentGroupDetailCode || !confirm('Leave this group?')) return;
+  if(!currentGroupDetailCode || !(await customConfirm('Leave this group?'))) return;
   const result = await window.leaveStudyGroup(currentGroupDetailCode);
   if(result.reason === 'admin_cannot_leave'){
     alert('As the group Admin, you can\'t leave — you would need to delete the group instead.');
@@ -12373,8 +12373,8 @@ document.getElementById('mnCreateSaveBtn').addEventListener('click', () => {
   showScreen(mnemonicsScreen);
   renderMnemonics(document.getElementById('mnemonicsSearchBox').value);
 });
-document.getElementById('mnCreateDeleteBtn').addEventListener('click', () => {
-  if(!mnemonicEditingId || !confirm('Delete this mnemonic?')) return;
+document.getElementById('mnCreateDeleteBtn').addEventListener('click', async () => {
+  if(!mnemonicEditingId || !(await customConfirm('Delete this mnemonic?'))) return;
   saveCustomMnemonics(getCustomMnemonics().filter(m => m.id !== mnemonicEditingId));
   showScreen(mnemonicsScreen);
   renderMnemonics(document.getElementById('mnemonicsSearchBox').value);
@@ -14709,8 +14709,8 @@ document.getElementById('sevenDayRevisionBtn').addEventListener('click', () => {
   showScreen(sevenDayRevisionScreen);
   render7DayPlan();
 });
-document.getElementById('sevenDayResetBtn').addEventListener('click', () => {
-  if(!confirm('Regenerate your 7-day plan from today, based on your current weak subjects?')) return;
+document.getElementById('sevenDayResetBtn').addEventListener('click', async () => {
+  if(!(await customConfirm('Regenerate your 7-day plan from today, based on your current weak subjects?'))) return;
   generate7DayPlan();
   render7DayPlan();
 });
@@ -15210,7 +15210,7 @@ async function renderNoteImages(note){
   ` : '').join('');
   document.querySelectorAll('.note-image-delete-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if(!confirm('Remove this image from the note?')) return;
+      if(!(await customConfirm('Remove this image from the note?'))) return;
       const imgId = btn.dataset.imgId;
       await deleteNoteImage(imgId).catch(() => {});
       const notes = getNotes();
@@ -15457,8 +15457,8 @@ document.getElementById('noteDrawUndoBtn').addEventListener('click', () => {
 document.getElementById('noteDrawRedoBtn').addEventListener('click', () => {
   if(noteDrawHistoryIndex < noteDrawHistory.length - 1){ noteDrawHistoryIndex++; noteDrawRestoreFromHistory(); }
 });
-document.getElementById('noteDrawClearBtn').addEventListener('click', () => {
-  if(!confirm('Clear this drawing?')) return;
+document.getElementById('noteDrawClearBtn').addEventListener('click', async () => {
+  if(!(await customConfirm('Clear this drawing?'))) return;
   const rect = noteDrawCanvasEl.getBoundingClientRect();
   noteDrawCtx.globalCompositeOperation = 'source-over';
   noteDrawCtx.globalAlpha = 1;
@@ -16214,12 +16214,12 @@ function closeLockNoteModal(){
   document.getElementById('lockNoteBackdrop').style.display = 'none';
   document.getElementById('lockNoteModal').style.display = 'none';
 }
-document.getElementById('drawerLockNoteBtn').addEventListener('click', () => {
+document.getElementById('drawerLockNoteBtn').addEventListener('click', async () => {
   closeNoteMoreDrawer();
   const notes = getNotes();
   const note = notes.find(n => n.id === currentEditingNoteId);
   if(note && note.lockedPinHash){
-    if(!confirm('Remove the PIN lock from this note?')) return;
+    if(!(await customConfirm('Remove the PIN lock from this note?'))) return;
     note.lockedPinHash = null;
     saveNotes(notes);
     alert('PIN lock removed.');
@@ -16641,8 +16641,8 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
 });
 
 // ---------- Delete (soft) / Trash / Restore / Permanent delete ----------
-document.getElementById('noteDeleteBtn').addEventListener('click', () => {
-  if(!confirm('Move this note to Trash?')) return;
+document.getElementById('noteDeleteBtn').addEventListener('click', async () => {
+  if(!(await customConfirm('Move this note to Trash?'))) return;
   const notes = getNotes();
   const idx = notes.findIndex(n => n.id === currentEditingNoteId);
   if(idx === -1) return;
@@ -16678,7 +16678,7 @@ function renderNoteTrash(){
   });
   document.querySelectorAll('[data-purge]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if(!confirm('Permanently delete this note? This cannot be undone.')) return;
+      if(!(await customConfirm('Permanently delete this note? This cannot be undone.'))) return;
       let notes = getNotes();
       const noteToDelete = notes.find(n => n.id === btn.dataset.purge);
       if(noteToDelete && noteToDelete.imageIds && noteToDelete.imageIds.length){
@@ -16874,8 +16874,8 @@ document.getElementById('hwUndoBtn').addEventListener('click', () => {
 document.getElementById('hwRedoBtn').addEventListener('click', () => {
   if(hwHistoryIndex < hwHistory.length - 1){ hwHistoryIndex++; hwRestoreFromHistory(); }
 });
-document.getElementById('hwClearBtn').addEventListener('click', () => {
-  if(!confirm('Clear the whole page?')) return;
+document.getElementById('hwClearBtn').addEventListener('click', async () => {
+  if(!(await customConfirm('Clear the whole page?'))) return;
   const rect = hwCanvas.getBoundingClientRect();
   hwCtx.globalCompositeOperation = 'source-over';
   hwCtx.globalAlpha = 1;
@@ -19272,7 +19272,7 @@ document.getElementById('npMasterToggle').addEventListener('click', async () => 
   const btn = document.getElementById('npMasterToggle');
   const currentlyOn = btn.textContent === 'On';
   if(currentlyOn){
-    if(!confirm('Turn off all notifications?')) return;
+    if(!(await customConfirm('Turn off all notifications?'))) return;
     btn.disabled = true;
     await window.disablePushNotifications();
     btn.disabled = false;
@@ -19397,7 +19397,7 @@ document.getElementById('alsChangePinBtn').addEventListener('click', async () =>
 });
 document.getElementById('alsDisableBtn').addEventListener('click', async () => {
   if(!(await reauthenticateAppLock())){ alert('Incorrect PIN or authentication failed.'); return; }
-  if(!confirm('Remove App Lock entirely? You can set it up again anytime.')) return;
+  if(!(await customConfirm('Remove App Lock entirely? You can set it up again anytime.'))) return;
   saveAppLockSettings({ enabled: false, method: 'pin', pinHash: null, credentialId: null, autoLockSeconds: 60, lockOnMinimize: true });
   alert('App Lock removed.');
   renderAppLockSettings();
@@ -19606,8 +19606,8 @@ document.getElementById('stFocusCustomBtn').addEventListener('click', () => {
   if(!minutes || minutes <= 0) return;
   startFocusSession(minutes);
 });
-document.getElementById('focusCancelBtn').addEventListener('click', () => {
-  if(!confirm('End this focus session early? It won\'t be counted as completed.')) return;
+document.getElementById('focusCancelBtn').addEventListener('click', async () => {
+  if(!(await customConfirm('End this focus session early? It won\'t be counted as completed.'))) return;
   clearInterval(focusTimerInterval);
   showScreen(screenTimeScreen);
   renderScreenTimeDashboard();
@@ -19807,7 +19807,7 @@ async function refreshMyDeviceSection(){
 }
 document.getElementById('menuLogoutOtherDevices').addEventListener('click', async () => {
   if(!window.currentUser || !window.hlFirestore) return;
-  if(!confirm('This will sign out every OTHER device using this account (not this one). Those devices will be logged out the next time they open the app. Continue?')) return;
+  if(!(await customConfirm('This will sign out every OTHER device using this account (not this one). Those devices will be logged out the next time they open the app. Continue?'))) return;
   try{
     const { doc, collection, getDocs, deleteDoc } = window.hlFirestoreFns;
     const db = window.hlFirestore;
@@ -20443,12 +20443,12 @@ function paintQotdAnswered(data){
 try{ loadQuestionOfDay(); }catch(err){ if(window.showDebugError) showDebugError('Startup step failed: loadQuestionOfDay();\n\n' + (err && err.message ? err.message : String(err))); }
 
 document.querySelectorAll('.back-link').forEach(b => {
-  b.addEventListener('click', () => {
+  b.addEventListener('click', async () => {
     const key = b.dataset.back || 'home';
 
     // Payment flow: confirm before leaving, since a checkout might be mid-flight
     if(key === 'premiumBack'){
-      if(!confirm('Are you sure you want to go back? This will cancel the payment process.')) return;
+      if(!(await customConfirm('Are you sure you want to go back? This will cancel the payment process.'))) return;
       navigateBack(premiumBackTarget);
       return;
     }
@@ -21948,6 +21948,26 @@ document.getElementById('inAppNotifBanner').addEventListener('click', () => {
 // open" symptoms with no visible cause, and there was no way to get real browser error details
 // without a computer and DevTools. Safe to remove later once the underlying issue is confirmed
 // found and fixed — this is a diagnostic aid, not a permanent feature. ----------
+// ---------- Real, guaranteed-to-render confirmation — replaces native confirm() everywhere,
+// since native browser dialogs can be silently suppressed in some installed-PWA contexts, making
+// a button relying on confirm() look completely broken when it's actually just waiting on a
+// dialog that never appears. Promise-based so every existing "if(!confirm(...)) return;" call
+// site converts cleanly to "if(!await customConfirm(...)) return;" with an async function. ----
+function customConfirm(message){
+  return new Promise((resolve) => {
+    document.getElementById('customConfirmText').textContent = message;
+    document.getElementById('customConfirmBackdrop').style.display = 'block';
+    document.getElementById('customConfirmModal').style.display = 'block';
+    const cleanup = (result) => {
+      document.getElementById('customConfirmBackdrop').style.display = 'none';
+      document.getElementById('customConfirmModal').style.display = 'none';
+      resolve(result);
+    };
+    document.getElementById('customConfirmOkBtn').onclick = () => cleanup(true);
+    document.getElementById('customConfirmCancelBtn').onclick = () => cleanup(false);
+  });
+}
+
 function showDebugError(message){
   document.getElementById('debugErrorText').textContent = message;
   document.getElementById('debugErrorOverlay').style.display = 'block';
@@ -22859,8 +22879,8 @@ document.getElementById('fcSaveCardBtn').addEventListener('click', () => {
   showScreen(flashcardsScreen);
   renderFlashcardsHome();
 });
-document.getElementById('fcDeleteCardBtn').addEventListener('click', () => {
-  if(!confirm('Delete this card?')) return;
+document.getElementById('fcDeleteCardBtn').addEventListener('click', async () => {
+  if(!(await customConfirm('Delete this card?'))) return;
   let cards = getFcCards();
   cards = cards.filter(c => c.id !== fcEditingCardId);
   saveFcCards(cards);
@@ -24266,8 +24286,8 @@ document.getElementById('skipQuestionBtn').addEventListener('click', () => {
 });
 
 // ---------- Exit quiz early (with confirmation, so progress isn't lost by accident) ----------
-document.getElementById('quizExitBtn').addEventListener('click', () => {
-  const confirmed = confirm('Are you sure you want to quit? Your progress in this set will be lost.');
+document.getElementById('quizExitBtn').addEventListener('click', async () => {
+  const confirmed = await customConfirm('Are you sure you want to quit? Your progress in this set will be lost.');
   if(confirmed){
     clearInterval(timerInterval);
     currentSetInfo = null;
@@ -24618,10 +24638,10 @@ function initChat(){
   });
 
   // ---- Delete Chat ----
-  document.getElementById('deleteChatBtn').addEventListener('click', (e) => {
+  document.getElementById('deleteChatBtn').addEventListener('click', async (e) => {
     e.stopPropagation();
     document.getElementById('chatMenuDropdown').classList.remove('open');
-    if(confirm('Delete this entire chat conversation? This cannot be undone.')){
+    if(await customConfirm('Delete this entire chat conversation? This cannot be undone.')){
       chatHistory = [];
       try{ localStorage.removeItem(uk('hl_chat_history')); }catch(err){}
       if(window.syncToCloud) window.syncToCloud({ chatHistory: [] });
@@ -24839,6 +24859,20 @@ if ('serviceWorker' in navigator) {
        directly on screen — so a real problem is visible and screenshot-able immediately,
        without needing a computer, DevTools, or a second test account. Stays until tapped away,
        since a fast auto-dismiss defeats the purpose of being able to actually read/copy it. -->
+  <!-- Real, DOM-based confirmation modal — replaces native confirm() everywhere in the app.
+       Native browser confirm()/alert() dialogs can be silently suppressed in some installed-PWA
+       WebView contexts, meaning a button relying on confirm() can look completely unresponsive —
+       the code is waiting on a dialog that never actually appears. This is guaranteed to render
+       since it's just normal HTML, not a browser-native API call. -->
+  <div id="customConfirmBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000;"></div>
+  <div id="customConfirmModal" style="display:none; position:fixed; left:8%; right:8%; top:30%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:10001;">
+    <p id="customConfirmText" style="font-size:14px; color:var(--ink-on-elevated); margin-bottom:20px; line-height:1.5;"></p>
+    <div style="display:flex; gap:10px;">
+      <button id="customConfirmCancelBtn" style="flex:1; padding:11px; background:none; border:1.5px solid var(--ink-on-elevated); border-radius:9px; color:var(--ink-on-elevated); font-weight:700; font-size:13px;">Cancel</button>
+      <button id="customConfirmOkBtn" style="flex:1; padding:11px; background:var(--crimson); border:none; border-radius:9px; color:#fff; font-weight:700; font-size:13px;">OK</button>
+    </div>
+  </div>
+
   <div id="debugErrorOverlay" style="display:none; position:fixed; left:12px; right:12px; bottom:80px; z-index:9999; background:#2a0a0a; border:2px solid #F87171; border-radius:12px; padding:14px; max-height:40vh; overflow-y:auto;">
     <div style="font-size:12px; font-weight:800; color:#F87171; margin-bottom:6px;">⚠️ A real error occurred — please screenshot this:</div>
     <div id="debugErrorText" style="font-size:11px; color:#fca5a5; font-family:monospace; white-space:pre-wrap; word-break:break-word;"></div>
