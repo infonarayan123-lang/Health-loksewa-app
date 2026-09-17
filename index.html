@@ -7871,6 +7871,49 @@ let studyGroupsBackTarget = studyGroupsScreen;
 // track their own specific back-target (docViewer, setSelect, etc.) keep working exactly as
 // before — this only fixes the generic case that used to hard-code "home". ----------
 let navHistoryStack = [];
+
+// Moved here, very early in the script, deliberately: these three buttons (Next Question,
+// Skip, and the quiz Exit/Home button) are critical, always-needed controls during any quiz.
+// If they're registered via a normal top-level statement late in the file, and ANY unrelated
+// earlier statement throws for any reason on a given real device/data combination, these
+// listeners simply never get attached — the buttons look and render correctly, but silently
+// do nothing when tapped, with zero visible error anywhere. Placing them here, right after
+// their required variables exist, makes them functional regardless of what else fails later.
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if(currentIndex < quizQuestions.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    clearInterval(timerInterval);
+    finishQuiz();
+  }
+});
+// Skip: deliberately leaves answers[currentIndex] as null (never sets it) and just advances —
+// finishQuiz()'s existing results loop already treats any null answer as "Skipped" with no score
+// deduction and no chapter/accuracy tracking, so nothing new was needed there, only a real way
+// for the user to reach that state mid-quiz rather than only via running out of time
+document.getElementById('skipQuestionBtn').addEventListener('click', () => {
+  if(answers[currentIndex] !== null) return; // already answered — nothing to skip
+  if(currentIndex < quizQuestions.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    clearInterval(timerInterval);
+    finishQuiz();
+  }
+});
+
+// ---------- Exit quiz early (with confirmation, so progress isn't lost by accident) ----------
+document.getElementById('quizExitBtn').addEventListener('click', async () => {
+  const confirmed = await customConfirm('Are you sure you want to quit? Your progress in this set will be lost.');
+  if(confirmed){
+    clearInterval(timerInterval);
+    currentSetInfo = null;
+    const target = navHistoryStack.length > 0 ? navHistoryStack.pop() : homeScreen;
+    navigateBack(target);
+  }
+  // If cancelled, do nothing — stay right where they are in the quiz
+});
 let suppressHistoryPush = false;
 
 // ---------- Screen Time & Study Time tracking: Health Loksewa's OWN in-app usage only — a web
@@ -24239,41 +24282,6 @@ function handleAnswer(letter){
 }
 document.getElementById('idkBtn').addEventListener('click', () => handleAnswer('IDK'));
 
-document.getElementById('nextBtn').addEventListener('click', () => {
-  if(currentIndex < quizQuestions.length - 1){
-    currentIndex++;
-    renderQuestion();
-  } else {
-    clearInterval(timerInterval);
-    finishQuiz();
-  }
-});
-// Skip: deliberately leaves answers[currentIndex] as null (never sets it) and just advances —
-// finishQuiz()'s existing results loop already treats any null answer as "Skipped" with no score
-// deduction and no chapter/accuracy tracking, so nothing new was needed there, only a real way
-// for the user to reach that state mid-quiz rather than only via running out of time
-document.getElementById('skipQuestionBtn').addEventListener('click', () => {
-  if(answers[currentIndex] !== null) return; // already answered — nothing to skip
-  if(currentIndex < quizQuestions.length - 1){
-    currentIndex++;
-    renderQuestion();
-  } else {
-    clearInterval(timerInterval);
-    finishQuiz();
-  }
-});
-
-// ---------- Exit quiz early (with confirmation, so progress isn't lost by accident) ----------
-document.getElementById('quizExitBtn').addEventListener('click', async () => {
-  const confirmed = await customConfirm('Are you sure you want to quit? Your progress in this set will be lost.');
-  if(confirmed){
-    clearInterval(timerInterval);
-    currentSetInfo = null;
-    const target = navHistoryStack.length > 0 ? navHistoryStack.pop() : homeScreen;
-    navigateBack(target);
-  }
-  // If cancelled, do nothing — stay right where they are in the quiz
-});
 
 // ---------- Results ----------
 function finishQuiz(){
