@@ -22434,61 +22434,32 @@ function generateCertificate(subject, totalSets){
 async function startSet(subject, setNumber, totalSets){
   await showReadCarefullyReminder();
   const cacheKey = 'hl_set_cache_' + progressKey(subject) + '_' + setNumber;
-  showQuizLoading('Loading Question 1…');
-  const FIRST_BATCH = 5;
+  showQuizLoading('Loading your questions…');
 
   try{
     if(!navigator.onLine){
       throw new Error('offline'); // skip straight to the cached-copy fallback below
     }
-    const baseUrl = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
+    // Real fix: this used to fetch just the first 5 questions fast, then quietly load the
+    // remaining 45 in the background — but that depended on the backend supporting offset/limit
+    // parameters, which may not match what's actually deployed, and any failure in that second,
+    // silent step left someone stuck with a 5-question quiz with no way to tell why. A single,
+    // complete fetch is simpler and removes this entire class of problem — the backend has
+    // already been confirmed to handle a 50-100 question request in one go without issue.
+    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
+    const res = await fetchWithTimeout(url);
+    let pool = await res.json();
 
-    // Phase 1: fetch just the first few questions — small payload, shows up fast
-    const firstRes = await fetchWithTimeout(`${baseUrl}&offset=0&limit=${FIRST_BATCH}`);
-    let firstBatch = await firstRes.json();
-
-    if(firstBatch.length === 0){
+    if(!pool || pool.length === 0){
       hideQuizLoading();
       alert('No questions found in this set yet.');
       return;
     }
 
+    try{ localStorage.setItem(cacheKey, JSON.stringify(pool)); }catch(e){}
     hideQuizLoading();
-    firstBatch = shuffle([...firstBatch]); // vary display order each attempt, within this batch
-    launchQuiz(firstBatch, subject, setNumber, totalSets);
-
-    // Phase 2: quietly fetch the rest in the background and append — the user is usually
-    // still on Question 1 or 2 by the time this finishes, so it feels seamless.
-    if(firstBatch.length === SET_SIZE){
-      // This Set only had FIRST_BATCH questions total anyway — nothing more to fetch
-      try{ localStorage.setItem(cacheKey, JSON.stringify(firstBatch)); }catch(e){}
-    } else {
-      fetchWithTimeout(`${baseUrl}&offset=${FIRST_BATCH}`).then(r => r.json()).then(restBatch => {
-        if(restBatch && restBatch.length > 0){
-          restBatch = shuffle([...restBatch]); // vary display order each attempt, within this batch
-          quizQuestions = quizQuestions.concat(restBatch);
-          answers = answers.concat(new Array(restBatch.length).fill(null));
-          secondsLeft += restBatch.length * (RAPID_FIRE_PACE_SEC[currentMcqPost] || 45); // extend the timer to match the full set, at this post's real exam pace
-          buildOmrStrip();
-          refreshOmrStrip();
-          // Real fix: quizQuestions.length grows here, but the visible "Q X / Y" counter text
-          // is only ever set inside renderQuestion() — which doesn't run again until the user
-          // navigates to a new question. Someone sitting on Question 1 while this Phase 2 load
-          // completes would see the OMR dots update but the counter itself stay frozen at the
-          // old, stale total (e.g. "Q 1 / 5") even once the real count reaches 50.
-          const qCounterEl = document.getElementById('qCounter');
-          if(qCounterEl) qCounterEl.textContent = `Q ${currentIndex + 1} / ${quizQuestions.length}`;
-        }
-        try{ localStorage.setItem(cacheKey, JSON.stringify(quizQuestions)); }catch(e){}
-      }).catch((err) => {
-        // Real fix: this used to fail completely silently, leaving the user with only the first
-        // 5 questions and no idea why — they'd assume this Set genuinely just had 5 questions.
-        // Now shown honestly, matching the same real-error pattern used elsewhere in the app.
-        if(window.showDebugError){
-          showDebugError('Only loaded ' + quizQuestions.length + ' of ' + SET_SIZE + ' questions for this Set — the rest failed to load in the background.\n\nReal error: ' + friendlyFetchError(err));
-        }
-      });
-    }
+    pool = shuffle([...pool]); // vary display order each attempt
+    launchQuiz(pool, subject, setNumber, totalSets);
   }catch(err){
     // Network failed or we're offline — try the cached copy from a previous successful load
     let cachedPool = null;
