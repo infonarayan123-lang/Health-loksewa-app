@@ -7963,6 +7963,10 @@ safeOn('quizExitBtn', 'click', async () => {
   }
   // If cancelled, do nothing — stay right where they are in the quiz
 });
+safeOn('restartBtn', 'click', () => {
+  currentSetInfo = null;
+  showScreen(homeScreen);
+});
 let suppressHistoryPush = false;
 
 // ---------- Screen Time & Study Time tracking: Health Loksewa's OWN in-app usage only — a web
@@ -8341,6 +8345,52 @@ safeOn('navPractice', 'click', () => {
 safeOn('navProgress', 'click', () => {
   showScreen(progressScreen);
   renderProgressScreen();
+});
+
+safeOn('goToSubjectProgress', 'click', (e) => {
+  e.preventDefault();
+  showScreen(subjectProgressScreen);
+  renderSubjectProgressList();
+});
+safeOn('goToQuestionPerformance', 'click', (e) => {
+  e.preventDefault();
+  showScreen(questionPerformanceScreen);
+  renderQuestionPerformance();
+});
+safeOn('goToWeakAreas', 'click', (e) => {
+  e.preventDefault();
+  showScreen(weakAreasScreen);
+  renderWeakAreas();
+});
+safeOn('goToAchievementsScreen', 'click', (e) => {
+  e.preventDefault();
+  showScreen(achievementsScreen);
+  renderAchievements(computeProgressStats(), getStudyStreak());
+});
+safeOn('goToLearnHubProgress', 'click', (e) => {
+  e.preventDefault();
+  showScreen(learnHubProgressScreen);
+  renderLearnHubProgress();
+});
+safeOn('goToRevisionProgress', 'click', (e) => {
+  e.preventDefault();
+  showScreen(revisionProgressScreen);
+  renderRevisionProgress();
+});
+safeOn('goToStudyActivity', 'click', (e) => {
+  e.preventDefault();
+  showScreen(studyActivityScreen);
+  renderStudyActivity();
+});
+safeOn('goToProgressGoals', 'click', (e) => {
+  e.preventDefault();
+  showScreen(progressGoalsScreen);
+  renderProgressGoals();
+});
+safeOn('goToProgressHistory', 'click', (e) => {
+  e.preventDefault();
+  showScreen(progressHistoryScreen);
+  renderProgressHistory();
 });
 safeOn('navProfile', 'click', () => {
   showScreen(profileScreen);
@@ -17631,31 +17681,6 @@ function renderProgressScreen(){
 function renderOverallProgressCard(){
   document.getElementById('overallProgressPct').textContent = `${computeProgressStats().overallPct}%`;
 }
-safeOn('goToSubjectProgress', 'click', (e) => {
-  e.preventDefault();
-  showScreen(subjectProgressScreen);
-  renderSubjectProgressList();
-});
-safeOn('goToQuestionPerformance', 'click', (e) => {
-  e.preventDefault();
-  showScreen(questionPerformanceScreen);
-  renderQuestionPerformance();
-});
-safeOn('goToWeakAreas', 'click', (e) => {
-  e.preventDefault();
-  showScreen(weakAreasScreen);
-  renderWeakAreas();
-});
-safeOn('goToAchievementsScreen', 'click', (e) => {
-  e.preventDefault();
-  showScreen(achievementsScreen);
-  renderAchievements(computeProgressStats(), getStudyStreak());
-});
-safeOn('goToLearnHubProgress', 'click', (e) => {
-  e.preventDefault();
-  showScreen(learnHubProgressScreen);
-  renderLearnHubProgress();
-});
 
 // ---------- Smart Insights: short, auto-generated observations from data already computed
 // elsewhere on this screen — deliberately capped at a few lines with one action each, per the
@@ -17694,11 +17719,6 @@ function renderSmartInsights(){
 
 // ---------- Revision Progress: entirely reused data — the spaced-repetition schedule already
 // tracked for Mistake Book / Revision Mode, just summarized here rather than duplicated ----------
-safeOn('goToRevisionProgress', 'click', (e) => {
-  e.preventDefault();
-  showScreen(revisionProgressScreen);
-  renderRevisionProgress();
-});
 function renderRevisionProgress(){
   const wrong = getWrongQuestions();
   const today = todayISO();
@@ -17727,11 +17747,6 @@ safeOn('rpStartBtn', 'click', () => {
 
 // ---------- Study Activity: reuses the exact Screen Time daily log rather than a second time-
 // tracking system ----------
-safeOn('goToStudyActivity', 'click', (e) => {
-  e.preventDefault();
-  showScreen(studyActivityScreen);
-  renderStudyActivity();
-});
 let saRange = 7;
 function renderStudyActivity(){
   const dates = getLastNDates(saRange);
@@ -17776,11 +17791,6 @@ document.querySelectorAll('.sa-range-btn').forEach(btn => {
 // ---------- Goals: Study Time reuses Screen Time's existing daily/weekly goal; Questions and
 // Topics are new, separate targets since they're a different kind of thing (a count, not a
 // duration) ----------
-safeOn('goToProgressGoals', 'click', (e) => {
-  e.preventDefault();
-  showScreen(progressGoalsScreen);
-  renderProgressGoals();
-});
 function renderProgressGoals(){
   const timeGoals = getScreenTimeGoals();
   const progGoals = getProgressGoals();
@@ -17822,11 +17832,6 @@ safeOn('pgEditBtn', 'click', () => {
 
 // ---------- History: pulls from the 3 dedicated result logs (Mock Test/Past Question/
 // Tournament) built in Phase 2 — the only activities with a real per-entry date to filter by ----
-safeOn('goToProgressHistory', 'click', (e) => {
-  e.preventDefault();
-  showScreen(progressHistoryScreen);
-  renderProgressHistory();
-});
 let phRange = 1;
 function renderProgressHistory(){
   const cutoff = addDaysISO(-(phRange - 1));
@@ -20614,7 +20619,12 @@ setInterval(showQuoteOfDay, 60 * 1000);
 
 // ---------- Question of the Day ----------
 async function loadQuestionOfDay(){
-  const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, resets at midnight (device time)
+  // Real fix: this previously used .toISOString(), which is always UTC regardless of the
+  // device's real timezone — meaning "today" here would flip over at 5:45am Nepal time, not at
+  // actual local midnight, and could mismatch the backend's own day boundary (which correctly
+  // uses Asia/Kathmandu). Computing the Nepal-local date directly keeps both sides in sync.
+  const nowNepal = new Date(Date.now() + (5.75 * 60 * 60 * 1000)); // UTC+5:45 offset
+  const todayKey = nowNepal.toISOString().slice(0, 10);
   const answeredKey = uk('hl_qotd_answered_' + todayKey);
 
   let answeredData = null;
@@ -24773,10 +24783,7 @@ function reviewRow(q, i, status, chosen){
   </div>`;
 }
 
-safeOn('restartBtn', 'click', () => {
-  currentSetInfo = null;
-  showScreen(homeScreen);
-});
+// (restartBtn's handler is declared near the top of the script for safety, see ~line 7966)
 
 // ---------- AI Assistant Chat ----------
 let chatHistory = []; // [{role:'user'|'assistant', content:'...'}]
