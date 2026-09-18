@@ -20572,7 +20572,8 @@ function getTodaysQotdEntry(){
   return {
     Date: todayLabel,
     Title: '🎯 Question of the Day is ready!',
-    Description: 'A fresh question is waiting for you on the home screen — answer it before it changes tomorrow.'
+    Description: 'A fresh question is waiting for you on the home screen — answer it before it changes tomorrow.',
+    _type: 'qotd'
   };
 }
 // Client-side generated, same pattern as the QOTD entry above — only shown when something is
@@ -20587,8 +20588,27 @@ function getTodaysRevisionEntry(){
   return {
     Date: formatDualDate(new Date()),
     Title: `🔄 ${total} item${total === 1 ? ' is' : 's are'} ready for today's revision`,
-    Description: `${mcqCount} question${mcqCount === 1 ? '' : 's'} and ${cardCount} Flash Card${cardCount === 1 ? '' : 's'} are due. Open Revision Mode to get started.`
+    Description: `${mcqCount} question${mcqCount === 1 ? '' : 's'} and ${cardCount} Flash Card${cardCount === 1 ? '' : 's'} are due. Open Revision Mode to get started.`,
+    _type: 'revision'
   };
+}
+// Deep-link: what tapping a notification card actually does. QOTD and Revision reuse the exact
+// navigation already used elsewhere in the app (the Home carousel's QOTD action, and the
+// existing showScreen(revisionScreen)+renderRevisionSummary() pattern used by Progress insights)
+// rather than inventing a new destination. A generic Sheet-driven entry only becomes tappable if
+// the admin gave it a real Link column — never a fake destination for one that didn't.
+function openNotificationEntry(n){
+  if(n._type === 'qotd'){
+    showScreen(homeScreen);
+    const card = document.getElementById('cardQotd');
+    if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else if(n._type === 'revision'){
+    showScreen(revisionScreen);
+    if(window.renderRevisionSummary) renderRevisionSummary();
+  } else if(n.Link){
+    window.open(n.Link, '_blank');
+  }
+  // No _type and no Link — purely informational, nothing to open
 }
 
 function paintNotifications(entries){
@@ -20599,13 +20619,50 @@ function paintNotifications(entries){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No notifications yet.</p>`;
     return;
   }
-  wrap.innerHTML = clean.map(n => `
-    <div class="content-card">
-      <div class="ca-date">${n.Date || ''}</div>
-      <h4>${n.Title || ''}</h4>
-      <p>${n.Description || ''}</p>
-    </div>
-  `).join('');
+  // TODAY vs EARLIER grouping. The client-generated QOTD/Revision entries are always "today" by
+  // construction; a backend Sheet entry is grouped by its own Date field (parsed as a real date,
+  // not string-matched against the display format, since formatDualDate's output isn't reliably
+  // re-comparable) — anything that fails to parse or isn't today falls into Earlier.
+  const todayStr = new Date().toDateString();
+  const today = [], earlier = [];
+  clean.forEach(n => {
+    if(n._type === 'qotd' || n._type === 'revision'){ today.push(n); return; }
+    const parsed = n.Date ? new Date(n.Date) : null;
+    if(parsed && !isNaN(parsed) && parsed.toDateString() === todayStr) today.push(n);
+    else earlier.push(n);
+  });
+
+  const cardHtml = (n) => {
+    const clickable = n._type === 'qotd' || n._type === 'revision' || !!n.Link;
+    return `
+      <div class="content-card notif-entry-card" data-clickable="${clickable}" style="${clickable ? 'cursor:pointer;' : ''}">
+        <div class="ca-date">${n.Date || ''}</div>
+        <h4>${n.Title || ''}</h4>
+        <p>${n.Description || ''}</p>
+      </div>
+    `;
+  };
+
+  let html = '';
+  if(today.length > 0){
+    html += `<div class="section-title" style="font-size:13px; margin-bottom:8px;">TODAY</div>`;
+    html += today.map(cardHtml).join('');
+  }
+  if(earlier.length > 0){
+    html += `<div class="section-title" style="font-size:13px; margin:16px 0 8px;">EARLIER</div>`;
+    html += earlier.map(cardHtml).join('');
+  }
+  wrap.innerHTML = html;
+
+  // Attach tap-to-open using the same entries array (by index) rather than re-parsing the
+  // rendered HTML — keeps the click action tied to real data, not scraped text.
+  const orderedForClicks = [...today, ...earlier];
+  wrap.querySelectorAll('.notif-entry-card').forEach((el, i) => {
+    const n = orderedForClicks[i];
+    if(n && (n._type === 'qotd' || n._type === 'revision' || n.Link)){
+      el.addEventListener('click', () => openNotificationEntry(n));
+    }
+  });
 }
 
 async function loadNotifications(){
