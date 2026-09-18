@@ -7923,6 +7923,28 @@ let studyGroupsBackTarget = studyGroupsScreen;
 // track their own specific back-target (docViewer, setSelect, etc.) keep working exactly as
 // before — this only fixes the generic case that used to hard-code "home". ----------
 let navHistoryStack = [];
+// Android/browser hardware Back integration: mirrors navHistoryStack's depth into the REAL
+// browser History API (via history.pushState), so the physical Android Back button actually has
+// history to walk through instead of exiting the app immediately (there was previously zero
+// connection between navHistoryStack and the real browser history at all). hlRealHistoryDepth
+// tracks how many of our own pushState entries are currently "outstanding" so we only ever
+// consume a real entry when one genuinely exists — this is what stops a stray history.back()
+// call from accidentally walking past our own entries and exiting the app early. hlBackGuardActive
+// distinguishes a popstate we triggered ourselves (via history.back() in consumeOneRealHistoryEntry)
+// from a genuine user Back press, so we never process the same back-navigation twice.
+let hlRealHistoryDepth = 0;
+let hlBackGuardActive = false;
+let hlQuizExitConfirmPending = false; // true while a "leave this test?" dialog is already awaiting an answer — stops a rapid double Back-press from stacking a second dialog
+// One-time "gate" screens shown before the user ever reaches Home (boot loading, login,
+// email verification, the post-login gate, mood check-in, onboarding). None of these should
+// ever become a valid Back-button destination once the user is past them — without this,
+// pressing hardware Back enough times from Home would overshoot into the loading screen or
+// login instead of stopping at Home and letting the app actually exit, as real testing caught.
+let HL_NAV_GATE_SCREENS;
+try{
+HL_NAV_GATE_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, verifyEmailScreen, postGateScreen,
+  moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen];
+}catch(err){ HL_NAV_GATE_SCREENS = []; if(window.showDebugError) showDebugError("A required setting (" + "HL_NAV_GATE_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
 let PAST_QUESTIONS_BY_POST = {}; // moved here for safety — populated per-post from the Sheet
 let rapidFireSelectedMode = null; // moved here for safety — used by Rapid Fire's mode tiles
@@ -7963,15 +7985,29 @@ safeOn('skipQuestionBtn', 'click', () => {
 });
 
 // ---------- Exit quiz early (with confirmation, so progress isn't lost by accident) ----------
-safeOn('quizExitBtn', 'click', async () => {
-  const confirmed = await customConfirm('Are you sure you want to quit? Your progress in this set will be lost.');
-  if(confirmed){
-    clearInterval(timerInterval);
-    currentSetInfo = null;
-    const target = navHistoryStack.length > 0 ? navHistoryStack.pop() : homeScreen;
-    navigateBack(target);
+// Shared by BOTH this Exit button and the Android/browser hardware Back button (wired further
+// below), so the exact same confirm message and cleanup logic exists in exactly one place rather
+// than being duplicated across two trigger points. Returns true if the user actually left.
+async function attemptLeaveQuiz(){
+  if(hlQuizExitConfirmPending) return false; // a leave-confirmation is already awaiting an answer — ignore this extra trigger (e.g. a rapid double Back-press) rather than stack a second dialog
+  hlQuizExitConfirmPending = true;
+  try{
+    const confirmed = await customConfirm('Are you sure you want to quit? Your progress in this set will be lost.');
+    if(confirmed){
+      clearInterval(timerInterval);
+      currentSetInfo = null;
+      const target = navHistoryStack.length > 0 ? navHistoryStack.pop() : homeScreen;
+      navigateBack(target);
+      return true;
+    }
+    return false; // cancelled — stay right where they are in the quiz
+  } finally {
+    hlQuizExitConfirmPending = false;
   }
-  // If cancelled, do nothing — stay right where they are in the quiz
+}
+safeOn('quizExitBtn', 'click', async () => {
+  const left = await attemptLeaveQuiz();
+  if(left) consumeOneRealHistoryEntry();
 });
 safeOn('restartBtn', 'click', () => {
   currentSetInfo = null;
@@ -8074,9 +8110,10 @@ function showScreen(el){
     screenTimeCurrentArea = getFeatureArea(el);
     screenTimeAreaStart = Date.now();
   }
-  if(currentActive && currentActive !== el && !suppressHistoryPush){
+  if(currentActive && currentActive !== el && !suppressHistoryPush && !HL_NAV_GATE_SCREENS.includes(currentActive)){
     navHistoryStack.push(currentActive);
     if(navHistoryStack.length > 30) navHistoryStack.shift(); // cap — avoid unbounded growth over a long session
+    pushNavHistoryState(); // keep the real browser/Android history in sync with this push
   }
   // Leaving the CPR 3D Demo — stop its WebGL render loop rather than let it keep rendering an
   // invisible canvas forever in the background (real battery/CPU drain on Android otherwise;
@@ -8131,6 +8168,24 @@ function showScreen(el){
 function navigateBack(target){
   suppressHistoryPush = true;
   showScreen(target);
+}
+// Records one real browser/Android history entry corresponding to a forward navigation, so the
+// physical Back button has something real to walk back through.
+function pushNavHistoryState(){
+  try{ history.pushState({ hlNav: true }, '', location.href); hlRealHistoryDepth++; }catch(e){}
+}
+// Called after any SOFTWARE-triggered back action (an in-app "← Back" tap, the quiz's own Exit
+// button) that already updated navHistoryStack + the visible screen — this consumes the one
+// matching real history entry so a later hardware Back press doesn't also try to consume it and
+// jump back further than the user actually asked for. The depth check keeps this safe even if
+// called when nothing is actually outstanding (e.g. a fallback-to-Home tap with an empty stack) —
+// it simply does nothing rather than risk eating into real history and exiting the app early.
+function consumeOneRealHistoryEntry(){
+  if(hlRealHistoryDepth > 0){
+    hlRealHistoryDepth--;
+    hlBackGuardActive = true;
+    try{ history.back(); }catch(e){ hlBackGuardActive = false; }
+  }
 }
 
 // ---------- Custom pull-to-refresh: swipe down at the top of a screen refreshes THAT
@@ -20818,6 +20873,7 @@ document.querySelectorAll('.back-link').forEach(b => {
     if(key === 'premiumBack'){
       if(!(await customConfirm('Are you sure you want to go back? This will cancel the payment process.'))) return;
       navigateBack(premiumBackTarget);
+      consumeOneRealHistoryEntry();
       return;
     }
 
@@ -20838,7 +20894,41 @@ document.querySelectorAll('.back-link').forEach(b => {
     } else {
       navigateBack(SCREEN_BY_KEY[key] || homeScreen);
     }
+    // Every branch above corresponds to undoing exactly one prior forward navigation, so keep
+    // the real browser/Android history in sync the same way as any other software-triggered back.
+    consumeOneRealHistoryEntry();
   });
+});
+
+// ---------- Android/browser hardware Back button — the single, unified handler for the physical
+// device Back button and the browser's own Back gesture/button. Deliberately reuses the SAME
+// navHistoryStack + navigateBack() the in-app "← Back" links above already use — no second,
+// parallel routing system. hlBackGuardActive skips any popstate WE caused ourselves (via
+// consumeOneRealHistoryEntry's history.back() calls above), so a software back-tap is never
+// double-processed here. ----------
+window.addEventListener('popstate', function(){
+  if(hlBackGuardActive){ hlBackGuardActive = false; return; }
+  if(hlRealHistoryDepth > 0) hlRealHistoryDepth--; // the browser just consumed one of our entries for real
+
+  const activeEl = document.querySelector('.screen.active');
+  // Mid-quiz protection: don't let a hardware Back press silently abandon an in-progress test.
+  // Restore the entry the browser just consumed (so nothing visually changes yet), ask the exact
+  // same confirm question the in-quiz Exit button already uses, and only actually leave if the
+  // user confirms — otherwise the user stays exactly where they were, answers/timer intact.
+  if(activeEl === quizScreen){
+    pushNavHistoryState(); // cancel the visual back-step while we ask
+    attemptLeaveQuiz().then(left => {
+      if(left) consumeOneRealHistoryEntry(); // actually consume the entry we just restored
+      // if not left (Stay chosen), the restore above already put things back — nothing more to do
+    });
+    return;
+  }
+
+  if(navHistoryStack.length > 0){
+    navigateBack(navHistoryStack.pop());
+  }
+  // If the stack is empty, we're already at the app's root (Home) — do nothing further and let
+  // this real back navigation stand, allowing the PWA to exit/minimize as the device normally would.
 });
 
 // ---------- Resources & News: reads directly from your "Resources" Google Sheet tab ----------
