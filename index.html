@@ -1801,6 +1801,30 @@
     </div>
   </div>
 
+  <!-- NOTIFICATION PERMISSION GATE — shown before Login/Signup, once per app startup, until the
+       user taps "Allow Notifications" and the browser actually grants it (or the browser denies
+       it outright, in which case there's nothing left to gain by asking again). "Maybe Later"
+       lets them through without asking, but this screen returns on the very next app open. -->
+  <div class="screen" id="notifOnboardingScreen">
+    <div class="home-body" style="padding-top:50px; text-align:center;">
+      <div style="font-size:44px; margin-bottom:12px;">🔔</div>
+      <div style="font-family:'Tinos',serif; font-size:20px; font-weight:700; color:var(--ink); margin-bottom:8px;">Stay Updated with Health Loksewa</div>
+      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:18px;">Receive useful reminders and important updates to support your Loksewa study.</p>
+      <div class="content-card" style="text-align:left; padding:14px 18px; margin-bottom:22px;">
+        <div style="font-size:13px; padding:5px 0;">✓ Question of the Day</div>
+        <div style="font-size:13px; padding:5px 0;">✓ Daily Study Reminder</div>
+        <div style="font-size:13px; padding:5px 0;">✓ Revision &amp; Mistake Reminders</div>
+        <div style="font-size:13px; padding:5px 0;">✓ New MCQs &amp; Notes</div>
+        <div style="font-size:13px; padding:5px 0;">✓ Weekly &amp; Monthly Tournament</div>
+        <div style="font-size:13px; padding:5px 0;">✓ New Features &amp; App Updates</div>
+        <div style="font-size:13px; padding:5px 0;">✓ Important Health Loksewa Notices</div>
+      </div>
+      <button class="start-btn" id="notifOnboardingAllowBtn">Allow Notifications</button>
+      <div id="notifOnboardingMaybeLaterBtn" style="text-align:center; color:var(--ink-soft); font-size:13px; margin-top:14px; text-decoration:underline; cursor:pointer;">Maybe Later</div>
+      <p style="font-size:11px; color:var(--ink-soft); margin-top:18px;">You can change notification preferences anytime from Settings.</p>
+    </div>
+  </div>
+
   <div class="screen" id="loginScreen">
     <div class="login-hero">
       <img src="icon-192.png" alt="Health Loksewa" class="login-logo">
@@ -6490,6 +6514,17 @@
 
   async function updateAuthUI(user){
     window.currentUser = user || null;
+    // Pre-login notification permission gate — must run before EVERYTHING else here, including
+    // the login screen and the email-verification gate below, per spec. Skipped once resolved
+    // this session, or once the persistent state is 'granted'/'denied' (nothing left to ask).
+    if(!hlNotifGateResolvedThisSession && window.getNotifOnboardingState){
+      const notifState = window.getNotifOnboardingState();
+      if(notifState !== 'granted' && notifState !== 'denied'){
+        window.hlPendingAuthUser = user;
+        window.showScreen(window.notifOnboardingScreen);
+        return; // resumed via finishNotifOnboardingGate() -> updateAuthUI(hlPendingAuthUser) once answered
+      }
+    }
     if(user){
       // Claim any pre-existing unnamespaced local data for this account before anything else
       // reads it — must run before the verification gate and everything after it, since several
@@ -6533,6 +6568,13 @@
         }));
       }catch(e){}
       if(window.checkAppLockOnBoot) await window.checkAppLockOnBoot();
+      // Complete the FCM registration that was deferred from the pre-login notification gate —
+      // this fires exactly once, the first time a real account exists after the user tapped
+      // Allow before they'd even signed up.
+      if(localStorage.getItem('hl_notif_pending_registration') === 'true' && window.registerForPushNotifications){
+        window.registerForPushNotifications({}).catch(() => {});
+        try{ localStorage.removeItem('hl_notif_pending_registration'); }catch(e){}
+      }
       window.showScreen(window.moodCheckinScreen || window.postGateScreen);
       if(window.initMoodCheckin) window.initMoodCheckin();
       if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
@@ -7201,6 +7243,7 @@
     return { allowed: daysSinceSignup <= 7 };
   };
 
+  window.updateAuthUI = updateAuthUI; // exposed so the classic script's notification-gate button handlers can resume the auth flow once answered
   onAuthStateChanged(auth, (user) => updateAuthUI(user));
 
   // ---- Email Verification screen: Continue re-checks the real, current status (Firebase
@@ -7703,6 +7746,7 @@ let currentTournamentWeekKey = null; // set only while taking a Weekly Tournamen
 let currentMonthlyTournamentMonthKey = null; // set only while taking a Monthly Tournament attempt — a genuinely separate flag, not shared with Weekly's
 
 const appLoadingScreen = document.getElementById('appLoadingScreen');
+const notifOnboardingScreen = document.getElementById('notifOnboardingScreen');
 const appLockScreen = document.getElementById('appLockScreen');
 const verifyEmailScreen = document.getElementById('verifyEmailScreen');
 const loginScreen = document.getElementById('loginScreen');
@@ -7878,9 +7922,10 @@ const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
 let ALL_SCREENS;
 try{
-ALL_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 }catch(err){ ALL_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ALL_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 window.showScreen = showScreen;
+window.notifOnboardingScreen = notifOnboardingScreen;
 window.loginScreen = loginScreen;
 window.postGateScreen = postGateScreen;
 window.moodCheckinScreen = moodCheckinScreen;
@@ -7942,7 +7987,7 @@ let hlQuizExitConfirmPending = false; // true while a "leave this test?" dialog 
 // login instead of stopping at Home and letting the app actually exit, as real testing caught.
 let HL_NAV_GATE_SCREENS;
 try{
-HL_NAV_GATE_SCREENS = [appLoadingScreen, appLockScreen, loginScreen, verifyEmailScreen, postGateScreen,
+HL_NAV_GATE_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, loginScreen, verifyEmailScreen, postGateScreen,
   moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen];
 }catch(err){ HL_NAV_GATE_SCREENS = []; if(window.showDebugError) showDebugError("A required setting (" + "HL_NAV_GATE_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
@@ -8268,7 +8313,7 @@ SCREEN_REFRESH_MAP = {
 
 let BOTTOM_NAV_HIDDEN_SCREENS;
 try{
-BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
+BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
 }catch(err){ BOTTOM_NAV_HIDDEN_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "BOTTOM_NAV_HIDDEN_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function updateBottomNav(activeScreen){
   const nav = document.getElementById('bottomNav');
@@ -19577,6 +19622,63 @@ safeOn('menuScreenTime', 'click', () => {
   showScreen(screenTimeScreen);
   renderScreenTimeDashboard();
 });
+// ---------- Pre-login Notification Permission Gate ----------
+// Persistent, DEVICE-level state (deliberately NOT run through uk()/per-account namespacing —
+// this must survive login/logout and even exist before any account is chosen, per spec). Three
+// states: 'not_requested' (show the gate every startup), 'granted' (never show it again),
+// 'denied' (also never show it again — the browser itself has permanently blocked it, so asking
+// our own screen again would only be able to re-request a browser prompt that won't fire twice).
+function getNotifOnboardingState(){
+  try{ return localStorage.getItem('hl_notif_onboarding_state') || 'not_requested'; }catch(e){ return 'not_requested'; }
+}
+function setNotifOnboardingState(state){
+  try{ localStorage.setItem('hl_notif_onboarding_state', state); }catch(e){}
+}
+// True once the user has answered Allow/Maybe Later at any point THIS session — stops the gate
+// from reappearing on a subsequent login/logout within the same page load even though the
+// persistent state may still be 'not_requested' (only a fresh app open should show it again).
+let hlNotifGateResolvedThisSession = false;
+// Hands control back to updateAuthUI() (module script) to resume exactly where the gate
+// interrupted it — see the gate check inserted at the top of updateAuthUI itself.
+function finishNotifOnboardingGate(){
+  hlNotifGateResolvedThisSession = true;
+  if(window.updateAuthUI) window.updateAuthUI(window.hlPendingAuthUser);
+}
+safeOn('notifOnboardingAllowBtn', 'click', async () => {
+  const btn = document.getElementById('notifOnboardingAllowBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Requesting…'; }
+  try{
+    if(!('Notification' in window)){
+      setNotifOnboardingState('denied'); // not supported on this browser/device — nothing to gain by asking again
+    } else {
+      const permission = await Notification.requestPermission();
+      if(permission === 'granted'){
+        setNotifOnboardingState('granted');
+        if(window.currentUser && window.registerForPushNotifications){
+          // Already logged in (a returning session) — complete real FCM token registration now,
+          // reusing the exact same function Profile → Settings uses, rather than a second copy.
+          window.registerForPushNotifications({}).catch(() => {});
+        } else {
+          // Not logged in yet (brand-new visitor, about to sign up) — finish real registration
+          // the moment they actually have an account, via the hook in updateAuthUI below.
+          try{ localStorage.setItem('hl_notif_pending_registration', 'true'); }catch(e){}
+        }
+      } else {
+        setNotifOnboardingState('denied'); // respect the browser's decision — never re-prompt
+      }
+    }
+  }catch(e){
+    setNotifOnboardingState('denied');
+  }
+  if(btn){ btn.disabled = false; btn.textContent = 'Allow Notifications'; }
+  finishNotifOnboardingGate();
+});
+safeOn('notifOnboardingMaybeLaterBtn', 'click', () => {
+  // Deliberately leave the persistent state untouched (still 'not_requested') — this screen
+  // returns on the very next app open, exactly as specified.
+  finishNotifOnboardingGate();
+});
+
 // ---------- Notification Preferences ----------
 safeOn('menuNotificationPrefs', 'click', async () => {
   showScreen(notificationPrefsScreen);
