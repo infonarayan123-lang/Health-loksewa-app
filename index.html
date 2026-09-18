@@ -7919,6 +7919,7 @@ let studyGroupsBackTarget = studyGroupsScreen;
 // before — this only fixes the generic case that used to hard-code "home". ----------
 let navHistoryStack = [];
 let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
+let PAST_QUESTIONS_BY_POST = {}; // moved here for safety — populated per-post from the Sheet
 
 // Moved here, very early in the script, deliberately: these three buttons (Next Question,
 // Skip, and the quiz Exit/Home button) are critical, always-needed controls during any quiz.
@@ -22338,7 +22339,7 @@ async function startMockTest(post){
 
 // Populated per-post from each post's own "Past Questions List" tab — see loadPastQuestionsList()
 // below. Add/remove a row there anytime to add/remove a paper — no code changes needed.
-let PAST_QUESTIONS_BY_POST = {};
+// (PAST_QUESTIONS_BY_POST itself is declared near the top of the script for safety, see ~line 7922)
 
 function renderPastQuestionsPosts(){
   const selected = getSelectedPosts();
