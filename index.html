@@ -7971,6 +7971,15 @@ safeOn('restartBtn', 'click', () => {
   currentSetInfo = null;
   showScreen(homeScreen);
 });
+safeOn('rapidFireStartBtn', 'click', startRapidFire);
+safeOn('rapidFireAllDueBtn', 'click', () => {
+  const today = todayISO();
+  const dueList = getWrongQuestions().filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
+  if(dueList.length === 0){ alert('Nothing due right now.'); return; }
+  currentSetInfo = null;
+  mistakeReviewActive = true;
+  launchQuiz(shuffle([...dueList]), 'Revision', 0, 0);
+});
 let suppressHistoryPush = false;
 
 // ---------- Screen Time & Study Time tracking: Health Loksewa's OWN in-app usage only — a web
@@ -24108,15 +24117,8 @@ function updateRapidFirePreview(){
   document.getElementById('rapidFirePreviewCount').textContent = `${count} Question${count !== 1 ? 's' : ''}`;
   document.getElementById('rapidFirePreviewPace').textContent = `Target pace: ~${pace} sec/question`;
 }
-safeOn('rapidFireStartBtn', 'click', startRapidFire);
-safeOn('rapidFireAllDueBtn', 'click', () => {
-  const today = todayISO();
-  const dueList = getWrongQuestions().filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
-  if(dueList.length === 0){ alert('Nothing due right now.'); return; }
-  currentSetInfo = null;
-  mistakeReviewActive = true;
-  launchQuiz(shuffle([...dueList]), 'Revision', 0, 0);
-});
+// (rapidFireStartBtn/rapidFireAllDueBtn handlers are declared near the top of the script for
+// safety, see ~line 7974)
 async function startRapidFire(){
   const mode = rapidFireSelectedMode;
   const post = rapidFireDefaultPost();
