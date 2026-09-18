@@ -7920,6 +7920,10 @@ let studyGroupsBackTarget = studyGroupsScreen;
 let navHistoryStack = [];
 let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
 let PAST_QUESTIONS_BY_POST = {}; // moved here for safety — populated per-post from the Sheet
+let rapidFireSelectedMode = null; // moved here for safety — used by Rapid Fire's mode tiles
+let rapidFireSelectedMinutes = 10; // moved here for safety — used by Rapid Fire's time selection
+let currentRapidFireMode = null; // moved here for safety — used by Rapid Fire's results screen
+let currentRapidFirePace = 45; // moved here for safety — used by Rapid Fire's pace verdict
 
 // Moved here, very early in the script, deliberately: these three buttons (Next Question,
 // Skip, and the quiz Exit/Home button) are critical, always-needed controls during any quiz.
@@ -24002,10 +24006,8 @@ safeOn('dbResultDoneBtn', 'click', () => {
 // Weak Topic) draw from the same pools as Mistake Book/Revision Mode/Progress — the
 // differentiator is the time-boxing, not a new data source. Battle Fire delegates straight
 // to the real Battle Challenge screen rather than rebuilding it. ----------
-let rapidFireSelectedMode = null;
-let rapidFireSelectedMinutes = 10;
-let currentRapidFireMode = null;
-let currentRapidFirePace = 45;
+// (rapidFireSelectedMode/Minutes/currentRapidFireMode/Pace are declared near the top of the
+// script for safety, see ~line 7923)
 
 function renderRapidFireModes(){
   const shades = ['t1','t2','t3','t4','t5','t6'];
