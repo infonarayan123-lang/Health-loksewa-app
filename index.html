@@ -3212,6 +3212,7 @@
       <div id="mistakeProgressCard" style="margin-bottom:14px;"></div>
 
       <button class="start-btn" id="practiceMistakesBtn" style="margin-bottom:14px;">🔥 Start Review — Due Today</button>
+      <button class="calc-btn" id="practiceAllMistakesBtn" style="display:none; margin-bottom:14px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">📋 Practice All Mistakes Now (ignore schedule)</button>
 
       <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;">
         <button class="calc-btn mistake-filter-btn active" data-filter="all" style="margin:0; width:auto; padding:7px 14px; font-size:11.5px; white-space:nowrap;">All</button>
@@ -14978,13 +14979,20 @@ function renderMistakeBook(){
   const practiceBtn = document.getElementById('practiceMistakesBtn');
   const list = getWrongQuestions();
 
+  const practiceAllBtn = document.getElementById('practiceAllMistakesBtn');
   if(list.length === 0){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No mistakes tracked yet — questions you get wrong during practice will show up here automatically.</p>`;
     practiceBtn.style.display = 'none';
+    if(practiceAllBtn) practiceAllBtn.style.display = 'none';
     document.getElementById('mistakeProgressCard').innerHTML = '';
     return;
   }
   practiceBtn.style.display = 'block';
+  // Shown whenever any mistakes exist at all, regardless of the spaced-repetition due date — a
+  // deliberate second option alongside "Start Review — Due Today", for someone who wants to
+  // review a just-made mistake right away instead of waiting for its scheduled day. Mirrors the
+  // same "ignore schedule" pool Rapid Fire's own Mistake Fire mode already uses.
+  if(practiceAllBtn) practiceAllBtn.style.display = 'block';
 
   const today = todayISO();
   const dueList = list.filter(q => !q.nextRevisionDate || q.nextRevisionDate <= today);
@@ -15079,6 +15087,18 @@ safeOn('practiceMistakesBtn', 'click', () => {
   currentSetInfo = null;
   mistakeReviewActive = true;
   launchQuiz(shuffle([...dueList]), 'Revision', 0, 0);
+});
+// "Practice All Mistakes Now" — deliberately bypasses nextRevisionDate entirely, same pool
+// Rapid Fire's Mistake Fire mode already draws from, so someone can review a fresh mistake today
+// instead of waiting for its scheduled day. currentSetInfo stays null and marked as 'Revision' so
+// getting it right still correctly advances the spaced schedule via advanceRevisionSchedule() in
+// finishQuiz() — this is a different SELECTION of questions, not a different review mechanism.
+safeOn('practiceAllMistakesBtn', 'click', () => {
+  const allMistakes = getWrongQuestions();
+  if(allMistakes.length === 0){ alert('No mistakes tracked yet.'); return; }
+  currentSetInfo = null;
+  mistakeReviewActive = true;
+  launchQuiz(shuffle([...allMistakes]), 'Revision', 0, 0);
 });
 
 function renderReminderSettings(){
