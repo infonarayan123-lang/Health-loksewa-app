@@ -2145,6 +2145,10 @@
             <div class="dc-label" style="color:#3A2E1F;">Question of the Day</div>
           </div>
           <div id="qotdCardContent" class="qotd-card-body">Loading today's question…</div>
+          <div id="qotdStreakCountdown" style="display:none; margin-top:10px; padding-top:10px; border-top:1px solid rgba(58,46,31,0.2); text-align:center;">
+            <div id="qotdStreakLine" style="font-size:13px; font-weight:700; color:#3A2E1F;"></div>
+            <div id="qotdCountdownLine" style="font-size:12px; color:#3A2E1F; opacity:0.85; margin-top:4px;"></div>
+          </div>
         </div>
       </div>
 
@@ -7924,6 +7928,7 @@ let rapidFireSelectedMode = null; // moved here for safety — used by Rapid Fir
 let rapidFireSelectedMinutes = 10; // moved here for safety — used by Rapid Fire's time selection
 let currentRapidFireMode = null; // moved here for safety — used by Rapid Fire's results screen
 let currentRapidFirePace = 45; // moved here for safety — used by Rapid Fire's pace verdict
+let qotdCountdownInterval = null; // moved here for safety — used by the Question of the Day countdown
 
 // Moved here, very early in the script, deliberately: these three buttons (Next Question,
 // Skip, and the quiz Exit/Home button) are critical, always-needed controls during any quiz.
@@ -20631,13 +20636,81 @@ try{ showQuoteOfDay(); }catch(err){ if(window.showDebugError) showDebugError('St
 setInterval(showQuoteOfDay, 60 * 1000);
 
 // ---------- Question of the Day ----------
+// Shared helper: the real current moment expressed in Nepal wall-clock time (as UTC-labeled
+// components), used consistently for the day-key, the streak calculation, and the countdown —
+// so all three can never drift out of sync with each other.
+function getNepalNow(){
+  return new Date(Date.now() + (5.75 * 60 * 60 * 1000)); // UTC+5:45 offset
+}
+function getQotdTodayKey(){
+  return getNepalNow().toISOString().slice(0, 10);
+}
+// Real daily streak, based on participation (answered, correct or not) on consecutive days —
+// computed fresh from the actual answered-day records each time, rather than a separately
+// stored counter that could drift out of sync with reality.
+function getQotdStreak(){
+  let streak = 0;
+  const checkDate = getNepalNow();
+  const todayKeyStr = checkDate.toISOString().slice(0, 10);
+  const answeredToday = localStorage.getItem(uk('hl_qotd_answered_' + todayKeyStr)) !== null;
+  // If today isn't answered yet, an existing streak isn't broken until the day actually ends —
+  // start checking from yesterday so someone mid-streak still sees their real count before answering.
+  if(!answeredToday) checkDate.setUTCDate(checkDate.getUTCDate() - 1);
+  while(true){
+    const key = checkDate.toISOString().slice(0, 10);
+    if(localStorage.getItem(uk('hl_qotd_answered_' + key)) !== null){
+      streak++;
+      checkDate.setUTCDate(checkDate.getUTCDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+// Milliseconds until the next Nepal-time midnight, when a new Question of the Day becomes available.
+function getMsUntilNextQotdReset(){
+  const nowNepal = getNepalNow();
+  const nextMidnightNepal = Date.UTC(nowNepal.getUTCFullYear(), nowNepal.getUTCMonth(), nowNepal.getUTCDate() + 1, 0, 0, 0);
+  return nextMidnightNepal - nowNepal.getTime();
+}
+// (qotdCountdownInterval is declared near the top of the script for safety, see ~line 7931)
+// Shows the streak line always, and a live, self-updating countdown to the next question — no
+// manual refresh needed. When the countdown reaches zero, automatically reloads the day's
+// question rather than leaving a frozen "00:00:00" on screen.
+function updateQotdStreakAndCountdownDisplay(){
+  const container = document.getElementById('qotdStreakCountdown');
+  if(!container) return;
+  container.style.display = 'block';
+
+  const streak = getQotdStreak();
+  const streakLine = document.getElementById('qotdStreakLine');
+  if(streakLine) streakLine.textContent = streak > 0 ? `🔥 ${streak} Day Streak` : '🔥 Start your streak today!';
+
+  if(qotdCountdownInterval) clearInterval(qotdCountdownInterval);
+  const tick = () => {
+    const msLeft = getMsUntilNextQotdReset();
+    const countdownLine = document.getElementById('qotdCountdownLine');
+    if(!countdownLine) return;
+    if(msLeft <= 0){
+      clearInterval(qotdCountdownInterval);
+      loadQuestionOfDay(); // the new day's question is ready — load it automatically
+      return;
+    }
+    const h = Math.floor(msLeft / 3600000);
+    const m = Math.floor((msLeft % 3600000) / 60000);
+    const s = Math.floor((msLeft % 60000) / 1000);
+    countdownLine.textContent = `⏱ Next MCQ in ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  };
+  tick();
+  qotdCountdownInterval = setInterval(tick, 1000);
+}
+
 async function loadQuestionOfDay(){
   // Real fix: this previously used .toISOString(), which is always UTC regardless of the
   // device's real timezone — meaning "today" here would flip over at 5:45am Nepal time, not at
   // actual local midnight, and could mismatch the backend's own day boundary (which correctly
   // uses Asia/Kathmandu). Computing the Nepal-local date directly keeps both sides in sync.
-  const nowNepal = new Date(Date.now() + (5.75 * 60 * 60 * 1000)); // UTC+5:45 offset
-  const todayKey = nowNepal.toISOString().slice(0, 10);
+  const todayKey = getQotdTodayKey();
   const answeredKey = uk('hl_qotd_answered_' + todayKey);
 
   let answeredData = null;
@@ -20645,6 +20718,7 @@ async function loadQuestionOfDay(){
 
   if(answeredData){
     paintQotdAnswered(answeredData);
+    updateQotdStreakAndCountdownDisplay();
     return;
   }
 
@@ -20661,6 +20735,7 @@ async function loadQuestionOfDay(){
       return;
     }
     paintQotdQuestion(q, todayKey);
+    updateQotdStreakAndCountdownDisplay();
   }catch(err){
     document.getElementById('qotdCardContent').innerHTML = 'Could not load today\'s question. Check your internet connection.';
   }
@@ -20685,6 +20760,7 @@ function paintQotdQuestion(q, todayKey){
       const answeredData = { question: q, chosen, correct };
       try{ localStorage.setItem(uk('hl_qotd_answered_' + todayKey), JSON.stringify(answeredData)); }catch(e){}
       paintQotdAnswered(answeredData);
+      updateQotdStreakAndCountdownDisplay(); // streak just changed now that today counts as answered
     });
   });
 }
