@@ -3026,17 +3026,46 @@
 
       <div id="npCategoriesWrap" style="display:none;">
         <div class="content-card">
+          <p style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;">Study</p>
           <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="qotd" checked> <span>📝 Question of the Day ready</span></label>
           <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="mistakes" checked> <span>❌ Your mistakes due for revision</span></label>
-          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="progress" checked> <span>📊 Your progress summary</span></label>
-          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="healthDay" checked> <span>📅 Today's Health Day</span></label>
-          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="whatsNew" checked> <span>🆕 New content added</span></label>
-          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="news"> <span>📰 News</span></label>
-          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="rapidFire"> <span>⚡ Rapid Fire reminder</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="streak" checked> <span>🔥 Streak reminder</span></label>
           <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="goals" checked> <span>🎯 Target/goal reminders</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="progress" checked> <span>📊 Your progress summary</span></label>
+
+          <p style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px;">Practice</p>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="newMcqs" checked> <span>📚 New MCQs added</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="mockTest" checked> <span>📝 Mock Test reminder</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="pastQuestions" checked> <span>📄 New Past Questions added</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="rapidFire"> <span>⚡ Rapid Fire reminder</span></label>
+
+          <p style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px;">Tournament</p>
           <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="tournament" checked> <span>🏆 Championship &amp; Tournament</span></label>
+
+          <p style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px;">Learning</p>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="healthDay" checked> <span>📅 Today's Health Day</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="newNotes" checked> <span>📖 New Notes added</span></label>
+
+          <p style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin:14px 0 6px;">Health Loksewa</p>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="whatsNew" checked> <span>🆕 New content &amp; app updates</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="announcement" checked> <span>📢 Important notices</span></label>
+          <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="news"> <span>📰 News</span></label>
           <label class="np-cat-row"><input type="checkbox" class="np-cat" data-cat="discount" checked> <span>💰 Discounts &amp; offers</span></label>
         </div>
+
+        <div class="content-card" style="margin-top:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:13px; font-weight:700;">🌙 Quiet Hours</span>
+            <input type="checkbox" id="npQuietHoursEnabled">
+          </div>
+          <p style="font-size:11px; color:var(--ink-soft); margin:6px 0 10px;">Skip notifications sent during these hours.</p>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <input type="time" id="npQuietHoursStart" value="22:00" style="flex:1; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink);">
+            <span style="color:var(--ink-soft); font-size:12px;">to</span>
+            <input type="time" id="npQuietHoursEnd" value="06:00" style="flex:1; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink);">
+          </div>
+        </div>
+
         <button class="start-btn" id="npSaveBtn" style="margin-top:14px;">Save Preferences</button>
       </div>
       <p id="npStatusMsg" style="font-size:12px; color:var(--wrong); margin-top:12px; text-align:center;"></p>
@@ -7726,7 +7755,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwEMSQT31wq1rF_4GPRIX0sK05vjiMFoLjFM5zWD_P49VD8zUf8V5N5uTSxydHuHRyJ/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbznlJm24JuJf35-YUyNjG-NUdq0Q9GAKfrmz5jEbpLL-LsQSsxdjL6DdTkAFWX8ziljtg/exec";
 }catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
@@ -19691,6 +19720,9 @@ safeOn('menuNotificationPrefs', 'click', async () => {
     document.querySelectorAll('.np-cat').forEach(cb => {
       cb.checked = existing.prefs[cb.dataset.cat] !== false; // default checked unless explicitly turned off before
     });
+    document.getElementById('npQuietHoursEnabled').checked = !!existing.prefs.quietHoursEnabled;
+    if(existing.prefs.quietHoursStart) document.getElementById('npQuietHoursStart').value = existing.prefs.quietHoursStart;
+    if(existing.prefs.quietHoursEnd) document.getElementById('npQuietHoursEnd').value = existing.prefs.quietHoursEnd;
   }
 });
 safeOn('npMasterToggle', 'click', async () => {
@@ -19714,6 +19746,9 @@ safeOn('npSaveBtn', 'click', async () => {
   btn.disabled = true; btn.textContent = 'Saving…';
   const prefs = {};
   document.querySelectorAll('.np-cat').forEach(cb => { prefs[cb.dataset.cat] = cb.checked; });
+  prefs.quietHoursEnabled = document.getElementById('npQuietHoursEnabled').checked;
+  prefs.quietHoursStart = document.getElementById('npQuietHoursStart').value || '22:00';
+  prefs.quietHoursEnd = document.getElementById('npQuietHoursEnd').value || '06:00';
   const result = await window.registerForPushNotifications(prefs);
   btn.disabled = false; btn.textContent = 'Save Preferences';
   const msg = document.getElementById('npStatusMsg');
