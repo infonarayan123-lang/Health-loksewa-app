@@ -2922,6 +2922,34 @@
     </div>
   </div>
 
+  <!-- Achievement detail — opened by tapping any card in Achievement Progress. Shows the same
+       current/next target as the summary card, larger, plus a locked preview of the target
+       AFTER that one, so it's visible that the progression keeps going rather than stopping. -->
+  <div class="screen" id="achievementDetailScreen">
+    <div class="back-link" data-back="achievements">← Back</div>
+    <div class="home-body" style="text-align:center;">
+      <div style="font-size:40px; margin-bottom:6px;" id="achDetailIcon"></div>
+      <div style="font-family:'Tinos',serif; font-size:19px; font-weight:800;" id="achDetailLabel"></div>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:6px 0 18px;" id="achDetailDescription"></p>
+
+      <div class="content-card" style="text-align:left;">
+        <div style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px;">Current Target</div>
+        <div id="achDetailTargetLine" style="font-size:14px; font-weight:700; margin-bottom:10px;"></div>
+        <div style="background:var(--panel); border-radius:7px; height:10px; overflow:hidden;">
+          <div id="achDetailBar" style="background:var(--teal); height:100%; width:0%;"></div>
+        </div>
+        <div id="achDetailRemaining" style="font-size:12px; color:var(--ink-soft); margin-top:8px;"></div>
+      </div>
+
+      <div class="content-card" style="text-align:left; margin-top:12px; opacity:0.7;">
+        <div style="font-size:11px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px;">🔒 Future Target</div>
+        <div id="achDetailFutureLine" style="font-size:13px;"></div>
+      </div>
+
+      <p style="font-size:11px; color:var(--ink-soft); margin-top:18px;">∞ Continuous Achievement — there's always another milestone ahead.</p>
+    </div>
+  </div>
+
   <div class="screen" id="learnHubProgressScreen">
     <div class="back-link" data-back="progress">← Back</div>
     <div class="home-body">
@@ -7815,6 +7843,7 @@ const subjectDetailScreen = document.getElementById('subjectDetailScreen');
 const questionPerformanceScreen = document.getElementById('questionPerformanceScreen');
 const weakAreasScreen = document.getElementById('weakAreasScreen');
 const achievementsScreen = document.getElementById('achievementsScreen');
+const achievementDetailScreen = document.getElementById('achievementDetailScreen');
 const learnHubProgressScreen = document.getElementById('learnHubProgressScreen');
 const revisionProgressScreen = document.getElementById('revisionProgressScreen');
 const studyActivityScreen = document.getElementById('studyActivityScreen');
@@ -7956,7 +7985,7 @@ const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
 let ALL_SCREENS;
 try{
-ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 }catch(err){ ALL_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ALL_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 window.showScreen = showScreen;
 window.notifOnboardingScreen = notifOnboardingScreen;
@@ -7966,7 +7995,7 @@ window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
 let SCREEN_BY_KEY;
 try{
-SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen, tournament: tournamentScreen };
+SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen, tournament: tournamentScreen, achievements: achievementsScreen };
 }catch(err){ SCREEN_BY_KEY = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SCREEN_BY_KEY" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let docViewerBackTarget = homeScreen;
 let currentDocViewerItem = null;
@@ -8024,6 +8053,7 @@ try{
 HL_NAV_GATE_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, loginScreen, verifyEmailScreen, postGateScreen,
   moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen];
 }catch(err){ HL_NAV_GATE_SCREENS = []; if(window.showDebugError) showDebugError("A required setting (" + "HL_NAV_GATE_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+let currentAchievementDetail = null; // set right before navigating to achievementDetailScreen — the one achievement card currently being viewed in detail
 let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
 let PAST_QUESTIONS_BY_POST = {}; // moved here for safety — populated per-post from the Sheet
 let rapidFireSelectedMode = null; // moved here for safety — used by Rapid Fire's mode tiles
@@ -8362,7 +8392,7 @@ function updateBottomNav(activeScreen){
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
-  const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
+  const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen, notificationPrefsScreen];
 
   let activeKey = '';
@@ -18421,9 +18451,26 @@ function makePctCeilingCategory(key, icon, label, currentPct, unit){
   const thresholds = [70, 75, 80, 85, 90, 95];
   const nextIdx = thresholds.findIndex(t => currentPct < t);
   if(nextIdx === -1){
-    return { key, icon, label, current: currentPct, target: 95, unit, capped: true, cappedNote: '95%+ reached — keep it maintained' };
+    return { key, icon, label, current: currentPct, target: 95, unit, capped: true, cappedNote: '95%+ reached — keep it maintained', future: null };
   }
-  return { key, icon, label, current: currentPct, target: thresholds[nextIdx], unit };
+  const future = thresholds[nextIdx + 1] || null; // null once the ladder itself runs out — the capped state picks up from there
+  return { key, icon, label, current: currentPct, target: thresholds[nextIdx], unit, future };
+}
+// Short, honest description of what each category actually tracks — shown on the detail page.
+// Matched by key prefix so every per-subject "subject-<name>" row shares one line without
+// needing an entry per subject.
+function achievementCategoryDescription(key){
+  if(key.startsWith('subject-')) return 'Build and maintain mastery in this specific subject.';
+  const map = {
+    practice: 'Answer MCQs across any practice mode to build your knowledge base.',
+    consistency: 'Keep a daily study streak going without missing a day.',
+    revision: 'Successfully master mistakes you\'ve previously gotten wrong, through Revision Mode.',
+    mockTest: 'Complete full-length Mock Tests to simulate the real exam.',
+    pastQuestions: 'Work through real past exam papers.',
+    tournament: 'Take part in Health Loksewa\'s Weekly and Monthly Tournaments.',
+    accuracy: 'Maintain strong accuracy across all the questions you attempt.'
+  };
+  return map[key] || '';
 }
 function computeAchievementCategories(stats){
   let mastered = 0;
@@ -18440,6 +18487,17 @@ function computeAchievementCategories(stats){
     { key:'pastQuestions', icon:'📄', label:'Past Questions', current: pqCount, target: nextEscalatingTarget([5,20], 20, pqCount), unit:'papers completed' },
     { key:'tournament', icon:'🏆', label:'Tournament', current: tCount, target: nextEscalatingTarget([3,10], 10, tCount), unit:'tournaments joined' },
   ];
+  // Future target = the tier ahead of the one already computed as "next" — reuses the exact
+  // same escalating-tier engine a second time, treating the upcoming target itself as the
+  // baseline to look past, rather than a separate lookup mechanism.
+  const categoryBases = {
+    practice: [[100,250,500,1000], 1000], consistency: [[7,30], 30], revision: [[10,30], 30],
+    mockTest: [[5,20], 20], pastQuestions: [[5,20], 20], tournament: [[3,10], 10]
+  };
+  categories.forEach(c => {
+    const base = categoryBases[c.key];
+    c.future = base ? nextEscalatingTarget(base[0], base[1], c.target) : null;
+  });
 
   // Gated by a minimum sample size so a lucky first question doesn't instantly claim 95%+
   if(stats.totalAttempted >= 20){
@@ -18454,7 +18512,7 @@ function computeAchievementCategories(stats){
 function renderAchievementCategories(categories){
   const wrap = document.getElementById('achievementCategoriesWrap');
   if(!wrap) return;
-  wrap.innerHTML = categories.map(c => {
+  wrap.innerHTML = categories.map((c, i) => {
     const isPct = c.unit && c.unit.trim().startsWith('%');
     const currentDisplay = isPct ? `${c.current}%` : c.current.toLocaleString();
     const targetDisplay = isPct ? `${c.target}%` : c.target.toLocaleString();
@@ -18467,7 +18525,7 @@ function renderAchievementCategories(categories){
       ? `<div style="font-size:12px; color:var(--teal); margin-top:6px;">${c.cappedNote}</div>`
       : `<div style="font-size:12px; color:var(--teal); margin-top:6px;">Next Target: ${targetDisplay} ${c.unit}</div>`;
     return `
-      <div class="content-card" style="margin-bottom:10px;">
+      <div class="content-card ach-cat-card" data-idx="${i}" style="margin-bottom:10px; cursor:pointer;">
         <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
           <span style="font-size:13px; font-weight:700;">${c.icon} ${c.label}</span>
           <span style="font-size:12px; color:var(--ink-soft); white-space:nowrap;">${currentDisplay}${c.capped ? '' : ' / ' + targetDisplay}</span>
@@ -18480,6 +18538,43 @@ function renderAchievementCategories(categories){
       </div>
     `;
   }).join('');
+  wrap.querySelectorAll('.ach-cat-card').forEach(el => {
+    el.addEventListener('click', () => {
+      currentAchievementDetail = categories[parseInt(el.dataset.idx, 10)];
+      showScreen(achievementDetailScreen);
+      renderAchievementDetail(currentAchievementDetail);
+    });
+  });
+}
+function renderAchievementDetail(c){
+  if(!c) return;
+  const isPct = c.unit && c.unit.trim().startsWith('%');
+  const currentDisplay = isPct ? `${c.current}%` : c.current.toLocaleString();
+  const targetDisplay = isPct ? `${c.target}%` : c.target.toLocaleString();
+  document.getElementById('achDetailIcon').textContent = c.icon;
+  document.getElementById('achDetailLabel').textContent = c.label;
+  document.getElementById('achDetailDescription').textContent = achievementCategoryDescription(c.key);
+
+  if(c.capped){
+    document.getElementById('achDetailTargetLine').textContent = `${currentDisplay} — ${c.cappedNote}`;
+    document.getElementById('achDetailBar').style.width = '100%';
+    document.getElementById('achDetailRemaining').textContent = '';
+  } else {
+    document.getElementById('achDetailTargetLine').textContent = `${targetDisplay} ${c.unit}`;
+    const pct = Math.max(0, Math.min(100, Math.round((c.current / Math.max(c.target, 1)) * 100)));
+    document.getElementById('achDetailBar').style.width = `${pct}%`;
+    const remaining = Math.max(c.target - c.current, 0);
+    document.getElementById('achDetailRemaining').textContent = isPct
+      ? `${currentDisplay} now — ${remaining} percentage point${remaining === 1 ? '' : 's'} remaining`
+      : `${currentDisplay} / ${targetDisplay} — ${remaining.toLocaleString()} remaining`;
+  }
+
+  const futureEl = document.getElementById('achDetailFutureLine');
+  if(c.future){
+    futureEl.textContent = isPct ? `${c.future}% ${c.unit}` : `${c.future.toLocaleString()} ${c.unit}`;
+  } else {
+    futureEl.textContent = 'Unlocks automatically once the current target is reached.';
+  }
 }
 function renderAchievements(stats, streak){
   const xp = getLpData().total;
