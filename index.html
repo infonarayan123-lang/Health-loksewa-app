@@ -2913,6 +2913,11 @@
         <div id="achRingChart" style="width:120px; height:120px; margin:0 auto 10px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800;"></div>
         <p style="font-size:12px; color:var(--ink-soft);" id="achRingLabel"></p>
       </div>
+
+      <div class="section-title" style="font-size:13px; margin-bottom:8px;">ACHIEVEMENT PROGRESS</div>
+      <div id="achievementCategoriesWrap"></div>
+
+      <div class="section-title" style="font-size:13px; margin:18px 0 8px;">MILESTONES</div>
       <div class="badges-grid" id="achievementsFullGrid"></div>
     </div>
   </div>
@@ -18392,6 +18397,90 @@ function getCurrentLevelInfo(xp){
   const next = { level: level + 1, name: levelTitleFor(level + 1), minXp: xpRequiredForLevel(level + 1) };
   return { current, next }; // next is now NEVER null — there is always a further level to climb toward
 }
+// ---------- Achievement Progress: per-category "current -> next target" continuous cards ----------
+// Reuses the SAME generateEscalatingTiers() engine already powering the flat badge grid below,
+// for every category that has real, already-tracked data behind it (Practice, Consistency,
+// Revision, Mock Tests, Past Questions, Tournament, plus Accuracy and each Subject's own mastery
+// via a shared percentage-ceiling helper). Speed and Improvement from the document are
+// deliberately NOT included — neither has any underlying data tracked anywhere in the app yet
+// (no Rapid Fire completion-time log, no accuracy-over-time snapshot), and building a fake
+// progress bar for either would fake functionality that doesn't actually exist.
+function nextEscalatingTarget(baseValues, doubleAfter, current){
+  const tiers = generateEscalatingTiers(baseValues, doubleAfter, current);
+  // The FIRST tier still ahead of current — not the last element. generateEscalatingTiers always
+  // appends at least one tier beyond the base list regardless of how small `current` is, so for a
+  // new or low-progress account the last element can be a much bigger, doubled-up tier while a
+  // smaller base tier (e.g. 100 before 2000) is still the genuinely correct "next" target.
+  return tiers.find(t => t > current) ?? tiers[tiers.length - 1];
+}
+// Shared by Accuracy AND every Subject Mastery row below — both are "climb toward a percentage"
+// metrics. Escalates in real 5-point steps up to a 95% ceiling (100% sustained forever isn't a
+// meaningful ongoing target), then honestly reports itself as maintained rather than pretending
+// there's a further percentage to chase.
+function makePctCeilingCategory(key, icon, label, currentPct, unit){
+  const thresholds = [70, 75, 80, 85, 90, 95];
+  const nextIdx = thresholds.findIndex(t => currentPct < t);
+  if(nextIdx === -1){
+    return { key, icon, label, current: currentPct, target: 95, unit, capped: true, cappedNote: '95%+ reached — keep it maintained' };
+  }
+  return { key, icon, label, current: currentPct, target: thresholds[nextIdx], unit };
+}
+function computeAchievementCategories(stats){
+  let mastered = 0;
+  try{ mastered = parseInt(localStorage.getItem(uk('hl_mistakes_mastered_count')) || '0', 10); }catch(e){}
+  const mockCount = getMockTestHistory().length;
+  const pqCount = getPastQuestionHistory().length;
+  const tCount = getTournamentHistory().length;
+
+  const categories = [
+    { key:'practice', icon:'📚', label:'Practice', current: stats.totalAttempted, target: nextEscalatingTarget([100,250,500,1000], 1000, stats.totalAttempted), unit:'MCQs completed' },
+    { key:'consistency', icon:'🔥', label:'Consistency', current: getLongestStreak(), target: nextEscalatingTarget([7,30], 30, getLongestStreak()), unit:'day streak' },
+    { key:'revision', icon:'🔄', label:'Revision', current: mastered, target: nextEscalatingTarget([10,30], 30, mastered), unit:'mistakes mastered' },
+    { key:'mockTest', icon:'📝', label:'Mock Tests', current: mockCount, target: nextEscalatingTarget([5,20], 20, mockCount), unit:'Mock Tests completed' },
+    { key:'pastQuestions', icon:'📄', label:'Past Questions', current: pqCount, target: nextEscalatingTarget([5,20], 20, pqCount), unit:'papers completed' },
+    { key:'tournament', icon:'🏆', label:'Tournament', current: tCount, target: nextEscalatingTarget([3,10], 10, tCount), unit:'tournaments joined' },
+  ];
+
+  // Gated by a minimum sample size so a lucky first question doesn't instantly claim 95%+
+  if(stats.totalAttempted >= 20){
+    categories.push(makePctCeilingCategory('accuracy', '🎯', 'Accuracy', stats.overallPct, '% accuracy'));
+  }
+  (stats.subjectAverages || []).forEach(s => {
+    categories.push(makePctCeilingCategory('subject-' + s.subject, '📊', s.subject, s.pct, '% mastery'));
+  });
+
+  return categories;
+}
+function renderAchievementCategories(categories){
+  const wrap = document.getElementById('achievementCategoriesWrap');
+  if(!wrap) return;
+  wrap.innerHTML = categories.map(c => {
+    const isPct = c.unit && c.unit.trim().startsWith('%');
+    const currentDisplay = isPct ? `${c.current}%` : c.current.toLocaleString();
+    const targetDisplay = isPct ? `${c.target}%` : c.target.toLocaleString();
+    const pct = c.capped ? 100 : Math.max(0, Math.min(100, Math.round((c.current / Math.max(c.target, 1)) * 100)));
+    const remaining = c.capped ? '' :
+      (isPct
+        ? `<div style="font-size:11px; color:var(--ink-soft); margin-top:4px;">${Math.max(c.target - c.current, 0)} more percentage point${(c.target - c.current) === 1 ? '' : 's'} to reach ${targetDisplay}</div>`
+        : `<div style="font-size:11px; color:var(--ink-soft); margin-top:4px;">${Math.max(c.target - c.current, 0).toLocaleString()} more ${c.unit} to go</div>`);
+    const nextLine = c.capped
+      ? `<div style="font-size:12px; color:var(--teal); margin-top:6px;">${c.cappedNote}</div>`
+      : `<div style="font-size:12px; color:var(--teal); margin-top:6px;">Next Target: ${targetDisplay} ${c.unit}</div>`;
+    return `
+      <div class="content-card" style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+          <span style="font-size:13px; font-weight:700;">${c.icon} ${c.label}</span>
+          <span style="font-size:12px; color:var(--ink-soft); white-space:nowrap;">${currentDisplay}${c.capped ? '' : ' / ' + targetDisplay}</span>
+        </div>
+        <div style="background:var(--panel); border-radius:6px; height:7px; overflow:hidden; margin-top:8px;">
+          <div style="background:var(--teal); height:100%; width:${pct}%;"></div>
+        </div>
+        ${remaining}
+        ${nextLine}
+      </div>
+    `;
+  }).join('');
+}
 function renderAchievements(stats, streak){
   const xp = getLpData().total;
   const { current, next } = getCurrentLevelInfo(xp);
@@ -18406,6 +18495,7 @@ function renderAchievements(stats, streak){
   }
 
   const badges = computeAchievements(stats, streak);
+  renderAchievementCategories(computeAchievementCategories(stats));
   const earnedCount = badges.filter(b => b.earned).length;
   const preview = document.getElementById('achievementsPreviewSub');
   if(preview) preview.textContent = `${earnedCount}/${badges.length} earned`;
