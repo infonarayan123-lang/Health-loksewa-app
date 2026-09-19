@@ -18363,26 +18363,34 @@ function computeAchievements(stats, streak){
   ];
   return badges;
 }
-// ---------- Level System: XP is Learning Points directly, not a parallel currency — the
-// document's own requirement ("XP comes from useful activities, not just opening the app") is
-// already exactly what Learning Points does, so reusing it here means Levels stay consistent
-// with everything else that already reads from the same number (Leaderboard, rewards). ----------
-let LEVEL_THRESHOLDS;
-try{
-LEVEL_THRESHOLDS = [
-  { level: 1, name: 'Beginner', minXp: 0 },
-  { level: 2, name: 'Learner', minXp: 500 },
-  { level: 3, name: 'Practitioner', minXp: 2000 },
-  { level: 4, name: 'Advanced', minXp: 5000 },
-  { level: 5, name: 'Lok Sewa Pro', minXp: 10000 },
+// ---------- Level System (unlimited) ----------
+// The original 5 thresholds (500 / 2,000 / 5,000 / 10,000 XP) already followed a clean quadratic
+// growth curve — each level costs exactly 250*level*(level-1) more XP than the last. Rather than
+// inventing new numbers, this continues that EXACT same math indefinitely: it reproduces all 5
+// original thresholds precisely, so nobody's current level changes, and there is no hard-coded
+// top level — the requirement keeps growing (progressively harder, never "done") forever.
+const LEVEL_TITLES = [
+  'Beginner', 'Learner', 'Practitioner', 'Advanced', 'Lok Sewa Pro',
+  'Health Master', 'Loksewa Master', 'Knowledge Builder', 'Exam Achiever', 'Exam Challenger',
+  'Health Practitioner', 'Public Health Learner', 'Health Explorer', 'Health Student',
+  'Loksewa Learner', 'Advanced Learner', 'Expert Learner'
 ];
-}catch(err){ LEVEL_THRESHOLDS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "LEVEL_THRESHOLDS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+function xpRequiredForLevel(n){
+  return Math.round(250 * n * (n * n - 1) / 3);
+}
+function levelTitleFor(n){
+  // Beyond the named list, cycle the final title rather than pretend a title doesn't exist —
+  // the level NUMBER (shown separately) is what keeps climbing; the title just stops changing.
+  return LEVEL_TITLES[Math.min(n, LEVEL_TITLES.length) - 1];
+}
 function getCurrentLevelInfo(xp){
-  let current = LEVEL_THRESHOLDS[0];
-  for(const tier of LEVEL_THRESHOLDS) if(xp >= tier.minXp) current = tier;
-  const nextIndex = LEVEL_THRESHOLDS.indexOf(current) + 1;
-  const next = LEVEL_THRESHOLDS[nextIndex] || null; // null once at the top level — nothing further to climb toward
-  return { current, next };
+  let level = 1;
+  // Safe to walk forward one level at a time — xpRequiredForLevel grows faster than any real XP
+  // total could realistically keep pace with, so this always terminates quickly in practice.
+  while(xpRequiredForLevel(level + 1) <= xp) level++;
+  const current = { level, name: levelTitleFor(level), minXp: xpRequiredForLevel(level) };
+  const next = { level: level + 1, name: levelTitleFor(level + 1), minXp: xpRequiredForLevel(level + 1) };
+  return { current, next }; // next is now NEVER null — there is always a further level to climb toward
 }
 function renderAchievements(stats, streak){
   const xp = getLpData().total;
