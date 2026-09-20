@@ -7788,7 +7788,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyiT_9NJzCVIFrSANLYPJ2YDexwgOUzqZ7O4St8LXPfq7iHqjZ9-f4asRTUx12Ug7p6SA/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyfKY8UUcBBdbCPPyptDQYTv-9MCxZxAtzzDlCcFzb-6KKEaqJj48VzxZwLjpBxn6LnOg/exec";
 }catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
@@ -17069,12 +17069,17 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
       return;
     }
     resultEl.innerHTML = `<p style="color:var(--ink-soft); font-size:12px;">✨ Thinking…</p>`;
+    // Maps each quick-action button to its own backend task type (noteExplain/noteSummarize/etc.)
+    // rather than every action sharing the single generic 'chat' routing — each of these is
+    // content-generation work suited to Gemini as primary, not the fast-chat Groq-first path.
+    const AI_ACTION_TASK_TYPES = { explain:'noteExplain', summarize:'noteSummarize', mcqs:'noteMcqGen', mnemonic:'noteMnemonic', simplify:'noteSimplify' };
     try{
       const res = await fetch(SHEET_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           action: 'chat',
+          taskType: AI_ACTION_TASK_TYPES[btn.dataset.aiAction] || 'chat',
           message: `${NOTE_AI_PROMPTS[btn.dataset.aiAction]}\n\n${sourceText}`,
           history: []
         })
@@ -23939,6 +23944,7 @@ safeOn('fcAiGenerateSubmitBtn', 'click', async () => {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'chat',
+        taskType: 'flashcardGen',
         message: `Generate exactly ${num} flashcards about "${topic}" at ${difficulty} difficulty, for a Nepal health Loksewa exam candidate. Respond with ONLY a JSON array, no other text, no markdown formatting, in this exact shape: [{"front":"question text","back":"answer text"}]`,
         history: []
       })
@@ -25629,7 +25635,7 @@ Give: (1) a score out of 10, (2) 2-3 short bullet points on what's good, (3) 2-3
     const res = await fetch(SHEET_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'chat', message: prompt, history: [] })
+      body: JSON.stringify({ action: 'chat', taskType: 'answerCheck', message: prompt, history: [] })
     });
     const data = await res.json();
     const reply = data.reply || "Sorry, I couldn't check that. Please try again.";
