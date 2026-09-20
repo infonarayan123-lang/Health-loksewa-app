@@ -2255,10 +2255,20 @@
     <div class="chat-screen-wrap">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-quick-actions" id="chatQuickActions">
-        <button class="chat-quick-btn" data-template="Explain this topic simply: ">📖 Explain Topic</button>
-        <button class="chat-quick-btn" data-template="Generate 5 MCQs about: ">📝 Generate MCQs</button>
-        <button class="chat-quick-btn" data-template="Make a mnemonic to remember: ">🧠 Make Mnemonic</button>
+        <button class="chat-quick-btn" data-template="Explain this topic simply: " data-task-type="noteExplain">📖 Explain Topic</button>
+        <button class="chat-quick-btn" data-template="Generate 5 MCQs about: " data-task-type="noteMcqGen">📝 Generate MCQs</button>
+        <button class="chat-quick-btn" data-template="Make a mnemonic to remember: " data-task-type="noteMnemonic">🧠 Make Mnemonic</button>
+        <button class="chat-quick-btn" data-template="Summarize this concisely, keeping the key exam-relevant points: " data-task-type="noteSummarize">📄 Summarize</button>
+        <button class="chat-quick-btn" data-template="Generate 5 flashcards (question and answer pairs) about: " data-task-type="flashcardGen">🗂️ Flashcards</button>
         <button class="chat-quick-btn" id="chatQuickCheckAnswerBtn">✍️ Check Answer</button>
+      </div>
+      <div style="display:flex; justify-content:flex-end; padding:0 4px 6px;">
+        <select id="aiProviderSelect" style="font-size:11px; color:var(--ink-soft); padding:4px 8px; border-radius:12px; background:var(--panel); border:1.5px solid var(--line);">
+          <option value="auto">AI: Auto</option>
+          <option value="gemini">AI: Gemini</option>
+          <option value="groq">AI: Groq</option>
+          <option value="openrouter">AI: OpenRouter</option>
+        </select>
       </div>
       <div class="chat-input-row">
         <button class="chat-send-btn" id="chatMicBtn" style="display:none; background:var(--panel); border:1.5px solid var(--crimson); color:var(--crimson);">🎤</button>
@@ -7788,7 +7798,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyfKY8UUcBBdbCPPyptDQYTv-9MCxZxAtzzDlCcFzb-6KKEaqJj48VzxZwLjpBxn6LnOg/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyb2VnM5UiZtndLrbg2QIvoEApAZuCOtPOykieRtgjtqGpXld0FsFaNjygdEGpkVyY4Zg/exec";
 }catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
@@ -8054,6 +8064,7 @@ HL_NAV_GATE_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, l
   moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen];
 }catch(err){ HL_NAV_GATE_SCREENS = []; if(window.showDebugError) showDebugError("A required setting (" + "HL_NAV_GATE_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let currentAchievementDetail = null; // set right before navigating to achievementDetailScreen — the one achievement card currently being viewed in detail
+let pendingChatTaskType = null; // set by an AI Chat quick-action tap, consumed by the next Send, cleared if the user edits the pre-filled text afterward
 let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
 let PAST_QUESTIONS_BY_POST = {}; // moved here for safety — populated per-post from the Sheet
 let rapidFireSelectedMode = null; // moved here for safety — used by Rapid Fire's mode tiles
@@ -17080,6 +17091,7 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
         body: JSON.stringify({
           action: 'chat',
           taskType: AI_ACTION_TASK_TYPES[btn.dataset.aiAction] || 'chat',
+          preferredProvider: getAiProviderPreference(),
           message: `${NOTE_AI_PROMPTS[btn.dataset.aiAction]}\n\n${sourceText}`,
           history: []
         })
@@ -23945,6 +23957,7 @@ safeOn('fcAiGenerateSubmitBtn', 'click', async () => {
       body: JSON.stringify({
         action: 'chat',
         taskType: 'flashcardGen',
+        preferredProvider: getAiProviderPreference(),
         message: `Generate exactly ${num} flashcards about "${topic}" at ${difficulty} difficulty, for a Nepal health Loksewa exam candidate. Respond with ONLY a JSON array, no other text, no markdown formatting, in this exact shape: [{"front":"question text","back":"answer text"}]`,
         history: []
       })
@@ -25377,6 +25390,11 @@ try{
 CHAT_GREETING = "नमस्ते! I'm your Health Loksewa assistant. Ask me about subjects, syllabus, how the app works, or study tips — I'm here to help. 🙂";
 }catch(err){ CHAT_GREETING = undefined; if(window.showDebugError) showDebugError("A required setting (" + "CHAT_GREETING" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
+// Read fresh each time (not cached) so Notes, Flashcards, and Answer Checker all respect the
+// same saved preference even if the user never opens the AI Chat screen where it's set.
+function getAiProviderPreference(){
+  try{ return localStorage.getItem(uk('hl_ai_provider_pref')) || 'auto'; }catch(e){ return 'auto'; }
+}
 function initChat(){
   if(chatInitialized) return; // don't reset the conversation every time they revisit
   chatInitialized = true;
@@ -25428,14 +25446,30 @@ function initChat(){
     btn.addEventListener('click', () => {
       const input = document.getElementById('chatInput');
       input.value = btn.dataset.template;
+      // Remembered so the NEXT send routes through this quick-action's proper task type
+      // (noteExplain/noteMcqGen/etc. from Phase 2's routing table) instead of generic chat —
+      // cleared below the moment the user types anything of their own into the pre-filled text.
+      pendingChatTaskType = btn.dataset.taskType || null;
       input.focus();
       input.setSelectionRange(input.value.length, input.value.length);
     });
   });
+  document.getElementById('chatInput').addEventListener('input', () => { pendingChatTaskType = null; });
   // "Check Answer" gets its own structured screen instead of a plain chat template — better UX
   // for a task with two distinct fields (question + answer) than one free-text chat line.
   document.getElementById('chatQuickCheckAnswerBtn').addEventListener('click', () => {
     showScreen(answerCheckerScreen);
+  });
+
+  // ---- AI provider preference: "Auto" lets the router decide as usual; picking a specific
+  // provider makes it tried FIRST for every message, while still falling back to the others if
+  // that one is unavailable — never a hard dead-end just because one provider hiccups. Read via
+  // getAiProviderPreference() rather than cached here, so Notes/Flashcards/Answer Checker also
+  // respect it even if the user never opens this chat screen first. ----
+  const providerSelect = document.getElementById('aiProviderSelect');
+  providerSelect.value = getAiProviderPreference();
+  providerSelect.addEventListener('change', () => {
+    try{ localStorage.setItem(uk('hl_ai_provider_pref'), providerSelect.value); }catch(e){}
   });
 
   // ---- 3-dot menu: toggle open/closed ----
@@ -25564,6 +25598,11 @@ async function sendChatMessage(){
   appendBubble('user', text);
   chatHistory.push({role:'user', content:text});
 
+  // Consumed once — a quick-action tap sets this for exactly the message it triggered, and the
+  // 'input' listener already clears it if the user edited the pre-filled text before sending.
+  const taskTypeForThisSend = pendingChatTaskType;
+  pendingChatTaskType = null;
+
   const thinkingBubble = appendBubble('ai', 'Thinking…');
   thinkingBubble.classList.add('thinking');
 
@@ -25573,6 +25612,8 @@ async function sendChatMessage(){
       headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight issues with Apps Script
       body: JSON.stringify({
         action: 'chat',
+        taskType: taskTypeForThisSend || 'chat',
+        preferredProvider: getAiProviderPreference(),
         message: text,
         history: chatHistory.slice(0, -1) // history BEFORE this new message
       })
@@ -25635,7 +25676,7 @@ Give: (1) a score out of 10, (2) 2-3 short bullet points on what's good, (3) 2-3
     const res = await fetch(SHEET_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'chat', taskType: 'answerCheck', message: prompt, history: [] })
+      body: JSON.stringify({ action: 'chat', taskType: 'answerCheck', preferredProvider: getAiProviderPreference(), message: prompt, history: [] })
     });
     const data = await res.json();
     const reply = data.reply || "Sorry, I couldn't check that. Please try again.";
