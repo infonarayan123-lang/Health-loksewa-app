@@ -7202,7 +7202,12 @@
     }
   };
 
-  window.checkAndIncrementChatCount = async function(){
+  // Generic per-feature AI usage limiter — stores each feature's own {date, count} under
+  // aiUsage.<featureKey> on the user's Firestore doc, using a dotted field path with merge:true
+  // so incrementing one feature's count can never clobber another's (each is its own nested
+  // field, not a shared object rewritten wholesale). Every AI-consuming feature calls this with
+  // its own key and its own daily limit, rather than sharing one combined bucket.
+  window.checkAndIncrementAiFeatureUsage = async function(featureKey, freeLimit){
     const user = auth.currentUser;
     if(!user) return { allowed: true, remaining: 999 }; // fail open if somehow not logged in
 
@@ -7214,18 +7219,27 @@
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
       const data = snap.exists() ? snap.data() : {};
-      let count = (data.chatCountDate === todayKey) ? (data.chatCountToday || 0) : 0;
+      const featureUsage = (data.aiUsage && data.aiUsage[featureKey]) || {};
+      let count = (featureUsage.date === todayKey) ? (featureUsage.count || 0) : 0;
 
-      if(count >= 10){
+      if(count >= freeLimit){
         return { allowed: false, remaining: 0 };
       }
 
       count++;
-      await setDoc(ref, { chatCountDate: todayKey, chatCountToday: count }, { merge: true });
-      return { allowed: true, remaining: 10 - count };
+      const update = {};
+      update['aiUsage.' + featureKey] = { date: todayKey, count };
+      await setDoc(ref, update, { merge: true });
+      return { allowed: true, remaining: freeLimit - count };
     }catch(err){
       return { allowed: true, remaining: 999 }; // fail open on error — don't block users due to a glitch
     }
+  };
+  // Kept as a thin wrapper over the generic limiter above, so anything still calling this by
+  // name keeps working exactly as before — just sharing the same underlying engine now instead
+  // of its own separate copy of the daily-reset logic.
+  window.checkAndIncrementChatCount = async function(){
+    return window.checkAndIncrementAiFeatureUsage('chat', 10);
   };
 
   // ---- Mock Test usage limit: first 2 EVER free, then 1 per calendar week free, rest Premium ----
@@ -17079,6 +17093,15 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
       resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12px;">Write something in the note first, or select the text you want AI to work on.</p>`;
       return;
     }
+    // This entire family of actions (Explain/Summarize/MCQs/Mnemonic/Simplify) shares ONE daily
+    // free-tier bucket — they were previously completely unlimited, a real cost-control gap.
+    if(window.checkAndIncrementAiFeatureUsage){
+      const limitCheck = await window.checkAndIncrementAiFeatureUsage('notesAi', 10);
+      if(!limitCheck.allowed){
+        resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12px;">You've reached today's free limit of 10 AI note actions. Upgrade to Premium for unlimited access, or come back tomorrow! 💎</p>`;
+        return;
+      }
+    }
     resultEl.innerHTML = `<p style="color:var(--ink-soft); font-size:12px;">✨ Thinking…</p>`;
     // Maps each quick-action button to its own backend task type (noteExplain/noteSummarize/etc.)
     // rather than every action sharing the single generic 'chat' routing — each of these is
@@ -23948,6 +23971,15 @@ safeOn('fcAiGenerateSubmitBtn', 'click', async () => {
 
   const topic = document.getElementById('fcAiTopicInput').value.trim();
   if(!topic){ alert('Please enter a topic.'); return; }
+  // Only the AI-generation path (not the "from my wrong MCQs" branch above, which never calls
+  // the AI at all) counts against this limit.
+  if(window.checkAndIncrementAiFeatureUsage){
+    const limitCheck = await window.checkAndIncrementAiFeatureUsage('flashcardGen', 3);
+    if(!limitCheck.allowed){
+      alert("You've reached today's free limit of 3 AI flashcard generations. Upgrade to Premium for unlimited access, or come back tomorrow!");
+      return;
+    }
+  }
   btn.textContent = '✨ Generating…';
   btn.disabled = true;
   try{
@@ -25637,8 +25669,10 @@ async function sendChatMessage(){
 }
 
 // ---------- Written Answer Checker: reuses the exact same AI chat backend (action=chat),
-// just with a structured grading prompt instead of a free-text message. Counts against the
-// same daily free-tier limit as regular AI chat, since it's the same underlying AI call. ----------
+// just with a structured grading prompt instead of a free-text message. Has its OWN, tighter
+// daily limit (2/day free) rather than sharing AI Chat's bucket — this is the most
+// resource-intensive task type (routed Gemini-first for grading quality), so it gets the
+// tightest cap of any AI feature, matching the per-feature limit table. ----------
 async function submitAnswerCheck(){
   const question = document.getElementById('answerCheckerQuestion').value.trim();
   const answer = document.getElementById('answerCheckerAnswer').value.trim();
@@ -25650,11 +25684,11 @@ async function submitAnswerCheck(){
     return;
   }
 
-  if(window.checkAndIncrementChatCount){
-    const limitCheck = await window.checkAndIncrementChatCount();
+  if(window.checkAndIncrementAiFeatureUsage){
+    const limitCheck = await window.checkAndIncrementAiFeatureUsage('answerCheck', 2);
     if(!limitCheck.allowed){
       resultWrap.style.display = 'block';
-      resultWrap.innerHTML = `<div class="content-card"><p style="color:var(--wrong); font-size:13.5px;">You've reached today's free limit of 10 AI uses. Upgrade to Premium for unlimited access, or come back tomorrow! 💎</p></div>`;
+      resultWrap.innerHTML = `<div class="content-card"><p style="color:var(--wrong); font-size:13.5px;">You've reached today's free limit of 2 answer checks. Upgrade to Premium for unlimited access, or come back tomorrow! 💎</p></div>`;
       return;
     }
   }
