@@ -105,7 +105,7 @@
     display:flex;
     flex-direction:column;
     box-shadow:0 0 40px rgba(0,0,0,0.06);
-    padding-bottom:calc(64px + env(safe-area-inset-bottom, 0px)); /* leaves room for the fixed bottom nav bar — the nav's own height grows on phones with a gesture bar via the same safe-area inset, so this must match it or content sitting at the very bottom (like the AI Chat input row) gets crowded */
+    padding-bottom:calc(92px + env(safe-area-inset-bottom, 0px)); /* leaves room for the fixed bottom nav bar. Computed from the nav's actual rendered height: 10px nav padding-top + 6px item padding-top + 42px icon + 4px gap + ~14px label text + 6px item padding-bottom + 10px nav padding-bottom = ~92px — the previous 64px reserved here was simply too small for the real nav height on every device, not just ones with a safe-area inset, which is why bottom content (like the AI Chat input row) kept getting crowded */
   }
   .bottom-nav{
     display:none; /* JS shows this once the correct screen is active — prevents flashing during initial load */
