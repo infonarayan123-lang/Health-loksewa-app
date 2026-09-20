@@ -7211,11 +7211,15 @@
     const user = auth.currentUser;
     if(!user) return { allowed: true, remaining: 999 }; // fail open if somehow not logged in
 
-    const isPremium = await window.checkPremiumStatus();
-    if(isPremium) return { allowed: true, remaining: Infinity };
-
-    const todayKey = new Date().toISOString().slice(0, 10);
+    // Widened to cover checkPremiumStatus() too — that call has no error handling of its own,
+    // and letting it throw uncaught here would silently kill the entire calling action (e.g. a
+    // chat message never gets sent, with no visible error) purely because of a transient
+    // network/Firestore hiccup. Every failure path in this function must fail open.
     try{
+      const isPremium = await window.checkPremiumStatus();
+      if(isPremium) return { allowed: true, remaining: Infinity };
+
+      const todayKey = new Date().toISOString().slice(0, 10);
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
       const data = snap.exists() ? snap.data() : {};
@@ -7256,10 +7260,13 @@
     const user = auth.currentUser;
     if(!user) return { allowed: true }; // fail open if somehow not logged in
 
-    const isPremium = await window.checkPremiumStatus();
-    if(isPremium) return { allowed: true };
-
+    // Widened to also cover checkPremiumStatus() — see the note on checkAndIncrementAiFeatureUsage
+    // above; that call has no error handling of its own, and left uncaught here it would silently
+    // block a Mock Test from ever starting purely because of a transient network hiccup.
     try{
+      const isPremium = await window.checkPremiumStatus();
+      if(isPremium) return { allowed: true };
+
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
       const data = snap.exists() ? snap.data() : {};
@@ -7295,10 +7302,11 @@
     const user = auth.currentUser;
     if(!user) return { allowed: true };
 
-    const isPremium = await window.checkPremiumStatus();
-    if(isPremium) return { allowed: true };
-
+    // Widened to also cover checkPremiumStatus() — see the note on checkAndIncrementAiFeatureUsage above.
     try{
+      const isPremium = await window.checkPremiumStatus();
+      if(isPremium) return { allowed: true };
+
       const ref = doc(db, 'users', user.uid);
       const snap = await getDoc(ref);
       const data = snap.exists() ? snap.data() : {};
@@ -7319,14 +7327,21 @@
     const user = auth.currentUser;
     if(!user) return { allowed: true };
 
-    const isPremium = await window.checkPremiumStatus();
-    if(isPremium) return { allowed: true };
+    // checkPremiumStatus() has no error handling of its own — wrapped here so a transient
+    // network/Firestore hiccup can never leave this whole check throwing uncaught (this function
+    // previously had NO try/catch at all, the least protected of this whole family of checks).
+    try{
+      const isPremium = await window.checkPremiumStatus();
+      if(isPremium) return { allowed: true };
 
-    const createdAt = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : null;
-    if(!createdAt) return { allowed: true }; // fail open if we can't determine signup date
+      const createdAt = user.metadata && user.metadata.creationTime ? new Date(user.metadata.creationTime) : null;
+      if(!createdAt) return { allowed: true }; // fail open if we can't determine signup date
 
-    const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-    return { allowed: daysSinceSignup <= 7 };
+      const daysSinceSignup = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+      return { allowed: daysSinceSignup <= 7 };
+    }catch(err){
+      return { allowed: true }; // fail open on error
+    }
   };
 
   window.updateAuthUI = updateAuthUI; // exposed so the classic script's notification-gate button handlers can resume the auth flow once answered
@@ -19229,9 +19244,16 @@ async function isPremiumUser(){
 }
 async function refreshPremiumStatus(){
   if(!window.checkPremiumStatus) return false;
-  const isPremium = await window.checkPremiumStatus();
-  try{ localStorage.setItem(uk('hl_premium_status'), JSON.stringify(isPremium)); }catch(e){}
-  return isPremium;
+  // checkPremiumStatus() has no error handling of its own — wrapped here (this function
+  // previously had no try/catch at all) so a transient network/Firestore hiccup can't throw
+  // uncaught into whatever screen happened to trigger a premium-status refresh.
+  try{
+    const isPremium = await window.checkPremiumStatus();
+    try{ localStorage.setItem(uk('hl_premium_status'), JSON.stringify(isPremium)); }catch(e){}
+    return isPremium;
+  }catch(err){
+    return false; // fail open toward "not premium" — never lets an error silently grant premium either
+  }
 }
 async function renderPremiumStatus(){
   const badge = document.getElementById('premiumStatusBadge');
@@ -25449,12 +25471,17 @@ function initChat(){
 
   // ---- Voice input: browser's own built-in speech recognition, no backend/AI model needed —
   // transcribes speech into the chat input, same send flow as typing. Hidden entirely on
-  // browsers that don't support it (feature-detected, never assumed). ----
+  // browsers that don't support it (feature-detected, never assumed). Wrapped in its own
+  // try/catch: webkitSpeechRecognition exists as a symbol in some Chromium-based browsers (e.g.
+  // Brave) even when the browser blocks the speech service it depends on, and constructing it
+  // can throw — this is a genuinely optional enhancement, so a failure here must never be able
+  // to silently prevent the quick-action buttons and 3-dot menu (wired below) from working.
+  try{
   const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(SpeechRecognitionAPI){
     const micBtn = document.getElementById('chatMicBtn');
+    const recognizer = new SpeechRecognitionAPI(); // only reveal the mic button once this succeeds — never show a button that can't actually work
     micBtn.style.display = '';
-    const recognizer = new SpeechRecognitionAPI();
     recognizer.lang = 'en-US';
     recognizer.interimResults = false;
     recognizer.maxAlternatives = 1;
@@ -25472,6 +25499,7 @@ function initChat(){
     recognizer.addEventListener('end', () => { micBtn.textContent = '🎤'; });
     recognizer.addEventListener('error', () => { micBtn.textContent = '🎤'; });
   }
+  }catch(e){ /* voice input unavailable/blocked on this browser — the rest of the chat screen must still work */ }
 
   // ---- Quick action chips: pre-fill a template into the input, same send flow as always ----
   document.querySelectorAll('.chat-quick-btn[data-template]').forEach(btn => {
