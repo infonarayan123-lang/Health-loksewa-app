@@ -2252,6 +2252,7 @@
         </div>
       </div>
     </div>
+    <div style="text-align:center; font-size:10px; color:#F87171; padding:2px 0; background:#1a0505;">DEBUG BUILD v416-DEBUG — if you see this text, the page loaded the newest file (this line will be removed once everything is confirmed working)</div>
     <div class="chat-screen-wrap">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-quick-actions" id="chatQuickActions">
@@ -25450,6 +25451,12 @@ function getAiProviderPreference(){
   try{ return localStorage.getItem(uk('hl_ai_provider_pref')) || 'auto'; }catch(e){ return 'auto'; }
 }
 function initChat(){
+  // TEMPORARY diagnostic — proves initChat() actually started running at all, separate from
+  // whether any individual piece inside it succeeds. Remove once the real issue is confirmed fixed.
+  try{
+    document.getElementById('chatMessages').innerHTML = '<div style="background:#F87171; color:#000; padding:8px; border-radius:8px; font-size:12px; margin-bottom:8px;">DEBUG: initChat() started running (chatInitialized was: ' + chatInitialized + ')</div>';
+  }catch(e){}
+
   if(chatInitialized) return; // don't reset the conversation every time they revisit
   chatInitialized = true;
 
