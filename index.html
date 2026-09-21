@@ -2252,7 +2252,7 @@
         </div>
       </div>
     </div>
-    <div style="text-align:center; font-size:10px; color:#F87171; padding:2px 0; background:#1a0505;">DEBUG BUILD v418-DEBUG — if you see this text, the page loaded the newest file (this line will be removed once everything is confirmed working)</div>
+    <div style="text-align:center; font-size:10px; color:#F87171; padding:2px 0; background:#1a0505;">DEBUG BUILD v419-DEBUG — if you see this text, the page loaded the newest file (this line will be removed once everything is confirmed working)</div>
     <div class="chat-screen-wrap">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-quick-actions" id="chatQuickActions">
@@ -25517,8 +25517,11 @@ function initChat(){
 
   // ---- Quick action chips: pre-fill a template into the input, same send flow as always ----
   try{
-    document.querySelectorAll('.chat-quick-btn[data-template]').forEach(btn => {
+    const quickBtns = document.querySelectorAll('.chat-quick-btn[data-template]');
+    alert('DEBUG: found ' + quickBtns.length + ' quick-action buttons to wire up (expected 5)'); // TEMPORARY
+    quickBtns.forEach(btn => {
       btn.addEventListener('click', () => {
+        alert('DEBUG: quick-action button click WAS received: ' + btn.textContent); // TEMPORARY
         const input = document.getElementById('chatInput');
         input.value = btn.dataset.template;
         // Remembered so the NEXT send routes through this quick-action's proper task type
