@@ -2252,7 +2252,7 @@
         </div>
       </div>
     </div>
-    <div style="text-align:center; font-size:10px; color:#F87171; padding:2px 0; background:#1a0505;">DEBUG BUILD v417-DEBUG — if you see this text, the page loaded the newest file (this line will be removed once everything is confirmed working)</div>
+    <div style="text-align:center; font-size:10px; color:#F87171; padding:2px 0; background:#1a0505;">DEBUG BUILD v418-DEBUG — if you see this text, the page loaded the newest file (this line will be removed once everything is confirmed working)</div>
     <div class="chat-screen-wrap">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-quick-actions" id="chatQuickActions">
@@ -8634,11 +8634,8 @@ safeOn('cardHandbookHome', 'click', () => {
   showScreen(studyResourcesScreen);
 });
 safeOn('cardAi', 'click', () => {
-  alert('DEBUG STEP 1: cardAi was clicked'); // TEMPORARY — proves the click itself is received
   showScreen(aiChatScreen);
-  alert('DEBUG STEP 2: showScreen ran, about to call initChat()'); // TEMPORARY
   initChat();
-  alert('DEBUG STEP 3: initChat() call finished with no throw'); // TEMPORARY
 });
 safeOn('cardSmartToolsHome', 'click', () => {
   showScreen(calculatorScreen);
@@ -25454,10 +25451,6 @@ function getAiProviderPreference(){
   try{ return localStorage.getItem(uk('hl_ai_provider_pref')) || 'auto'; }catch(e){ return 'auto'; }
 }
 function initChat(){
-  // TEMPORARY diagnostic — proves initChat() actually started running at all, separate from
-  // whether any individual piece inside it succeeds. Remove once the real issue is confirmed fixed.
-  alert('DEBUG STEP 4: initChat() itself started running (chatInitialized was: ' + chatInitialized + ')');
-
   if(chatInitialized) return; // don't reset the conversation every time they revisit
   chatInitialized = true;
 
