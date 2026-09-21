@@ -25453,21 +25453,34 @@ function initChat(){
   if(chatInitialized) return; // don't reset the conversation every time they revisit
   chatInitialized = true;
 
+  // Every block below is now independently wrapped — a real device may fail at a step this
+  // sandbox can't reproduce (a specific browser's storage/DOM quirk, an extension interfering,
+  // etc.), and previously a single failure anywhere in this function silently prevented every
+  // piece of setup AFTER it from ever running (this is exactly the shape of bug reported: send,
+  // quick actions, and the 3-dot menu all failing together points at one early crash taking
+  // everything downstream with it). Isolating each piece means one failure can only ever affect
+  // that one feature, never the others — and any real failure now surfaces via the app's own
+  // visible debug-error overlay instead of vanishing silently.
+
   try{
     const saved = JSON.parse(localStorage.getItem(uk('hl_chat_history')) || '[]');
     chatHistory = saved;
   }catch(e){ chatHistory = []; }
 
-  if(chatHistory.length === 0){
-    appendBubble('ai', CHAT_GREETING);
-  } else {
-    chatHistory.forEach(m => appendBubble(m.role === 'user' ? 'user' : 'ai', m.content));
-  }
+  try{
+    if(chatHistory.length === 0){
+      appendBubble('ai', CHAT_GREETING);
+    } else {
+      chatHistory.forEach(m => appendBubble(m.role === 'user' ? 'user' : 'ai', m.content));
+    }
+  }catch(e){ if(window.showDebugError) showDebugError('AI Chat greeting failed: ' + (e && e.message ? e.message : String(e))); }
 
-  document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
-  document.getElementById('chatInput').addEventListener('keydown', (e) => {
-    if(e.key === 'Enter') sendChatMessage();
-  });
+  try{
+    document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+    document.getElementById('chatInput').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') sendChatMessage();
+    });
+  }catch(e){ if(window.showDebugError) showDebugError('AI Chat send button failed to set up: ' + (e && e.message ? e.message : String(e))); }
 
   // ---- Voice input: browser's own built-in speech recognition, no backend/AI model needed —
   // transcribes speech into the chat input, same send flow as typing. Hidden entirely on
@@ -25477,82 +25490,90 @@ function initChat(){
   // can throw — this is a genuinely optional enhancement, so a failure here must never be able
   // to silently prevent the quick-action buttons and 3-dot menu (wired below) from working.
   try{
-  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(SpeechRecognitionAPI){
-    const micBtn = document.getElementById('chatMicBtn');
-    const recognizer = new SpeechRecognitionAPI(); // only reveal the mic button once this succeeds — never show a button that can't actually work
-    micBtn.style.display = '';
-    recognizer.lang = 'en-US';
-    recognizer.interimResults = false;
-    recognizer.maxAlternatives = 1;
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(SpeechRecognitionAPI){
+      const micBtn = document.getElementById('chatMicBtn');
+      const recognizer = new SpeechRecognitionAPI(); // only reveal the mic button once this succeeds — never show a button that can't actually work
+      micBtn.style.display = '';
+      recognizer.lang = 'en-US';
+      recognizer.interimResults = false;
+      recognizer.maxAlternatives = 1;
 
-    micBtn.addEventListener('click', () => {
-      micBtn.textContent = '🔴';
-      try{ recognizer.start(); }catch(e){ /* already listening — ignore */ }
-    });
-    recognizer.addEventListener('result', (event) => {
-      const transcript = event.results[0][0].transcript;
-      const input = document.getElementById('chatInput');
-      input.value = transcript;
-      input.focus();
-    });
-    recognizer.addEventListener('end', () => { micBtn.textContent = '🎤'; });
-    recognizer.addEventListener('error', () => { micBtn.textContent = '🎤'; });
-  }
+      micBtn.addEventListener('click', () => {
+        micBtn.textContent = '🔴';
+        try{ recognizer.start(); }catch(e){ /* already listening — ignore */ }
+      });
+      recognizer.addEventListener('result', (event) => {
+        const transcript = event.results[0][0].transcript;
+        const input = document.getElementById('chatInput');
+        input.value = transcript;
+        input.focus();
+      });
+      recognizer.addEventListener('end', () => { micBtn.textContent = '🎤'; });
+      recognizer.addEventListener('error', () => { micBtn.textContent = '🎤'; });
+    }
   }catch(e){ /* voice input unavailable/blocked on this browser — the rest of the chat screen must still work */ }
 
   // ---- Quick action chips: pre-fill a template into the input, same send flow as always ----
-  document.querySelectorAll('.chat-quick-btn[data-template]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById('chatInput');
-      input.value = btn.dataset.template;
-      // Remembered so the NEXT send routes through this quick-action's proper task type
-      // (noteExplain/noteMcqGen/etc. from Phase 2's routing table) instead of generic chat —
-      // cleared below the moment the user types anything of their own into the pre-filled text.
-      pendingChatTaskType = btn.dataset.taskType || null;
-      input.focus();
-      input.setSelectionRange(input.value.length, input.value.length);
+  try{
+    document.querySelectorAll('.chat-quick-btn[data-template]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('chatInput');
+        input.value = btn.dataset.template;
+        // Remembered so the NEXT send routes through this quick-action's proper task type
+        // (noteExplain/noteMcqGen/etc. from Phase 2's routing table) instead of generic chat —
+        // cleared below the moment the user types anything of their own into the pre-filled text.
+        pendingChatTaskType = btn.dataset.taskType || null;
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      });
     });
-  });
-  document.getElementById('chatInput').addEventListener('input', () => { pendingChatTaskType = null; });
-  // "Check Answer" gets its own structured screen instead of a plain chat template — better UX
-  // for a task with two distinct fields (question + answer) than one free-text chat line.
-  document.getElementById('chatQuickCheckAnswerBtn').addEventListener('click', () => {
-    showScreen(answerCheckerScreen);
-  });
+    document.getElementById('chatInput').addEventListener('input', () => { pendingChatTaskType = null; });
+    // "Check Answer" gets its own structured screen instead of a plain chat template — better UX
+    // for a task with two distinct fields (question + answer) than one free-text chat line.
+    document.getElementById('chatQuickCheckAnswerBtn').addEventListener('click', () => {
+      showScreen(answerCheckerScreen);
+    });
+  }catch(e){ if(window.showDebugError) showDebugError('AI Chat quick actions failed to set up: ' + (e && e.message ? e.message : String(e))); }
 
   // ---- AI provider preference: "Auto" lets the router decide as usual; picking a specific
   // provider makes it tried FIRST for every message, while still falling back to the others if
   // that one is unavailable — never a hard dead-end just because one provider hiccups. Read via
   // getAiProviderPreference() rather than cached here, so Notes/Flashcards/Answer Checker also
   // respect it even if the user never opens this chat screen first. ----
-  const providerSelect = document.getElementById('aiProviderSelect');
-  providerSelect.value = getAiProviderPreference();
-  providerSelect.addEventListener('change', () => {
-    try{ localStorage.setItem(uk('hl_ai_provider_pref'), providerSelect.value); }catch(e){}
-  });
+  try{
+    const providerSelect = document.getElementById('aiProviderSelect');
+    providerSelect.value = getAiProviderPreference();
+    providerSelect.addEventListener('change', () => {
+      try{ localStorage.setItem(uk('hl_ai_provider_pref'), providerSelect.value); }catch(e){}
+    });
+  }catch(e){ if(window.showDebugError) showDebugError('AI Chat provider selector failed to set up: ' + (e && e.message ? e.message : String(e))); }
 
   // ---- 3-dot menu: toggle open/closed ----
-  document.getElementById('chatMenuBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('chatMenuDropdown').classList.toggle('open');
-  });
-  document.addEventListener('click', () => {
-    document.getElementById('chatMenuDropdown').classList.remove('open');
-  });
+  try{
+    document.getElementById('chatMenuBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('chatMenuDropdown').classList.toggle('open');
+    });
+    document.addEventListener('click', () => {
+      document.getElementById('chatMenuDropdown').classList.remove('open');
+    });
+  }catch(e){ if(window.showDebugError) showDebugError('AI Chat menu failed to set up: ' + (e && e.message ? e.message : String(e))); }
 
   // ---- Delete Chat ----
-  document.getElementById('deleteChatBtn').addEventListener('click', async (e) => {
-    e.stopPropagation();
-    document.getElementById('chatMenuDropdown').classList.remove('open');
-    if(await customConfirm('Delete this entire chat conversation? This cannot be undone.')){
-      chatHistory = [];
-      try{ localStorage.removeItem(uk('hl_chat_history')); }catch(err){}
-      if(window.syncToCloud) window.syncToCloud({ chatHistory: [] });
-      document.getElementById('chatMessages').innerHTML = '';
-      appendBubble('ai', CHAT_GREETING);
-    }
-  });
+  try{
+    document.getElementById('deleteChatBtn').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      document.getElementById('chatMenuDropdown').classList.remove('open');
+      if(await customConfirm('Delete this entire chat conversation? This cannot be undone.')){
+        chatHistory = [];
+        try{ localStorage.removeItem(uk('hl_chat_history')); }catch(err){}
+        if(window.syncToCloud) window.syncToCloud({ chatHistory: [] });
+        document.getElementById('chatMessages').innerHTML = '';
+        appendBubble('ai', CHAT_GREETING);
+      }
+    });
+  }catch(e){ if(window.showDebugError) showDebugError('AI Chat delete button failed to set up: ' + (e && e.message ? e.message : String(e))); }
 }
 
 function appendBubble(role, text){
@@ -25786,7 +25807,7 @@ if ('serviceWorker' in navigator) {
     </div>
   </div>
 
-  <div id="debugErrorOverlay" style="display:none; position:fixed; left:12px; right:12px; bottom:80px; z-index:9999; background:#2a0a0a; border:2px solid #F87171; border-radius:12px; padding:14px; max-height:40vh; overflow-y:auto;">
+  <div id="debugErrorOverlay" style="display:none; position:fixed; left:12px; right:12px; bottom:calc(100px + env(safe-area-inset-bottom, 0px)); z-index:9999; background:#2a0a0a; border:2px solid #F87171; border-radius:12px; padding:14px; max-height:40vh; overflow-y:auto;">
     <div style="font-size:12px; font-weight:800; color:#F87171; margin-bottom:6px;">⚠️ A real error occurred — please screenshot this:</div>
     <div id="debugErrorText" style="font-size:11px; color:#fca5a5; font-family:monospace; white-space:pre-wrap; word-break:break-word;"></div>
     <button id="debugErrorDismissBtn" style="margin-top:10px; width:100%; padding:8px; background:#F87171; color:#2a0a0a; border:none; border-radius:8px; font-weight:700; font-size:12px;">Dismiss</button>
