@@ -2252,7 +2252,7 @@
         </div>
       </div>
     </div>
-    <div style="text-align:center; font-size:10px; color:#F87171; padding:2px 0; background:#1a0505;">DEBUG BUILD v420-DEBUG — if you see this text, the page loaded the newest file (this line will be removed once everything is confirmed working)</div>
+    <div style="text-align:center; font-size:10px; color:#F87171; padding:2px 0; background:#1a0505;">DEBUG BUILD v421-DEBUG — if you see this text, the page loaded the newest file (this line will be removed once everything is confirmed working)</div>
     <div class="chat-screen-wrap">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-quick-actions" id="chatQuickActions">
@@ -25460,6 +25460,10 @@ function initChat(){
   document.getElementById('aiChatScreen').addEventListener('click', (e) => {
     document.body.style.background = '#00FF00';
     setTimeout(() => { document.body.style.background = ''; }, 400);
+    // TEMPORARY — reveals exactly which element actually received the click, since a click
+    // reaching this ancestor while the button's OWN listener never fires would mean the real
+    // click target is something else entirely overlapping the button, not the button itself.
+    alert('DEBUG: actual click target was <' + e.target.tagName + '> class="' + e.target.className + '" text="' + (e.target.textContent || '').slice(0,30) + '"');
   }, true); // capture phase — runs before any other click handler, so it fires even if something later stops the event
 
   if(chatInitialized) return; // don't reset the conversation every time they revisit
