@@ -22924,8 +22924,23 @@ function customConfirm(message){
 }
 
 function showDebugError(message){
-  document.getElementById('debugErrorText').textContent = message;
-  document.getElementById('debugErrorOverlay').style.display = 'block';
+  // Defensive: this function itself must NEVER throw, no matter what. It's called both from
+  // later event handlers (when the whole page has finished loading, and its own overlay
+  // elements definitely exist) AND from top-level script code that can run WHILE the page is
+  // still being parsed — and since debugErrorOverlay/debugErrorText are positioned in the HTML
+  // AFTER this script block closes, calling this during that early window used to throw
+  // "Cannot set properties of null", which — being uncaught — silently aborted the ENTIRE rest
+  // of the script's top-level execution (every function/variable declared after that point in
+  // the file, including chatInitialized, was never created). Falling back to console.error here
+  // keeps that early-call case harmless instead of catastrophic.
+  const textEl = document.getElementById('debugErrorText');
+  const overlayEl = document.getElementById('debugErrorOverlay');
+  if(textEl && overlayEl){
+    textEl.textContent = message;
+    overlayEl.style.display = 'block';
+  } else {
+    console.error('[Health Loksewa debug]', message);
+  }
 }
 window.addEventListener('error', (event) => {
   showDebugError(`${event.message}\n\nFile: ${(event.filename || '').split('/').pop()}:${event.lineno}:${event.colno}`);
