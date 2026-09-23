@@ -3112,6 +3112,7 @@
         <button class="start-btn" id="npSaveBtn" style="margin-top:14px;">Save Preferences</button>
       </div>
       <p id="npStatusMsg" style="font-size:12px; color:var(--wrong); margin-top:12px; text-align:center;"></p>
+      <p id="npDiagnosticMsg" style="font-size:11px; color:var(--ink-soft); margin-top:8px; text-align:center;"></p>
     </div>
   </div>
 
@@ -8371,6 +8372,51 @@ SCREEN_REFRESH_MAP = {
   pastQuestionsYearScreen: () => loadPastQuestionsList(currentMcqPost),
   subjectPickScreen: () => renderSubjectPick(),
   profileScreen: () => refreshProfileData(),
+  // ---- Added in this batch: 36 more screens, each verified to have a real, existing,
+  // zero-argument render function reused as-is (never a new refactor). Deliberately NOT
+  // added: pure calculators (BMI, epidemiology formulas, stats tools — nothing server-side to
+  // refresh), forms mid-entry (note editor, group/discussion creation, change password —
+  // refreshing could discard unsaved input), and active-session screens (quiz, battle-live,
+  // focus timer, flashcard study, CPR demo — refreshing mid-action would be disruptive, not
+  // helpful). A handful of detail/reader screens (mnemonic detail, quick reference detail,
+  // dictionary, discussion thread, inspiration hub) show one specific item via inline logic
+  // rather than a reusable function, and weren't touched in this pass to avoid a refactor.
+  ainSangrahaScreen: () => renderAinSangraha(),
+  samsamayikScreen: () => renderSamsamayik(),
+  resourcesScreen: () => renderResources(),
+  newsPortalScreen: () => renderNewsPortal(),
+  appLockSettingsScreen: () => renderAppLockSettings(),
+  questionPerformanceScreen: () => renderQuestionPerformance(),
+  weakAreasScreen: () => renderWeakAreas(),
+  achievementsScreen: () => renderAchievements(computeProgressStats(), getStudyStreak()),
+  achievementDetailScreen: () => renderAchievementDetail(currentAchievementDetail),
+  learnHubProgressScreen: () => renderLearnHubProgress(),
+  revisionProgressScreen: () => renderRevisionProgress(),
+  studyActivityScreen: () => renderStudyActivity(),
+  progressGoalsScreen: () => renderProgressGoals(),
+  progressHistoryScreen: () => renderProgressHistory(),
+  myBookmarksHubScreen: () => renderMyBookmarksHub(),
+  fcProgressScreen: () => renderFcProgress(),
+  healthGuideScreen: () => renderHealthGuide(),
+  immunizationScreen: () => renderImmunization(),
+  noteTrashScreen: () => renderNoteTrash(),
+  revisionCalendarScreen: () => renderRevisionCalendar(),
+  studyPlannerSetupScreen: () => renderStudyPlannerSetup(),
+  studyPlannerScreen: () => renderStudyPlanner(),
+  whatsNewScreen: () => renderWhatsNew(),
+  upgradeScreen: () => renderPremiumStatus(),
+  fcCommunityScreen: () => renderCommunityDecks(),
+  battleScreen: () => renderDailyBattleCard(),
+  quickRefScreen: () => renderQuickRefHub(),
+  monthlyTournamentScreen: () => renderMonthlyTournamentScreen(),
+  rapidFireScreen: () => renderRapidFireModes(),
+  healthDayCalendarScreen: () => renderHealthDayCalendarGrid(),
+  groupDetailScreen: () => switchGroupTab('overview'),
+  revisionSubjectPickScreen: () => renderRevisionSubjectPicker(),
+  examRevisionScreen: () => renderExamRevisionPlan(),
+  sevenDayRevisionScreen: () => render7DayPlan(),
+  subjectProgressScreen: () => renderSubjectProgressList(),
+  screenTimeScreen: () => renderScreenTimeDashboard(),
 };
 }catch(err){ SCREEN_REFRESH_MAP = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SCREEN_REFRESH_MAP" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
@@ -19971,6 +20017,21 @@ safeOn('menuNotificationPrefs', 'click', async () => {
   const enabled = existing && existing.enabled;
   document.getElementById('npMasterToggle').textContent = enabled ? 'On' : 'Off';
   document.getElementById('npCategoriesWrap').style.display = enabled ? 'block' : 'none';
+
+  // Diagnostic line: shows the browser/OS's OWN raw permission state, separate from whether our
+  // registration actually succeeded (fcmToken saved). This narrows down exactly where a "no
+  // notifications ever arrive" problem sits — e.g. permission genuinely denied at the OS level
+  // vs. permission granted but something else in registration failed.
+  try{
+    const rawPermission = ('Notification' in window) ? Notification.permission : 'unsupported';
+    let diagnosticText = 'Device permission: ' + rawPermission + ' · Token saved: ' + (enabled ? 'yes' : 'no');
+    if(rawPermission === 'granted' && !enabled){
+      diagnosticText += ' — permission is granted but no token was saved yet; try turning notifications On below.';
+    } else if(rawPermission === 'denied'){
+      diagnosticText += ' — blocked at the browser/device level; re-enable it in your browser or phone Settings for this site, then reopen the app.';
+    }
+    document.getElementById('npDiagnosticMsg').textContent = diagnosticText;
+  }catch(e){}
   if(existing && existing.prefs){
     document.querySelectorAll('.np-cat').forEach(cb => {
       cb.checked = existing.prefs[cb.dataset.cat] !== false; // default checked unless explicitly turned off before

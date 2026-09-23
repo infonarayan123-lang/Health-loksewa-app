@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pho-loksewa-v424';
+const CACHE_NAME = 'pho-loksewa-v426';
 const FILES_TO_CACHE = [
   './index.html',
   './manifest.json',
