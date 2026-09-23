@@ -6653,6 +6653,7 @@
       if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
       if(window.renderHomePremiumBanner) window.renderHomePremiumBanner();
       if(window.checkForEsewaReturnAndActivate) window.checkForEsewaReturnAndActivate();
+      if(window.checkForNotificationDeepLinkAndNavigate) window.checkForNotificationDeepLinkAndNavigate();
       if(window.maybeOfferAppLockSetup) setTimeout(window.maybeOfferAppLockSetup, 1500); // let the next screen settle first, not stack on top of it instantly
     } else {
       try{ localStorage.removeItem('hl_user'); }catch(e){}
@@ -7828,7 +7829,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwp1vqUAe_Lyx-g29QkMbf_R_RRjWIT0_JtCf1TI1bjfcmiy1tfdWIkPXzOyxrXpGAwFw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwiZ-34Qv6gwqMOaleOB_OjGe80c8uj8cNwVjiJyf2IvsPnt85Nw8VrwPTRApPQRZvDjw/exec";
 }catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
@@ -19538,6 +19539,29 @@ safeOn('esewaPayBtn', 'click', async () => {
 });
 
 // ---------- eSewa Payment: handle the redirect BACK after payment completes ----------
+// ---------- Push notification deep links: a tapped notification opens the app with a
+// ?notif=<key> URL param (added server-side in sendFcmMessage_) — this reads that param once at
+// boot and navigates straight to the relevant screen, same "check a URL param, act, then clean
+// the URL" pattern as the eSewa-return check above. ----------
+function checkForNotificationDeepLinkAndNavigate(){
+  const params = new URLSearchParams(window.location.search);
+  const notifKey = params.get('notif');
+  if(!notifKey) return; // not opened from a notification tap — nothing to do
+
+  // Clean the URL immediately so refreshing doesn't re-trigger this
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+  const NOTIF_DEEPLINK_MAP = {
+    whatsnew: () => { showScreen(whatsNewScreen); if(window.renderWhatsNew) renderWhatsNew(); },
+    notifications: () => { showScreen(notificationsScreen); if(window.loadNotifications) loadNotifications(); },
+    healthday: () => { showScreen(healthDaysScreen); if(window.renderHealthDays) renderHealthDays(''); },
+  };
+  const action = NOTIF_DEEPLINK_MAP[notifKey];
+  if(action){
+    try{ action(); }catch(e){ if(window.showDebugError) showDebugError('Notification deep link failed: ' + (e && e.message ? e.message : String(e))); }
+  }
+}
+
 async function checkForEsewaReturnAndActivate(){
   const params = new URLSearchParams(window.location.search);
   const dataParam = params.get('data');
