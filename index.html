@@ -6641,6 +6641,16 @@
         }));
       }catch(e){}
       if(window.checkAppLockOnBoot) await window.checkAppLockOnBoot();
+      // Records today's date on the user's own doc every time the app opens — this is what lets
+      // the backend's evening "you haven't studied today" check (checkInactiveUsersAndRemind_ in
+      // apps-script-v5.js) tell who's genuinely inactive today without an expensive per-device
+      // subcollection query (a separate, unrelated lastActive field already exists for the My
+      // Devices security feature — this is a new, simpler, top-level field just for this).
+      try{
+        await setDoc(doc(db, 'users', user.uid), {
+          lastAppOpenDate: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' }) // yyyy-MM-dd
+        }, { merge: true });
+      }catch(e){}
       // Complete the FCM registration that was deferred from the pre-login notification gate —
       // this fires exactly once, the first time a real account exists after the user tapped
       // Allow before they'd even signed up.
@@ -7829,7 +7839,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwiZ-34Qv6gwqMOaleOB_OjGe80c8uj8cNwVjiJyf2IvsPnt85Nw8VrwPTRApPQRZvDjw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwC_7tt8p2FrUaXpU3Rtr1mSN0s4GVynxMWniddTlYk1IsxZA6DHc35p-qsTvzEFa2lyQ/exec";
 }catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
@@ -19555,6 +19565,7 @@ function checkForNotificationDeepLinkAndNavigate(){
     whatsnew: () => { showScreen(whatsNewScreen); if(window.renderWhatsNew) renderWhatsNew(); },
     notifications: () => { showScreen(notificationsScreen); if(window.loadNotifications) loadNotifications(); },
     healthday: () => { showScreen(healthDaysScreen); if(window.renderHealthDays) renderHealthDays(''); },
+    home: () => { showScreen(homeScreen); const card = document.getElementById('cardQotd'); if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' }); },
   };
   const action = NOTIF_DEEPLINK_MAP[notifKey];
   if(action){
