@@ -8106,6 +8106,14 @@ HL_NAV_GATE_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, l
 }catch(err){ HL_NAV_GATE_SCREENS = []; if(window.showDebugError) showDebugError("A required setting (" + "HL_NAV_GATE_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let currentAchievementDetail = null; // set right before navigating to achievementDetailScreen — the one achievement card currently being viewed in detail
 let pendingChatTaskType = null; // set by an AI Chat quick-action tap, consumed by the next Send, cleared if the user edits the pre-filled text afterward
+// Shared by every promise-based custom modal that assigns a fresh .onclick to a single shared
+// DOM element on each call (customConfirm, showPremiumLockModal, showReadCarefullyReminder).
+// Without this, if a second modal call happened before the first one's promise had resolved, the
+// second call's .onclick assignment would silently overwrite the first's — permanently orphaning
+// the first Promise, with zero error, hanging whatever awaited it forever. Queuing forces every
+// call to wait its turn instead of overlapping. Same fix already proven for App Lock via
+// appLockPendingPromise; this generalizes it to the other modals sharing the same pattern.
+let modalQueue = Promise.resolve();
 let currentSpeakingBtn = null; // moved here for safety — used by the text-to-speech Listen buttons
 let PAST_QUESTIONS_BY_POST = {}; // moved here for safety — populated per-post from the Sheet
 let rapidFireSelectedMode = null; // moved here for safety — used by Rapid Fire's mode tiles
@@ -19433,6 +19441,7 @@ async function showReadCarefullyReminder(){
   try{ dismissedDate = localStorage.getItem(uk('hl_read_carefully_dismissed_date')); }catch(e){}
   if(dismissedDate === todayISO()) return; // already acknowledged today
 
+  return queueModal(() => {
   document.getElementById('readCarefullyBackdrop').style.display = 'block';
   document.getElementById('readCarefullyModal').style.display = 'block';
   document.getElementById('readCarefullyDontShowToday').checked = false;
@@ -19458,8 +19467,10 @@ async function showReadCarefullyReminder(){
     }, 45000);
   });
   return Promise.race([continuePromise, timeoutPromise]);
+  });
 }
-async function showPremiumLockModal(message){
+function showPremiumLockModal(message){
+  return queueModal(async () => {
   document.getElementById('premiumLockMessage').textContent = message;
   await ensurePricingPlansLoaded();
   const monthlyPlan = pricingPlansList.find(p => Number(p.months) === 1) || pricingPlansList[0] || FALLBACK_PRICING_PLAN;
@@ -19495,6 +19506,7 @@ async function showPremiumLockModal(message){
       document.getElementById('premiumLockModal').style.display = 'none';
       resolve(false);
     };
+  });
   });
 }
 
@@ -23004,8 +23016,16 @@ safeOn('inAppNotifBanner', 'click', () => {
 // a button relying on confirm() look completely broken when it's actually just waiting on a
 // dialog that never appears. Promise-based so every existing "if(!confirm(...)) return;" call
 // site converts cleanly to "if(!await customConfirm(...)) return;" with an async function. ----
+// Runs runModal() only once whatever's ahead of it in modalQueue has settled, and keeps the
+// queue alive even if runModal() itself throws — one broken modal call must never permanently
+// jam every future confirm/lock/reminder dialog behind it.
+function queueModal(runModal){
+  const result = modalQueue.then(runModal);
+  modalQueue = result.catch(() => {});
+  return result;
+}
 function customConfirm(message){
-  return new Promise((resolve) => {
+  return queueModal(() => new Promise((resolve) => {
     document.getElementById('customConfirmText').textContent = message;
     document.getElementById('customConfirmBackdrop').style.display = 'block';
     document.getElementById('customConfirmModal').style.display = 'block';
@@ -23016,7 +23036,7 @@ function customConfirm(message){
     };
     document.getElementById('customConfirmOkBtn').onclick = () => cleanup(true);
     document.getElementById('customConfirmCancelBtn').onclick = () => cleanup(false);
-  });
+  }));
 }
 
 function showDebugError(message){
