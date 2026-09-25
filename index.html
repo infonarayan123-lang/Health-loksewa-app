@@ -7196,24 +7196,6 @@
   // ---- AI Chat daily message limit (10/day free, unlimited for premium) ----
   // ---- Activate Premium after a verified eSewa payment (defaults to 30 days = 1 month;
   // pass months for longer tiers, e.g. 3/6/12) ----
-  window.activatePremiumAfterPayment = async function(months){
-    const user = auth.currentUser;
-    if(!user) return;
-    const planMonths = Number(months) > 0 ? Number(months) : 1;
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + (planMonths * 30));
-    try{
-      await setDoc(doc(db, 'users', user.uid), {
-        premium: true,
-        premiumExpiresAt: expiresAt.toISOString().slice(0, 10),
-        premiumActivatedAt: new Date().toISOString()
-      }, { merge: true });
-    }catch(err){
-      // Rethrow so the caller can alert the user — this is important enough not to fail silently
-      throw err;
-    }
-  };
-
   // Generic per-feature AI usage limiter — stores each feature's own {date, count} under
   // aiUsage.<featureKey> on the user's Firestore doc, using a dotted field path with merge:true
   // so incrementing one feature's count can never clobber another's (each is its own nested
@@ -7839,7 +7821,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwC_7tt8p2FrUaXpU3Rtr1mSN0s4GVynxMWniddTlYk1IsxZA6DHc35p-qsTvzEFa2lyQ/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwmcLE1-l3Z2ndoKvXDYuUhp-bRWu3liVF3LiBo9JRnwDLP8HWT_AXW0mrrdl4lb_J1_g/exec";
 }catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
@@ -19610,13 +19592,18 @@ async function checkForEsewaReturnAndActivate(){
       return;
     }
 
-    if(window.activatePremiumAfterPayment){
-      let planMonths = 1;
-      try{ planMonths = Number(localStorage.getItem(uk('hl_pending_plan_months'))) || 1; }catch(e){}
-      await window.activatePremiumAfterPayment(planMonths);
+    // Premium is granted server-side now (see verifyEsewaPayment in apps-script-v5.js) — the
+    // client never writes this itself. Previously, a globally-callable client-side function did
+    // this write directly, meaning anyone could grant themselves Premium for free from their
+    // browser's own console with no payment at all; that function no longer exists. This just
+    // refreshes the LOCAL view of a status the backend already set, and shows a clean confirmation
+    // using the exact plan length the backend verified from the real amount paid — never
+    // anything the client itself claimed.
+    if(result.activated){
+      if(window.refreshPremiumStatus) await window.refreshPremiumStatus();
+      const monthsLabel = result.planMonths === 12 ? '1 year' : result.planMonths === 6 ? '6 months' : `${result.planMonths} month${result.planMonths === 1 ? '' : 's'}`;
+      alert(`🎉 Payment successful!\n\n✅ Premium unlocked for ${monthsLabel} — thank you for joining Health Loksewa!`);
       try{ localStorage.removeItem(uk('hl_pending_plan_months')); }catch(e){}
-      alert('🎉 Payment successful! ✅ Premium Active — thank you for joining Health Loksewa!');
-      try{ localStorage.setItem(uk('hl_premium_status'), 'true'); }catch(e){}
     }
   }catch(err){
     alert('Payment verification failed due to a connection issue. If you were charged, please contact support.');
