@@ -7205,30 +7205,19 @@
     const user = auth.currentUser;
     if(!user) return { allowed: true, remaining: 999 }; // fail open if somehow not logged in
 
-    // Widened to cover checkPremiumStatus() too — that call has no error handling of its own,
-    // and letting it throw uncaught here would silently kill the entire calling action (e.g. a
-    // chat message never gets sent, with no visible error) purely because of a transient
-    // network/Firestore hiccup. Every failure path in this function must fail open.
+    // Moved to the backend (see checkAiUsageLimit in apps-script-v5.js) — previously this
+    // function read and wrote its own counter directly in Firestore, but the security rule that
+    // lets a user write their OWN document (auth.uid == userId) can't tell the difference between
+    // this legitimate write and a user resetting their own counter to 0 via the browser console.
+    // The backend now owns the whole read-check-increment-write cycle using its own privileged
+    // access; the client only ever asks "am I allowed?" and gets back a yes/no. As a side effect,
+    // this also fixes a small pre-existing inconsistency: the old client-side version reset at
+    // UTC midnight, while the backend correctly resets at actual Nepal midnight, same as QOTD.
     try{
-      const isPremium = await window.checkPremiumStatus();
-      if(isPremium) return { allowed: true, remaining: Infinity };
-
-      const todayKey = new Date().toISOString().slice(0, 10);
-      const ref = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      const data = snap.exists() ? snap.data() : {};
-      const featureUsage = (data.aiUsage && data.aiUsage[featureKey]) || {};
-      let count = (featureUsage.date === todayKey) ? (featureUsage.count || 0) : 0;
-
-      if(count >= freeLimit){
-        return { allowed: false, remaining: 0 };
-      }
-
-      count++;
-      const update = {};
-      update['aiUsage.' + featureKey] = { date: todayKey, count };
-      await setDoc(ref, update, { merge: true });
-      return { allowed: true, remaining: freeLimit - count };
+      const res = await fetch(`${window.SHEET_API_URL}?action=checkAiUsageLimit&uid=${encodeURIComponent(user.uid)}&featureKey=${encodeURIComponent(featureKey)}&freeLimit=${freeLimit}`);
+      const result = await res.json();
+      if(result.remaining === -1) result.remaining = Infinity; // -1 is the backend's "unlimited" signal
+      return result;
     }catch(err){
       return { allowed: true, remaining: 999 }; // fail open on error — don't block users due to a glitch
     }
@@ -7821,7 +7810,11 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwmcLE1-l3Z2ndoKvXDYuUhp-bRWu3liVF3LiBo9JRnwDLP8HWT_AXW0mrrdl4lb_J1_g/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzYiE06XQP8SULtTJr_-bVKqBJtTzL_dXqIFhXeKuzo-GRpEtMg-nVvaoN3TTnEkt_5bg/exec";
+// Exposed on window because the module script (a separate top-level scope entirely — its own
+// `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
+// vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
+window.SHEET_API_URL = SHEET_API_URL;
 }catch(err){ SHEET_API_URL = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SHEET_API_URL" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
 let quizQuestions = [];
@@ -23516,7 +23509,7 @@ async function startSet(subject, setNumber, totalSets){
 
     if(!pool || pool.length === 0){
       hideQuizLoading();
-      alert('No questions found in this set yet.');
+      alert(`No questions found for "${subject}" (Set ${setNumber}, post: ${currentMcqPost || 'default'}).\n\nIf this subject should have questions, please screenshot this exact message — it tells us precisely what to check.`);
       return;
     }
 
