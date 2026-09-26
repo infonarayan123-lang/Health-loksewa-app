@@ -2677,7 +2677,7 @@
       <div id="pricingOfferBadge" style="display:none;"></div>
       <div id="pricingPlansWrap" class="pricing-plans-wrap"></div>
 
-      <!-- eSewa: automatic + manual -->
+      <!-- eSewa: fully automatic — no manual option, no personal payment details ever shown -->
       <div class="pay-method-card" id="esewaMethodCard">
         <div class="pay-method-title">🟢 eSewa <span class="pay-method-price" id="esewaMethodPrice">NPR 299/month</span></div>
 
@@ -2686,27 +2686,17 @@
           <span id="esewaPayBtnLabel">Pay Automatically with eSewa</span>
         </button>
         <p id="esewaPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 0;"></p>
-
-        <details class="pay-manual-details">
-          <summary>Or pay manually instead</summary>
-          <ol class="pay-manual-steps">
-            <li>Send <b id="esewaManualAmount">NPR 299</b> via <b>eSewa</b> to: <b id="esewaIdDisplay">9848551259</b></li>
-            <li>Take a screenshot of your payment confirmation</li>
-            <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
-            <li>Your account will be manually activated within 24 hours</li>
-          </ol>
-        </details>
       </div>
 
-      <!-- Khalti: manual only for now (automatic checkout pending Khalti API keys) -->
+      <!-- Khalti: fully automatic — no manual option, no personal payment details ever shown -->
       <div class="pay-method-card" id="khaltiMethodCard">
         <div class="pay-method-title">🟣 Khalti <span class="pay-method-price" id="khaltiMethodPrice">NPR 299/month</span></div>
-        <ol class="pay-manual-steps">
-          <li>Send <b id="khaltiManualAmount">NPR 299</b> via <b>Khalti</b> to: <b id="khaltiIdDisplay">9848551259</b></li>
-          <li>Take a screenshot of your payment confirmation</li>
-          <li>Send the screenshot + your account email to <a href="mailto:healthloksewa026@gmail.com?subject=Premium%20Activation">healthloksewa026@gmail.com</a> or WhatsApp</li>
-          <li>Your account will be manually activated within 24 hours</li>
-        </ol>
+
+        <button class="esewa-pay-btn" id="khaltiPayBtn" style="background:#5C2D91;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="10"/></svg>
+          <span id="khaltiPayBtnLabel">Pay Automatically with Khalti</span>
+        </button>
+        <p id="khaltiPayStatus" style="text-align:center; font-size:12px; color:var(--ink-soft); margin:8px 0 0;"></p>
       </div>
     </div>
   </div>
@@ -6663,6 +6653,7 @@
       if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
       if(window.renderHomePremiumBanner) window.renderHomePremiumBanner();
       if(window.checkForEsewaReturnAndActivate) window.checkForEsewaReturnAndActivate();
+      if(window.checkForKhaltiReturnAndActivate) window.checkForKhaltiReturnAndActivate();
       if(window.checkForNotificationDeepLinkAndNavigate) window.checkForNotificationDeepLinkAndNavigate();
       if(window.maybeOfferAppLockSetup) setTimeout(window.maybeOfferAppLockSetup, 1500); // let the next screen settle first, not stack on top of it instantly
     } else {
@@ -7810,7 +7801,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzYiE06XQP8SULtTJr_-bVKqBJtTzL_dXqIFhXeKuzo-GRpEtMg-nVvaoN3TTnEkt_5bg/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw5ewtqt9qBnD6s6WqmxR2nb_0fJboyWZP2BmLNOkfPHzFXwKDPnNt9MaPHIcKhhWKFiA/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -19399,9 +19390,8 @@ function selectPricingPlan(index){
   const amountLabel = `NPR ${selectedPricingPlan.finalPrice}`;
   document.getElementById('esewaMethodPrice').textContent = priceLabel;
   document.getElementById('khaltiMethodPrice').textContent = priceLabel;
-  document.getElementById('esewaManualAmount').textContent = amountLabel;
-  document.getElementById('khaltiManualAmount').textContent = amountLabel;
   document.getElementById('esewaPayBtnLabel').textContent = `Pay Automatically with eSewa — ${amountLabel}`;
+  document.getElementById('khaltiPayBtnLabel').textContent = `Pay Automatically with Khalti — ${amountLabel}`;
 }
 
 // ---------- Shared premium lock modal — every locked-feature prompt in the app routes through
@@ -19534,6 +19524,72 @@ safeOn('esewaPayBtn', 'click', async () => {
     btn.disabled = false;
   }
 });
+
+// ---------- Khalti Payment: fully automatic ----------
+safeOn('khaltiPayBtn', 'click', async () => {
+  let userInfo = null;
+  try{ userInfo = JSON.parse(localStorage.getItem('hl_user') || 'null'); }catch(e){}
+  if(!userInfo || !userInfo.uid){
+    alert('Please make sure you are logged in first.');
+    return;
+  }
+
+  const btn = document.getElementById('khaltiPayBtn');
+  const statusEl = document.getElementById('khaltiPayStatus');
+  btn.disabled = true;
+  statusEl.textContent = 'Connecting to Khalti…';
+
+  try{
+    const planForPayment = selectedPricingPlan || FALLBACK_PRICING_PLAN;
+    const res = await fetch(`${SHEET_API_URL}?action=initiateKhaltiPayment&uid=${encodeURIComponent(userInfo.uid)}&amountNpr=${encodeURIComponent(planForPayment.finalPrice)}`);
+    const result = await res.json();
+
+    if(!result.success || !result.paymentUrl){
+      statusEl.textContent = 'Could not start payment. Please try again.';
+      btn.disabled = false;
+      return;
+    }
+
+    // Khalti's own initiate response already gives us a ready checkout link — unlike eSewa,
+    // no form/signed-fields to build ourselves, just navigate there directly.
+    window.location.href = result.paymentUrl;
+  }catch(err){
+    statusEl.textContent = 'Could not connect to Khalti. Please check your internet and try again.';
+    btn.disabled = false;
+  }
+});
+
+// ---------- Khalti Payment: handle the redirect BACK after payment completes ----------
+async function checkForKhaltiReturnAndActivate(){
+  const params = new URLSearchParams(window.location.search);
+  const pidx = params.get('pidx');
+  if(!pidx) return; // not returning from a Khalti payment — nothing to do
+
+  // Clean the URL immediately so refreshing doesn't re-trigger this
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+  try{
+    const res = await fetch(`${window.SHEET_API_URL}?action=verifyKhaltiPayment&pidx=${encodeURIComponent(pidx)}`);
+    const result = await res.json();
+
+    if(!result.valid){
+      alert('⚠️ Payment could not be verified (' + (result.reason || 'unknown') + '). If you were charged, please contact support with your payment screenshot.');
+      return;
+    }
+
+    // Premium is granted server-side (see verifyKhaltiPayment in apps-script-v5.js), using the
+    // uid the backend itself remembered from when IT initiated this exact payment — never
+    // anything read from this return URL, which a user could edit before it's even sent. This
+    // just refreshes the local view of a status the backend already set.
+    if(result.activated){
+      if(window.refreshPremiumStatus) await window.refreshPremiumStatus();
+      const monthsLabel = result.planMonths === 12 ? '1 year' : result.planMonths === 6 ? '6 months' : `${result.planMonths} month${result.planMonths === 1 ? '' : 's'}`;
+      alert(`🎉 Payment successful!\n\n✅ Premium unlocked for ${monthsLabel} — thank you for joining Health Loksewa!`);
+    }
+  }catch(err){
+    alert('Payment verification failed due to a connection issue. If you were charged, please contact support.');
+  }
+}
 
 // ---------- eSewa Payment: handle the redirect BACK after payment completes ----------
 // ---------- Push notification deep links: a tapped notification opens the app with a
