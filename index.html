@@ -115,7 +115,7 @@
     will-change:transform;
     width:100%; max-width:480px;
     justify-content:space-around; align-items:center;
-    background:linear-gradient(180deg, #1a1a1f 0%, #0a0a0d 100%);
+    background:linear-gradient(180deg, #1A2A45 0%, #0F1C2E 100%);
     border-top:1px solid rgba(255,255,255,0.08);
     border-radius:22px 22px 0 0;
     padding:10px 6px max(10px, env(safe-area-inset-bottom));
@@ -320,11 +320,11 @@
     padding:14px 20px 10px;
     position:sticky; top:0; z-index:50;
     margin:0 -20px;
-    /* Fixed dark bar — identical to .bottom-nav's own background, on purpose, so the top and
-       bottom of the app read as one consistent frame regardless of light/dark mode. Previously
-       this used var(--bg), which meant the header flipped to a pale color in light mode while
-       the bottom nav always stayed dark — the two bars never matched. */
-    background:linear-gradient(180deg, #1a1a1f 0%, #0a0a0d 100%);
+    /* Fixed navy bar — same navy family already used for the home dashboard cards (#0F1C2E /
+       #1A2A45), matching the reference design exactly. Identical to .bottom-nav's own background
+       on purpose, so top and bottom read as one consistent frame regardless of light/dark mode —
+       this never changes with the theme toggle. */
+    background:linear-gradient(180deg, #1A2A45 0%, #0F1C2E 100%);
     border-radius:0 0 22px 22px; /* mirrors bottom-nav's rounded corners, flipped to the bottom edge of this bar */
     box-shadow:0 8px 24px rgba(0,0,0,0.35), inset 0 -1px 0 rgba(255,255,255,0.05);
   }
@@ -366,7 +366,7 @@
     position:absolute; top:-4px; right:-4px;
     min-width:16px; height:16px; padding:0 3px;
     background:var(--crimson); color:#fff;
-    border-radius:9px; border:1.5px solid #0a0a0d;
+    border-radius:9px; border:1.5px solid #0F1C2E;
     font-size:9.5px; font-weight:700;
     display:flex; align-items:center; justify-content:center;
     line-height:1;
@@ -1139,15 +1139,29 @@
     margin-bottom:22px;
   }
   .dash-card{
-    border-radius:16px; padding:18px 14px;
-    display:flex; flex-direction:column; gap:10px;
+    border-radius:14px; padding:16px 34px 16px 16px;
+    display:flex; flex-direction:column; gap:4px; justify-content:center;
     cursor:pointer; border:none; text-align:left;
-    color:var(--ink); min-height:104px;
+    color:var(--ink); min-height:64px;
     font-family:'Inter',sans-serif;
     text-decoration:none; /* dash-card is reused on <a> tags across Learn/Practice/Smart
       Tools/Progress/Study Resources/Rapid Fire — without this, anchor elements show their
       browser-default underline on the label/sub text, which buttons never had */
+    position:relative; /* anchors the arrow below */
+    box-shadow:0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09);
+      /* the soft outer shadow plus a faint inner top highlight is what gives these a raised,
+         tactile feel instead of sitting flat on the page */
   }
+  /* Every dash-card gets a small trailing arrow instead of a leading icon — text and depth
+     carry the design now. Centered vertically so it holds its position whether the label wraps
+     to one line or two. QOTD keeps its own deliberate notebook-paper look, excluded here, same
+     as the checkerboard rule above. */
+  .dash-card:not(.qotd-card)::after{
+    content:'›';
+    position:absolute; top:50%; right:14px; transform:translateY(-50%);
+    font-size:22px; font-weight:700; line-height:1; opacity:0.45;
+  }
+  .dash-card:not(.qotd-card) .dc-icon{ display:none; } /* icons removed — see the redesign note above */
   .dash-card .dc-icon{ font-size:26px; }
   .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
   .dash-card .dc-sub{ font-size:11px; opacity:0.85; }
