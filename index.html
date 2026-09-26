@@ -3385,6 +3385,11 @@
         <div class="dc-label">Video Lessons</div>
         <div class="dc-sub">Topic videos</div>
       </a>
+      <a class="dash-card hub-tile t3" href="#" id="goToLiveClassFromLearn">
+        <div class="dc-icon">🔴</div>
+        <div class="dc-label">Live Class</div>
+        <div class="dc-sub">Premium</div>
+      </a>
       <a class="dash-card hub-tile t4" href="#" id="goToStudyResourcesFromLearn">
         <div class="dc-icon">📚</div>
         <div class="dc-label">Handbook</div>
@@ -3403,6 +3408,15 @@
       </div>
     </div>
   </div>
+
+  <div class="screen" id="liveClassScreen">
+    <div class="back-link" data-back="learn">← Back to Learn</div>
+    <div class="home-body">
+      <div class="section-title">🔴 Live Class</div>
+      <div id="liveClassContent" style="text-align:center; padding:40px 16px; color:var(--ink-soft);">Loading…</div>
+    </div>
+  </div>
+
 
   <div class="screen" id="practiceScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
@@ -7801,7 +7815,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw5ewtqt9qBnD6s6WqmxR2nb_0fJboyWZP2BmLNOkfPHzFXwKDPnNt9MaPHIcKhhWKFiA/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzfXXhKW4O84UjVjfxI4B_EU29nPMVIPFt8IDdtBqC-HjlHr9YqRNRvWj6eGbU4FKbM/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -7874,6 +7888,7 @@ const quickRefScreen = document.getElementById('quickRefScreen');
 const quickRefDetailScreen = document.getElementById('quickRefDetailScreen');
 const videoScreen = document.getElementById('videoScreen');
 const learnScreen = document.getElementById('learnScreen');
+const liveClassScreen = document.getElementById('liveClassScreen');
 const practiceScreen = document.getElementById('practiceScreen');
 const mistakeBookScreen = document.getElementById('mistakeBookScreen');
 const flashcardsScreen = document.getElementById('flashcardsScreen');
@@ -8002,7 +8017,7 @@ const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
 let ALL_SCREENS;
 try{
-ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, liveClassScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
 }catch(err){ ALL_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ALL_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 window.showScreen = showScreen;
 window.notifOnboardingScreen = notifOnboardingScreen;
@@ -8383,6 +8398,7 @@ SCREEN_REFRESH_MAP = {
   myBookmarksHubScreen: () => renderMyBookmarksHub(),
   fcProgressScreen: () => renderFcProgress(),
   healthGuideScreen: () => renderHealthGuide(),
+  liveClassScreen: () => renderLiveClassScreen(),
   immunizationScreen: () => renderImmunization(),
   noteTrashScreen: () => renderNoteTrash(),
   revisionCalendarScreen: () => renderRevisionCalendar(),
@@ -8493,6 +8509,20 @@ safeOn('goToVideoFromLearn', 'click', (e) => {
   e.preventDefault();
   showScreen(videoScreen);
   renderVideoLessons();
+});
+safeOn('goToLiveClassFromLearn', 'click', async (e) => {
+  e.preventDefault();
+  const status = await window.getAccessStatus();
+  if(!status.isPremium){
+    if(await showPremiumLockModal('🔴 Live Class is a Premium feature. Upgrade to Premium to join live classes?')){
+      premiumBackTarget = learnScreen;
+      showScreen(upgradeScreen);
+      renderPremiumStatus();
+    }
+    return;
+  }
+  showScreen(liveClassScreen);
+  renderLiveClassScreen();
 });
 safeOn('goToStudyResourcesFromLearn', 'click', (e) => {
   e.preventDefault();
@@ -12905,8 +12935,47 @@ function renderMnemonicPracticeCard(){
 
 function extractYouTubeId(url){
   if(!url) return '';
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([^&?/]+)/);
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/))([^&?/]+)/);
   return match ? match[1] : '';
+}
+async function renderLiveClassScreen(){
+  const wrap = document.getElementById('liveClassContent');
+  wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Loading…</p>`;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=liveClassInfo`);
+    const info = await res.json();
+
+    if(info.status === 'Live Now'){
+      const vid = extractYouTubeId(info.youtubeLink);
+      if(!vid){
+        wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Live class is starting soon — please check back in a moment.</p>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <div class="video-item" style="text-align:left;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#e53e3e; display:inline-block;"></span>
+            <span style="font-weight:700; color:#e53e3e; font-size:13px;">LIVE NOW</span>
+          </div>
+          <div style="font-weight:700; font-size:15px; margin-bottom:12px; color:var(--ink);">${info.title || 'Live Class'}</div>
+          <div class="vi-frame-wrap">
+            <iframe src="https://www.youtube.com/embed/${vid}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen title="Live Class"></iframe>
+          </div>
+        </div>`;
+    } else if(info.status === 'Scheduled'){
+      wrap.innerHTML = `
+        <div style="font-size:48px; margin-bottom:12px;">📅</div>
+        <div style="font-weight:700; font-size:16px; color:var(--ink); margin-bottom:6px;">${info.title || 'Upcoming Live Class'}</div>
+        <div style="color:var(--ink-soft); font-size:14px;">${info.scheduledDate || ''}${info.scheduledTime ? ' at ' + info.scheduledTime : ''}</div>
+        <div style="color:var(--ink-soft); font-size:12.5px; margin-top:10px;">Come back here when it's time — the class will play right in this screen.</div>`;
+    } else {
+      wrap.innerHTML = `
+        <div style="font-size:48px; margin-bottom:12px;">🔴</div>
+        <div style="color:var(--ink-soft); font-size:14px;">No live class scheduled right now — check back soon!</div>`;
+    }
+  }catch(err){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load live class info. Please check your connection and try again.</p>`;
+  }
 }
 async function renderVideoLessons(){
   const wrap = document.getElementById('videoListContent');
