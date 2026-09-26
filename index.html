@@ -1139,7 +1139,7 @@
     margin-bottom:22px;
   }
   .dash-card{
-    border-radius:14px; padding:16px 34px 16px 16px;
+    border-radius:14px; padding:14px 34px 14px 18px;
     display:flex; flex-direction:column; gap:4px; justify-content:center;
     cursor:pointer; border:none; text-align:left;
     color:var(--ink); min-height:64px;
@@ -1152,16 +1152,38 @@
       /* the soft outer shadow plus a faint inner top highlight is what gives these a raised,
          tactile feel instead of sitting flat on the page */
   }
-  /* Every dash-card gets a small trailing arrow instead of a leading icon — text and depth
-     carry the design now. Centered vertically so it holds its position whether the label wraps
-     to one line or two. QOTD keeps its own deliberate notebook-paper look, excluded here, same
-     as the checkerboard rule above. */
+  /* Every dash-card gets a small trailing arrow — text and depth carry the design, not a wall of
+     icons. Centered vertically so it holds its position whether the label wraps to one line or
+     two. QOTD keeps its own deliberate notebook-paper look, excluded here, same as the
+     checkerboard rule below. */
   .dash-card:not(.qotd-card)::after{
     content:'›';
     position:absolute; top:50%; right:14px; transform:translateY(-50%);
     font-size:22px; font-weight:700; line-height:1; opacity:0.45;
   }
-  .dash-card:not(.qotd-card) .dc-icon{ display:none; } /* icons removed — see the redesign note above */
+  /* Icon sits beside the title as a small monochrome badge, description wraps below spanning
+     the full width — achieved purely with grid placement, independent of DOM order, so no HTML
+     changes were needed anywhere this class is used. */
+  .dash-card:not(.qotd-card){
+    display:grid;
+    grid-template-columns:auto 1fr;
+    grid-template-areas:"icon label" "sub sub";
+    column-gap:10px; row-gap:3px; align-items:center;
+  }
+  .dash-card:not(.qotd-card) .dc-icon{
+    grid-area:icon;
+    display:flex; align-items:center; justify-content:center;
+    width:32px; height:32px; border-radius:9px; flex-shrink:0;
+    background:rgba(255,255,255,0.1);
+    font-size:16px;
+    /* Converts whatever colorful emoji is already in the HTML into a clean monochrome glyph —
+       grayscale alone reads muddy on a dark card, so brightness is pushed up to read as a
+       crisp light/white shape instead of asking every icon across the app to be hand-replaced
+       with a custom SVG. */
+    filter:grayscale(100%) brightness(1.7) contrast(0.9);
+  }
+  .dash-card:not(.qotd-card) .dc-label{ grid-area:label; align-self:center; }
+  .dash-card:not(.qotd-card) .dc-sub{ grid-area:sub; }
   .dash-card .dc-icon{ font-size:26px; }
   .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
   .dash-card .dc-sub{ font-size:11px; opacity:0.85; }
@@ -1174,6 +1196,19 @@
   #homeScreen .dash-grid > .dash-card:not(.qotd-card):nth-child(even){
     background:#1A2A45; color:#fff;
   }
+  /* 7-color navy+teal accent system: a left-edge stripe cycling through these 7 colors in order,
+     1 through 7, then repeating — applied to every dash-card app-wide (Home, Learn, Practice,
+     Smart Tools, Progress, everywhere this class is used), counted fresh within each screen's
+     own grid. QOTD is excluded, keeping its own look. This sits alongside each card's existing
+     background treatment (the checkerboard above, or the gradient tones below) rather than
+     replacing it — the stripe is the identifying accent, not the whole card's color. */
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+1){ border-left:5px solid #06101F; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+2){ border-left:5px solid #0B1F3A; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+3){ border-left:5px solid #0F2C4C; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+4){ border-left:5px solid #134066; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+5){ border-left:5px solid #0C4A6E; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+6){ border-left:5px solid #0E7490; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n){ border-left:5px solid #14B8A6; }
   .dash-card.c-quiz{ background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff; }
   .dash-card.c-syllabus{ background:#13233F; color:#fff; }
   .dash-card.c-current{ background:#13233F; color:#fff; }
