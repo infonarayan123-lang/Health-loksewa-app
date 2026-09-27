@@ -45,9 +45,10 @@
     --line:#E4DDD1;
   }
   body.light-mode #app{ background:var(--panel); }
-  body.light-mode .content-card,
-  body.light-mode .link-card,
-  body.light-mode .set-card{ background:var(--panel); }
+  body.light-mode .content-card{ background:var(--panel); }
+  /* .link-card and .set-card deliberately excluded here — both already fixed to a permanent
+     dark, theme-independent background elsewhere; this override (having higher specificity than
+     a plain class rule) was silently undoing that fix in light mode for each of them in turn. */
 
   /* ---------- Accent color options — background/panel NEVER change, only these two ---------- */
   body.accent-blue{ --navy:#1565C0; --crimson:#42A5F5; }
@@ -736,6 +737,30 @@
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
     padding:16px; margin:16px 0;
   }
+  /* Uniform glassy treatment extended to every other content/navigation box across the app —
+     Study Groups, Health Days, Dictionary, Calculators, FAQs, Mnemonics, Video Lessons,
+     Formulas, Notes, stat tiles, Progress cards, Leaderboard, Bookmarks, pricing selection,
+     Flashcards, achievement badges, mood/swipe cards, promo banners, Focus Mode, Resources,
+     quiz Set selection, and the payment method card — matching Home/Learn/Practice/Smart Tools.
+     Rather than hunt down and fix every nested sub-element's own text/border color individually
+     (a real risk of missing one), the --ink/--ink-soft/--line variables are redefined right here,
+     scoped to just these boxes — anything nested inside that references those variables inherits
+     the fix automatically, with no risk of a missed spot going dark-on-dark in light mode. */
+  .group-card, .healthday-item, .dict-item, .calc-card, .faq-item, .mnemonic-item, .video-item,
+  .formula-item, .note-item, .stat-tile, .progress-detail-card, .leaderboard-row, .bookmark-item,
+  .pricing-plan-tile, .flashcard, .badge-tile, .swipe-card, .promo-banner, .focus-row,
+  .resource-row .rcard, .set-card, .pay-method-card{
+    --ink:#FFFFFF; --ink-soft:#E2E8F0; --line:rgba(255,255,255,0.12);
+    background:rgba(20,40,68,0.82);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -8px 14px rgba(0,0,0,0.16),
+      0 6px 14px rgba(0,0,0,0.28);
+  }
+  /* pricing-plan-tile's own "active/selected" gold highlight stays exactly as it was — this
+     only needs to win over the new background above, nothing else about it changes. */
+  .pricing-plan-tile.active{ border-color:var(--gold,#B8860B); background:rgba(184,134,11,0.18); }
   .breakdown-wrap h4{ font-family:'Tinos',serif; font-size:15px; margin-bottom:12px; }
   .breakdown-row{
     display:flex; justify-content:space-between; align-items:center;
@@ -764,7 +789,7 @@
     gap:10px; margin-bottom:14px;
   }
   .stat-tile{
-    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    border:1px solid var(--line); border-radius:12px;
     padding:14px; text-align:center;
   }
   .stat-tile .st-num{ font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--navy); }
@@ -774,7 +799,7 @@
     display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;
   }
   .progress-detail-card{
-    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px;
   }
   .pd-label{ font-size:11px; color:var(--ink-soft); margin-bottom:4px; }
   .pd-value{ font-size:13.5px; font-weight:700; color:var(--ink); }
@@ -782,7 +807,7 @@
   /* ---------- Leaderboard ---------- */
   .leaderboard-row{
     display:flex; align-items:center; gap:12px;
-    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    border:1px solid var(--line); border-radius:12px;
     padding:12px 14px; margin-bottom:9px;
   }
   .leaderboard-row.is-you{ border-color:var(--gold); background:var(--correct-bg); }
@@ -800,7 +825,7 @@
 
   /* ---------- Bookmarks ---------- */
   .bookmark-item{
-    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    border:1px solid var(--line); border-radius:12px;
     padding:14px; margin-bottom:10px;
   }
   .bookmark-item .bq-subject{ font-size:11px; color:var(--gold); font-weight:700; text-transform:uppercase; margin-bottom:5px; }
@@ -929,7 +954,7 @@
     text-align:center; margin:10px 0 18px;
   }
   .pay-method-card{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    border:1px solid var(--line); border-radius:14px;
     padding:16px; margin-bottom:16px;
   }
   .pay-method-title{
@@ -951,7 +976,7 @@
   }
   .pricing-plans-wrap{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
   .pricing-plan-tile{
-    background:var(--panel); border:1.5px solid var(--line); border-radius:12px;
+    border:1.5px solid var(--line); border-radius:12px;
     padding:12px 10px; text-align:center; cursor:pointer;
   }
   .pricing-plan-tile.active{ border-color:var(--gold,#B8860B); background:rgba(184,134,11,0.08); }
@@ -1325,7 +1350,7 @@
 
   /* ---------- Flashcards ---------- */
   .flashcard{
-    background:var(--panel); border:1.5px solid var(--line); border-radius:16px;
+    border:1.5px solid var(--line); border-radius:16px;
     padding:28px 20px; min-height:180px; display:flex; flex-direction:column;
     justify-content:center; align-items:center; text-align:center; cursor:pointer;
   }
@@ -1348,7 +1373,7 @@
     display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:20px;
   }
   .badge-tile{
-    background:var(--panel); border:1.5px solid var(--line); border-radius:14px;
+    border:1.5px solid var(--line); border-radius:14px;
     padding:14px 8px; text-align:center;
   }
   .badge-tile .badge-icon{ font-size:26px; margin-bottom:6px; filter:grayscale(1); opacity:0.35; }
@@ -1356,7 +1381,7 @@
   .badge-tile .badge-label{ font-size:10.5px; font-weight:700; color:var(--ink-soft); line-height:1.3; }
   .badge-tile.earned .badge-label{ color:var(--ink); }
   .badge-tile.earned{ border-color:var(--gold); box-shadow:0 0 10px rgba(201,162,39,0.2); }
-  .swipe-card{ background:var(--panel); border-radius:16px; border:1px solid var(--line); overflow:hidden; }
+  .swipe-card{ border-radius:16px; border:1px solid var(--line); overflow:hidden; }
   .home-chart-tab{
     flex:1; text-align:center; padding:7px 4px; border-radius:8px; font-size:11px;
     font-weight:700; color:var(--ink-soft); background:transparent; border:none; cursor:pointer;
@@ -1402,7 +1427,7 @@
   }
   .mood-chip.active{ border-color:var(--crimson); background:rgba(20,163,168,0.15); color:var(--crimson); font-weight:700; }
   .promo-banner{
-    background:var(--panel); border:1px dashed var(--line); border-radius:14px;
+    border:1px dashed var(--line); border-radius:14px;
     padding:16px; text-align:center; cursor:pointer;
   }
   .promo-banner .pb-label{ color:var(--ink-soft); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
@@ -1410,7 +1435,7 @@
   .promo-banner .pb-sub{ color:var(--ink-soft); font-size:11.5px; margin-top:4px; }
   .focus-row{
     display:flex; align-items:center; justify-content:space-between;
-    background:var(--panel); border-radius:12px; padding:11px 14px; border:1px solid var(--line);
+    border-radius:12px; padding:11px 14px; border:1px solid var(--line);
   }
   .focus-row .focus-label{ color:var(--ink-soft); font-size:11px; }
   .focus-row .focus-value{ color:var(--ink); font-size:13px; font-weight:700; margin-top:2px; }
@@ -1418,7 +1443,7 @@
   .resource-row{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
   .resource-row::-webkit-scrollbar{ display:none; }
   .resource-row .rcard{
-    flex:none; width:88px; background:var(--panel); border:1px solid var(--line);
+    flex:none; width:88px; border:1px solid var(--line);
     border-radius:12px; padding:12px 8px; text-align:center; cursor:pointer;
   }
   .resource-row .ri{ font-size:18px; margin-bottom:6px; }
@@ -1505,7 +1530,7 @@
     display:flex; align-items:center; gap:14px;
     border:1.5px solid var(--line); border-radius:12px;
     padding:15px 16px; margin-bottom:10px;
-    cursor:pointer; background:var(--panel);
+    cursor:pointer;
   }
   .set-card.locked{ opacity:0.55; cursor:not-allowed; background:var(--bg); }
   .set-card.completed{ border-color:var(--correct); background:var(--correct-bg); }
