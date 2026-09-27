@@ -753,10 +753,14 @@
     --ink:#FFFFFF; --ink-soft:#E2E8F0; --line:rgba(255,255,255,0.12);
     background:rgba(20,40,68,0.82);
     backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    /* A soft teal ambient glow layered under the usual bevel shadow — this is what gives these
+       boxes the "water glow" quality from the reference images, rather than reading as flatly
+       dark; subtle enough not to fight the 4-color accent stripe on the cards that have one. */
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.12),
       inset 0 -8px 14px rgba(0,0,0,0.16),
-      0 6px 14px rgba(0,0,0,0.28);
+      0 6px 14px rgba(0,0,0,0.28),
+      0 0 20px rgba(20,184,166,0.1);
   }
   /* pricing-plan-tile's own "active/selected" gold highlight stays exactly as it was — this
      only needs to win over the new background above, nothing else about it changes. */
@@ -1172,7 +1176,8 @@
       inset 0 1px 0 rgba(255,255,255,0.12),
       inset 0 -10px 18px rgba(0,0,0,0.18),
       0 8px 20px rgba(0,0,0,0.32),
-      0 2px 5px rgba(0,0,0,0.2);
+      0 2px 5px rgba(0,0,0,0.2),
+      0 0 20px rgba(20,184,166,0.1);
   }
   /* Soft glossy sheen across the top third of the card, like light catching glass */
   .dash-card:not(.qotd-card)::before{
@@ -1218,7 +1223,7 @@
      consistent with it. */
   .hub-tile{
     box-shadow:
-      0 0 14px rgba(255,255,255,0.05),
+      0 0 20px rgba(20,184,166,0.12),
       inset 0 1px 0 rgba(255,255,255,0.12),
       inset 0 -10px 18px rgba(0,0,0,0.18),
       0 8px 20px rgba(0,0,0,0.32);
@@ -1246,7 +1251,8 @@
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.12),
       inset 0 -8px 14px rgba(0,0,0,0.16),
-      0 6px 14px rgba(0,0,0,0.28);
+      0 6px 14px rgba(0,0,0,0.28),
+      0 0 20px rgba(20,184,166,0.1);
   }
   /* Same 4-color accent system as dash-card, but as a TOP bar rather than a left stripe — this
      tile is short and centered (icon-over-label), where a left stripe would look cramped; a top
@@ -1494,7 +1500,7 @@
     padding:14px 16px; margin-bottom:10px;
     text-decoration:none; color:#fff;
     background:linear-gradient(135deg, #1A2A45, #0F1C2E);
-    box-shadow:0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09);
+    box-shadow:0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09), 0 0 20px rgba(20,184,166,0.1);
   }
   .link-card .lc-icon{
     width:36px; height:36px; border-radius:9px;
@@ -2385,7 +2391,7 @@
     </div>
     <div class="profile-menu">
       <div class="calc-card" id="myPreparationCard" style="margin:0 4px 18px;">
-        <h4 style="margin-bottom:10px;">🎯 My Preparation</h4>
+        <h4 style="margin-bottom:10px;"><i class="bi bi-bullseye"></i> My Preparation</h4>
         <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px;">
           <span style="color:var(--ink-soft);">Goal</span>
           <span id="myPrepGoal" style="color:var(--ink); font-weight:700;">—</span>
@@ -2402,16 +2408,16 @@
       </div>
 
       <div class="calc-card" id="mySavedContentCard" style="margin:0 4px 18px;">
-        <h4 style="margin-bottom:10px;">🔖 My Saved Content</h4>
-        <button class="profile-menu-item" id="menuMyBookmarks" style="padding:10px 4px;"><span class="pm-icon">📚</span> Bookmarks</button>
-        <button class="profile-menu-item" id="menuMyNotes" style="padding:10px 4px;"><span class="pm-icon">📝</span> My Notes</button>
-        <button class="profile-menu-item" id="menuMyMistakes" style="padding:10px 4px;"><span class="pm-icon">❌</span> Mistake Book</button>
-        <button class="profile-menu-item" id="menuMySavedNews" style="padding:10px 4px;"><span class="pm-icon">📰</span> Saved News</button>
+        <h4 style="margin-bottom:10px;"><i class="bi bi-bookmark"></i> My Saved Content</h4>
+        <button class="profile-menu-item" id="menuMyBookmarks" style="padding:10px 4px;"><span class="pm-icon"><i class="bi bi-book"></i></span> Bookmarks</button>
+        <button class="profile-menu-item" id="menuMyNotes" style="padding:10px 4px;"><span class="pm-icon"><i class="bi bi-pencil-square"></i></span> My Notes</button>
+        <button class="profile-menu-item" id="menuMyMistakes" style="padding:10px 4px;"><span class="pm-icon"><i class="bi bi-x-circle"></i></span> Mistake Book</button>
+        <button class="profile-menu-item" id="menuMySavedNews" style="padding:10px 4px;"><span class="pm-icon"><i class="bi bi-newspaper"></i></span> Saved News</button>
       </div>
 
       <div class="calc-card" style="margin:0 4px 18px;">
-        <button class="profile-menu-item" id="menuScreenTime" style="padding:10px 4px;"><span class="pm-icon">⏱️</span> Study Time &amp; App Usage</button>
-        <button class="profile-menu-item" id="menuNotificationPrefs" style="padding:10px 4px;"><span class="pm-icon">🔔</span> Notifications</button>
+        <button class="profile-menu-item" id="menuScreenTime" style="padding:10px 4px;"><span class="pm-icon"><i class="bi bi-stopwatch"></i></span> Study Time &amp; App Usage</button>
+        <button class="profile-menu-item" id="menuNotificationPrefs" style="padding:10px 4px;"><span class="pm-icon"><i class="bi bi-bell"></i></span> Notifications</button>
       </div>
 
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
@@ -2426,7 +2432,7 @@
       </div>
 
       <details class="profile-accordion" id="accDisplay">
-        <summary>🎨 Display &amp; Appearance</summary>
+        <summary><i class="bi bi-palette"></i> Display &amp; Appearance</summary>
         <div class="profile-accordion-body">
           <div class="profile-subrow">
             <div>
@@ -2486,7 +2492,7 @@
       </details>
 
       <details class="profile-accordion" id="accSecurity">
-        <summary>🔐 Account &amp; Privacy</summary>
+        <summary><i class="bi bi-shield-lock"></i> Account &amp; Privacy</summary>
         <div class="profile-accordion-body">
           <div class="profile-subrow">
             <div>
@@ -2494,28 +2500,28 @@
               <div class="psr-sub" id="myDeviceCountLabel">Checking…</div>
             </div>
           </div>
-          <button class="profile-menu-item" id="menuLogoutOtherDevices"><span class="pm-icon">📵</span> Logout All Other Devices</button>
-          <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon">🔑</span> Change Password</button>
-          <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon">🔐</span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
-          <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon">🔒</span> Privacy Policy</button>
-          <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong);"><span class="pm-icon">⚠️</span> Delete Account</button>
+          <button class="profile-menu-item" id="menuLogoutOtherDevices"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> Logout All Other Devices</button>
+          <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon"><i class="bi bi-key"></i></span> Change Password</button>
+          <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
+          <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon"><i class="bi bi-lock"></i></span> Privacy Policy</button>
+          <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
         </div>
       </details>
 
       <details class="profile-accordion" id="accSupport">
-        <summary>ℹ️ Support and About</summary>
+        <summary><i class="bi bi-info-circle"></i> Support and About</summary>
         <div class="profile-accordion-body">
-          <button class="profile-menu-item" id="menuAppGuidelines"><span class="pm-icon">📘</span> App Guidelines</button>
-          <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon">📞</span> Contact Us</button>
-          <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon">ℹ️</span> About Us</button>
-          <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon">💬</span> Feedback</button>
-          <button class="profile-menu-item" id="menuRateUs"><span class="pm-icon">⭐</span> Rate Us</button>
-          <button class="profile-menu-item" id="menuTerms"><span class="pm-icon">📄</span> Terms and Conditions</button>
+          <button class="profile-menu-item" id="menuAppGuidelines"><span class="pm-icon"><i class="bi bi-book"></i></span> App Guidelines</button>
+          <button class="profile-menu-item" id="menuContactUs"><span class="pm-icon"><i class="bi bi-telephone"></i></span> Contact Us</button>
+          <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon"><i class="bi bi-info-circle"></i></span> About Us</button>
+          <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon"><i class="bi bi-chat-dots"></i></span> Feedback</button>
+          <button class="profile-menu-item" id="menuRateUs"><span class="pm-icon"><i class="bi bi-star"></i></span> Rate Us</button>
+          <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
 
       <div id="appVersionLine" style="text-align:center; padding:18px 4px 6px; font-size:11.5px; color:var(--ink-soft);">Health Loksewa</div>
-      <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon">🚪</span> Logout</button>
+      <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon"><i class="bi bi-box-arrow-right"></i></span> Logout</button>
     </div>
   </div>
 
