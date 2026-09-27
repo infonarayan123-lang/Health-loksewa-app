@@ -2370,7 +2370,7 @@
       <div class="profile-avatar-big" id="profileAvatarBig">?</div>
       <h2 id="profileName">Loading…</h2>
       <p id="profileEmail"></p>
-      <a href="#" id="editNameLink" style="display:inline-block; margin-top:8px; color:#fff; font-size:12px; text-decoration:underline; opacity:0.9;">✏️ Edit Name</a>
+      <a href="#" id="editNameLink" style="display:inline-block; margin-top:8px; color:#fff; font-size:12px; text-decoration:underline; opacity:0.9;"><i class="bi bi-pencil"></i> Edit Name</a>
     </div>
     <div class="profile-status-row">
       <div id="accountStatusClickTarget" style="cursor:pointer; width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
@@ -2384,10 +2384,10 @@
     </div>
     <div id="accountStatusExpanded" class="account-status-expanded" style="display:none;">
       <div id="premiumActiveBanner" class="premium-active-inline" style="display:none;">
-        ✅ <b>Premium Active</b> — thank you for joining Health Loksewa!
+        <i class="bi bi-check-circle-fill"></i> <b>Premium Active</b> — thank you for joining Health Loksewa!
       </div>
       <div id="premiumFeaturesTable"></div>
-      <button class="upgrade-btn" id="upgradeNowBtn" style="width:100%; justify-content:center;">💳 Proceed to Payment</button>
+      <button class="upgrade-btn" id="upgradeNowBtn" style="width:100%; justify-content:center;"><i class="bi bi-credit-card"></i> Proceed to Payment</button>
     </div>
     <div class="profile-menu">
       <div class="calc-card" id="myPreparationCard" style="margin:0 4px 18px;">
@@ -2423,7 +2423,7 @@
       <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
         <div id="examTypeClickTarget" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between;">
           <div>
-            <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;">🎯 Which exam are you preparing for?</div>
+            <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;"><i class="bi bi-bullseye"></i> Which exam are you preparing for?</div>
             <div id="examTypeSummary" style="font-size:14px; font-weight:700; color:var(--ink);">Not set</div>
           </div>
           <span id="examTypeCaret" style="font-size:12px; color:var(--ink-soft);">▾</span>
@@ -2436,34 +2436,34 @@
         <div class="profile-accordion-body">
           <div class="profile-subrow">
             <div>
-              <div class="psr-label">🌐 Language</div>
+              <div class="psr-label"><i class="bi bi-globe"></i> Language</div>
               <div class="psr-sub">App stays in English for now — Nepali display coming later</div>
             </div>
             <div id="languageRow"></div>
           </div>
           <div class="profile-subrow-block">
-            <div class="psr-label">🇳🇵 Calendar System</div>
+            <div class="psr-label"><i class="bi bi-calendar3"></i> Calendar System</div>
             <div class="psr-sub">How dates show throughout the app — Age Calculator, Due Date, exam dates, and more</div>
             <div style="display:flex; gap:8px; margin-top:8px;" id="calendarPrefRow"></div>
           </div>
           <div class="profile-subrow-block">
-            <div class="psr-label">🎨 Accent Color</div>
+            <div class="psr-label"><i class="bi bi-palette"></i> Accent Color</div>
             <div class="psr-sub">Background always stays Health Loksewa navy — this only changes your buttons, links and highlights</div>
             <div class="theme-swatches" id="themeSwatches"></div>
           </div>
           <div class="profile-subrow">
-            <div><div class="psr-label">🌙 Dark Mode</div></div>
+            <div><div class="psr-label"><i class="bi bi-moon-stars"></i> Dark Mode</div></div>
             <button class="font-size-btn" id="profileDarkModeToggle" style="flex:none; width:52px;">OFF</button>
           </div>
           <div class="profile-subrow">
             <div>
-              <div class="psr-label">👁️ Eye Comfort Shield</div>
+              <div class="psr-label"><i class="bi bi-eye"></i> Eye Comfort Shield</div>
               <div class="psr-sub">Warm filter to reduce eye strain during long study sessions</div>
             </div>
             <button class="font-size-btn" id="profileEyeComfortToggle" style="flex:none; width:52px;">OFF</button>
           </div>
           <div class="profile-subrow-block">
-            <div class="psr-label">🔆 Screen Brightness</div>
+            <div class="psr-label"><i class="bi bi-brightness-high"></i> Screen Brightness</div>
             <div class="psr-sub">Dims the app's own content — does not change your phone's actual screen brightness</div>
             <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
               <input type="range" id="brightnessSlider" min="50" max="100" step="5" value="100" style="flex:1;">
@@ -2472,18 +2472,18 @@
           </div>
           <div class="profile-subrow">
             <div>
-              <div class="psr-label">🎯 Study Preferences</div>
+              <div class="psr-label"><i class="bi bi-bullseye"></i> Study Preferences</div>
               <div class="psr-sub">Update your daily goal, focus areas &amp; study style</div>
             </div>
             <button class="font-size-btn" id="editPreferencesBtn" style="flex:none; width:auto; padding:0 14px; background:var(--crimson); color:#fff;">Edit</button>
           </div>
           <div class="profile-subrow-block">
-            <div class="psr-label">🔡 Font Size</div>
+            <div class="psr-label"><i class="bi bi-fonts"></i> Font Size</div>
             <div class="font-size-row" id="fontSizeRow"></div>
           </div>
           <div class="profile-subrow">
             <div>
-              <div class="psr-label">♿ High Contrast Mode</div>
+              <div class="psr-label"><i class="bi bi-circle-half"></i> High Contrast Mode</div>
               <div class="psr-sub">Maximum contrast for better visibility</div>
             </div>
             <button class="font-size-btn" id="highContrastToggle" style="flex:none; width:52px;">OFF</button>
@@ -2496,7 +2496,7 @@
         <div class="profile-accordion-body">
           <div class="profile-subrow">
             <div>
-              <div class="psr-label">📱 My Device</div>
+              <div class="psr-label"><i class="bi bi-phone"></i> My Device</div>
               <div class="psr-sub" id="myDeviceCountLabel">Checking…</div>
             </div>
           </div>
@@ -2532,7 +2532,7 @@
   <div class="screen" id="appLockSettingsScreen">
     <div class="back-link" data-back="profile">← Back</div>
     <div class="home-body">
-      <div class="section-title">🔐 App Lock</div>
+      <div class="section-title"><i class="bi bi-shield-lock"></i> App Lock</div>
       <p style="font-size:12px; color:var(--ink-soft); margin-bottom:16px;">Protect Health Loksewa and your personal study information.</p>
 
       <div class="content-card" style="margin-bottom:16px;">
