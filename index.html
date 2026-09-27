@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css">
 <style>
   :root{
     --bg:#0B1526;
@@ -1139,7 +1140,7 @@
     margin-bottom:22px;
   }
   .dash-card{
-    border-radius:14px; padding:14px 34px 14px 18px;
+    border-radius:16px; padding:14px 34px 14px 20px;
     display:flex; flex-direction:column; gap:4px; justify-content:center;
     cursor:pointer; border:none; text-align:left;
     color:var(--ink); min-height:64px;
@@ -1147,81 +1148,83 @@
     text-decoration:none; /* dash-card is reused on <a> tags across Learn/Practice/Smart
       Tools/Progress/Study Resources/Rapid Fire — without this, anchor elements show their
       browser-default underline on the label/sub text, which buttons never had */
-    position:relative; /* anchors the arrow below */
-    box-shadow:0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09);
-      /* the soft outer shadow plus a faint inner top highlight is what gives these a raised,
-         tactile feel instead of sitting flat on the page */
+    position:relative; overflow:hidden; /* anchors the arrow + top-highlight sheen below */
   }
   /* Every dash-card gets a small trailing arrow — text and depth carry the design, not a wall of
      icons. Centered vertically so it holds its position whether the label wraps to one line or
-     two. QOTD keeps its own deliberate notebook-paper look, excluded here, same as the
-     checkerboard rule below. */
+     two. QOTD keeps its own deliberate notebook-paper look, excluded here throughout. */
   .dash-card:not(.qotd-card)::after{
     content:'›';
     position:absolute; top:50%; right:14px; transform:translateY(-50%);
-    font-size:22px; font-weight:700; line-height:1; opacity:0.45;
+    font-size:22px; font-weight:700; line-height:1; opacity:0.5; z-index:2;
   }
-  /* Icon sits beside the title as a small monochrome badge, description wraps below spanning
-     the full width — achieved purely with grid placement, independent of DOM order, so no HTML
-     changes were needed anywhere this class is used. */
+  /* Glassy 3D bevel card: semi-transparent dark-navy glass (frosted via backdrop-filter),
+     a soft inner top highlight for a raised, glossy feel, and a left accent stripe cycling
+     through 4 colors (see the ::before rules below) — this is the "water bubble" card style,
+     adapted to sit correctly on this app's existing dark background rather than the light-blue
+     background it was originally designed against. */
   .dash-card:not(.qotd-card){
     display:grid;
     grid-template-columns:auto 1fr;
     grid-template-areas:"icon label" "sub sub";
     column-gap:10px; row-gap:3px; align-items:center;
+    background:rgba(20,40,68,0.82);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.09);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -10px 18px rgba(0,0,0,0.18),
+      0 8px 20px rgba(0,0,0,0.32),
+      0 2px 5px rgba(0,0,0,0.2);
+  }
+  /* Soft glossy sheen across the top third of the card, like light catching glass */
+  .dash-card:not(.qotd-card)::before{
+    content:''; position:absolute; top:0; left:6px; right:0; height:42%;
+    background:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, transparent 100%);
+    border-radius:16px 16px 0 0; pointer-events:none; z-index:1;
+  }
+  /* The 4-color accent system — a left-edge stripe cycling through these 4 colors in order,
+     1 through 4, then repeating — applied to every dash-card app-wide (Home, Learn, Practice,
+     Smart Tools, Progress, everywhere this class is used), counted fresh within each screen's
+     own grid. QOTD is excluded, keeping its own look. Each card's icon badge (below) is tinted
+     to match its own stripe color, exactly like the reference design. */
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(4n+1){ --accent:#14B8A6; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(4n+2){ --accent:#0EA5E9; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(4n+3){ --accent:#0284C7; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(4n){ --accent:#0369A1; }
+  .dash-grid > .dash-card:not(.qotd-card){
+    border-left:5px solid var(--accent, #14B8A6);
   }
   .dash-card:not(.qotd-card) .dc-icon{
-    grid-area:icon;
+    grid-area:icon; z-index:2;
     display:flex; align-items:center; justify-content:center;
     width:32px; height:32px; border-radius:9px; flex-shrink:0;
-    background:rgba(255,255,255,0.1);
-    font-size:16px;
-    /* Converts whatever colorful emoji is already in the HTML into a clean monochrome glyph —
-       grayscale alone reads muddy on a dark card, so brightness is pushed up to read as a
-       crisp light/white shape instead of asking every icon across the app to be hand-replaced
-       with a custom SVG. */
-    filter:grayscale(100%) brightness(1.7) contrast(0.9);
+    background:rgba(255,255,255,0.16); /* fallback for browsers without color-mix() support */
+    background:color-mix(in srgb, var(--accent, #14B8A6) 22%, transparent);
+    font-size:16px; color:#fff;
   }
-  .dash-card:not(.qotd-card) .dc-label{ grid-area:label; align-self:center; }
-  .dash-card:not(.qotd-card) .dc-sub{ grid-area:sub; }
+  /* Icons are real outline glyphs (Bootstrap Icons, loaded in <head>) rather than colorful
+     emoji — genuinely monochrome white shapes, not a filter approximation. */
+  .dash-card:not(.qotd-card) .dc-icon i{ font-size:16px; color:#fff; }
+  .dash-card:not(.qotd-card) .dc-label{ grid-area:label; align-self:center; z-index:2; }
+  .dash-card:not(.qotd-card) .dc-sub{ grid-area:sub; z-index:2; }
   .dash-card .dc-icon{ font-size:26px; }
   .dash-card .dc-label{ font-weight:700; font-size:14.5px; line-height:1.25; }
   .dash-card .dc-sub{ font-size:11px; opacity:0.85; }
-  /* Home dashboard cards: alternating 2-color checkerboard, left/right column, per explicit
-     request — overrides the per-feature background classes below via ID+nth-child specificity.
-     QOTD keeps its own deliberate notebook-paper look, excluded here. */
-  #homeScreen .dash-grid > .dash-card:not(.qotd-card):nth-child(odd){
-    background:#0F1C2E; color:#fff;
-  }
-  #homeScreen .dash-grid > .dash-card:not(.qotd-card):nth-child(even){
-    background:#1A2A45; color:#fff;
-  }
-  /* 7-color navy+teal accent system: a left-edge stripe cycling through these 7 colors in order,
-     1 through 7, then repeating — applied to every dash-card app-wide (Home, Learn, Practice,
-     Smart Tools, Progress, everywhere this class is used), counted fresh within each screen's
-     own grid. QOTD is excluded, keeping its own look. This sits alongside each card's existing
-     background treatment (the checkerboard above, or the gradient tones below) rather than
-     replacing it — the stripe is the identifying accent, not the whole card's color. */
-  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+1){ border-left:5px solid #06101F; }
-  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+2){ border-left:5px solid #0B1F3A; }
-  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+3){ border-left:5px solid #0F2C4C; }
-  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+4){ border-left:5px solid #134066; }
-  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+5){ border-left:5px solid #0C4A6E; }
-  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n+6){ border-left:5px solid #0E7490; }
-  .dash-grid > .dash-card:not(.qotd-card):nth-child(7n){ border-left:5px solid #14B8A6; }
   .dash-card.c-quiz{ background:linear-gradient(135deg,#0D9488,#14B8A6); color:#fff; }
   .dash-card.c-syllabus{ background:#13233F; color:#fff; }
   .dash-card.c-current{ background:#13233F; color:#fff; }
   .dash-card.c-gk{ background:linear-gradient(135deg,#1B3B6F,#0F2648); color:#fff; }
-  /* Sub-hub grids (Learn/Practice/Smart Tools/Progress) — same exact shape as Home's cards,
-     but a deliberately different, quieter treatment: neutral dark grey/charcoal family
-     instead of navy/teal, plus a soft ambient glow Home's regular tiles don't have. This
-     keeps Home visually "in charge" while every hub underneath still feels consistent. */
+  /* Sub-hub grids (Learn/Practice/Smart Tools/Progress) — same glassy card shape as Home,
+     same 4-color accent system above; this just adds a soft ambient glow Home's regular tiles
+     don't have, keeping Home visually "in charge" while every hub underneath still feels
+     consistent with it. */
   .hub-tile{
-    box-shadow:0 0 14px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.07);
-    color:#fff; /* backgrounds below are fixed dark gradients regardless of light/dark mode,
-                   so text must stay white — var(--ink) would go dark in light mode and vanish */
+    box-shadow:
+      0 0 14px rgba(255,255,255,0.05),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -10px 18px rgba(0,0,0,0.18),
+      0 8px 20px rgba(0,0,0,0.32);
   }
   .hub-tile .dc-sub{ color:rgba(255,255,255,0.65); }
   .hub-tile.t1{ background:linear-gradient(135deg,#26262B,#1A1A1D); }
@@ -1469,18 +1472,21 @@
 
   .link-card{
     display:flex; align-items:center; gap:14px;
-    border:1px solid var(--line); border-radius:12px;
+    border-radius:14px;
     padding:14px 16px; margin-bottom:10px;
-    text-decoration:none; color:var(--ink);
+    text-decoration:none; color:#fff;
+    background:linear-gradient(135deg, #1A2A45, #0F1C2E);
+    box-shadow:0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09);
   }
   .link-card .lc-icon{
-    width:40px; height:40px; border-radius:10px;
-    background:var(--bg); display:flex; align-items:center; justify-content:center;
-    font-size:19px; flex-shrink:0;
+    width:36px; height:36px; border-radius:9px;
+    background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center;
+    font-size:17px; flex-shrink:0;
+    filter:grayscale(100%) brightness(1.7) contrast(0.9);
   }
-  .link-card .lc-text h4{ font-family:'Tinos',serif; font-size:14.5px; margin-bottom:2px; }
-  .link-card .lc-text p{ font-size:12px; color:var(--ink-soft); }
-  .link-card .lc-arrow{ margin-left:auto; color:var(--ink-soft); font-size:16px; }
+  .link-card .lc-text h4{ font-family:'Tinos',serif; font-size:14.5px; margin-bottom:2px; color:#fff; }
+  .link-card .lc-text p{ font-size:12px; color:rgba(255,255,255,0.65); }
+  .link-card .lc-arrow{ margin-left:auto; color:rgba(255,255,255,0.5); font-size:16px; }
   .link-group-label{
     font-size:11px; font-weight:700; text-transform:uppercase;
     letter-spacing:0.05em; color:var(--crimson); margin:16px 0 8px;
@@ -2155,72 +2161,72 @@
 
       <div class="dash-grid">
         <button class="dash-card c-quiz" id="cardQuiz">
-          <div class="dc-icon">📝</div>
+          <div class="dc-icon"><i class="bi bi-pencil-square"></i></div>
           <div class="dc-label">Subject-wise MCQs</div>
           <div class="dc-sub">Timed MCQs · negative marking</div>
         </button>
         <button class="dash-card c-mock" id="cardMock">
-          <div class="dc-icon">🏆</div>
+          <div class="dc-icon"><i class="bi bi-trophy"></i></div>
           <div class="dc-label">Mock Test</div>
           <div class="dc-sub">Simulates the real exam experience</div>
         </button>
         <button class="dash-card c-mock" id="cardPastQuestions">
-          <div class="dc-icon">📜</div>
+          <div class="dc-icon"><i class="bi bi-file-earmark-text"></i></div>
           <div class="dc-label">Past Questions</div>
           <div class="dc-sub">Real papers from previous years</div>
         </button>
         <button class="dash-card c-syllabus" id="cardSyllabus">
-          <div class="dc-icon">📚</div>
+          <div class="dc-icon"><i class="bi bi-book"></i></div>
           <div class="dc-label">Syllabus</div>
           <div class="dc-sub">Units &amp; downloadable PDFs</div>
         </button>
         <button class="dash-card c-current" id="cardSmartToolsHome">
-          <div class="dc-icon">🧰</div>
+          <div class="dc-icon"><i class="bi bi-tools"></i></div>
           <div style="text-align:left;">
             <div class="dc-label">Smart Tools</div>
             <div class="dc-sub">BMI, health indicators &amp; epidemiology calculators</div>
           </div>
         </button>
         <button class="dash-card c-ai" id="cardAi">
-          <div class="dc-icon">🤖</div>
+          <div class="dc-icon"><i class="bi bi-robot"></i></div>
           <div class="dc-label">AI Assistant</div>
           <div class="dc-sub">Ask about syllabus, subjects, study tips &amp; more</div>
         </button>
         <button class="dash-card c-current" id="cardHealthGuide">
-          <div class="dc-icon">🩺</div>
+          <div class="dc-icon"><i class="bi bi-heart-pulse"></i></div>
           <div style="text-align:left;">
             <div class="dc-label">Health Guide</div>
             <div class="dc-sub">Basic health education articles</div>
           </div>
         </button>
         <button class="dash-card c-tournament" id="cardTournament">
-          <div class="dc-icon">🏆</div>
+          <div class="dc-icon"><i class="bi bi-trophy"></i></div>
           <div class="dc-label">Weekly Tournament</div>
           <div class="dc-sub">Same questions for everyone — compete this week!</div>
         </button>
         <button class="dash-card c-current" id="cardCurrent">
-          <div class="dc-icon">🔄</div>
+          <div class="dc-icon"><i class="bi bi-arrow-repeat"></i></div>
           <div class="dc-label">New Update</div>
           <div class="dc-sub">Official reports · view in-app</div>
         </button>
         <button class="dash-card c-video" id="cardRapidFire">
-          <div class="dc-icon">⚡</div>
+          <div class="dc-icon"><i class="bi bi-lightning-charge"></i></div>
           <div class="dc-label">Rapid Fire</div>
           <div class="dc-sub">Fast-paced practice, 5 modes</div>
         </button>
         <button class="dash-card c-video" id="cardHandbookHome">
-          <div class="dc-icon">📚</div>
+          <div class="dc-icon"><i class="bi bi-book"></i></div>
           <div class="dc-label">Handbook</div>
           <div class="dc-sub">Formulas, Quick References &amp; more</div>
         </button>
         <button class="dash-card c-video" id="cardWhatsNew">
-          <div class="dc-icon">🆕</div>
+          <div class="dc-icon"><i class="bi bi-patch-plus"></i></div>
           <div class="dc-label">What's New</div>
           <div class="dc-sub" id="whatsNewHomeSub">App updates &amp; features</div>
         </button>
         <div class="dash-card c-qotd qotd-card" id="cardQotd">
           <div class="qotd-card-header">
-            <div class="dc-icon">🎯</div>
+            <div class="dc-icon"><i class="bi bi-bullseye"></i></div>
             <div class="dc-label" style="color:#3A2E1F;">Question of the Day</div>
           </div>
           <div id="qotdCardContent" class="qotd-card-body">Loading today's question…</div>
@@ -2802,47 +2808,47 @@
       <div class="section-title" style="font-size:15px; margin-top:20px; margin-bottom:12px;">🔍 Explore Your Progress</div>
       <div class="dash-grid">
         <a class="dash-card hub-tile t1" href="#" id="goToSubjectProgress">
-          <div class="dc-icon">📚</div>
+          <div class="dc-icon"><i class="bi bi-book"></i></div>
           <div class="dc-label">Subject Progress</div>
           <div class="dc-sub">By subject, with charts</div>
         </a>
         <a class="dash-card hub-tile t2" href="#" id="goToQuestionPerformance">
-          <div class="dc-icon">📝</div>
+          <div class="dc-icon"><i class="bi bi-pencil-square"></i></div>
           <div class="dc-label">Question Performance</div>
           <div class="dc-sub">Trends over time</div>
         </a>
         <a class="dash-card hub-tile t3" href="#" id="goToWeakAreas">
-          <div class="dc-icon">⚠️</div>
+          <div class="dc-icon"><i class="bi bi-exclamation-triangle"></i></div>
           <div class="dc-label">Weak Areas</div>
           <div class="dc-sub">What to fix first</div>
         </a>
         <a class="dash-card hub-tile t4" href="#" id="goToAchievementsScreen">
-          <div class="dc-icon">🏆</div>
+          <div class="dc-icon"><i class="bi bi-trophy"></i></div>
           <div class="dc-label">Achievements</div>
           <div class="dc-sub" id="achievementsPreviewSub">— earned</div>
         </a>
         <a class="dash-card hub-tile t5" href="#" id="goToLearnHubProgress">
-          <div class="dc-icon">📖</div>
+          <div class="dc-icon"><i class="bi bi-journal-bookmark"></i></div>
           <div class="dc-label">Learn Hub &amp; Confidence</div>
           <div class="dc-sub">Topics &amp; self-rating</div>
         </a>
         <a class="dash-card hub-tile t6" href="#" id="goToRevisionProgress">
-          <div class="dc-icon">🔄</div>
+          <div class="dc-icon"><i class="bi bi-arrow-repeat"></i></div>
           <div class="dc-label">Revision Progress</div>
           <div class="dc-sub">Due, completed, overdue</div>
         </a>
         <a class="dash-card hub-tile t1" href="#" id="goToStudyActivity">
-          <div class="dc-icon">📈</div>
+          <div class="dc-icon"><i class="bi bi-graph-up-arrow"></i></div>
           <div class="dc-label">Study Activity</div>
           <div class="dc-sub">Habits over time</div>
         </a>
         <a class="dash-card hub-tile t2" href="#" id="goToProgressGoals">
-          <div class="dc-icon">🎯</div>
+          <div class="dc-icon"><i class="bi bi-bullseye"></i></div>
           <div class="dc-label">Goals</div>
           <div class="dc-sub">Daily &amp; weekly targets</div>
         </a>
         <a class="dash-card hub-tile t3" href="#" id="goToProgressHistory">
-          <div class="dc-icon">📅</div>
+          <div class="dc-icon"><i class="bi bi-calendar-event"></i></div>
           <div class="dc-label">History</div>
           <div class="dc-sub">Look back by date</div>
         </a>
@@ -2850,7 +2856,7 @@
 
       <div class="dash-grid">
       <a class="dash-card hub-tile t1" href="#" id="goToLeaderboard">
-        <div class="dc-icon">🏆</div>
+        <div class="dc-icon"><i class="bi bi-trophy"></i></div>
         <div class="dc-label">Leaderboard</div>
         <div class="dc-sub">Your rank</div>
       </a>
@@ -2861,27 +2867,27 @@
            risky to duplicate. Practice's own tiles now delegate a .click() to these. -->
       <div style="display:none;">
       <a class="dash-card hub-tile t2" href="#" id="goToBookmarks">
-        <div class="dc-icon">⭐</div>
+        <div class="dc-icon"><i class="bi bi-star"></i></div>
         <div class="dc-label">My Bookmarks</div>
         <div class="dc-sub">Saved questions</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToStudyGroups">
-        <div class="dc-icon">👥</div>
+        <div class="dc-icon"><i class="bi bi-people"></i></div>
         <div class="dc-label">Study Groups</div>
         <div class="dc-sub">With friends</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToNotes">
-        <div class="dc-icon">📝</div>
+        <div class="dc-icon"><i class="bi bi-pencil-square"></i></div>
         <div class="dc-label">My Notes</div>
         <div class="dc-sub">Saved on device</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToReminder">
-        <div class="dc-icon">🔔</div>
+        <div class="dc-icon"><i class="bi bi-bell"></i></div>
         <div class="dc-label">Daily Reminder</div>
         <div class="dc-sub">Practice reminder</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToRevision">
-        <div class="dc-icon">🔄</div>
+        <div class="dc-icon"><i class="bi bi-arrow-repeat"></i></div>
         <div class="dc-label">Revision Mode</div>
         <div class="dc-sub">Wrong &amp; bookmarked</div>
       </a>
@@ -3426,37 +3432,37 @@
       <div id="globalSearchResults" style="display:none; margin-bottom:20px;"></div>
       <div id="learnLinkCardsWrap" class="dash-grid">
       <a class="dash-card hub-tile t1" href="#" id="goToSyllabusFromLearn">
-        <div class="dc-icon">📖</div>
+        <div class="dc-icon"><i class="bi bi-journal-bookmark"></i></div>
         <div class="dc-label">Syllabus</div>
         <div class="dc-sub">By post</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToGkFromLearn">
-        <div class="dc-icon">🧠</div>
+        <div class="dc-icon"><i class="bi bi-lightbulb"></i></div>
         <div class="dc-label">General Knowledge</div>
         <div class="dc-sub">Constitution &amp; Acts</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToVideoFromLearn">
-        <div class="dc-icon">🎥</div>
+        <div class="dc-icon"><i class="bi bi-camera-video"></i></div>
         <div class="dc-label">Video Lessons</div>
         <div class="dc-sub">Topic videos</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToLiveClassFromLearn">
-        <div class="dc-icon">🔴</div>
+        <div class="dc-icon"><i class="bi bi-broadcast"></i></div>
         <div class="dc-label">Live Class</div>
         <div class="dc-sub">Premium</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToStudyResourcesFromLearn">
-        <div class="dc-icon">📚</div>
+        <div class="dc-icon"><i class="bi bi-book"></i></div>
         <div class="dc-label">Handbook</div>
         <div class="dc-sub">Notes &amp; references</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToSmartToolsFromLearn">
-        <div class="dc-icon">🧮</div>
+        <div class="dc-icon"><i class="bi bi-calculator"></i></div>
         <div class="dc-label">Smart Tools</div>
         <div class="dc-sub">Calculators</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToHealthGuideFromLearn">
-        <div class="dc-icon">🩺</div>
+        <div class="dc-icon"><i class="bi bi-heart-pulse"></i></div>
         <div class="dc-label">Health Guide</div>
         <div class="dc-sub">Health education</div>
       </a>
@@ -3479,77 +3485,77 @@
       <div class="section-title">📝 Practice</div>
       <div class="dash-grid">
       <a class="dash-card hub-tile t1" href="#" id="goToMcqFromPractice">
-        <div class="dc-icon">📝</div>
+        <div class="dc-icon"><i class="bi bi-pencil-square"></i></div>
         <div class="dc-label">Subject-wise MCQs</div>
         <div class="dc-sub">1000+ questions</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToMockFromPractice">
-        <div class="dc-icon">🏆</div>
+        <div class="dc-icon"><i class="bi bi-trophy"></i></div>
         <div class="dc-label">Mock Test</div>
         <div class="dc-sub">Real exam pattern</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToPastQuestionsFromPractice">
-        <div class="dc-icon">📜</div>
+        <div class="dc-icon"><i class="bi bi-file-earmark-text"></i></div>
         <div class="dc-label">Past Questions</div>
         <div class="dc-sub">Previous exam papers</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToTournamentFromPractice">
-        <div class="dc-icon">🏅</div>
+        <div class="dc-icon"><i class="bi bi-award"></i></div>
         <div class="dc-label">Weekly Tournament</div>
         <div class="dc-sub">Weekly leaderboard</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToRevisionFromPractice">
-        <div class="dc-icon">🔄</div>
+        <div class="dc-icon"><i class="bi bi-arrow-repeat"></i></div>
         <div class="dc-label">Revision Mode</div>
         <div class="dc-sub">Wrong &amp; bookmarked</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToBookmarksFromPractice">
-        <div class="dc-icon">🔖</div>
+        <div class="dc-icon"><i class="bi bi-bookmark"></i></div>
         <div class="dc-label">Bookmarks</div>
         <div class="dc-sub">Saved for later</div>
       </a>
       <a class="dash-card hub-tile t1" href="#" id="goToMistakeBookFromPractice">
-        <div class="dc-icon">❌</div>
+        <div class="dc-icon"><i class="bi bi-x-circle"></i></div>
         <div class="dc-label">My Mistakes</div>
         <div class="dc-sub">Tracked automatically</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToFlashcardsFromPractice">
-        <div class="dc-icon">🧩</div>
+        <div class="dc-icon"><i class="bi bi-puzzle"></i></div>
         <div class="dc-label">Flashcards</div>
         <div class="dc-sub">Active recall</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToAnswerCheckerFromPractice">
-        <div class="dc-icon">✍️</div>
+        <div class="dc-icon"><i class="bi bi-pencil"></i></div>
         <div class="dc-label">Check My Answer</div>
         <div class="dc-sub">Written, AI-graded</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToBattleFromPractice">
-        <div class="dc-icon">⚔️</div>
+        <div class="dc-icon"><i class="bi bi-shield"></i></div>
         <div class="dc-label">Battle Challenge</div>
         <div class="dc-sub">Challenge a friend</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToRapidFireFromPractice">
-        <div class="dc-icon">⚡</div>
+        <div class="dc-icon"><i class="bi bi-lightning-charge"></i></div>
         <div class="dc-label">Rapid Fire</div>
         <div class="dc-sub">Paced mini-test</div>
       </a>
       <a class="dash-card hub-tile t1" href="#" id="goToReminderFromPractice">
-        <div class="dc-icon">🔔</div>
+        <div class="dc-icon"><i class="bi bi-bell"></i></div>
         <div class="dc-label">Daily Reminder</div>
         <div class="dc-sub">Practice reminder</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToStudyGroupsFromPractice">
-        <div class="dc-icon">👥</div>
+        <div class="dc-icon"><i class="bi bi-people"></i></div>
         <div class="dc-label">Study Groups</div>
         <div class="dc-sub">With friends</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToNotesFromPractice">
-        <div class="dc-icon">📝</div>
+        <div class="dc-icon"><i class="bi bi-pencil-square"></i></div>
         <div class="dc-label">My Notes</div>
         <div class="dc-sub">Saved on device</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToStudyPlannerFromPractice">
-        <div class="dc-icon">🗓️</div>
+        <div class="dc-icon"><i class="bi bi-calendar3"></i></div>
         <div class="dc-label">Study Planner</div>
         <div class="dc-sub">Your personal daily plan</div>
       </a>
@@ -3979,27 +3985,27 @@
       <div class="section-title">📚 Handbook</div>
       <div class="dash-grid">
       <a class="dash-card hub-tile t1" href="#" id="goToFormulaFromHub">
-        <div class="dc-icon">🔢</div>
+        <div class="dc-icon"><i class="bi bi-123"></i></div>
         <div class="dc-label">Formulas</div>
         <div class="dc-sub">Key formulas &amp; facts</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToQuickRefFromHub">
-        <div class="dc-icon">⚡</div>
+        <div class="dc-icon"><i class="bi bi-lightning-charge"></i></div>
         <div class="dc-label">Quick References</div>
         <div class="dc-sub">Instant facts &amp; tables</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToMnemonicsFromHub">
-        <div class="dc-icon">🧩</div>
+        <div class="dc-icon"><i class="bi bi-puzzle"></i></div>
         <div class="dc-label">Mnemonics Library</div>
         <div class="dc-sub">Memory tricks</div>
       </a>
       <a class="dash-card hub-tile t3" href="#" id="goToHealthDaysFromHub">
-        <div class="dc-icon">📅</div>
+        <div class="dc-icon"><i class="bi bi-calendar-event"></i></div>
         <div class="dc-label">Health Days</div>
         <div class="dc-sub">Observance days</div>
       </a>
       <a class="dash-card hub-tile t4" href="#" id="goToDictionaryFromHub">
-        <div class="dc-icon">📖</div>
+        <div class="dc-icon"><i class="bi bi-journal-bookmark"></i></div>
         <div class="dc-label">Health Dictionary</div>
         <div class="dc-sub">Reference PDFs</div>
       </a>
@@ -4009,12 +4015,12 @@
         <div class="dc-sub">Term glossary</div>
       </a>
       <a class="dash-card hub-tile t5" href="#" id="goToFaqsFromHub">
-        <div class="dc-icon">❓</div>
+        <div class="dc-icon"><i class="bi bi-question-circle"></i></div>
         <div class="dc-label">FAQs</div>
         <div class="dc-sub">Common questions</div>
       </a>
       <a class="dash-card hub-tile t6" href="#" id="goToInspirationHubFromHub">
-        <div class="dc-icon">✨</div>
+        <div class="dc-icon"><i class="bi bi-stars"></i></div>
         <div class="dc-label">Inspiration Hub</div>
         <div class="dc-sub">Success stories &amp; history</div>
       </a>
@@ -7856,11 +7862,11 @@ const PAST_QUESTIONS_POSTS = [
 let RAPID_FIRE_MODES;
 try{
 RAPID_FIRE_MODES = [
-  { key:'quick', icon:'⚡', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
-  { key:'weak', icon:'🎯', label:'Weak Topic Fire', desc:'Focused on your weakest subject', shortDesc:'Your weak subject' },
-  { key:'mistake', icon:'❌', label:'Mistake Fire', desc:'Turn your mistakes into strengths', shortDesc:'Past mistakes' },
-  { key:'topic', icon:'📚', label:'Topic Fire', desc:'Drill one specific subject', shortDesc:'Pick a subject' },
-  { key:'battle', icon:'⚔️', label:'Battle Fire', desc:'Beat your previous score — challenge a friend', shortDesc:'Challenge a friend' },
+  { key:'quick', icon:'<i class="bi bi-lightning-charge"></i>', label:'Quick Fire', desc:'Time-paced questions from your exam', shortDesc:'Paced by time' },
+  { key:'weak', icon:'<i class="bi bi-bullseye"></i>', label:'Weak Topic Fire', desc:'Focused on your weakest subject', shortDesc:'Your weak subject' },
+  { key:'mistake', icon:'<i class="bi bi-x-circle"></i>', label:'Mistake Fire', desc:'Turn your mistakes into strengths', shortDesc:'Past mistakes' },
+  { key:'topic', icon:'<i class="bi bi-book"></i>', label:'Topic Fire', desc:'Drill one specific subject', shortDesc:'Pick a subject' },
+  { key:'battle', icon:'<i class="bi bi-shield"></i>', label:'Battle Fire', desc:'Beat your previous score — challenge a friend', shortDesc:'Challenge a friend' },
 ];
 }catch(err){ RAPID_FIRE_MODES = undefined; if(window.showDebugError) showDebugError("A required setting (" + "RAPID_FIRE_MODES" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 
