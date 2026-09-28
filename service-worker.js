@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pho-loksewa-v450';
+const CACHE_NAME = 'pho-loksewa-v452';
 const FILES_TO_CACHE = [
   './index.html',
   './manifest.json',
@@ -25,10 +25,19 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 // Background messages (app closed or not focused) — this is what actually shows up in the
 // phone's real notification bar, matching what was asked for specifically
+// Notifications are plain text only. The server already strips emoji before sending; this repeats
+// it on the phone itself so a push from any other source (e.g. sent by hand from the Firebase
+// Console) still shows as clean text. Arrows and ordinary punctuation are left alone.
+function stripEmojiForNotification(text) {
+  return String(text == null ? '' : text)
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\uFE0F\u200D\u20E3]/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
 messaging.onBackgroundMessage((payload) => {
-  const title = (payload.notification && payload.notification.title) || 'Health Loksewa';
+  const title = stripEmojiForNotification(payload.notification && payload.notification.title) || 'Health Loksewa';
   const options = {
-    body: (payload.notification && payload.notification.body) || '',
+    body: stripEmojiForNotification(payload.notification && payload.notification.body),
     icon: './icon-192.png',
     badge: './icon-192.png',
     data: { url: (payload.data && payload.data.url) || './index.html' }
