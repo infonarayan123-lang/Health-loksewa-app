@@ -753,7 +753,7 @@
   .formula-item, .note-item, .stat-tile, .progress-detail-card, .leaderboard-row, .bookmark-item,
   .pricing-plan-tile, .flashcard, .badge-tile, .swipe-card, .promo-banner, .focus-row,
   .resource-row .rcard, .set-card, .pay-method-card, .content-card, .profile-status-row,
-  .breakdown-wrap{
+  .breakdown-wrap, .result-chart-card, .rv-card{
     /* These components are ALWAYS rendered in the app's dark palette, in both themes. Light mode
        overrides seven colour variables, so all seven are re-set to their dark values here —
        re-setting only the text colours left things like a calculator's input box light-cream with
@@ -1568,11 +1568,16 @@
     border-radius:12px; padding:16px; margin:14px 0;
     font-size:14px; line-height:1.5; font-weight:600; text-align:center;
   }
-  .result-message.excellent{ background:var(--correct-bg); color:#204F3E; }
-  .result-message.good{ background:#FFF6E8; color:#7A5B12; }
-  .result-message.needs-work{ background:var(--wrong-bg); color:#7A2018; }
+  /* Text colours are theme-aware: the old fixed dark colours were written for the light theme and
+     turned dark-red-on-dark-maroon (barely readable) in dark mode. */
+  .result-message.excellent{ background:var(--correct-bg); color:#86EFAC; }
+  .result-message.good{ background:rgba(201,162,39,0.16); color:#F5D97A; }
+  .result-message.needs-work{ background:var(--wrong-bg); color:#FCA5A5; }
+  body.light-mode .result-message.excellent{ color:#204F3E; }
+  body.light-mode .result-message.good{ background:#FFF6E8; color:#7A5B12; }
+  body.light-mode .result-message.needs-work{ color:#7A2018; }
   .next-set-btn{
-    width:100%; padding:14px; margin-top:6px;
+    width:100%; padding:14px; margin-top:6px; margin-bottom:14px;
     border:none; border-radius:12px;
     background:var(--navy); color:#fff;
     font-weight:700; font-size:14.5px; cursor:pointer;
@@ -1704,6 +1709,14 @@
   .omr-dot.current{ background:var(--navy); transform:scale(1.3); }
   .omr-dot.correct{ background:var(--correct); }
   .omr-dot.wrong{ background:var(--wrong); }
+  /* Test mode: a finished question is marked only as "answered" — never green/red, which would
+     give the result away mid-test. */
+  .omr-dot.answered{ background:var(--navy); opacity:0.6; }
+  /* pull-to-refresh spinner (shown only while a refresh is actually running) */
+  .ptr-spin{ display:none; width:13px; height:13px; border:2px solid rgba(255,255,255,0.25); border-top-color:var(--navy); border-radius:50%; }
+  #pullRefreshIndicator[data-state="busy"] .ptr-spin{ display:inline-block; animation:ptrRot 0.7s linear infinite; }
+  @keyframes ptrRot{ to{ transform:rotate(360deg); } }
+  #examModeHint{ font-size:11.5px; color:var(--ink-soft); text-align:center; margin:2px 0 10px; }
 
   .quiz-body{ padding:22px 20px; flex:1; }
   .q-tag{
@@ -1804,6 +1817,59 @@
     padding:12px 14px; margin-bottom:8px; font-size:13px;
   }
   .review-item .rq{ font-weight:600; margin-bottom:4px; }
+
+  /* ---------- End-of-test results: graphs + full question-by-question review ---------- */
+  .result-chart-card{ border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .result-chart-card h4{ font-family:'Tinos',serif; font-size:15px; margin-bottom:12px; }
+  .rc-donut-wrap{ display:flex; align-items:center; gap:18px; }
+  .rc-legend{ flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+  .rc-legend-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink); }
+  .rc-legend-row b{ margin-left:auto; font-family:'JetBrains Mono',monospace; }
+  .rc-legend-dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .rc-legend-note{ font-size:11px; color:var(--ink-soft); line-height:1.4; }
+  .rc-bars{ display:flex; align-items:flex-end; gap:8px; height:118px; }
+  .rc-bar-col{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .rc-bar-val{ font-size:10px; font-family:'JetBrains Mono',monospace; margin-bottom:3px; color:var(--ink); }
+  .rc-bar{ width:100%; max-width:34px; border-radius:6px 6px 0 0; background:rgba(148,163,184,0.45); }
+  .rc-bar.current{ background:var(--navy); }
+  .rc-bar-label{ font-size:9.5px; color:var(--ink-soft); margin-top:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .rc-hbar-row{ margin-bottom:11px; }
+  .rc-hbar-top{ display:flex; justify-content:space-between; gap:8px; font-size:12.5px; margin-bottom:5px; }
+  .rc-hbar-top span:first-child{ font-weight:600; }
+  .rc-hbar-track{ height:9px; border-radius:6px; background:rgba(255,255,255,0.10); overflow:hidden; }
+  .rc-hbar-fill{ height:100%; border-radius:6px; }
+  .rc-qmap{ display:grid; grid-template-columns:repeat(auto-fill,minmax(34px,1fr)); gap:6px; }
+  .rc-qcell{ height:34px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:700; color:#fff; cursor:pointer; border:1.5px solid var(--line); background:rgba(148,163,184,0.22); }
+  .rc-qcell.correct{ background:rgba(52,211,153,0.28); border-color:var(--correct); }
+  .rc-qcell.wrong{ background:rgba(248,113,113,0.28); border-color:var(--wrong); }
+  .rv-filters{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px; }
+  .rv-chip{ padding:7px 13px; border-radius:20px; border:1.5px solid var(--line); background:transparent; color:var(--ink-soft); font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
+  .rv-chip.active{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .rv-card{ border:1px solid var(--line); border-radius:14px; padding:14px 14px 12px; margin-bottom:12px; scroll-margin-top:12px; }
+  .rv-card.flash{ box-shadow:0 0 0 2px var(--navy), 0 6px 14px rgba(0,0,0,0.28); }
+  .rv-head{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .rv-num{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12.5px; color:var(--ink); }
+  .rv-pill{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:0.04em; }
+  .rv-pill.correct{ background:rgba(52,211,153,0.18); color:var(--correct); }
+  .rv-pill.wrong{ background:rgba(248,113,113,0.18); color:var(--wrong); }
+  .rv-pill.skipped{ background:rgba(148,163,184,0.2); color:var(--ink-soft); }
+  .rv-tag{ font-size:10.5px; color:var(--ink-soft); margin-left:auto; text-align:right; }
+  .rv-q{ font-size:14px; font-weight:600; line-height:1.45; margin-bottom:10px; color:var(--ink); }
+  .rv-opt{ display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border-radius:10px; border:1.5px solid var(--line); margin-bottom:7px; font-size:13px; }
+  .rv-opt.correct{ border-color:var(--correct); background:var(--correct-bg); }
+  .rv-opt.chosen-wrong{ border-color:var(--wrong); background:var(--wrong-bg); }
+  .rv-bubble{ width:22px; height:22px; border-radius:50%; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+  .rv-opt.correct .rv-bubble{ background:var(--correct); border-color:var(--correct); color:#0B1526; }
+  .rv-opt.chosen-wrong .rv-bubble{ background:var(--wrong); border-color:var(--wrong); color:#0B1526; }
+  .rv-text{ flex:1; line-height:1.4; min-width:0; }
+  .rv-mark{ font-size:10px; font-weight:700; white-space:nowrap; align-self:center; color:var(--ink-soft); }
+  .rv-opt.correct .rv-mark{ color:var(--correct); }
+  .rv-opt.chosen-wrong .rv-mark{ color:var(--wrong); }
+  .rv-exp{ margin-top:10px; padding:11px 12px; border-radius:10px; background:rgba(20,184,166,0.10); border-left:3px solid var(--navy); font-size:12.5px; line-height:1.55; }
+  .rv-exp-title{ font-size:10.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--navy); margin-bottom:4px; }
+  .rv-exp-none{ color:var(--ink-soft); font-style:italic; border-left-color:var(--line); background:transparent; }
+  .rv-actions{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .rv-act{ padding:6px 12px; border-radius:8px; border:1.5px solid var(--line); background:transparent; color:var(--ink-soft); font-size:11.5px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
   .restart-btn{
     width:100%; padding:14px; margin-top:6px;
     border:1.5px solid var(--crimson); border-radius:12px;
@@ -1814,7 +1880,7 @@
 </head>
 <body>
 <div id="app">
-<div id="pullRefreshIndicator" style="position:fixed; top:0; left:50%; transform:translate(-50%,-40px); opacity:0; z-index:9999; background:var(--panel); color:var(--ink); font-size:12.5px; font-weight:600; padding:6px 14px; border-radius:0 0 12px 12px; box-shadow:0 2px 8px rgba(0,0,0,0.15); transition:opacity 0.2s, transform 0.2s; pointer-events:none;">Refreshing…</div>
+<div id="pullRefreshIndicator" data-state="pull" style="position:fixed; top:0; left:50%; transform:translate(-50%,-44px); opacity:0; z-index:9999; background:#13233F; color:#fff; font-size:12.5px; font-weight:600; padding:8px 18px; border-radius:0 0 16px 16px; border:1px solid rgba(255,255,255,0.12); border-top:none; box-shadow:0 6px 16px rgba(0,0,0,0.35); transition:opacity 0.2s, transform 0.2s; pointer-events:none; display:flex; align-items:center; gap:8px; white-space:nowrap;"><span class="ptr-spin"></span><span id="pullRefreshText">Pull to refresh</span></div>
 <div id="installBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9998; background:var(--navy,#0FA3A8); color:#fff; font-size:12.5px; padding:10px 14px; align-items:center; gap:10px; box-shadow:0 -2px 8px rgba(0,0,0,0.2);">
   <span style="flex:1;">For a full-screen view with no browser bar, add Health Loksewa to your Home Screen (menu → "Add to Home screen").</span>
   <button id="installBannerDismiss" style="background:none; border:1px solid rgba(255,255,255,0.4); color:#fff; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:700;">Got it</button>
@@ -6470,6 +6536,7 @@
       </div>
       <div class="q-text" id="qText">Question text here</div>
       <div id="optionsWrap"></div>
+      <div id="examModeHint" style="display:none;">Test mode: answers and full explanations are shown at the end.</div>
       <button class="calc-btn" id="idkBtn" style="display:none; margin-top:4px; background:var(--panel); color:var(--ink-soft); border:1.5px dashed var(--line); font-size:12.5px;">I Don't Know</button>
       <div class="feedback" id="feedbackBox"></div>
     </div>
@@ -6494,6 +6561,7 @@
         <div class="stat"><div class="stat-num" id="statWrong" style="color:var(--wrong)">0</div><div class="stat-label">Wrong</div></div>
         <div class="stat"><div class="stat-num" id="statSkip">0</div><div class="stat-label">Skipped</div></div>
       </div>
+      <div id="resultCharts"></div>
       <div id="setResultMessage"></div>
       <button class="next-set-btn" id="nextSetBtn" style="display:none;">Next Set →</button>
       <div id="subjectBreakdown"></div>
@@ -8232,6 +8300,25 @@ safeOn('skipQuestionBtn', 'click', () => {
 // Shared by BOTH this Exit button and the Android/browser hardware Back button (wired further
 // below), so the exact same confirm message and cleanup logic exists in exactly one place rather
 // than being duplicated across two trigger points. Returns true if the user actually left.
+// Every quiz mode switches its own flag on at the start but they were only switched off when a quiz
+// FINISHED. Quit a Weekly Tournament / Mock Test / Revision session halfway and the flag stayed on, so
+// the NEXT quiz could be logged as a mock test or even submitted as your tournament score. Called
+// whenever someone confirms leaving a quiz.
+function resetQuizModeFlags(){
+  // Each reset is independent: some of these are declared far apart in the file, and confirming a
+  // quit must never fail (or skip the remaining resets) because of one of them.
+  [
+    () => { revisionModeActive = false; },
+    () => { mistakeReviewActive = false; },
+    () => { mockTestActive = false; },
+    () => { pastQuestionActive = false; },
+    () => { groupChallengeActive = false; },
+    () => { currentDailyBattleActive = false; },
+    () => { currentTournamentWeekKey = null; },
+    () => { currentMonthlyTournamentMonthKey = null; },
+    () => { currentRapidFireMode = null; },
+  ].forEach(reset => { try{ reset(); }catch(e){} });
+}
 async function attemptLeaveQuiz(){
   if(hlQuizExitConfirmPending) return false; // a leave-confirmation is already awaiting an answer — ignore this extra trigger (e.g. a rapid double Back-press) rather than stack a second dialog
   hlQuizExitConfirmPending = true;
@@ -8240,6 +8327,7 @@ async function attemptLeaveQuiz(){
     if(confirmed){
       clearInterval(timerInterval);
       currentSetInfo = null;
+      resetQuizModeFlags();
       const target = navHistoryStack.length > 0 ? navHistoryStack.pop() : homeScreen;
       navigateBack(target);
       return true;
@@ -8412,6 +8500,25 @@ function showScreen(el){
 function navigateBack(target){
   suppressHistoryPush = true;
   showScreen(target);
+  hlRefreshAfterBack(target);
+}
+// Going Back redraws the screen you land on, so it never shows data that went stale while you were
+// away. A light redraw only (the same one the screen already does when opened) — it does NOT drop the
+// in-memory caches, so it stays fast and never re-downloads everything on every tap. Group Detail is
+// skipped: its redraw jumps to the Overview tab, which would throw you off the tab you were on.
+function hlRefreshAfterBack(target){
+  try{
+    if(!target || !target.id) return;
+    if(['groupDetailScreen'].includes(target.id)) return;
+    const fn = SCREEN_REFRESH_MAP && SCREEN_REFRESH_MAP[target.id];
+    if(!fn) return;
+    setTimeout(() => {
+      // only if that screen is still the one showing — a quick second tap may already have moved on
+      if(document.querySelector('.screen.active') === target){
+        try{ Promise.resolve(fn()).catch(() => {}); }catch(e){}
+      }
+    }, 150);
+  }catch(e){}
 }
 // Records one real browser/Android history entry corresponding to a forward navigation, so the
 // physical Back button has something real to walk back through.
@@ -8454,9 +8561,9 @@ SCREEN_REFRESH_MAP = {
   studyGroupsScreen: () => renderMyGroups(),
   tournamentPostScreen: () => renderTournamentPosts(),
   tournamentScreen: () => renderTournamentScreen(),
-  formulaScreen: () => renderFormulas(''),
-  mnemonicsScreen: () => renderMnemonics(''),
-  healthDaysScreen: () => renderHealthDays(''),
+  formulaScreen: () => renderFormulas((document.getElementById('formulaSearchBox') || {}).value || ''),
+  mnemonicsScreen: () => renderMnemonics((document.getElementById('mnemonicsSearchBox') || {}).value || ''),
+  healthDaysScreen: () => renderHealthDays((document.getElementById('healthDaysSearchBox') || {}).value || ''),
   faqsScreen: () => renderFaqs(),
   videoScreen: () => renderVideoLessons(),
   studyResourcesScreen: () => loadStudyResourcesData(),
@@ -8479,6 +8586,7 @@ SCREEN_REFRESH_MAP = {
   samsamayikScreen: () => renderSamsamayik(),
   resourcesScreen: () => renderResources(),
   newsPortalScreen: () => renderNewsPortal(),
+  webPortalScreen: () => renderWebPortalScreen(webPortalSelectedCategory || undefined),
   appLockSettingsScreen: () => renderAppLockSettings(),
   questionPerformanceScreen: () => renderQuestionPerformance(),
   weakAreasScreen: () => renderWeakAreas(),
@@ -8518,22 +8626,28 @@ SCREEN_REFRESH_MAP = {
 (function setupPullToRefresh(){
   let startY = 0;
   let pulling = false;
+  let activeHasRefresh = false; // known once, at touchstart — avoids showing "Pull to refresh" on a screen that has nothing to refresh
   const indicator = document.getElementById('pullRefreshIndicator');
+  const textEl = document.getElementById('pullRefreshText');
 
   document.addEventListener('touchstart', (e) => {
     const appEl = document.getElementById('app');
     if(appEl && appEl.scrollTop > 0) { pulling = false; return; }
+    const activeScreen = document.querySelector('.screen.active');
+    activeHasRefresh = !!(activeScreen && SCREEN_REFRESH_MAP[activeScreen.id]);
     startY = e.touches[0].clientY;
     pulling = true;
   }, { passive: true });
 
   document.addEventListener('touchmove', (e) => {
-    if(!pulling) return;
+    if(!pulling || !activeHasRefresh) return;
     const dy = e.touches[0].clientY - startY;
     if(dy > 0 && indicator){
       const pct = Math.min(dy / 80, 1);
+      indicator.dataset.state = 'pull';
+      textEl.textContent = dy > 70 ? 'Release to refresh' : 'Pull to refresh';
       indicator.style.opacity = pct;
-      indicator.style.transform = `translateY(${Math.min(dy * 0.4, 32) - 40}px)`;
+      indicator.style.transform = `translateY(${Math.min(dy * 0.4, 32) - 44}px)`;
     }
   }, { passive: true });
 
@@ -8541,18 +8655,31 @@ SCREEN_REFRESH_MAP = {
     if(!pulling) return;
     pulling = false;
     const dy = (e.changedTouches[0].clientY - startY);
-    if(indicator){ indicator.style.opacity = 0; indicator.style.transform = 'translateY(-40px)'; }
-    if(dy > 70){
-      const activeScreen = document.querySelector('.screen.active');
-      const refreshFn = activeScreen && SCREEN_REFRESH_MAP[activeScreen.id];
-      if(refreshFn){
-        if(indicator){ indicator.textContent = 'Refreshing…'; indicator.style.opacity = 1; indicator.style.transform = 'translateY(8px)'; }
-        try{ refreshFn(); }catch(e){}
-        setTimeout(() => { if(indicator){ indicator.style.opacity = 0; indicator.style.transform = 'translateY(-40px)'; indicator.textContent = 'Refreshing…'; } }, 700);
-      }
-      // If this screen has no refresh mapping, we simply do nothing — never fall back to
-      // a hard reload or Home, since that's exactly the behavior this feature replaces.
+    if(dy <= 70 || !activeHasRefresh || !indicator){
+      if(indicator){ indicator.style.opacity = 0; indicator.style.transform = 'translateY(-44px)'; }
+      return;
     }
+    const activeScreen = document.querySelector('.screen.active');
+    const refreshFn = activeScreen && SCREEN_REFRESH_MAP[activeScreen.id];
+    if(!refreshFn){ indicator.style.opacity = 0; indicator.style.transform = 'translateY(-44px)'; return; }
+
+    indicator.dataset.state = 'busy';
+    textEl.textContent = 'Refreshing…';
+    indicator.style.opacity = 1;
+    indicator.style.transform = 'translateY(8px)';
+
+    // The refresh function itself may be sync or return a Promise (most fetch a Sheet). Either way,
+    // wait for it so "Refreshing…" reflects what's actually happening, then confirm it finished
+    // rather than just guessing at a fixed delay — and never leave the bar stuck up if it throws.
+    Promise.resolve().then(refreshFn).catch((err) => { if(window.showDebugError) showDebugError('Pull-to-refresh failed: ' + (err && err.message ? err.message : String(err))); })
+      .finally(() => {
+        indicator.dataset.state = 'done';
+        textEl.textContent = 'Refreshed';
+        setTimeout(() => {
+          indicator.style.opacity = 0;
+          indicator.style.transform = 'translateY(-44px)';
+        }, 500);
+      });
   }, { passive: true });
 })();
 
@@ -25366,10 +25493,14 @@ function buildOmrStrip(){
   strip.innerHTML = quizQuestions.map((_, i) => `<div class="omr-dot" id="dot-${i}"></div>`).join('');
 }
 function refreshOmrStrip(){
+  const learning = isLearningQuiz();
   quizQuestions.forEach((_, i) => {
     const dot = document.getElementById(`dot-${i}`);
     dot.className = 'omr-dot';
     if(i === currentIndex) dot.classList.add('current');
+    // Test mode: a finished question is only marked "answered" — colouring it green/red here
+    // would reveal the result mid-test even with the question's own feedback hidden.
+    else if(!learning && answers[i]) dot.classList.add('answered');
     else if(answers[i] && answers[i].correct === true) dot.classList.add('correct');
     else if(answers[i] && answers[i].correct === false) dot.classList.add('wrong');
   });
@@ -25393,6 +25524,8 @@ function renderQuestion(){
 
   document.getElementById('feedbackBox').className = 'feedback';
   document.getElementById('feedbackBox').innerHTML = '';
+  const examHint = document.getElementById('examModeHint');
+  if(examHint) examHint.style.display = isLearningQuiz() ? 'none' : 'block';
   document.getElementById('nextBtn').disabled = true;
   document.getElementById('nextBtn').textContent =
     currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Select an answer, then tap to continue';
@@ -25451,14 +25584,57 @@ function toggleBookmark(q){
 // ---------- Revision Mode: wrong-question tracking lives earlier in the file now
 // (spaced-repetition version — see getWrongQuestions/addToWrongQuestions near renderRevisionSummary) ----------
 
+// A learning session (Revision / Mistake review) is the ONLY place instant feedback belongs — that
+// immediate right/wrong + explanation is the whole point there. Everything else (Subject-wise Sets,
+// Mock Test, Past Questions, Rapid Fire, Tournaments...) is a real test: nothing is revealed until
+// the end. Read from currentSetInfo.subject — the same signal finishQuiz already trusts — because
+// launchQuiz() rewrites it fresh for every quiz, whereas revisionModeActive can be left stuck on.
+function isLearningQuiz(){
+  return !!(currentSetInfo && currentSetInfo.subject === 'Revision');
+}
+// One shared "save this question + explanation to My Notes" used by both the learning feedback box
+// and the end-of-test review.
+function saveQuestionToNotes(q){
+  const notes = getNotes();
+  notes.unshift({
+    id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
+    title: (q.Question || 'Question').slice(0, 50) + (q.Question && q.Question.length > 50 ? '…' : ''),
+    body: `Q: ${q.Question || ''}\n\nAnswer: ${q.CorrectAnswer || ''}\n\nExplanation: ${q.Explanation || ''}`,
+    folder: 'Practice',
+    tags: ['MCQ'],
+    pinned: false,
+    revisionStatus: null,
+    reviewDateAD: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    deletedAt: null,
+  });
+  saveNotes(notes);
+}
+
 function handleAnswer(letter){
-  if(answers[currentIndex] !== null) return; // already answered
+  const learning = isLearningQuiz();
+  if(learning && answers[currentIndex] !== null) return; // learning: locked on first tap, as before
   const q = quizQuestions[currentIndex];
   const isCorrect = letter === (q.CorrectAnswer || '').trim().toUpperCase();
 
+  // Recorded either way (finishQuiz reads it at the end). In test mode this simply overwrites, so the
+  // choice can still be changed until the person moves on to the next question.
   answers[currentIndex] = { correct: isCorrect, chosen: letter, correctAnswer: q.CorrectAnswer, idk: letter === 'IDK' };
   document.getElementById('idkBtn').style.display = 'none';
   document.getElementById('skipQuestionBtn').style.display = 'none'; // nothing left to skip once answered
+
+  if(!learning){
+    // TEST MODE: no green/red, no feedback box, no explanation — just mark which option is chosen.
+    document.querySelectorAll('.option').forEach(opt => {
+      opt.classList.toggle('selected', opt.dataset.letter === letter);
+    });
+    const nb = document.getElementById('nextBtn');
+    nb.disabled = false;
+    nb.textContent = currentIndex === quizQuestions.length - 1 ? 'Finish Quiz' : 'Next Question →';
+    refreshOmrStrip();
+    return;
+  }
 
   document.querySelectorAll('.option').forEach(opt => {
     opt.classList.add('disabled');
@@ -25480,24 +25656,8 @@ function handleAnswer(letter){
       speakText(q.Explanation, e.currentTarget);
     });
     document.getElementById('saveExplanationBtn').addEventListener('click', (e) => {
-      const btn = e.target;
-      const notes = getNotes();
-      const newNote = {
-        id: 'n' + Date.now() + Math.random().toString(36).slice(2,7),
-        title: (q.Question || 'Question').slice(0, 50) + (q.Question && q.Question.length > 50 ? '…' : ''),
-        body: `Q: ${q.Question || ''}\n\nAnswer: ${q.CorrectAnswer || ''}\n\nExplanation: ${q.Explanation || ''}`,
-        folder: 'Practice',
-        tags: ['MCQ'],
-        pinned: false,
-        revisionStatus: null,
-        reviewDateAD: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        deletedAt: null,
-      };
-      notes.unshift(newNote);
-      saveNotes(notes);
-      btn.textContent = '✓ Saved to Notes';
+      saveQuestionToNotes(q);
+      e.target.textContent = '✓ Saved to Notes';
     });
   }
 
@@ -25518,18 +25678,22 @@ function finishQuiz(){
   showScreen(resultsScreen);
   document.getElementById('battleResultBox').style.display = 'none'; // reset — only Battle quizzes populate this
   document.getElementById('rapidFireResultBox').style.display = 'none'; // reset — only Rapid Fire quizzes populate this
+  const resultMode = detectResultMode(); // captured NOW — the mode flags below are reset later in this function
 
   let correct = 0, wrong = 0, skipped = 0, score = 0;
   const reviewHtml = [];
+  const statuses = []; // 'Correct' | 'Wrong' | 'Skipped' per question, in order — drives the question map + filters
   const marks = currentMarksPerQuestion; // 1 for normal quizzes; PHO Mock=1, other posts' Mock=2
 
   quizQuestions.forEach((q, i) => {
     const a = answers[i];
     if(!a){
       skipped++;
+      statuses.push('Skipped');
       reviewHtml.push(reviewRow(q, i, 'Skipped', '—'));
     } else if(a.correct){
       correct++; score += marks;
+      statuses.push('Correct');
       reviewHtml.push(reviewRow(q, i, 'Correct', a.chosen));
       recordChapterAnswer(q.Subject, q.Chapter, true);
       recordQuestionAnswered();
@@ -25545,6 +25709,7 @@ function finishQuiz(){
       }
     } else {
       wrong++; score -= (marks * 0.2);
+      statuses.push('Wrong');
       reviewHtml.push(reviewRow(q, i, 'Wrong', a.chosen));
       recordChapterAnswer(q.Subject, q.Chapter, false);
       recordQuestionAnswered();
@@ -25557,7 +25722,7 @@ function finishQuiz(){
   document.getElementById('statCorrect').textContent = correct;
   document.getElementById('statWrong').textContent = wrong;
   document.getElementById('statSkip').textContent = skipped;
-  document.getElementById('reviewList').innerHTML = reviewHtml.join('');
+  buildReviewSection(statuses, reviewHtml);
   renderSubjectBreakdown();
   recordDailyActivity(correct + wrong, correct); // powers the Home screen's Daily/Weekly/Monthly/Yearly chart — skipped questions don't count as "answered"
 
@@ -25681,6 +25846,11 @@ function finishQuiz(){
     submitGroupChallengeResult(correct, quizQuestions.length);
   }
 
+  // ---- Graphs: drawn only now, after every score/history entry for THIS attempt has been saved, so
+  // the trend bars include it. Isolated so a drawing problem can never break the results screen. ----
+  try{ renderResultInsights(resultMode, correct, wrong, skipped); }
+  catch(err){ if(window.showDebugError) showDebugError('Results graphs failed: ' + (err && err.message ? err.message : String(err))); }
+
   // ---- Rapid Fire: pace summary, and streak update for Daily Fire ----
   if(currentRapidFireMode){
     const mode = RAPID_FIRE_MODES.find(m => m.key === currentRapidFireMode);
@@ -25710,66 +25880,243 @@ function finishQuiz(){
   }
 }
 
+// ---------- End-of-test results: graphs, then a full question-by-question review ----------
+function correctLetterOf(q){ return (q.CorrectAnswer || '').trim().toUpperCase(); }
+
+// Which kind of test just finished — read at the very top of finishQuiz, before it resets the flags.
+function detectResultMode(){
+  if(mockTestActive) return 'mock';
+  if(pastQuestionActive) return 'past';
+  if(currentTournamentWeekKey) return 'weekly';
+  if(currentMonthlyTournamentMonthKey) return 'monthly';
+  if(currentRapidFireMode) return 'rapid';
+  if(isLearningQuiz()) return 'revision';
+  if(currentSetInfo && currentSetInfo.setNumber > 0) return 'set';
+  return 'other';
+}
+
+// Ring chart of correct / wrong / skipped, with overall accuracy in the middle. Colours go through
+// style="" (not presentation attributes) so the CSS variables resolve reliably.
+function donutSvg(correct, wrong, skipped){
+  const total = (correct + wrong + skipped) || 1;
+  const R = 42, C = 2 * Math.PI * R;
+  let offset = 0, rings = '';
+  [[correct, 'var(--correct)'], [wrong, 'var(--wrong)'], [skipped, 'rgba(148,163,184,0.6)']].forEach(([n, color]) => {
+    if(n <= 0) return;
+    const len = C * n / total;
+    rings += `<circle cx="60" cy="60" r="${R}" fill="none" style="stroke:${color}" stroke-width="14" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 60 60)"/>`;
+    offset += len;
+  });
+  const pct = Math.round(correct / total * 100);
+  return `<svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="${pct}% correct">
+    <circle cx="60" cy="60" r="${R}" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="14"/>
+    ${rings}
+    <text x="60" y="61" text-anchor="middle" font-size="23" font-weight="700" fill="#FFFFFF" font-family="JetBrains Mono, monospace">${pct}%</text>
+    <text x="60" y="78" text-anchor="middle" font-size="9" fill="#E2E8F0" font-family="Inter, sans-serif">correct</text>
+  </svg>`;
+}
+
+// Real score history for the kind of test just taken: recent Mock Tests / Past Papers / Tournaments
+// (already logged by finishQuiz before this runs), or every completed Set of the current subject.
+function trendItemsFor(mode){
+  const shortDate = h => (h && h.date) ? String(h.date).slice(5) : '';
+  const fromHistory = hist => hist.slice(0, 8).reverse().map((h, idx, arr) => ({ label: shortDate(h), pct: h.pct || 0, current: idx === arr.length - 1 }));
+  if(mode === 'mock') return { title: 'Your Mock Test scores', items: fromHistory(getMockTestHistory()) };
+  if(mode === 'past') return { title: 'Your Past Paper scores', items: fromHistory(getPastQuestionHistory()) };
+  if(mode === 'weekly') return { title: 'Your Tournament scores', items: fromHistory(getTournamentHistory()) };
+  if(mode === 'monthly') return { title: 'Your Tournament scores', items: fromHistory(getMonthlyTournamentHistory()) };
+  if(mode === 'set' && currentSetInfo){
+    const progress = loadProgress();
+    const entry = progress[progressKey(currentSetInfo.subject)];
+    const scores = (entry && entry.scores) || {};
+    const items = Object.keys(scores).map(Number).sort((a, b) => a - b).map(n => {
+      const s = scores[n], tot = s.correct + s.wrong + s.skipped;
+      return { label: 'Set ' + n, pct: tot > 0 ? Math.round(s.correct / tot * 100) : 0, current: n === currentSetInfo.setNumber };
+    });
+    return { title: 'Set-wise accuracy', items };
+  }
+  return { title: '', items: [] };
+}
+
+function renderResultInsights(mode, correct, wrong, skipped){
+  const box = document.getElementById('resultCharts');
+  if(!box) return;
+  const total = correct + wrong + skipped;
+  if(total === 0){ box.innerHTML = ''; return; }
+  const attempted = correct + wrong;
+  const overview = `
+    <div class="result-chart-card">
+      <h4>Performance</h4>
+      <div class="rc-donut-wrap">
+        ${donutSvg(correct, wrong, skipped)}
+        <div class="rc-legend">
+          <div class="rc-legend-row"><span class="rc-legend-dot" style="background:var(--correct)"></span>Correct<b>${correct}</b></div>
+          <div class="rc-legend-row"><span class="rc-legend-dot" style="background:var(--wrong)"></span>Wrong<b>${wrong}</b></div>
+          <div class="rc-legend-row"><span class="rc-legend-dot" style="background:rgba(148,163,184,0.6)"></span>Skipped<b>${skipped}</b></div>
+          <div class="rc-legend-note">Attempted ${attempted} of ${total}${attempted > 0 ? ' · ' + Math.round(correct / attempted * 100) + '% of your attempts were right' : ''}</div>
+        </div>
+      </div>
+    </div>`;
+
+  const trend = trendItemsFor(mode);
+  let trendHtml = '';
+  if(trend.items.length >= 2){
+    const bars = trend.items.map(it => `
+      <div class="rc-bar-col">
+        <div class="rc-bar-val">${it.pct}%</div>
+        <div class="rc-bar${it.current ? ' current' : ''}" style="height:${Math.max(3, Math.round(it.pct * 0.7))}px"></div>
+        <div class="rc-bar-label">${it.label}</div>
+      </div>`).join('');
+    trendHtml = `
+      <div class="result-chart-card">
+        <h4>${trend.title}</h4>
+        <div class="rc-bars">${bars}</div>
+        <div class="rc-legend-note" style="margin-top:8px;">The highlighted bar is this attempt.</div>
+      </div>`;
+  }
+  box.innerHTML = overview + trendHtml;
+}
+
+// Subject-wise bars (or chapter-wise, for a single-subject Set). Weakest first — the most useful thing to see.
 function renderSubjectBreakdown(){
   const wrap = document.getElementById('subjectBreakdown');
+  const subjects = new Set(quizQuestions.map(q => q.Subject || 'General'));
+  let field = null;
+  if(subjects.size > 1) field = 'Subject';
+  else if(new Set(quizQuestions.map(q => q.Chapter).filter(Boolean)).size > 1) field = 'Chapter';
+  if(!field){ wrap.innerHTML = ''; return; }
 
-  // Only meaningful for mixed-subject quizzes (Mock Test / All Subjects) — a single-subject
-  // Set already IS one subject, so a "breakdown" wouldn't add anything useful there.
-  const subjectsInThisQuiz = new Set(quizQuestions.map(q => q.Subject || 'General'));
-  if(currentSetInfo || subjectsInThisQuiz.size <= 1){
-    wrap.innerHTML = '';
-    return;
-  }
-
-  const bySubject = {};
+  const groups = {};
   quizQuestions.forEach((q, i) => {
-    const subj = q.Subject || 'General';
-    if(!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0 };
-    bySubject[subj].total++;
-    if(answers[i] && answers[i].correct) bySubject[subj].correct++;
+    const name = q[field] || (field === 'Subject' ? 'General' : 'Other');
+    if(!groups[name]) groups[name] = { correct: 0, total: 0 };
+    groups[name].total++;
+    if(answers[i] && answers[i].correct) groups[name].correct++;
   });
-
-  const rows = Object.keys(bySubject).map(subj => {
-    const { correct, total } = bySubject[subj];
+  const rows = Object.keys(groups).map(name => {
+    const { correct, total } = groups[name];
     const pct = Math.round((correct / total) * 100);
-    const icon = pct >= 80 ? '✅' : pct >= 50 ? '👍' : '⚠️';
-    const label = pct >= 80 ? 'Strong!' : pct >= 50 ? '' : 'Weak area!';
-    return { subj, correct, total, pct, icon, label };
-  }).sort((a, b) => a.pct - b.pct); // weakest first, most useful to see right away
+    const tier = pct >= 80 ? { label: 'Strong', color: 'var(--correct)' }
+               : pct >= 50 ? { label: 'Average', color: 'var(--gold)' }
+               : { label: 'Weak', color: 'var(--wrong)' };
+    return { name, correct, total, pct, tier };
+  }).sort((a, b) => a.pct - b.pct);
 
   const weakest = rows[0];
-
+  const canRecommend = field === 'Subject' && weakest && weakest.pct < 80;
   wrap.innerHTML = `
-    <div class="breakdown-wrap">
-      <h4>Subject-wise Breakdown</h4>
+    <div class="result-chart-card">
+      <h4>${field}-wise Performance</h4>
       ${rows.map(r => `
-        <div class="breakdown-row">
-          <div class="br-subject">${r.subj}</div>
-          <div class="br-score">${r.correct}/${r.total}</div>
-          <div>${r.icon} ${r.label}</div>
-        </div>
-      `).join('')}
-      ${weakest && weakest.pct < 80 ? `
-        <div class="breakdown-recommend">Recommended: Practice more ${weakest.subj}</div>
-        <button class="start-btn" id="practiceWeakBtn" style="margin-top:10px;">Practice ${weakest.subj} Now</button>
-      ` : ''}
-    </div>
-  `;
+        <div class="rc-hbar-row">
+          <div class="rc-hbar-top"><span>${r.name}</span><span>${r.correct}/${r.total} · <b style="color:${r.tier.color}">${r.tier.label}</b></span></div>
+          <div class="rc-hbar-track"><div class="rc-hbar-fill" style="width:${r.pct}%; background:${r.tier.color};"></div></div>
+        </div>`).join('')}
+      ${canRecommend ? `
+        <div class="breakdown-recommend">Recommended: Practice more ${weakest.name}</div>
+        <button class="start-btn" id="practiceWeakBtn" style="margin-top:10px;">Practice ${weakest.name} Now</button>` : ''}
+    </div>`;
 
-  if(weakest && weakest.pct < 80){
+  if(canRecommend){
     document.getElementById('practiceWeakBtn').addEventListener('click', () => {
       setSelectBackTarget = homeScreen;
-      openSetSelect(weakest.subj);
+      openSetSelect(weakest.name);
     });
   }
 }
 
+// One full review card per question: the question, all options with your answer and the right answer
+// marked, and the complete explanation.
 function reviewRow(q, i, status, chosen){
-  const color = status === 'Correct' ? 'var(--correct)' : status === 'Wrong' ? 'var(--wrong)' : 'var(--ink-soft)';
-  return `<div class="review-item">
-    <div class="rq">Q${i+1}. ${q.Question}</div>
-    <div style="color:${color}; font-weight:600;">${status}${chosen !== '—' ? ' — your answer: ' + chosen : ''} (Correct: ${q.CorrectAnswer})</div>
+  const right = correctLetterOf(q);
+  const optsHtml = ['A', 'B', 'C', 'D'].map(L => {
+    const text = q['Option' + L];
+    const isRight = L === right, isChosen = chosen === L;
+    if((text === undefined || text === null || String(text).trim() === '') && !isRight) return '';
+    let mark = '';
+    if(isRight && isChosen) mark = 'Your answer · Correct';
+    else if(isRight) mark = 'Correct answer';
+    else if(isChosen) mark = 'Your answer';
+    return `<div class="rv-opt${isRight ? ' correct' : (isChosen ? ' chosen-wrong' : '')}">
+      <span class="rv-bubble">${L}</span><span class="rv-text">${text || ''}</span>${mark ? `<span class="rv-mark">${mark}</span>` : ''}
+    </div>`;
+  }).join('');
+
+  const note = status === 'Skipped' ? '<div class="rc-legend-note" style="margin:-2px 0 8px;">You did not answer this question.</div>'
+             : chosen === 'IDK' ? '<div class="rc-legend-note" style="margin:-2px 0 8px;">You marked this as "I don\'t know".</div>' : '';
+  const tag = ((q.Subject || '') + (q.Chapter ? ' · ' + q.Chapter : '')).trim();
+  const explanation = q.Explanation
+    ? `<div class="rv-exp"><div class="rv-exp-title">Explanation</div>${q.Explanation}</div>`
+    : `<div class="rv-exp rv-exp-none">No explanation is available for this question yet.</div>`;
+  return `<div class="rv-card" id="rv-q${i}" data-status="${status}">
+    <div class="rv-head">
+      <span class="rv-num">Q${i + 1}</span>
+      <span class="rv-pill ${status.toLowerCase()}">${status}</span>
+      ${tag ? `<span class="rv-tag">${tag}</span>` : ''}
+    </div>
+    <div class="rv-q">${q.Question}</div>
+    ${note}
+    <div class="rv-opts">${optsHtml}</div>
+    ${explanation}
+    <div class="rv-actions">
+      <button class="rv-act" data-act="bookmark" data-idx="${i}">${isBookmarked(q) ? 'Bookmarked' : 'Bookmark'}</button>
+      ${q.Explanation ? `<button class="rv-act" data-act="listen" data-idx="${i}">Listen</button><button class="rv-act" data-act="save" data-idx="${i}">Save to Notes</button>` : ''}
+    </div>
   </div>`;
+}
+
+// Question map (tap a number to jump to it) + filter chips + the review cards themselves.
+function buildReviewSection(statuses, reviewHtml){
+  const wrap = document.getElementById('reviewList');
+  const counts = { Correct: 0, Wrong: 0, Skipped: 0 };
+  statuses.forEach(s => { counts[s]++; });
+  const map = statuses.map((s, i) => `<button class="rc-qcell ${s.toLowerCase()}" data-jump="${i}" aria-label="Question ${i + 1}: ${s}">${i + 1}</button>`).join('');
+  wrap.innerHTML = `
+    <div class="result-chart-card">
+      <h4>Question map</h4>
+      <div class="rc-qmap">${map}</div>
+      <div class="rc-legend-note" style="margin-top:10px;">Green = correct, red = wrong, grey = skipped. Tap a number to jump to its explanation.</div>
+    </div>
+    <div class="section-title" style="margin:6px 0 10px;">Detailed Review</div>
+    <div class="rv-filters">
+      <button class="rv-chip active" data-rv-filter="all">All (${statuses.length})</button>
+      <button class="rv-chip" data-rv-filter="Wrong">Wrong (${counts.Wrong})</button>
+      <button class="rv-chip" data-rv-filter="Skipped">Skipped (${counts.Skipped})</button>
+      <button class="rv-chip" data-rv-filter="Correct">Correct (${counts.Correct})</button>
+    </div>
+    <div id="rvCards">${reviewHtml.join('')}</div>`;
+  wrap.onclick = handleReviewClick; // assigned (not added) so re-rendering can never stack duplicate listeners
+}
+function handleReviewClick(e){
+  const chip = e.target.closest('[data-rv-filter]');
+  if(chip){
+    const f = chip.dataset.rvFilter;
+    document.querySelectorAll('#reviewList .rv-chip').forEach(ch => ch.classList.toggle('active', ch === chip));
+    document.querySelectorAll('#reviewList .rv-card').forEach(card => {
+      card.style.display = (f === 'all' || card.dataset.status === f) ? '' : 'none';
+    });
+    return;
+  }
+  const jump = e.target.closest('[data-jump]');
+  if(jump){
+    const allChip = document.querySelector('#reviewList [data-rv-filter="all"]');
+    if(allChip) allChip.click(); // never jump to a card that an active filter is hiding
+    const card = document.getElementById('rv-q' + jump.dataset.jump);
+    if(card){
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      card.classList.add('flash');
+      setTimeout(() => card.classList.remove('flash'), 1600);
+    }
+    return;
+  }
+  const act = e.target.closest('[data-act]');
+  if(act){
+    const q = quizQuestions[Number(act.dataset.idx)];
+    if(!q) return;
+    if(act.dataset.act === 'bookmark'){ toggleBookmark(q); act.textContent = isBookmarked(q) ? 'Bookmarked' : 'Bookmark'; }
+    else if(act.dataset.act === 'listen'){ speakText(q.Explanation || '', act); }
+    else if(act.dataset.act === 'save'){ saveQuestionToNotes(q); act.textContent = 'Saved to Notes'; }
+  }
 }
 
 // (restartBtn's handler is declared near the top of the script for safety, see ~line 7966)
