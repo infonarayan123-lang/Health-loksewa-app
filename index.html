@@ -7396,77 +7396,38 @@
     return window.checkAndIncrementAiFeatureUsage('chat', 10);
   };
 
-  // ---- Mock Test usage limit: first 2 EVER free, then 1 per calendar week free, rest Premium ----
-  function getIsoWeekKey(d){
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    const dayNum = date.getUTCDay() || 7;
-    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    const weekNum = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-    return date.getUTCFullYear() + '-W' + weekNum;
-  }
-
+  // getIsoWeekKey moved to the backend (see checkMockTestLimit in apps-script-v5.js) — the
+  // client no longer computes this itself.
   window.checkAndIncrementMockTestUsage = async function(){
     const user = auth.currentUser;
     if(!user) return { allowed: true }; // fail open if somehow not logged in
 
-    // Widened to also cover checkPremiumStatus() — see the note on checkAndIncrementAiFeatureUsage
-    // above; that call has no error handling of its own, and left uncaught here it would silently
-    // block a Mock Test from ever starting purely because of a transient network hiccup.
+    // Moved to the backend (see checkMockTestLimit in apps-script-v5.js) — same reason as
+    // checkAndIncrementAiFeatureUsage above: the client-side version wrote its own counters
+    // directly, and the Firestore Rule that lets a user write their own document couldn't tell
+    // that apart from the user resetting those same counters via the browser console. The
+    // backend now owns the whole read-check-increment-write cycle using its own privileged
+    // access; the client only ever asks "am I allowed?" and gets back a yes/no.
     try{
-      const isPremium = await window.checkPremiumStatus();
-      if(isPremium) return { allowed: true };
-
-      const ref = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      const data = snap.exists() ? snap.data() : {};
-      const totalCount = data.mockTestTotalCount || 0;
-
-      // First 2 attempts ever are free, no matter the week
-      if(totalCount < 2){
-        await setDoc(ref, { mockTestTotalCount: totalCount + 1 }, { merge: true });
-        return { allowed: true };
-      }
-
-      // After that: 1 free attempt per calendar week
-      const currentWeekKey = getIsoWeekKey(new Date());
-      const alreadyUsedThisWeek = data.mockTestWeekKey === currentWeekKey && data.mockTestWeekUsed === true;
-      if(alreadyUsedThisWeek){
-        return { allowed: false };
-      }
-      await setDoc(ref, {
-        mockTestTotalCount: totalCount + 1,
-        mockTestWeekKey: currentWeekKey,
-        mockTestWeekUsed: true
-      }, { merge: true });
-      return { allowed: true };
+      const res = await fetch(`${window.SHEET_API_URL}?action=checkMockTestLimit&uid=${encodeURIComponent(user.uid)}`);
+      return await res.json();
     }catch(err){
-      return { allowed: true }; // fail open on error
+      return { allowed: true }; // fail open on error — don't block a real attempt due to a glitch
     }
   };
 
   // ---- Past Questions usage limit: first 2 DISTINCT papers free, rest Premium ----
   // Re-opening a paper you've already unlocked stays free — the limit is on how many
   // different papers you've ever started, not on repeat attempts of the same paper.
+  // Moved to the backend (see checkPastQuestionLimit in apps-script-v5.js) — same migration,
+  // same reason, as the two usage limiters above.
   window.checkAndRecordPastQuestionAccess = async function(paperName){
     const user = auth.currentUser;
     if(!user) return { allowed: true };
 
-    // Widened to also cover checkPremiumStatus() — see the note on checkAndIncrementAiFeatureUsage above.
     try{
-      const isPremium = await window.checkPremiumStatus();
-      if(isPremium) return { allowed: true };
-
-      const ref = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
-      const data = snap.exists() ? snap.data() : {};
-      const opened = data.pastQuestionsOpened || [];
-
-      if(opened.includes(paperName)) return { allowed: true }; // already unlocked before
-      if(opened.length >= 2) return { allowed: false };
-
-      await setDoc(ref, { pastQuestionsOpened: [...opened, paperName] }, { merge: true });
-      return { allowed: true };
+      const res = await fetch(`${window.SHEET_API_URL}?action=checkPastQuestionLimit&uid=${encodeURIComponent(user.uid)}&paperName=${encodeURIComponent(paperName)}`);
+      return await res.json();
     }catch(err){
       return { allowed: true }; // fail open on error
     }
@@ -7977,7 +7938,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxEI-lqw1w4dXPbaPGT0b7dTvQa28KN0fBOUo2D7F0BoQVe1YfPglenPUS5Nt1Fk5EJ0Q/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzM5ZB8MCu8dJnqzfNIwOFJehNxbrjfekdkFFDouYtQH84vUA62y2A7oGYreRbpgHWlyQ/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
