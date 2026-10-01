@@ -6914,13 +6914,33 @@
   };
 
   const LP_PERIOD_FIELD = { today: 'todayLP', week: 'weekLP', month: 'monthLP', all: 'learningPoints' };
+  // A student's Today/Week/Month points are only saved when THAT student uses the app, so a
+  // student who was active last week but not yet this week still has last week's weekLP stored.
+  // Without this check, Monday's "This Week" board showed last week's points (same for Today and
+  // This Month). Points count only if they were saved inside the current period — exactly the same
+  // period boundaries the app uses when it calculates them (local midnight, Monday, 1st of month).
+  // All Time points never expire.
+  function hlLbFreshPoints_(d, field, period){
+    const value = Number(d && d[field]) || 0;
+    if(!period || period === 'all' || field === 'learningPoints') return value;
+    const start = new Date(); start.setHours(0,0,0,0);
+    if(period === 'week') start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    else if(period === 'month') start.setDate(1);
+    const saved = d && d.updatedAt ? new Date(d.updatedAt) : null;
+    if(!saved || isNaN(saved.getTime()) || saved < start) return 0;
+    return value;
+  }
   window.fetchLeaderboard = async function(period, subject){
     const sortField = LP_PERIOD_FIELD[period] || 'weekLP';
     try{
       const q = query(collection(db, 'leaderboard'), orderBy(sortField, 'desc'), limit(100));
       const snap = await getDocs(q);
       const results = [];
-      snap.forEach(docSnap => results.push({ uid: docSnap.id, ...docSnap.data() }));
+      snap.forEach(docSnap => {
+        const row = { uid: docSnap.id, ...docSnap.data() };
+        row[sortField] = hlLbFreshPoints_(row, sortField, period); // old-period points count as 0
+        results.push(row);
+      });
       if(subject){
         // Subject view: re-rank the same pool by that subject's points specifically
         results.sort((a, b) => ((b.subjectPoints || {})[subject] || 0) - ((a.subjectPoints || {})[subject] || 0));
@@ -7281,7 +7301,7 @@
           results.push({
             uid, name: memberNames[uid] || 'Student',
             overallPct: d.overallPct || 0,
-            displayPoints: d[field] || 0,
+            displayPoints: hlLbFreshPoints_(d, field, period), // old-period points count as 0
             totalAttempted: d.totalAttempted || 0,
           });
         }catch(e){
