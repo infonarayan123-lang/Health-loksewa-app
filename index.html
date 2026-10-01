@@ -13222,7 +13222,9 @@ async function renderHealthGuide(){
         ${groups[cat].map((r, i) => `
           <div class="faq-item" data-hg="${cat}-${i}">
             <div class="faq-question"><span>${r.Title}</span><span class="faq-chevron">▾</span></div>
-            <div class="faq-answer">${r.Content}</div>
+            <div class="faq-answer">${r.Content}
+              <div style="margin-top:10px;"><button class="hg-ai-btn" data-cat="${encodeURIComponent(cat)}" data-i="${i}" style="background:none; border:1px solid var(--line); border-radius:8px; color:var(--ink-soft); font-size:12px; font-weight:600; padding:6px 10px; cursor:pointer;">Ask AI about this</button></div>
+            </div>
           </div>
         `).join('')}
       </div>
@@ -13231,6 +13233,14 @@ async function renderHealthGuide(){
     document.querySelectorAll('#healthGuideContent .faq-item').forEach(item => {
       item.querySelector('.faq-question').addEventListener('click', () => {
         item.classList.toggle('open');
+      });
+    });
+    wrap.querySelectorAll('.hg-ai-btn').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const r = (groups[decodeURIComponent(btn.dataset.cat)] || [])[parseInt(btn.dataset.i, 10)];
+        if(!r) return;
+        openAiChatWithPrompt(`Explain this health topic in simple English for a Nepal Loksewa (PHO / Health Inspector) exam candidate, with key points to remember and 2 likely exam questions.\n\nTopic: ${aiPromptPlainText_(r.Title, 300)}\nNotes: ${aiPromptPlainText_(r.Content, 700)}`);
       });
     });
   }catch(err){
@@ -15540,6 +15550,7 @@ function renderMistakeBook(){
           <div class="bq-text">${q.Question}</div>
           <div style="font-size:10.5px; color:var(--ink-soft); margin-top:2px;">Wrong ${q.wrongCount || 1}× · Correct reviews ${q.correctReviews || 0}</div>
           <button class="bookmark-remove-btn" data-key="${encodeURIComponent(questionKey(q))}">✕ Remove</button>
+          <button class="mistake-ai-btn" data-key="${encodeURIComponent(questionKey(q))}" style="font-size:11.5px; color:var(--ink-soft); background:none; border:none; font-weight:700; cursor:pointer; padding:0; margin-left:16px;">Ask AI</button>
         </div>
       `;
     }).join('');
@@ -15551,6 +15562,15 @@ function renderMistakeBook(){
     `;
   }).join('');
 
+  wrap.querySelectorAll('.mistake-ai-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = decodeURIComponent(btn.dataset.key);
+      const q = filtered.find(w => questionKey(w) === key);
+      if(!q) return;
+      const opts = ['A','B','C','D'].filter(L => q['Option' + L]).map(L => `${L}) ${aiPromptPlainText_(q['Option' + L], 200)}`).join('\n');
+      openAiChatWithPrompt(`I got this MCQ wrong in my Loksewa practice. Explain in simple English why the correct answer is right, why the other options are wrong, and give me one easy memory tip.\n\nQuestion: ${aiPromptPlainText_(q.Question, 500)}${opts ? '\n' + opts : ''}${q.CorrectAnswer ? '\nCorrect answer: ' + aiPromptPlainText_(q.CorrectAnswer, 200) : ''}${q.lastWrongAnswer ? '\nMy answer: ' + q.lastWrongAnswer : ''}`);
+    });
+  });
   document.querySelectorAll('#mistakeBookContent .bookmark-remove-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = decodeURIComponent(btn.dataset.key);
@@ -22188,9 +22208,17 @@ function renderNewsArticleCards(articles, sourceName){
         <button class="news-save-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">${isNewsSaved(a.Link) ? 'Saved' : 'Save'}</button>
         <button class="news-share-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">Share</button>
         <button class="news-note-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">Note</button>
+        <button class="news-ai-btn" data-idx="${i}" style="flex:1; background:none; border:none; color:var(--ink-soft); font-size:12px; padding:6px; cursor:pointer;">Ask AI</button>
       </div>
     </div>
   `).join('');
+  listEl.querySelectorAll('.news-ai-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const article = articles[parseInt(btn.dataset.idx, 10)];
+      if(!article) return;
+      openAiChatWithPrompt(`Explain this health news in simple English for a Nepal Loksewa (PHO / Health Inspector) exam candidate: what happened, why it matters for public health in Nepal, and 2 points that could come in the exam.\n\nTitle: ${aiPromptPlainText_(article.Title, 300)}\nSummary: ${aiPromptPlainText_(article.Snippet, 600)}`);
+    });
+  });
   document.querySelectorAll('.news-save-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const article = articles[parseInt(btn.dataset.idx, 10)];
@@ -26095,6 +26123,36 @@ function handleReviewClick(e){
 // ---------- AI Assistant Chat ----------
 let chatHistory = []; // [{role:'user'|'assistant', content:'...'}]
 let chatInitialized = false;
+
+// ---------- "Ask AI" from other screens (News Portal, Health Guide, My Mistakes) ----------
+// Opens AI Chat exactly the way the Home card does (showScreen + initChat), puts a ready-made
+// question in the message box, and lets the student press Send themselves. Nothing is sent and
+// no daily AI use is counted unless they choose to send. Sending uses the normal, secured
+// sendChatMessage, so it counts under the AI Chat limit like any typed message.
+function openAiChatWithPrompt(text){
+  try{
+    showScreen(aiChatScreen);
+    initChat();
+    const input = document.getElementById('chatInput');
+    if(!input) return;
+    // The chat box is a single-line input, which silently deletes line breaks and would glue
+    // "...exam.Title: ..." together — so line breaks become spaces here, in this one place.
+    input.value = String(text || '').replace(/\s*\n+\s*/g, ' ').trim();
+    pendingChatTaskType = null; // plain chat routing, same as a typed message
+    input.focus();
+    input.setSelectionRange(0, 0);
+    input.scrollLeft = 0;
+  }catch(e){ if(window.showDebugError) showDebugError('Ask AI failed to open: ' + (e && e.message ? e.message : String(e))); }
+}
+// HTML -> plain text for a prompt. DOMParser builds an inert document: no scripts or image
+// handlers ever run, unlike setting innerHTML on a temporary element.
+function aiPromptPlainText_(html, maxLen){
+  let text = '';
+  try{ text = new DOMParser().parseFromString(String(html || ''), 'text/html').body.textContent || ''; }
+  catch(e){ text = String(html || ''); }
+  text = text.replace(/\s+/g, ' ').trim();
+  return (maxLen && text.length > maxLen) ? text.slice(0, maxLen) + '…' : text;
+}
 
 let CHAT_GREETING;
 try{
