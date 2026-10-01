@@ -8599,8 +8599,46 @@ SCREEN_REFRESH_MAP = {
   sevenDayRevisionScreen: () => render7DayPlan(),
   subjectProgressScreen: () => renderSubjectProgressList(),
   screenTimeScreen: () => renderScreenTimeDashboard(),
+  // ---- Detail/reader screens (added later). Each re-runs that screen's own existing "open"
+  // function for the SAME item it is showing — verified to only redraw (no points, counters or
+  // logs), and showScreen() adds no history entry when the screen is already the active one.
+  // Every entry first checks the item is known, so it silently does nothing otherwise.
+  // Remember: this map also runs when you come BACK to a screen (hlRefreshAfterBack).
+  // Deliberately NOT added: Health Dictionary (fixed list of links), English-Nepali Dictionary
+  // (its opener clears the search box — would erase what the student typed), Note Reader (shows
+  // the note currently open in the editor — nothing newer exists to load).
+  subjectDetailScreen: () => hlDetailRefresh_(() => { if(currentSubjectDetail) openSubjectDetail(currentSubjectDetail); }),
+  quickRefDetailScreen: () => hlDetailRefresh_(() => { const st = (document.getElementById('qrBookmarkBtn') || {}).dataset; if(st && st.subtopic) openQuickRefSubtopic(st.subtopic); }),
+  fcDeckDetailScreen: () => hlDetailRefresh_(() => { if(fcCurrentDeckId) openFcDeckDetail(fcCurrentDeckId); }),
+  mnemonicDetailScreen: () => hlDetailRefresh_(() => { if(currentMnemonicDetail) openMnemonicDetail(currentMnemonicDetail); }),
+  healthDayDetailScreen: () => hlDetailRefresh_(() => { if(currentHealthDayDetail) openHealthDayDetail(currentHealthDayDetail); }),
+  inspirationHubScreen: () => hlDetailRefresh_(() => refreshInspirationHub_()),
+  inspirationDetailScreen: () => hlDetailRefresh_(() => {
+    const title = (document.getElementById('inspDetailTitle') || {}).textContent || '';
+    const story = title && (inspirationStories || []).find(st => st && st.Title === title);
+    if(story) openInspirationDetail(story);
+  }),
+  groupPreviewScreen: () => hlDetailRefresh_(() => { if(currentPreviewCode) return openGroupPreview(currentPreviewCode); }),
+  discussionThreadScreen: () => hlDetailRefresh_(() => { if(currentDiscussionId && currentGroupDetailCode) return openDiscussionThread(currentDiscussionId); }),
+  docListScreen: () => hlDetailRefresh_(() => {
+    const t = document.getElementById('docListTitle');
+    if(t && t.dataset.sheet) return openDocList(t.textContent, t.dataset.sheet, docListBackTarget);
+  }),
+  setSelectScreen: () => hlDetailRefresh_(() => { const t = document.getElementById('setSelectTitle'); if(t && t.textContent) openSetSelect(t.textContent); }),
+  revisionTopicPickScreen: () => hlDetailRefresh_(() => { if(revisionPickedSubject) openRevisionTopicPicker(revisionPickedSubject); }),
 };
 }catch(err){ SCREEN_REFRESH_MAP = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SCREEN_REFRESH_MAP" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+
+// Runs one detail-screen refresh. Network problems (e.g. briefly offline while refreshing a
+// discussion) are swallowed quietly — the screen simply keeps what it already shows, the same as the
+// app's other Sheet screens — instead of popping the red "Pull-to-refresh failed" box at students.
+function hlDetailRefresh_(fn){
+  try{
+    return Promise.resolve(fn()).catch(() => {});
+  }catch(e){
+    return Promise.resolve();
+  }
+}
 
 (function setupPullToRefresh(){
   let startY = 0;
@@ -12553,6 +12591,16 @@ safeOn('goToInspirationHubFromHub', 'click', async (e) => {
     if(!cached) wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px;">Could not load stories. Check your connection.</p>`;
   }
 });
+// Pull-to-refresh for the Inspiration Hub — the same loading its opening button does, but without
+// navigating or blanking what is already on screen. The original button handler is unchanged.
+async function refreshInspirationHub_(){
+  const res = await fetch(`${SHEET_API_URL}?action=inspirationHub`);
+  const fresh = await res.json();
+  if(!Array.isArray(fresh)) return;
+  inspirationStories = fresh;
+  try{ localStorage.setItem('hl_cache_inspiration', JSON.stringify(inspirationStories)); }catch(e){}
+  renderInspirationHubList();
+}
 function renderInspirationHubList(){
   const wrap = document.getElementById('inspirationHubList');
   const stories = inspirationStories.filter(s => s && s.Title);
@@ -22517,6 +22565,7 @@ function paintDocList(items){
 
 async function openDocList(title, sheetName, backTarget){
   document.getElementById('docListTitle').textContent = title;
+  document.getElementById('docListTitle').dataset.sheet = sheetName; // lets pull-to-refresh reload the same list
   docListBackTarget = backTarget;
   showScreen(docListScreen);
 
