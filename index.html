@@ -7944,7 +7944,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzHnW-ece47HMPqMMIDIs54UGQgvtcLxEdDqmdO8sSO0Y4qYY6J_UXVjxxEqIsrL9UQGw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyu_2b9370OBonHr-Tg5qt9yG1PM5oH7u6jrtYOD0jMiTPLw_3lpMjtYdPSZ7H04DWU/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -14168,6 +14168,18 @@ function fetchWithTimeout(url, timeoutMs = 35000){
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timeoutId));
 }
+// Same as fetchWithTimeout, but a POST with a JSON body (text/plain avoids the CORS preflight,
+// same as the AI requests). Used by the secure Mock Test / Past Questions requests.
+function postJsonWithTimeout(bodyObj, timeoutMs = 35000){
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(SHEET_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(bodyObj),
+    signal: controller.signal
+  }).finally(() => clearTimeout(timeoutId));
+}
 // Turns a raw error into a message someone can actually understand and act on — an AbortError's
 // real .message is a cryptic browser-internal string, so this names what actually happened instead.
 function friendlyFetchError(err){
@@ -14968,7 +14980,12 @@ function getNeedsAttentionSubjects(){
 // Falls back to the Set-based signal only when there's no mistake history yet — e.g. a new user
 // who's completed Sets but hasn't missed anything trackable yet. ----------
 function getBestWeakSubject(){
-  const attention = getNeedsAttentionSubjects();
+  // Past papers can only be opened from Past Questions now, so a subject that is really a past
+  // paper's name (wrong questions from a paper are saved with a PastPaper field) is skipped here
+  // — otherwise Rapid Fire's weak mode would ask for a paper and get nothing back.
+  let paperNames = new Set();
+  try{ paperNames = new Set(getWrongQuestions().map(w => w.PastPaper).filter(Boolean)); }catch(e){}
+  const attention = getNeedsAttentionSubjects().filter(a => !paperNames.has(a.subject));
   if(attention.length > 0) return attention[0].subject;
   const stats = computeProgressStats();
   return stats.weakest ? stats.weakest.subject : null;
@@ -23428,9 +23445,32 @@ async function startMockTest(post){
   mockTestActive = true;
   showQuizLoading('Please wait, loading your Mock Test… this may take a moment.');
   try{
-    const url = `${SHEET_API_URL}?action=random&count=${post.questionCount}&post=${post.key}`;
-    const res = await fetchWithTimeout(url);
+    // Secure request: the backend checks the login token and counts this Mock Test in the same
+    // step that sends the questions (the questions are exactly what 'random' gave before).
+    const res = await postJsonWithTimeout({
+      action: 'mockTestQuestions',
+      idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
+      count: post.questionCount,
+      post: post.key
+    });
     const pool = await res.json();
+
+    if(!Array.isArray(pool)){
+      hideQuizLoading();
+      mockTestActive = false;
+      if(pool && pool.error === 'limit'){
+        if(await showPremiumLockModal('You\'ve used your free Mock Test for this week. Upgrade to Premium for unlimited Mock Tests?')){
+          premiumBackTarget = mockPostScreen;
+          showScreen(upgradeScreen);
+          renderPremiumStatus();
+        }
+      } else if(pool && pool.error === 'auth'){
+        alert('Please close the app completely and open it again, then try once more.');
+      } else {
+        alert('Could not load the mock test right now. Please try again.');
+      }
+      return;
+    }
 
     if(pool.length === 0){
       hideQuizLoading();
@@ -23554,9 +23594,32 @@ async function startPastQuestionPaper(paperName){
   pastQuestionActive = true;
   showQuizLoading('Please wait, loading this paper… this may take a moment.');
   try{
-    const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(paperName)}&setNumber=1&setSize=200&post=${currentMcqPost}`;
-    const res = await fetchWithTimeout(url);
+    // Secure request: the backend checks the login token and records this paper in the same
+    // step that sends it. Past papers can no longer be loaded through the public requests.
+    const res = await postJsonWithTimeout({
+      action: 'pastQuestionPaper',
+      idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
+      paperName: paperName,
+      post: currentMcqPost
+    });
     const pool = await res.json();
+
+    if(!Array.isArray(pool)){
+      hideQuizLoading();
+      pastQuestionActive = false;
+      if(pool && pool.error === 'limit'){
+        if(await showPremiumLockModal('You\'ve used your 2 free Past Question papers. Upgrade to Premium for unlimited access?')){
+          premiumBackTarget = pastQuestionsYearScreen;
+          showScreen(upgradeScreen);
+          renderPremiumStatus();
+        }
+      } else if(pool && pool.error === 'auth'){
+        alert('Please close the app completely and open it again, then try once more.');
+      } else {
+        alert('Could not load this paper right now. Please try again.');
+      }
+      return;
+    }
 
     if(pool.length === 0){
       hideQuizLoading();
