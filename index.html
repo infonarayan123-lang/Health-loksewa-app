@@ -7368,6 +7368,12 @@
   // so incrementing one feature's count can never clobber another's (each is its own nested
   // field, not a shared object rewritten wholesale). Every AI-consuming feature calls this with
   // its own key and its own daily limit, rather than sharing one combined bucket.
+  // Login token sent with every AI request, so the backend can check the daily limit for the
+  // real, verified user (not just a user ID the phone claims). Firebase refreshes it itself.
+  // Returns '' if not available; the backend then politely asks the user to reopen the app.
+  window.getAiAuthToken = async function(){
+    try{ const u = auth.currentUser; return u ? await u.getIdToken() : ''; }catch(e){ return ''; }
+  };
   window.checkAndIncrementAiFeatureUsage = async function(featureKey, freeLimit){
     const user = auth.currentUser;
     if(!user) return { allowed: true, remaining: 999 }; // fail open if somehow not logged in
@@ -7938,7 +7944,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzxDXYOd4TfpzrdhCGY_WTNv_uk_9EHVyWb8toJ7AizoHWpEIbE5mJskFR5--nfqiNC/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzHnW-ece47HMPqMMIDIs54UGQgvtcLxEdDqmdO8sSO0Y4qYY6J_UXVjxxEqIsrL9UQGw/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -17410,6 +17416,8 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           action: 'chat',
+          featureKey: 'notesAi',
+          idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
           taskType: AI_ACTION_TASK_TYPES[btn.dataset.aiAction] || 'chat',
           preferredProvider: getAiProviderPreference(),
           message: `${NOTE_AI_PROMPTS[btn.dataset.aiAction]}\n\n${sourceText}`,
@@ -24437,6 +24445,8 @@ safeOn('fcAiGenerateSubmitBtn', 'click', async () => {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'chat',
+        featureKey: 'flashcardGen',
+        idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
         taskType: 'flashcardGen',
         preferredProvider: getAiProviderPreference(),
         message: `Generate exactly ${num} flashcards about "${topic}" at ${difficulty} difficulty, for a Nepal health Loksewa exam candidate. Respond with ONLY a JSON array, no other text, no markdown formatting, in this exact shape: [{"front":"question text","back":"answer text"}]`,
@@ -26340,6 +26350,8 @@ async function sendChatMessage(){
       headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight issues with Apps Script
       body: JSON.stringify({
         action: 'chat',
+        featureKey: 'chat',
+        idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
         taskType: taskTypeForThisSend || 'chat',
         preferredProvider: getAiProviderPreference(),
         message: text,
@@ -26406,7 +26418,7 @@ Give: (1) a score out of 10, (2) 2-3 short bullet points on what's good, (3) 2-3
     const res = await fetch(SHEET_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'chat', taskType: 'answerCheck', preferredProvider: getAiProviderPreference(), message: prompt, history: [] })
+      body: JSON.stringify({ action: 'chat', featureKey: 'answerCheck', idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''), taskType: 'answerCheck', preferredProvider: getAiProviderPreference(), message: prompt, history: [] })
     });
     const data = await res.json();
     const reply = data.reply || "Sorry, I couldn't check that. Please try again.";
