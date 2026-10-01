@@ -7976,7 +7976,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyu_2b9370OBonHr-Tg5qt9yG1PM5oH7u6jrtYOD0jMiTPLw_3lpMjtYdPSZ7H04DWU/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbz-Uc7fCTPAWExMcPTS8T4NMOrH9qCYw1qzalNzbVdqh_AERYZ8buePcnagUmKNWaovNQ/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -19985,6 +19985,8 @@ function checkForNotificationDeepLinkAndNavigate(){
     notifications: () => { showScreen(notificationsScreen); if(window.loadNotifications) loadNotifications(); },
     healthday: () => { showScreen(healthDaysScreen); if(window.renderHealthDays) renderHealthDays(''); },
     home: () => { showScreen(homeScreen); const card = document.getElementById('cardQotd'); if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' }); },
+    // Leaderboard rank-change notifications (sent by the backend) open This Week's board
+    leaderboard: () => { showScreen(leaderboardScreen); if(typeof renderLeaderboard === 'function') renderLeaderboard(); },
   };
   const action = NOTIF_DEEPLINK_MAP[notifKey];
   if(action){
