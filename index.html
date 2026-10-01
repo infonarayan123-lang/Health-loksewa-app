@@ -7343,7 +7343,9 @@
   // ---- Premium status (Path B: manually flipped "premium: true" by Narayan in Firestore) ----
   // Accounts that always get Premium access for free, no payment needed — checked first,
   // before the normal Firestore-based paid-premium check below.
-  const FREE_PREMIUM_EMAILS = ['infonarayan1234@gmail.com', 'narayanrimal659@gmail.com'];
+  // Narayan's three accounts (confirmed Oct 2026). infonarayan123@gmail.com — his main address, also
+  // used on Contact Us — was missing from the original list.
+  const FREE_PREMIUM_EMAILS = ['infonarayan123@gmail.com', 'infonarayan1234@gmail.com', 'narayanrimal659@gmail.com'];
 
   window.getAccessStatus = async function(){
     const user = auth.currentUser;
@@ -7976,7 +7978,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyJH0cBTDp0NvRW9Q2xhZjqBT-8EfFwFMKDqwM3kyWbq3T7vW-_RbI4BZ091rj0wNHmww/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbywbvjT34921m3wyHYvzHboYp1LDRayjMr2r_VXzxBAkNfF9Cp23k6rpvkS-_nuFponcw/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -25710,7 +25712,7 @@ function renderQuestion(){
 // backend (login token checked with Google + admin email list there), so a student who forces
 // these buttons to appear still cannot change anything. Mode is remembered per device.
 // ==========================================================================================
-function hlAdminEmailsUi_(){ return ['infonarayan1234@gmail.com', 'narayanrimal659@gmail.com']; }
+function hlAdminEmailsUi_(){ return ['infonarayan123@gmail.com', 'infonarayan1234@gmail.com', 'narayanrimal659@gmail.com']; }
 function hlIsAdminUser_(){
   const email = window.currentUser && window.currentUser.email ? String(window.currentUser.email).toLowerCase() : '';
   return !!email && hlAdminEmailsUi_().includes(email);
@@ -25822,7 +25824,9 @@ function hlOpenAdminEditModal_(q){
         return;
       }
       const msg = {
-        notAdmin: 'This account is not an admin, so nothing was changed.',
+        notAdmin: (data && data.reason === 'unverified')
+          ? 'Logged in as ' + (data.email || '?') + ', but this email is not verified yet, so nothing was changed.'
+          : 'Logged in as ' + ((data && data.email) || '?') + ', which is not on the admin list, so nothing was changed.',
         auth: 'Please close the app completely and open it again, then try once more.',
         unavailable: 'Could not verify your login right now. Nothing was changed. Try again in a minute.',
         notFound: 'Could not find this exact question in the Sheet. Nothing was changed — please edit it in the Sheet.',
