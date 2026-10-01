@@ -21,6 +21,9 @@
        too. Using --ink here would go dark-on-dark in light mode, where --ink correctly becomes a
        dark color for readability against light panels but panel-elevated never lightens to match. */
     --ink-on-elevated:#FFFFFF;
+    /* Soft text on the always-dark surfaces (same value --ink-soft has in dark mode, but it never
+       changes in light mode — --ink-soft turns brown there, which is unreadable on dark navy). */
+    --ink-soft-on-elevated:#E2E8F0;
     --ink:#FFFFFF;
     --ink-soft:#E2E8F0;
     --ink-muted:#64748B;
@@ -49,6 +52,15 @@
     --line:#E4DDD1;
   }
   body.light-mode #app{ background:var(--panel); }
+  /* ---------- Text colours for LIGHT backgrounds (light-mode contrast fix) ----------
+     The bright teal/red/gold that look great on dark navy are too pale on a white page
+     (contrast ~2.5, below the 4.5 readability minimum). In dark mode each of these equals the
+     normal colour exactly, so dark mode is unchanged; in light mode they become deeper shades of
+     the same colours. Used ONLY on text that sits on a light surface. A chosen accent colour
+     (blue/emerald/violet) keeps controlling links, exactly as before. */
+  body{ --navy-on-light:var(--navy); --wrong-on-light:var(--wrong); --gold-on-light:var(--gold); }
+  body.light-mode{ --wrong-on-light:#DC2626; --gold-on-light:#8A6A00; }
+  body.light-mode:not(.accent-blue):not(.accent-emerald):not(.accent-violet){ --navy-on-light:#0F766E; }
   /* .link-card and .set-card deliberately excluded here — both already fixed to a permanent
      dark, theme-independent background elsewhere; this override (having higher specificity than
      a plain class rule) was silently undoing that fix in light mode for each of them in turn. */
@@ -317,7 +329,7 @@
   .login-toggle{
     text-align:center; margin-top:20px; font-size:13px; color:var(--ink-soft);
   }
-  .login-toggle a{ color:var(--navy); font-weight:700; text-decoration:none; margin-left:4px; }
+  .login-toggle a{ color:var(--navy-on-light); font-weight:700; text-decoration:none; margin-left:4px; }
 
   /* ---------- Top Header Bar ---------- */
   .app-header-bar{
@@ -1074,7 +1086,7 @@
     cursor:pointer; background:none; border-left:none; border-right:none; border-top:none;
     width:100%; text-align:left; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink);
   }
-  .profile-menu-item.logout{ color:var(--wrong); }
+  .profile-menu-item.logout{ color:var(--wrong-on-light); }
   .pm-icon{ font-size:17px; width:22px; text-align:center; }
 
   .profile-accordion{ border-bottom:1px solid var(--line); margin-bottom:10px; padding-bottom:6px; }
@@ -1287,7 +1299,7 @@
   .section-title{ font-family:'Tinos',serif; font-size:17px; margin:8px 0 12px; }
   .back-link{
     display:inline-flex; align-items:center; gap:6px;
-    font-size:13px; font-weight:600; color:var(--navy);
+    font-size:13px; font-weight:600; color:var(--navy-on-light);
     cursor:pointer; padding:14px 20px 0;
   }
   .content-card{
@@ -1596,7 +1608,7 @@
     font-family:'Tinos',serif;
     font-size:12.5px;
     font-weight:700;
-    color:var(--navy);
+    color:var(--navy-on-light);
     margin-bottom:2px;
   }
 
@@ -1908,7 +1920,7 @@
     <div class="app-loading-wrap" style="justify-content:center;">
       <div style="font-size:40px; margin-bottom:10px;">🔐</div>
       <div class="splash-title" style="font-size:18px;">Health Loksewa Locked</div>
-      <p style="font-size:12px; color:var(--ink-soft); margin:8px 0 20px;">Authenticate to continue</p>
+      <p style="font-size:12px; color:var(--ink-soft-on-elevated); margin:8px 0 20px;">Authenticate to continue</p>
 
       <button class="start-btn" id="appLockBiometricBtn" style="display:none; width:220px; margin-bottom:10px;">Use Fingerprint / Face</button>
       <button class="calc-btn" id="appLockUsePinInsteadBtn" style="display:none; width:220px; margin-bottom:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Use PIN Instead</button>
@@ -1930,13 +1942,13 @@
     <div class="app-loading-wrap" style="justify-content:center;">
       <div style="font-size:40px; margin-bottom:10px;">📧</div>
       <div class="splash-title" style="font-size:18px;">Verify Your Email</div>
-      <p style="font-size:12.5px; color:var(--ink-soft); margin:8px 0 4px; text-align:center; padding:0 30px;">We sent a verification link to</p>
+      <p style="font-size:12.5px; color:var(--ink-soft-on-elevated); margin:8px 0 4px; text-align:center; padding:0 30px;">We sent a verification link to</p>
       <p style="font-size:13.5px; color:var(--ink); font-weight:700; margin-bottom:16px;" id="verifyEmailAddress"></p>
-      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:24px; text-align:center; padding:0 30px; line-height:1.5;">Open your inbox, tap the link, then come back here and tap Continue.</p>
+      <p style="font-size:12px; color:var(--ink-soft-on-elevated); margin-bottom:24px; text-align:center; padding:0 30px; line-height:1.5;">Open your inbox, tap the link, then come back here and tap Continue.</p>
       <button class="start-btn" id="verifyEmailContinueBtn" style="width:220px; margin-bottom:10px;">I've Verified — Continue</button>
       <button class="calc-btn" id="verifyEmailResendBtn" style="width:220px; margin-bottom:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Resend Email</button>
       <p style="font-size:12px; color:var(--wrong); min-height:16px; margin-bottom:10px;" id="verifyEmailError"></p>
-      <button class="calc-btn" id="verifyEmailLogoutBtn" style="width:220px; background:none; color:var(--ink-soft); border:none; font-size:12px;">Use a different account</button>
+      <button class="calc-btn" id="verifyEmailLogoutBtn" style="width:220px; background:none; color:var(--ink-soft-on-elevated); border:none; font-size:12px;">Use a different account</button>
     </div>
   </div>
 
@@ -1949,9 +1961,9 @@
   <div id="appLockOfferBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
   <div id="appLockOfferModal" style="display:none; position:fixed; left:8%; right:8%; top:18%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:81; text-align:center; max-height:80vh; overflow-y:auto;">
     <div style="font-size:32px; margin-bottom:8px;">🔐</div>
-    <h4 style="margin-bottom:8px;">Set Up App Lock?</h4>
-    <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;">Protect Health Loksewa and your personal study data. You can change or turn this off anytime in Profile → Account &amp; Privacy.</p>
-    <p style="font-size:11px; color:var(--ink-soft); margin-bottom:6px; text-align:left;">6-digit PIN (always required, even with biometric, as a backup):</p>
+    <h4 style="margin-bottom:8px; color:var(--ink-on-elevated);">Set Up App Lock?</h4>
+    <p style="font-size:12.5px; color:var(--ink-soft-on-elevated); margin-bottom:14px;">Protect Health Loksewa and your personal study data. You can change or turn this off anytime in Profile → Account &amp; Privacy.</p>
+    <p style="font-size:11px; color:var(--ink-soft-on-elevated); margin-bottom:6px; text-align:left;">6-digit PIN (always required, even with biometric, as a backup):</p>
     <input type="password" inputmode="numeric" maxlength="6" id="appLockOfferPinInput" placeholder="Choose a 6-digit PIN" style="width:100%; text-align:center; letter-spacing:4px; padding:12px; border:1.5px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); margin-bottom:10px;">
     <p style="font-size:11.5px; color:var(--wrong); min-height:14px; margin-bottom:10px;" id="appLockOfferError"></p>
     <button class="start-btn" id="appLockOfferBiometricBtn" style="display:none; margin-bottom:8px;">Use Fingerprint / Face</button>
@@ -2021,7 +2033,7 @@
         </div>
       </div>
       <p id="forgotPasswordWrap" style="text-align:right; margin-top:-8px; margin-bottom:14px;">
-        <a href="#" id="forgotPasswordLink" style="color:var(--navy); font-size:12.5px; font-weight:600; text-decoration:none;">Forgot Password?</a>
+        <a href="#" id="forgotPasswordLink" style="color:var(--navy-on-light); font-size:12.5px; font-weight:600; text-decoration:none;">Forgot Password?</a>
       </p>
       <div class="field" id="fieldConfirmPassword" style="display:none;">
         <label>Confirm Password</label>
@@ -2579,7 +2591,7 @@
           <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon"><i class="bi bi-key"></i></span> Change Password</button>
           <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon"><i class="bi bi-lock"></i></span> Privacy Policy</button>
-          <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
+          <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong-on-light);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
         </div>
       </details>
 
@@ -2717,7 +2729,7 @@
       <div style="font-size:13px; color:var(--ink-soft); margin-bottom:10px;">Focus Session</div>
       <div style="font-size:48px; font-weight:800; color:var(--ink);" id="focusCountdown">25:00</div>
       <p style="font-size:12px; color:var(--ink-soft); margin:10px 0 24px;" id="focusRemainingLabel">remaining</p>
-      <button class="calc-btn" id="focusCancelBtn" style="background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong); width:auto; padding:8px 20px;">Cancel Session</button>
+      <button class="calc-btn" id="focusCancelBtn" style="background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--wrong); width:auto; padding:8px 20px;">Cancel Session</button>
     </div>
   </div>
 
@@ -2758,7 +2770,7 @@
       <button class="start-btn" id="cpSubmitBtn">Update Password</button>
 
       <p style="text-align:center; margin-top:16px;">
-        <a href="#" id="cpForgotLink" style="color:var(--navy); font-size:12.5px; font-weight:600; text-decoration:none;">Forgot your current password?</a>
+        <a href="#" id="cpForgotLink" style="color:var(--navy-on-light); font-size:12.5px; font-weight:600; text-decoration:none;">Forgot your current password?</a>
       </p>
     </div>
   </div>
@@ -2813,7 +2825,7 @@
   <div id="healthDayStartupBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:80;"></div>
   <div id="healthDayStartupCard" style="display:none; position:fixed; left:8%; right:8%; top:28%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:81; text-align:center;">
     <div id="hdStartupIcon" style="font-size:32px; margin-bottom:8px;">📅</div>
-    <div id="hdStartupBadge" style="font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;">Upcoming Health Day</div>
+    <div id="hdStartupBadge" style="font-size:11.5px; font-weight:700; color:var(--ink-soft-on-elevated); margin-bottom:6px;">Upcoming Health Day</div>
     <div id="hdStartupTitle" style="font-size:16px; font-weight:700; color:var(--ink); margin-bottom:4px;"></div>
     <div id="hdStartupCountdown" style="font-size:13px; color:var(--gold); font-weight:700; margin-bottom:12px;"></div>
     <p id="hdStartupDesc" style="font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin-bottom:18px;"></p>
@@ -3307,7 +3319,7 @@
       <div class="section-title">7-Day Exam Revision</div>
       <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Built from your actual weak subjects — not the same plan for everyone.</p>
       <div id="sevenDayList"></div>
-      <button class="calc-btn" id="sevenDayResetBtn" style="margin-top:14px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong); font-size:12px;">Regenerate Plan</button>
+      <button class="calc-btn" id="sevenDayResetBtn" style="margin-top:14px; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--wrong); font-size:12px;">Regenerate Plan</button>
     </div>
   </div>
 
@@ -3734,7 +3746,7 @@
       <div style="font-size:48px; margin-bottom:16px;" id="qbSearchIcon">🔍</div>
       <div class="section-title" style="justify-content:center;">Finding an opponent…</div>
       <p style="font-size:12.5px; color:var(--ink-soft); margin:10px 0 24px;">Matching you with another student searching right now. This may take a moment if no one else is currently looking for a match.</p>
-      <button class="calc-btn" id="qbCancelBtn" style="background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Cancel</button>
+      <button class="calc-btn" id="qbCancelBtn" style="background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--wrong);">Cancel</button>
     </div>
   </div>
 
@@ -3813,7 +3825,7 @@
     <div class="home-body" style="padding-top:20px; text-align:center;">
       <div class="section-title" style="justify-content:center;">Daily Battle Result</div>
       <div style="margin:18px 0;">
-        <div style="font-size:34px; font-weight:800; color:var(--gold);" id="dbResultScore">0 / 0</div>
+        <div style="font-size:34px; font-weight:800; color:var(--gold-on-light);" id="dbResultScore">0 / 0</div>
         <div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">YOUR SCORE</div>
       </div>
       <div class="content-card" style="text-align:left; margin-bottom:16px;">
@@ -4014,7 +4026,7 @@
 
       <div id="cprStageWrap" style="background:linear-gradient(180deg,#1a2842,#0e1729); border-radius:16px; aspect-ratio:4/3; position:relative; overflow:hidden; margin:12px 0;">
         <canvas id="cprCanvas3d" style="width:100%; height:100%; display:block; touch-action:none;"></canvas>
-        <div id="cprLoadingMsg" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:12px;">Loading 3D scene…</div>
+        <div id="cprLoadingMsg" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--ink-soft-on-elevated); font-size:12px;">Loading 3D scene…</div>
         <div id="cprSpeechBubble" style="display:none; position:absolute; top:14px; right:14px; max-width:65%; background:#fff; color:#1a1a1a; padding:8px 12px; border-radius:12px 12px 2px 12px; font-size:12.5px; font-weight:600; box-shadow:0 4px 10px rgba(0,0,0,0.3);"></div>
         <div id="cprCompressionHud" style="display:none; position:absolute; top:12px; left:12px; background:rgba(11,21,38,0.85); border-radius:10px; padding:8px 12px;">
           <div style="font-size:22px; font-weight:800; color:var(--gold); line-height:1;" id="cprCompressionCount">0</div>
@@ -4455,7 +4467,7 @@
 
       <!-- Step indicator -->
       <div id="swStepBar" style="display:flex; justify-content:space-between; margin-bottom:16px; overflow-x:auto; gap:4px;">
-        <div class="sw-step active" data-step="1" style="flex:1; text-align:center; font-size:10px; color:var(--gold); padding-bottom:6px; border-bottom:2px solid var(--gold);">① सेवा</div>
+        <div class="sw-step active" data-step="1" style="flex:1; text-align:center; font-size:10px; color:var(--gold-on-light); padding-bottom:6px; border-bottom:2px solid var(--gold);">① सेवा</div>
         <div class="sw-step" data-step="2" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">② पद</div>
         <div class="sw-step" data-step="3" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">③ ग्रेड</div>
         <div class="sw-step" data-step="4" style="flex:1; text-align:center; font-size:10px; color:var(--ink-soft); padding-bottom:6px; border-bottom:2px solid var(--line);">④ विवरण</div>
@@ -4824,7 +4836,7 @@
     <div class="back-link" data-back="healthCalcHub">← Back</div>
     <div class="home-body">
       <div class="section-title">Child Growth Screening</div>
-      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Screens for Stunting (height-for-age), Wasting (weight-for-height), and Underweight (weight-for-age) using the percent-of-median method against WHO reference medians. <b style="color:var(--gold);">This is a screening estimate, not a diagnosis</b> — a child flagged here should be assessed against full WHO growth charts by a health worker.</p>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">Screens for Stunting (height-for-age), Wasting (weight-for-height), and Underweight (weight-for-age) using the percent-of-median method against WHO reference medians. <b style="color:var(--gold-on-light);">This is a screening estimate, not a diagnosis</b> — a child flagged here should be assessed against full WHO growth charts by a health worker.</p>
       <div class="calc-card">
         <div class="calc-field"><label>Age (months, 0–60)</label><input type="number" id="cgAgeMonths" placeholder="e.g. 24" min="0" max="60"></div>
         <div class="calc-field"><label>Sex</label>
@@ -6073,7 +6085,7 @@
         <div id="noteAutoSaveStatus" style="font-size:11.5px; color:var(--ink-soft);"></div>
         <div style="display:flex; gap:8px;">
           <button class="calc-btn" id="noteMoreBtn" style="margin:0; width:36px; padding:7px 0; font-size:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⋮</button>
-          <button class="calc-btn" id="noteDeleteBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Delete</button>
+          <button class="calc-btn" id="noteDeleteBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--wrong);">Delete</button>
         </div>
       </div>
       <input type="text" id="noteTitleInput" placeholder="Title" style="width:100%; border:none; background:none; font-family:'Tinos',serif; font-size:19px; font-weight:700; color:var(--ink); padding:6px 0; margin-bottom:8px;">
@@ -6239,15 +6251,15 @@
   <!-- Voice Recording modal (overlays the note editor) -->
   <div id="voiceRecordBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
   <div id="voiceRecordModal" style="display:none; position:fixed; left:5%; right:5%; top:20%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:71;">
-    <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:14px;">Voice Recording</div>
-    <div id="voiceRecordStatus" style="text-align:center; font-size:13px; color:var(--ink-soft); margin-bottom:16px;">Tap record to start</div>
+    <div style="font-size:14px; font-weight:700; color:var(--ink-on-elevated); margin-bottom:14px;">Voice Recording</div>
+    <div id="voiceRecordStatus" style="text-align:center; font-size:13px; color:var(--ink-soft-on-elevated); margin-bottom:16px;">Tap record to start</div>
     <div style="text-align:center; margin-bottom:16px;">
-      <span id="voiceRecordTimer" style="font-family:'Tinos',serif; font-size:28px; color:var(--ink); font-weight:700;">00:00</span>
+      <span id="voiceRecordTimer" style="font-family:'Tinos',serif; font-size:28px; color:var(--ink-on-elevated); font-weight:700;">00:00</span>
     </div>
     <div style="display:flex; gap:8px; justify-content:center; margin-bottom:16px;">
       <button class="calc-btn" id="voiceRecordStartBtn" style="margin:0; width:auto; padding:10px 20px;">Record</button>
       <button class="calc-btn" id="voiceRecordPauseBtn" style="margin:0; width:auto; padding:10px 20px; display:none; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Pause</button>
-      <button class="calc-btn" id="voiceRecordStopBtn" style="margin:0; width:auto; padding:10px 20px; display:none; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Stop</button>
+      <button class="calc-btn" id="voiceRecordStopBtn" style="margin:0; width:auto; padding:10px 20px; display:none; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--wrong);">Stop</button>
     </div>
     <div id="voiceRecordPreview" style="display:none; margin-bottom:14px;">
       <audio id="voiceRecordAudioPreview" controls style="width:100%;"></audio>
@@ -6261,8 +6273,8 @@
   <!-- Lock Note modal (overlays the note editor / and used to prompt on open) -->
   <div id="lockNoteBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
   <div id="lockNoteModal" style="display:none; position:fixed; left:8%; right:8%; top:25%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:71;">
-    <div id="lockNoteModalTitle" style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:6px;">Set a PIN for this note</div>
-    <p id="lockNoteModalSub" style="font-size:11.5px; color:var(--ink-soft); margin-bottom:14px;">This is a PIN lock, not device biometrics — a true fingerprint/Face ID lock needs infrastructure this app doesn't have yet.</p>
+    <div id="lockNoteModalTitle" style="font-size:14px; font-weight:700; color:var(--ink-on-elevated); margin-bottom:6px;">Set a PIN for this note</div>
+    <p id="lockNoteModalSub" style="font-size:11.5px; color:var(--ink-soft-on-elevated); margin-bottom:14px;">This is a PIN lock, not device biometrics — a true fingerprint/Face ID lock needs infrastructure this app doesn't have yet.</p>
     <input type="password" id="lockNotePinInput" inputmode="numeric" maxlength="6" placeholder="4–6 digit PIN" style="width:100%; padding:12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:18px; text-align:center; letter-spacing:6px; margin-bottom:14px;">
     <div id="lockNoteError" style="color:var(--wrong); font-size:11.5px; text-align:center; margin-bottom:10px; min-height:14px;"></div>
     <div style="display:flex; gap:8px;">
@@ -6274,10 +6286,10 @@
   <!-- Table Builder modal -->
   <div id="tableBuilderBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
   <div id="tableBuilderModal" style="display:none; position:fixed; left:4%; right:4%; top:8%; bottom:8%; background:var(--panel-elevated); border-radius:16px; padding:20px; z-index:71; overflow-y:auto;">
-    <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:14px;">▦ Insert Table</div>
+    <div style="font-size:14px; font-weight:700; color:var(--ink-on-elevated); margin-bottom:14px;">▦ Insert Table</div>
 
     <div id="tableSizePicker">
-      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">Choose a size to start:</p>
+      <p style="font-size:12px; color:var(--ink-soft-on-elevated); margin-bottom:10px;">Choose a size to start:</p>
       <div style="display:flex; gap:8px; margin-bottom:12px;">
         <button class="calc-btn table-size-preset" data-rows="2" data-cols="2" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">2 × 2</button>
         <button class="calc-btn table-size-preset" data-rows="3" data-cols="3" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">3 × 3</button>
@@ -6306,9 +6318,9 @@
   <!-- Sticky Note modal -->
   <div id="stickyNoteBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:70;"></div>
   <div id="stickyNoteModal" style="display:none; position:fixed; left:8%; right:8%; top:22%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:71;">
-    <div style="font-size:14px; font-weight:700; color:var(--ink); margin-bottom:14px;">Add Sticky Note</div>
+    <div style="font-size:14px; font-weight:700; color:var(--ink-on-elevated); margin-bottom:14px;">Add Sticky Note</div>
     <textarea id="stickyNoteTextInput" placeholder="Remember this before exam!" style="width:100%; min-height:80px; padding:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif; font-size:13px; margin-bottom:12px;"></textarea>
-    <p style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">Color:</p>
+    <p style="font-size:11px; color:var(--ink-soft-on-elevated); margin-bottom:8px;">Color:</p>
     <div style="display:flex; gap:8px; margin-bottom:16px;">
       <button class="sticky-color-btn active" data-color="yellow" style="background:#F5D547;"></button>
       <button class="sticky-color-btn" data-color="pink" style="background:#F5A9C0;"></button>
@@ -12231,7 +12243,7 @@ function goToSwStep(stepNum){
   document.getElementById(`swPanel${stepNum}`).style.display = 'block';
   document.querySelectorAll('.sw-step').forEach(s => {
     const isActive = parseInt(s.dataset.step, 10) === stepNum;
-    s.style.color = isActive ? 'var(--gold)' : 'var(--ink-soft)';
+    s.style.color = isActive ? 'var(--gold-on-light)' : 'var(--ink-soft)';
     s.style.borderBottomColor = isActive ? 'var(--gold)' : 'var(--line)';
   });
 }
