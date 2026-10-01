@@ -7346,6 +7346,9 @@
   // Narayan's three accounts (confirmed Oct 2026). infonarayan123@gmail.com — his main address, also
   // used on Contact Us — was missing from the original list.
   const FREE_PREMIUM_EMAILS = ['infonarayan123@gmail.com', 'infonarayan1234@gmail.com', 'narayanrimal659@gmail.com'];
+  // Master accounts skip the "am I allowed?" pre-checks below. Safe: the pre-check protects nothing
+  // by itself — the backend's secure step checks the email Google verified, not this list.
+  function hlIsMasterAccount_(user){ return !!(user && user.email && FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())); }
 
   window.getAccessStatus = async function(){
     const user = auth.currentUser;
@@ -7411,6 +7414,7 @@
   window.checkAndIncrementAiFeatureUsage = async function(featureKey, freeLimit){
     const user = auth.currentUser;
     if(!user) return { allowed: true, remaining: 999 }; // fail open if somehow not logged in
+    if(hlIsMasterAccount_(user)) return { allowed: true, remaining: Infinity }; // owner accounts: unlimited
 
     // Moved to the backend (see checkAiUsageLimit in apps-script-v5.js) — previously this
     // function read and wrote its own counter directly in Firestore, but the security rule that
@@ -7441,6 +7445,7 @@
   window.checkAndIncrementMockTestUsage = async function(){
     const user = auth.currentUser;
     if(!user) return { allowed: true }; // fail open if somehow not logged in
+    if(hlIsMasterAccount_(user)) return { allowed: true }; // owner accounts: unlimited
 
     // Moved to the backend (see checkMockTestLimit in apps-script-v5.js) — same reason as
     // checkAndIncrementAiFeatureUsage above: the client-side version wrote its own counters
@@ -7464,6 +7469,7 @@
   window.checkAndRecordPastQuestionAccess = async function(paperName){
     const user = auth.currentUser;
     if(!user) return { allowed: true };
+    if(hlIsMasterAccount_(user)) return { allowed: true }; // owner accounts: unlimited
 
     try{
       const res = await fetch(`${window.SHEET_API_URL}?action=checkPastQuestionLimit&uid=${encodeURIComponent(user.uid)}&paperName=${encodeURIComponent(paperName)}`);
@@ -7978,7 +7984,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbywbvjT34921m3wyHYvzHboYp1LDRayjMr2r_VXzxBAkNfF9Cp23k6rpvkS-_nuFponcw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzWBkLhUTqGi32nCCIVW4PdaMx5VSvUtfEurGl7E18hIhS0GmURNYIYOzrEWRa3Dfkuzw/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
