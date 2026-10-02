@@ -7986,7 +7986,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyBj9Xw7ZoXM7QXkexGu4mw6tAlkJiGJdmDM1BfJJ4bkzql5bvHbpvG29cQmuqfBRpung/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyldEN7LiwwbVUmngVUJ32YXo0f5INkXvSy-YWlw3-zR60nc_RBSyf8t4-IJq3aiOmWhw/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -25889,6 +25889,7 @@ function hlOpenAdminAddModal_(currentQ){
     + ['A','B','C','D'].map(x => '<label style="' + L + '">Option ' + x + '</label><input id="hlAaOption' + x + '" style="' + F + '">').join('')
     + '<label style="' + L + '">Correct answer</label><select id="hlAaCorrect" style="' + F + '"><option>A</option><option>B</option><option>C</option><option>D</option></select>'
     + '<label style="' + L + '">Explanation</label><textarea id="hlAaExplanation" rows="3" style="' + F + '"></textarea>'
+    + '<button type="button" id="hlAaBulk" style="width:100%; margin:12px 0 0; padding:7px; font-size:12px; background:none; color:var(--ink-on-elevated); border:1.5px dashed rgba(255,255,255,0.4);">Add many at once (paste from a sheet)</button>'
     + '<div id="hlAaStatus" style="font-size:12px; min-height:16px; margin-top:10px; color:var(--ink-on-elevated);"></div>'
     + '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="hlAaSave" style="flex:1; margin:0;">Add question</button>'
     + '<button type="button" id="hlAaCancel" style="flex:1; margin:0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Cancel</button></div>'
@@ -25898,6 +25899,7 @@ function hlOpenAdminAddModal_(currentQ){
   tabs.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); }); // plain text, never HTML
   if(hint) sel.value = hint;
   modal.querySelector('#hlAaCancel').onclick = () => modal.remove();
+  modal.querySelector('#hlAaBulk').onclick = () => hlOpenAdminBulkModal_(sel.value, tabs, post);
   const status = modal.querySelector('#hlAaStatus');
   const saveBtn = modal.querySelector('#hlAaSave');
   saveBtn.onclick = async () => {
@@ -26126,6 +26128,108 @@ async function hlOpenContentManager_(screenId, tabIndex){
   }
 
   showList();
+}
+// ---- Bulk add: paste many questions copied from Google Sheets / Excel (one question per row,
+// columns: Question | A | B | C | D | Answer | Explanation | Chapter). Lines typed with "|" between
+// the parts also work. Shows a preview first; nothing is saved until "Add all" is tapped.
+function hlParsePastedQuestions_(text){
+  // Spreadsheet copy = tab-separated; cells containing line breaks arrive wrapped in "quotes"
+  const rows = []; let row = [], cell = '', inQ = false;
+  const src = String(text || '');
+  for(let i = 0; i < src.length; i++){
+    const ch = src[i];
+    if(inQ){
+      if(ch === '"'){ if(src[i + 1] === '"'){ cell += '"'; i++; } else inQ = false; }
+      else cell += ch;
+    } else if(ch === '"' && cell === ''){ inQ = true; }
+    else if(ch === '\t'){ row.push(cell); cell = ''; }
+    else if(ch === '\n'){ row.push(cell); rows.push(row); row = []; cell = ''; }
+    else if(ch !== '\r'){ cell += ch; }
+  }
+  row.push(cell); rows.push(row);
+  const items = [], problems = [];
+  rows.forEach((r, idx) => {
+    let cells = r.map(c => String(c).trim());
+    if(cells.length === 1 && cells[0].includes('|')) cells = cells[0].split('|').map(c => c.trim());
+    if(cells.every(c => !c)) return;                                   // blank line
+    if(idx === 0 && /^question$/i.test(cells[0])) return;               // header row
+    const ansRaw = cells[5] || '';
+    const m = ansRaw.match(/^\(?\s*(?:option\s*)?([A-Da-d])\b/i);
+    const f = { Question: cells[0] || '', OptionA: cells[1] || '', OptionB: cells[2] || '', OptionC: cells[3] || '', OptionD: cells[4] || '',
+                CorrectAnswer: m ? m[1].toUpperCase() : ansRaw.toUpperCase(), Explanation: cells[6] || '', Chapter: cells[7] || '' };
+    const line = idx + 1;
+    let why = null;
+    if(!f.Question) why = 'empty question';
+    else if(!f.OptionA || !f.OptionB) why = 'options A and B are required';
+    else if(!['A','B','C','D'].includes(f.CorrectAnswer)) why = 'answer must be A, B, C or D';
+    else if(!f['Option' + f.CorrectAnswer]) why = 'answer points to an empty option';
+    if(why) problems.push({ line, reason: why }); else items.push({ line, fields: f });
+  });
+  return { items, problems };
+}
+function hlOpenAdminBulkModal_(tab, tabs, post){
+  let modal = document.getElementById('hlAdminEditModal');
+  if(modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'hlAdminEditModal';
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px;';
+  const F = 'width:100%; box-sizing:border-box; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:12.5px;';
+  const T = 'color:var(--ink-on-elevated);', S = 'color:var(--ink-soft-on-elevated);';
+  modal.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:440px; max-height:90vh; overflow-y:auto;">'
+    + '<div style="font-size:14px; font-weight:800; ' + T + '">Add many questions</div>'
+    + '<div style="font-size:11.5px; margin:4px 0 8px; ' + S + '">In Google Sheets or Excel, put one question per row with columns in this order: <b>Question | A | B | C | D | Answer | Explanation | Chapter</b> (Chapter optional). Select the rows, copy, and paste below. Up to 200 at a time.</div>'
+    + '<label style="display:block; font-size:11px; font-weight:700; margin:6px 0 3px; ' + S + '">Tab</label><select id="hlBkTab" style="' + F + '"></select>'
+    + '<label style="display:block; font-size:11px; font-weight:700; margin:8px 0 3px; ' + S + '">Paste here</label><textarea id="hlBkText" rows="7" style="' + F + '"></textarea>'
+    + '<div id="hlBkPreview" style="font-size:12px; margin-top:10px; ' + T + '"></div>'
+    + '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="hlBkCheck" style="flex:1; margin:0;">Check</button>'
+    + '<button type="button" id="hlBkAdd" style="flex:1; margin:0;" disabled>Add all</button>'
+    + '<button type="button" id="hlBkCancel" style="flex:1; margin:0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div>'
+    + '</div>';
+  document.body.appendChild(modal);
+  const sel = modal.querySelector('#hlBkTab');
+  (tabs && tabs.length ? tabs : [tab]).forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); });
+  if(tab) sel.value = tab;
+  const prev = modal.querySelector('#hlBkPreview');
+  const addBtn = modal.querySelector('#hlBkAdd');
+  let parsed = null;
+  modal.querySelector('#hlBkCancel').onclick = () => modal.remove();
+  modal.querySelector('#hlBkText').oninput = () => { addBtn.disabled = true; parsed = null; prev.textContent = ''; };
+  modal.querySelector('#hlBkCheck').onclick = () => {
+    parsed = hlParsePastedQuestions_(modal.querySelector('#hlBkText').value);
+    const n = parsed.items.length;
+    let html = '<div style="font-weight:800;">' + n + ' ready to add' + (parsed.problems.length ? ', ' + parsed.problems.length + ' with problems (will be skipped)' : '') + '</div>';
+    if(n > 200) html += '<div>Too many — please paste at most 200 at a time.</div>';
+    html += parsed.problems.slice(0, 12).map(p => '<div style="' + S + '">Row ' + p.line + ': ' + hlEsc(p.reason) + '</div>').join('');
+    html += parsed.items.slice(0, 3).map(it => '<div style="margin-top:6px; padding:6px; border:1px solid rgba(255,255,255,0.2); border-radius:6px;">' + hlEsc(it.fields.Question.slice(0, 90)) + ' <span style="' + S + '">→ ' + hlEsc(it.fields.CorrectAnswer) + '</span></div>').join('');
+    if(n > 3) html += '<div style="' + S + ' margin-top:4px;">…and ' + (n - 3) + ' more</div>';
+    prev.innerHTML = html;
+    addBtn.disabled = !(n > 0 && n <= 200);
+  };
+  addBtn.onclick = async () => {
+    if(!parsed || !parsed.items.length) return;
+    addBtn.disabled = true; prev.textContent = 'Adding ' + parsed.items.length + ' questions…';
+    try{
+      const res = await postJsonWithTimeout({
+        action: 'adminBulkAddQuestions',
+        idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
+        post: post || ((typeof currentMcqPost !== 'undefined' && currentMcqPost) ? currentMcqPost : 'pho'),
+        tab: sel.value, questions: parsed.items.map(it => it.fields)
+      });
+      const data = await res.json();
+      if(data && data.ok){
+        const skippedLines = (data.skipped || []).map(sk => 'Row ' + parsed.items[sk.index].line + ': ' + sk.reason);
+        prev.innerHTML = '<div style="font-weight:800;">Added ' + data.added + ' to ' + hlEsc(data.tab) + (data.firstId ? ' (IDs ' + data.firstId + '–' + data.lastId + ')' : '') + '. Students see them now.</div>'
+          + (skippedLines.length ? '<div style="' + S + ' margin-top:4px;">Skipped ' + skippedLines.length + ':</div>' + skippedLines.slice(0, 12).map(x => '<div style="' + S + '">' + hlEsc(x) + '</div>').join('') : '');
+        parsed = null;
+        modal.querySelector('#hlBkText').value = '';
+        return;
+      }
+      prev.textContent = hlAdminErrorText_(data);
+    }catch(err){
+      prev.textContent = 'Could not reach the server. Nothing was changed.';
+    }
+    addBtn.disabled = false;
+  };
 }
 async function hlAdminDeleteCurrent_(q){
   if(!q) return;
