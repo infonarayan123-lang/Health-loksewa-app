@@ -7984,7 +7984,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzWBkLhUTqGi32nCCIVW4PdaMx5VSvUtfEurGl7E18hIhS0GmURNYIYOzrEWRa3Dfkuzw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwlp25OLQwjlfjjSxxVLJDg_74SnI_cRCPnMA1WZeBo03uMEaZ0dN2SxlwY9_iTx95Fyw/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -8733,6 +8733,7 @@ try{
 BOTTOM_NAV_HIDDEN_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, quizScreen]; // full-focus screens, no bottom nav
 }catch(err){ BOTTOM_NAV_HIDDEN_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "BOTTOM_NAV_HIDDEN_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 function updateBottomNav(activeScreen){
+  try{ hlRenderAdminBar_(activeScreen); }catch(e){} // admin-only mode pill (nothing for students)
   const nav = document.getElementById('bottomNav');
   if(!nav) return;
 
@@ -25728,33 +25729,185 @@ function hlAdminModeOn_(){
 }
 function hlRenderAdminQuizControls_(q){
   let bar = document.getElementById('hlAdminQuizBar');
-  if(!hlIsAdminUser_()){ if(bar) bar.remove(); return; }
   const qText = document.getElementById('qText');
-  if(!qText || !qText.parentNode) return;
+  const card = qText ? qText.parentNode : null;
+  if(!hlIsAdminUser_() || !hlAdminModeOn_()){
+    // Student view (or not an admin): exactly what students see — no strip, no gold border
+    if(bar) bar.remove();
+    if(card) card.classList.remove('hl-admin-editable');
+    return;
+  }
+  if(!qText || !card) return;
+  hlEnsureAdminStyle_();
+  card.classList.add('hl-admin-editable'); // gold top border = "this can be edited"
   if(!bar){
     bar = document.createElement('div');
     bar.id = 'hlAdminQuizBar';
-    qText.parentNode.insertBefore(bar, qText);
+    card.insertBefore(bar, qText);
   }
-  if(hlAdminModeOn_()){
-    bar.style.cssText = 'border:1.5px solid var(--gold); border-radius:10px; padding:8px 10px; margin:0 0 10px; font-size:11.5px;';
-    bar.innerHTML = '<div style="font-weight:800; color:var(--gold-on-light); letter-spacing:0.3px; margin-bottom:6px;">ADMIN MODE: edits are live for all students</div>'
-      + '<div style="display:flex; gap:8px;">'
-      + '<button type="button" id="hlAdminEditBtn" style="flex:1; margin:0; padding:7px; font-size:12px;">Edit this question</button>'
-      + '<button type="button" id="hlAdminStudentViewBtn" style="flex:1; margin:0; padding:7px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Student view</button>'
-      + '</div>';
-    bar.querySelector('#hlAdminEditBtn').onclick = () => hlOpenAdminEditModal_(quizQuestions[currentIndex]);
-    bar.querySelector('#hlAdminStudentViewBtn').onclick = () => {
-      try{ localStorage.setItem('hl_admin_mode', '0'); }catch(e){}
-      hlRenderAdminQuizControls_(quizQuestions[currentIndex]);
+  bar.style.cssText = 'border:1.5px solid var(--gold); border-radius:10px; padding:8px 10px; margin:0 0 10px; font-size:11.5px;';
+  const sec = 'flex:1; margin:0; padding:7px 4px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);';
+  bar.innerHTML = '<div style="font-weight:800; color:var(--gold-on-light); letter-spacing:0.3px; margin-bottom:6px;">ADMIN MODE: changes are live for all students</div>'
+    + '<div style="display:flex; gap:6px;">'
+    + '<button type="button" id="hlAdminEditBtn" style="flex:1; margin:0; padding:7px 4px; font-size:12px;">Edit</button>'
+    + '<button type="button" id="hlAdminAddBtn" style="' + sec + '">Add new</button>'
+    + '<button type="button" id="hlAdminDeleteBtn" style="' + sec + ' color:var(--wrong-on-light);">Delete</button>'
+    + '</div><div id="hlAdminQuizStatus" style="font-size:11.5px; margin-top:6px; color:var(--ink); min-height:0;"></div>';
+  bar.querySelector('#hlAdminEditBtn').onclick = () => hlOpenAdminEditModal_(quizQuestions[currentIndex]);
+  bar.querySelector('#hlAdminAddBtn').onclick = () => hlOpenAdminAddModal_(quizQuestions[currentIndex]);
+  bar.querySelector('#hlAdminDeleteBtn').onclick = () => hlAdminDeleteCurrent_(quizQuestions[currentIndex]);
+}
+function hlEnsureAdminStyle_(){
+  if(document.getElementById('hlAdminStyle')) return;
+  const st = document.createElement('style');
+  st.id = 'hlAdminStyle';
+  st.textContent = '.hl-admin-editable{ border-top:3px solid var(--gold) !important; }';
+  document.head.appendChild(st);
+}
+// Small pill shown on EVERY screen, admins only: shows the current mode and switches it in one tap.
+function hlRenderAdminBar_(activeScreen){
+  let pill = document.getElementById('hlAdminPill');
+  const scr = activeScreen || document.querySelector('.screen.active');
+  let onGate = false;
+  try{ onGate = Array.isArray(HL_NAV_GATE_SCREENS) && HL_NAV_GATE_SCREENS.includes(scr); }catch(e){}
+  if(!hlIsAdminUser_() || onGate){ if(pill) pill.remove(); return; }
+  if(!pill){
+    pill = document.createElement('button');
+    pill.type = 'button';
+    pill.id = 'hlAdminPill';
+    pill.onclick = hlToggleAdminMode_;
+    document.body.appendChild(pill);
+  }
+  const on = hlAdminModeOn_();
+  pill.textContent = on ? 'ADMIN MODE · tap for Student view' : 'Student view · tap for Admin mode';
+  pill.style.cssText = 'position:fixed; left:10px; bottom:calc(env(safe-area-inset-bottom, 0px) + 12px); z-index:9990; width:auto; margin:0; padding:5px 11px;'
+    + ' font-size:10.5px; font-weight:800; letter-spacing:0.3px; border-radius:14px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.35);'
+    + ' background:var(--panel-elevated);' + (on ? ' color:var(--gold); border:1.5px solid var(--gold);' : ' color:var(--ink-soft-on-elevated); border:1px solid rgba(255,255,255,0.35);');
+  // sit just above whatever is fixed at the bottom: the bottom navigation and/or the browser-only
+  // "Add to Home Screen" banner (which would otherwise cover the pill and block taps)
+  requestAnimationFrame(() => {
+    let lift = 0;
+    const nav = document.getElementById('bottomNav');
+    if(nav && nav.style.display !== 'none' && nav.offsetHeight > 0) lift = Math.max(lift, nav.offsetHeight);
+    const banner = document.getElementById('installBanner');
+    if(banner && getComputedStyle(banner).display !== 'none' && banner.offsetHeight > 0) lift = Math.max(lift, banner.offsetHeight);
+    if(lift > 0) pill.style.bottom = (lift + 8) + 'px';
+  });
+}
+function hlToggleAdminMode_(){
+  try{ localStorage.setItem('hl_admin_mode', hlAdminModeOn_() ? '0' : '1'); }catch(e){}
+  hlRenderAdminBar_();
+  try{
+    const active = document.querySelector('.screen.active');
+    if(active && active.id === 'quizScreen' && quizQuestions[currentIndex]) hlRenderAdminQuizControls_(quizQuestions[currentIndex]);
+  }catch(e){}
+}
+function hlAdminErrorText_(data){
+  return ({
+    notAdmin: (data && data.reason === 'unverified')
+      ? 'Logged in as ' + (data.email || '?') + ', but this email is not verified yet, so nothing was changed.'
+      : 'Logged in as ' + ((data && data.email) || '?') + ', which is not on the admin list, so nothing was changed.',
+    auth: 'Please close the app completely and open it again, then try once more.',
+    unavailable: 'Could not verify your login right now. Nothing was changed. Try again in a minute.',
+    notFound: 'Could not find this exact question in the Sheet. Nothing was changed — please do it in the Sheet.',
+    ambiguous: 'This question text appears ' + (data && data.count) + ' times in the Sheet, so nothing was changed (to avoid touching the wrong one). Please do it in the Sheet.',
+    duplicate: 'This exact question already exists in that tab, so it was not added again.',
+    busy: 'Another change is still saving. Please try again.',
+  })[data && data.error] || (data && data.message) || 'Could not save. Nothing was changed.';
+}
+function hlOpenAdminAddModal_(currentQ){
+  let modal = document.getElementById('hlAdminEditModal');
+  if(modal) modal.remove();
+  const post = (typeof currentMcqPost !== 'undefined' && currentMcqPost) ? currentMcqPost : 'pho';
+  let tabs = [];
+  try{ tabs = (post === 'pho' ? KNOWN_SUBJECTS : (KNOWN_SUBJECTS_BY_POST[post] || KNOWN_SUBJECTS)).slice(); }catch(e){}
+  try{ (PAST_QUESTIONS_BY_POST[post] || []).forEach(n => { if(n && !tabs.includes(n)) tabs.push(n); }); }catch(e){}
+  const hint = (currentQ && currentQ.PastPaper) || (currentSetInfo && currentSetInfo.subject) || '';
+  if(hint && !tabs.includes(hint)) tabs.unshift(hint);
+  modal = document.createElement('div');
+  modal.id = 'hlAdminEditModal';
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px;';
+  const L = 'display:block; font-size:11px; font-weight:700; color:var(--ink-soft-on-elevated); margin:8px 0 3px;';
+  const F = 'width:100%; box-sizing:border-box; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px;';
+  modal.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:420px; max-height:88vh; overflow-y:auto;">'
+    + '<div style="font-size:14px; font-weight:800; color:var(--ink-on-elevated);">Add new question</div>'
+    + '<div style="font-size:11px; color:var(--ink-soft-on-elevated); margin-top:2px;">It is added to the end of the chosen tab, goes live for all students, and is recorded in the "Admin Edit Log" tab.</div>'
+    + '<label style="' + L + '">Tab (subject or past paper)</label><select id="hlAaTab" style="' + F + '"></select>'
+    + '<label style="' + L + '">Chapter (optional)</label><input id="hlAaChapter" style="' + F + '">'
+    + '<label style="' + L + '">Question</label><textarea id="hlAaQuestion" rows="3" style="' + F + '"></textarea>'
+    + ['A','B','C','D'].map(x => '<label style="' + L + '">Option ' + x + '</label><input id="hlAaOption' + x + '" style="' + F + '">').join('')
+    + '<label style="' + L + '">Correct answer</label><select id="hlAaCorrect" style="' + F + '"><option>A</option><option>B</option><option>C</option><option>D</option></select>'
+    + '<label style="' + L + '">Explanation</label><textarea id="hlAaExplanation" rows="3" style="' + F + '"></textarea>'
+    + '<div id="hlAaStatus" style="font-size:12px; min-height:16px; margin-top:10px; color:var(--ink-on-elevated);"></div>'
+    + '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="hlAaSave" style="flex:1; margin:0;">Add question</button>'
+    + '<button type="button" id="hlAaCancel" style="flex:1; margin:0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Cancel</button></div>'
+    + '</div>';
+  document.body.appendChild(modal);
+  const sel = modal.querySelector('#hlAaTab');
+  tabs.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); }); // plain text, never HTML
+  if(hint) sel.value = hint;
+  modal.querySelector('#hlAaCancel').onclick = () => modal.remove();
+  const status = modal.querySelector('#hlAaStatus');
+  const saveBtn = modal.querySelector('#hlAaSave');
+  saveBtn.onclick = async () => {
+    const fields = {
+      Chapter: modal.querySelector('#hlAaChapter').value.trim(),
+      Question: modal.querySelector('#hlAaQuestion').value.trim(),
+      OptionA: modal.querySelector('#hlAaOptionA').value.trim(),
+      OptionB: modal.querySelector('#hlAaOptionB').value.trim(),
+      OptionC: modal.querySelector('#hlAaOptionC').value.trim(),
+      OptionD: modal.querySelector('#hlAaOptionD').value.trim(),
+      CorrectAnswer: modal.querySelector('#hlAaCorrect').value,
+      Explanation: modal.querySelector('#hlAaExplanation').value.trim()
     };
-  } else {
-    bar.style.cssText = 'margin:0 0 8px; text-align:right;';
-    bar.innerHTML = '<button type="button" id="hlAdminModeOnBtn" style="width:auto; margin:0; padding:4px 10px; font-size:11px; background:none; color:var(--ink-soft); border:1px dashed var(--line);">Admin: switch to edit mode</button>';
-    bar.querySelector('#hlAdminModeOnBtn').onclick = () => {
-      try{ localStorage.setItem('hl_admin_mode', '1'); }catch(e){}
-      hlRenderAdminQuizControls_(quizQuestions[currentIndex]);
-    };
+    if(!sel.value){ status.textContent = 'Please choose a tab.'; return; }
+    if(!fields.Question){ status.textContent = 'The question text cannot be empty.'; return; }
+    if(!fields.OptionA || !fields.OptionB){ status.textContent = 'Options A and B are required.'; return; }
+    if(!fields['Option' + fields.CorrectAnswer]){ status.textContent = 'The correct answer points to an empty option.'; return; }
+    saveBtn.disabled = true; status.textContent = 'Adding…';
+    try{
+      const res = await postJsonWithTimeout({
+        action: 'adminAddQuestion',
+        idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
+        post, tab: sel.value, fields
+      });
+      const data = await res.json();
+      if(data && data.ok){
+        status.textContent = 'Added to ' + data.tab + (data.id ? ' (ID ' + data.id + ')' : '') + '. Students see it now.';
+        setTimeout(() => { if(document.body.contains(modal)) modal.remove(); }, 1800);
+        return;
+      }
+      status.textContent = hlAdminErrorText_(data);
+    }catch(err){
+      status.textContent = 'Could not reach the server. Nothing was changed.';
+    }
+    saveBtn.disabled = false;
+  };
+}
+async function hlAdminDeleteCurrent_(q){
+  if(!q) return;
+  const statusEl = document.getElementById('hlAdminQuizStatus');
+  const say = (t) => { if(statusEl) statusEl.textContent = t; };
+  const ok = await customConfirm('Delete this question for ALL students?\n\n"' + String(q.Question || '').slice(0, 120) + '"\n\nIt is removed from the Sheet. A full copy is saved in the "Admin Edit Log" tab, so it can be restored.');
+  if(!ok) return;
+  say('Deleting…');
+  try{
+    const res = await postJsonWithTimeout({
+      action: 'adminDeleteQuestion',
+      idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''),
+      post: (typeof currentMcqPost !== 'undefined' && currentMcqPost) ? currentMcqPost : 'pho',
+      hintSheet: q.PastPaper || (currentSetInfo && currentSetInfo.subject) || '',
+      originalQuestion: String(q.Question == null ? '' : q.Question)
+    });
+    const data = await res.json();
+    if(data && data.ok){
+      // Left in THIS quiz on purpose (removing it mid-quiz would shift your answers); gone for everyone next time
+      say('Deleted from ' + data.tab + '. Students will not see it from now on. It stays in this quiz until you finish.');
+      return;
+    }
+    say(hlAdminErrorText_(data));
+  }catch(err){
+    say('Could not reach the server. Nothing was changed.');
   }
 }
 function hlOpenAdminEditModal_(q){
