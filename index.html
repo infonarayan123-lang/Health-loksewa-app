@@ -6683,7 +6683,8 @@
       if(!snap.exists()) return null;
       return { enabled: !!snap.data().fcmToken, prefs: snap.data().notificationPrefs || null };
     }catch(err){
-      return null;
+      // Reading failed (e.g. briefly offline) — say so, instead of looking like "not set up"
+      return { readFailed: true, enabled: false, prefs: null };
     }
   };
   // Foreground messages (app already open) show as an in-app banner via the existing toast/alert
@@ -8446,7 +8447,9 @@ function showScreen(el){
   const currentActive = document.querySelector('.screen.active');
   if(currentActive){
     logScreenTimeElapsed();
-    screenTimeCurrentArea = getFeatureArea(el);
+    // Entry screens (loading, login, onboarding, App Lock, verify email) are not "using the app" —
+    // time spent typing a password used to be counted as screen time. null = clock paused there.
+    screenTimeCurrentArea = HL_NAV_GATE_SCREENS.includes(el) ? null : getFeatureArea(el);
     screenTimeAreaStart = Date.now();
   }
   if(currentActive && currentActive !== el && !suppressHistoryPush && !HL_NAV_GATE_SCREENS.includes(currentActive)){
@@ -20497,7 +20500,10 @@ safeOn('menuNotificationPrefs', 'click', async () => {
   try{
     const rawPermission = ('Notification' in window) ? Notification.permission : 'unsupported';
     let diagnosticText = 'Device permission: ' + rawPermission + ' · Token saved: ' + (enabled ? 'yes' : 'no');
-    if(rawPermission === 'granted' && !enabled){
+    if(existing && existing.readFailed){
+      // Edge case fixed: a failed read used to show "no token saved — try turning notifications On"
+      diagnosticText = 'Could not check your notification status right now (no internet?). Please open this screen again.';
+    } else if(rawPermission === 'granted' && !enabled){
       diagnosticText += ' — permission is granted but no token was saved yet; try turning notifications On below.';
     } else if(rawPermission === 'denied'){
       diagnosticText += ' — blocked at the browser/device level; re-enable it in your browser or phone Settings for this site, then reopen the app.';
