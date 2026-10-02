@@ -2592,6 +2592,7 @@
           <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon"><i class="bi bi-lock"></i></span> Privacy Policy</button>
           <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong-on-light);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
+          <button class="profile-menu-item" id="menuAdminView" style="display:none;"><span class="pm-icon"><i class="bi bi-person-gear"></i></span> Admin view <span id="adminViewStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
         </div>
       </details>
 
@@ -25776,7 +25777,19 @@ function hlRenderAdminBar_(activeScreen){
   const scr = activeScreen || document.querySelector('.screen.active');
   let onGate = false;
   try{ onGate = Array.isArray(HL_NAV_GATE_SCREENS) && HL_NAV_GATE_SCREENS.includes(scr); }catch(e){}
-  if(!hlIsAdminUser_() || onGate){ if(pill) pill.remove(); return; }
+  // The switch lives in Profile > Account & Privacy ("Admin view"), shown to admin accounts only
+  const menuBtn = document.getElementById('menuAdminView');
+  if(menuBtn){
+    const isAdmin = hlIsAdminUser_();
+    menuBtn.style.display = isAdmin ? '' : 'none';
+    if(isAdmin){
+      const lbl = document.getElementById('adminViewStatusLabel');
+      if(lbl) lbl.textContent = hlAdminModeOn_() ? 'On' : 'Off';
+      if(!menuBtn.dataset.wired){ menuBtn.dataset.wired = '1'; menuBtn.onclick = hlToggleAdminMode_; }
+    }
+  }
+  // Pill appears ONLY while Admin view is ON. Off = nothing at all = exactly the student view.
+  if(!hlIsAdminUser_() || onGate || !hlAdminModeOn_()){ if(pill) pill.remove(); return; }
   if(!pill){
     pill = document.createElement('button');
     pill.type = 'button';
@@ -25785,7 +25798,7 @@ function hlRenderAdminBar_(activeScreen){
     document.body.appendChild(pill);
   }
   const on = hlAdminModeOn_();
-  pill.textContent = on ? 'ADMIN MODE · tap for Student view' : 'Student view · tap for Admin mode';
+  pill.textContent = 'ADMIN MODE · tap to turn off';
   pill.style.cssText = 'position:fixed; left:10px; bottom:calc(env(safe-area-inset-bottom, 0px) + 12px); z-index:9990; width:auto; margin:0; padding:5px 11px;'
     + ' font-size:10.5px; font-weight:800; letter-spacing:0.3px; border-radius:14px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.35);'
     + ' background:var(--panel-elevated);' + (on ? ' color:var(--gold); border:1.5px solid var(--gold);' : ' color:var(--ink-soft-on-elevated); border:1px solid rgba(255,255,255,0.35);');
