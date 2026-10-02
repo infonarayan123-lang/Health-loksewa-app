@@ -7986,7 +7986,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwlp25OLQwjlfjjSxxVLJDg_74SnI_cRCPnMA1WZeBo03uMEaZ0dN2SxlwY9_iTx95Fyw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyBj9Xw7ZoXM7QXkexGu4mw6tAlkJiGJdmDM1BfJJ4bkzql5bvHbpvG29cQmuqfBRpung/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -9121,9 +9121,9 @@ async function renderDiscoverGroups(){
     return;
   }
   wrap.innerHTML = notJoined.map(g => `
-    <div class="group-card" data-code="${g.code}">
-      <div class="gc-name">${g.name}</div>
-      <div class="gc-meta">${(g.memberUids || []).length} members · ${g.category || 'General Study'}</div>
+    <div class="group-card" data-code="${hlEsc(g.code)}">
+      <div class="gc-name">${hlEsc(g.name)}</div>
+      <div class="gc-meta">${(g.memberUids || []).length} members · ${hlEsc(g.category || 'General Study')}</div>
     </div>
   `).join('');
   document.querySelectorAll('#discoverGroupsList .group-card').forEach(card => {
@@ -9147,9 +9147,9 @@ async function renderMyGroups(){
   }
 
   wrap.innerHTML = groups.map(g => `
-    <div class="group-card" data-code="${g.code}">
-      <div class="gc-name">${g.name}${(g.pendingUids || []).length > 0 && g.createdBy === (window.currentUser ? window.currentUser.uid : null) ? ` <span style="color:var(--gold); font-size:11px;">(${g.pendingUids.length} pending)</span>` : ''}</div>
-      <div class="gc-meta">${g.memberUids.length} member${g.memberUids.length !== 1 ? 's' : ''} · Code: ${g.code}</div>
+    <div class="group-card" data-code="${hlEsc(g.code)}">
+      <div class="gc-name">${hlEsc(g.name)}${(g.pendingUids || []).length > 0 && g.createdBy === (window.currentUser ? window.currentUser.uid : null) ? ` <span style="color:var(--gold); font-size:11px;">(${g.pendingUids.length} pending)</span>` : ''}</div>
+      <div class="gc-meta">${g.memberUids.length} member${g.memberUids.length !== 1 ? 's' : ''} · Code: ${hlEsc(g.code)}</div>
     </div>
   `).join('');
 
@@ -9225,11 +9225,11 @@ function renderGroupMembers(group){
 
   const memberRow = (m, roleLabel) => `
     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-top:1px solid var(--line);">
-      <span style="font-size:12.5px;">${roleLabel} ${m.name}${m.uid === myUid ? ' (You)' : ''}</span>
+      <span style="font-size:12.5px;">${roleLabel} ${hlEsc(m.name)}${m.uid === myUid ? ' (You)' : ''}</span>
       ${isAdmin && m.uid !== group.createdBy ? `
         <div style="display:flex; gap:6px;">
-          <button class="calc-btn gd-mod-toggle" data-uid="${m.uid}" data-ismod="${mods.includes(m.uid)}" style="margin:0; width:auto; padding:4px 8px; font-size:10px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">${mods.includes(m.uid) ? 'Demote' : 'Make Mod'}</button>
-          <button class="calc-btn gd-member-remove" data-uid="${m.uid}" style="margin:0; width:auto; padding:4px 8px; font-size:10px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Remove</button>
+          <button class="calc-btn gd-mod-toggle" data-uid="${hlEsc(m.uid)}" data-ismod="${mods.includes(m.uid)}" style="margin:0; width:auto; padding:4px 8px; font-size:10px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">${mods.includes(m.uid) ? 'Demote' : 'Make Mod'}</button>
+          <button class="calc-btn gd-member-remove" data-uid="${hlEsc(m.uid)}" style="margin:0; width:auto; padding:4px 8px; font-size:10px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">Remove</button>
         </div>` : ''}
     </div>`;
 
@@ -9283,10 +9283,10 @@ function renderGroupPendingRequests(group){
       <h4 style="margin-bottom:8px;">Pending Requests (${pending.length})</h4>
       ${pending.map(uid => `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-top:1px solid var(--line);">
-          <span style="font-size:12.5px;">${(group.memberNames && group.memberNames[uid]) || 'Student'}</span>
+          <span style="font-size:12.5px;">${hlEsc((group.memberNames && group.memberNames[uid]) || 'Student')}</span>
           <div style="display:flex; gap:6px;">
-            <button class="calc-btn gpr-approve" data-uid="${uid}" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--correct); color:#fff;">✓ Approve</button>
-            <button class="calc-btn gpr-reject" data-uid="${uid}" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">✕</button>
+            <button class="calc-btn gpr-approve" data-uid="${hlEsc(uid)}" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--correct); color:#fff;">✓ Approve</button>
+            <button class="calc-btn gpr-reject" data-uid="${hlEsc(uid)}" style="margin:0; width:auto; padding:5px 10px; font-size:11px; background:var(--panel); color:var(--wrong); border:1.5px solid var(--wrong);">✕</button>
           </div>
         </div>
       `).join('')}
@@ -9367,13 +9367,13 @@ async function renderGroupStudyTab(){
 
   wrap.innerHTML = `
     <div class="content-card">
-      <h4 style="margin-bottom:4px;">${challenge.subject || 'Mixed'} Week</h4>
-      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">${challenge.totalQuestions} Questions · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left</p>
+      <h4 style="margin-bottom:4px;">${hlEsc(challenge.subject || 'Mixed')} Week</h4>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;">${hlEsc(challenge.totalQuestions)} Questions · ${daysLeft} day${daysLeft === 1 ? '' : 's'} left</p>
       <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">Group Progress · ${groupAvgPct}% avg</div>
       <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden; margin-bottom:10px;"><div style="background:var(--teal); height:100%; width:${groupAvgPct}%;"></div></div>
       <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;">${participantsSnap.size} / ${totalMembers} members participating</div>
       ${myScore !== null
-        ? `<p style="font-size:12.5px; color:var(--correct); font-weight:700;">✓ Your score: ${myScore} / ${challenge.totalQuestions}</p>`
+        ? `<p style="font-size:12.5px; color:var(--correct); font-weight:700;">✓ Your score: ${hlEsc(myScore)} / ${hlEsc(challenge.totalQuestions)}</p>`
         : `<button class="start-btn" id="gdStartChallengeBtn" style="margin-top:0;">Start Challenge</button>`}
     </div>
   `;
@@ -9402,8 +9402,21 @@ async function createGroupChallenge(){
   }
 }
 let groupChallengeActive = false;
+// Group challenge questions are stored in Firestore by whichever MEMBER created the challenge, so
+// they are not trusted like your own Sheet. Real < and > are swapped for look-alike characters once,
+// here, so no hidden code can exist in them anywhere they are later shown (quiz, review, My Mistakes,
+// notes). The correct answer is kept to a plain A-D letter.
+function hlPlainQuestion_(q){
+  const out = {};
+  Object.keys(q || {}).forEach(k => {
+    out[k] = (typeof q[k] === 'string') ? q[k].replace(/</g, '\uFF1C').replace(/>/g, '\uFF1E') : q[k];
+  });
+  const ca = String(out.CorrectAnswer || '').trim().toUpperCase().charAt(0);
+  if(ca && 'ABCD'.includes(ca)) out.CorrectAnswer = ca;
+  return out;
+}
 function startGroupChallengeQuiz(challenge){
-  quizQuestions = challenge.questions;
+  quizQuestions = (Array.isArray(challenge.questions) ? challenge.questions : []).map(hlPlainQuestion_);
   currentIndex = 0;
   answers = new Array(quizQuestions.length).fill(null);
   secondsLeft = quizQuestions.length * 45;
@@ -9443,8 +9456,8 @@ async function renderGroupResources(){
     }
     wrap.innerHTML = resources.map(r => `
       <div class="content-card" style="margin-bottom:8px;">
-        <div style="font-size:12.5px; font-weight:700;">${r.title}</div>
-        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:6px;">Shared by ${r.sharedByName || 'Student'}</div>
+        <div style="font-size:12.5px; font-weight:700;">${hlEsc(r.title)}</div>
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:6px;">Shared by ${hlEsc(r.sharedByName || 'Student')}</div>
         <button class="chat-save-btn gd-save-resource" data-idx="${resources.indexOf(r)}" style="display:inline-block;">Save to My Notes</button>
       </div>
     `).join('');
@@ -9511,10 +9524,10 @@ async function renderGroupDiscussions(){
       return;
     }
     wrap.innerHTML = discussions.map(d => `
-      <div class="note-item gd-discussion-row" data-id="${d.id}" style="cursor:pointer;">
+      <div class="note-item gd-discussion-row" data-id="${hlEsc(d.id)}" style="cursor:pointer;">
         ${d.pinned ? '<div style="font-size:10px; color:var(--gold); font-weight:700; margin-bottom:3px;">Pinned</div>' : ''}
-        <div class="ni-title" style="font-size:13px;">${DISCUSSION_TYPE_ICON[d.type] || '💬'} ${d.title}</div>
-        <div class="ni-meta">${d.replyCount || 0} replies · ${(d.likes || []).length}</div>
+        <div class="ni-title" style="font-size:13px;">${DISCUSSION_TYPE_ICON[d.type] || '💬'} ${hlEsc(d.title)}</div>
+        <div class="ni-meta">${hlEsc(d.replyCount || 0)} replies · ${(d.likes || []).length}</div>
       </div>
     `).join('');
     wrap.querySelectorAll('.gd-discussion-row').forEach(row => {
@@ -9583,8 +9596,8 @@ async function openDiscussionThread(discussionId){
     ? `<p style="color:var(--ink-soft); font-size:12.5px;">No replies yet.</p>`
     : replies.map(r => `
       <div class="content-card" style="margin-bottom:8px;">
-        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">${r.authorName}</div>
-        <div style="font-size:13px; color:var(--ink);">${r.content}</div>
+        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">${hlEsc(r.authorName)}</div>
+        <div style="font-size:13px; color:var(--ink);">${hlEsc(r.content)}</div>
       </div>
     `).join('');
 }
@@ -9665,8 +9678,8 @@ async function renderGroupDetailLeaderboard(){
     return `
       <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
         <div class="lb-rank ${medalRanks[i] || ''}">${rankIcon}</div>
-        <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
-        <div class="lb-pct">${r.displayPoints || 0} LP · ${r.overallPct}%</div>
+        <div class="lb-name">${hlEsc(r.name)}${isYou ? ' (You)' : ''}</div>
+        <div class="lb-pct">${r.displayPoints || 0} LP · ${hlEsc(r.overallPct)}%</div>
       </div>
     `;
   }).join('');
@@ -9767,8 +9780,8 @@ async function renderTournamentScreen(){
         return `
           <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
             <div class="lb-rank ${medalRanks[i] || ''}">${rankIcon}</div>
-            <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
-            <div class="lb-pct">${r.score}/${r.totalQuestions}</div>
+            <div class="lb-name">${hlEsc(r.name)}${isYou ? ' (You)' : ''}</div>
+            <div class="lb-pct">${hlEsc(r.score)}/${hlEsc(r.totalQuestions)}</div>
           </div>
         `;
       }).join('');
@@ -9851,8 +9864,8 @@ async function renderMonthlyTournamentScreen(){
         return `
           <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
             <div class="lb-rank ${medalRanks[i] || ''}">${rankIcon}</div>
-            <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
-            <div class="lb-pct">${r.score}/${r.totalQuestions}</div>
+            <div class="lb-name">${hlEsc(r.name)}${isYou ? ' (You)' : ''}</div>
+            <div class="lb-pct">${hlEsc(r.score)}/${hlEsc(r.totalQuestions)}</div>
           </div>
         `;
       }).join('');
@@ -16433,6 +16446,20 @@ safeOn('drawerPrintBtn', 'click', () => {
 // renders the same markdown-style tokens the formatting toolbar writes (**bold**, *italic*,
 // - bullets, 1. numbered, [ ] checklist, ## heading) into real formatting, with adjustable
 // font size, line spacing, brightness and theme. Settings persist across sessions. ----------
+// ---- Hidden-script (XSS) protection, Oct 2026 ----
+// Text written by OTHER people (other students' names/posts, community decks, outside news
+// websites) must never be inserted into innerHTML as-is: a name like <img src=x onerror=...> would
+// RUN on every phone that shows it. hlEsc() turns it into harmless visible text. Your own Sheet
+// content is NOT passed through this (it is trusted and may use HTML formatting on purpose).
+function hlEsc(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+// Only real web links may be used in href/src (blocks javascript: and other tricks)
+function hlSafeUrl(u){
+  const v = String(u == null ? '' : u).trim();
+  return /^https?:\/\//i.test(v) ? hlEsc(v) : '#';
+}
 function escapeHtmlForReader(text){
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -19186,7 +19213,7 @@ async function renderLeaderboard(){
           <span style="font-size:26px; font-weight:800;">#${myRank}</span>
           ${change !== 0 ? `<span style="font-size:13px; font-weight:700;">${change > 0 ? '↑' : '↓'}${Math.abs(change)}</span>` : ''}
         </div>
-        <div style="font-size:12.5px; opacity:0.9;">${me.displayPoints || 0} LP · ${me.overallPct || 0}% accuracy</div>
+        <div style="font-size:12.5px; opacity:0.9;">${me.displayPoints || 0} LP · ${hlEsc(me.overallPct || 0)}% accuracy</div>
       </div>
     `;
   }
@@ -19200,8 +19227,8 @@ async function renderLeaderboard(){
     return `
       <div class="leaderboard-row ${isYou ? 'is-you' : ''}">
         <div class="lb-rank ${rankClass}">${rankIcon}</div>
-        <div class="lb-name">${r.name}${isYou ? ' (You)' : ''}</div>
-        <div class="lb-pct">${r.displayPoints || 0} LP · ${r.overallPct || 0}%</div>
+        <div class="lb-name">${hlEsc(r.name)}${isYou ? ' (You)' : ''}</div>
+        <div class="lb-pct">${r.displayPoints || 0} LP · ${hlEsc(r.overallPct || 0)}%</div>
       </div>
     `;
   }).join('');
@@ -19211,8 +19238,8 @@ async function renderLeaderboard(){
     html += `
       <div class="leaderboard-row is-you" style="margin-top:10px; border-top:1px dashed var(--line); padding-top:10px;">
         <div class="lb-rank">${myIndex + 1}</div>
-        <div class="lb-name">${me.name} (You)</div>
-        <div class="lb-pct">${me.displayPoints || 0} LP · ${me.overallPct || 0}%</div>
+        <div class="lb-name">${hlEsc(me.name)} (You)</div>
+        <div class="lb-pct">${me.displayPoints || 0} LP · ${hlEsc(me.overallPct || 0)}%</div>
       </div>
     `;
   }
@@ -22313,12 +22340,12 @@ function renderNewsArticleCards(articles, sourceName){
   const listEl = document.getElementById('newsPortalList');
   listEl.innerHTML = articles.map((a, i) => `
     <div class="calc-card" style="margin-bottom:12px; padding:12px;">
-      <a href="${a.Link || '#'}" target="_blank" rel="noopener" style="display:flex; gap:12px; text-decoration:none;">
-        ${a.ImageURL ? `<img src="${a.ImageURL}" style="width:72px; height:72px; border-radius:10px; object-fit:cover; flex-shrink:0;" alt="">` : ''}
+      <a href="${hlSafeUrl(a.Link)}" target="_blank" rel="noopener" style="display:flex; gap:12px; text-decoration:none;">
+        ${a.ImageURL ? `<img src="${hlSafeUrl(a.ImageURL)}" style="width:72px; height:72px; border-radius:10px; object-fit:cover; flex-shrink:0;" alt="">` : ''}
         <div style="min-width:0;">
-          <div style="font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.3;">${a.Title || ''}</div>
-          <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${a.Snippet || ''}</div>
-          <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${formatRssTime(a.TimeLabel)}${a.SourceName ? ' · ' + a.SourceName : ''}</div>
+          <div style="font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.3;">${hlEsc(a.Title || '')}</div>
+          <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${hlEsc(a.Snippet || '')}</div>
+          <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${formatRssTime(a.TimeLabel)}${a.SourceName ? ' · ' + hlEsc(a.SourceName) : ''}</div>
         </div>
       </a>
       <div style="display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line);">
@@ -24170,7 +24197,7 @@ function renderFlashcardsHome(){
   const dueCards = fcCardsDueToday(cards);
   document.getElementById('fcDueCount').textContent = `${dueCards.length} card${dueCards.length === 1 ? '' : 's'}`;
 
-  document.getElementById('fcCardDeckSelect').innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('fcCardDeckSelect').innerHTML = decks.map(d => `<option value="${hlEsc(d.id)}">${hlEsc(d.name)}</option>`).join('');
 
   const wrap = document.getElementById('fcDeckList');
   if(decks.length === 0){
@@ -24181,9 +24208,9 @@ function renderFlashcardsHome(){
     const deckCards = cards.filter(c => c.deckId === deck.id);
     const deckDue = fcCardsDueToday(deckCards).length;
     return `
-      <button class="note-item fc-deck-row" data-deck-id="${deck.id}" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center; border:none; cursor:pointer;">
+      <button class="note-item fc-deck-row" data-deck-id="${hlEsc(deck.id)}" style="width:100%; text-align:left; display:flex; justify-content:space-between; align-items:center; border:none; cursor:pointer;">
         <div>
-          <div class="ni-title">${deck.name}</div>
+          <div class="ni-title">${hlEsc(deck.name)}</div>
           <div class="ni-meta">${deckCards.length} card${deckCards.length === 1 ? '' : 's'}${deckDue > 0 ? ` · ${deckDue} due` : ''}</div>
         </div>
         <span style="color:var(--ink-soft);">→</span>
@@ -24247,14 +24274,14 @@ safeOn('fcSearchInput', 'input', (e) => {
     (c.tags || []).some(t => t.toLowerCase().includes(query))
   );
   if(matches.length === 0){
-    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No cards match "${e.target.value}".</p>`;
+    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No cards match "${hlEsc(e.target.value)}".</p>`;
     return;
   }
   resultsWrap.innerHTML = matches.map(c => `
-    <button class="note-item fc-search-result-row" data-card-id="${c.id}" style="width:100%; text-align:left; border:none; cursor:pointer;">
-      <div class="ni-title" style="font-size:13px;">${c.favorite ? '⭐ ' : ''}${c.front}</div>
-      <div class="ni-meta">${c.back.slice(0, 60)}${c.back.length > 60 ? '…' : ''}</div>
-      ${(c.tags && c.tags.length) ? `<div class="ni-tags">${c.tags.map(t => `<span class="ni-tag">#${t}</span>`).join('')}</div>` : ''}
+    <button class="note-item fc-search-result-row" data-card-id="${hlEsc(c.id)}" style="width:100%; text-align:left; border:none; cursor:pointer;">
+      <div class="ni-title" style="font-size:13px;">${c.favorite ? '⭐ ' : ''}${hlEsc(c.front)}</div>
+      <div class="ni-meta">${hlEsc(c.back.slice(0, 60))}${c.back.length > 60 ? '…' : ''}</div>
+      ${(c.tags && c.tags.length) ? `<div class="ni-tags">${c.tags.map(t => `<span class="ni-tag">#${hlEsc(t)}</span>`).join('')}</div>` : ''}
     </button>
   `).join('');
   document.querySelectorAll('.fc-search-result-row').forEach(btn => {
@@ -24294,10 +24321,10 @@ function openFcDeckDetail(deckId){
   } else {
     const statusDot = { new:'var(--wrong)', learning:'var(--gold)', familiar:'#1976d2', mastered:'var(--correct)' };
     listEl.innerHTML = cards.map(c => `
-      <button class="note-item fc-card-row" data-card-id="${c.id}" style="width:100%; text-align:left; border:none; cursor:pointer;">
+      <button class="note-item fc-card-row" data-card-id="${hlEsc(c.id)}" style="width:100%; text-align:left; border:none; cursor:pointer;">
         <div style="display:flex; align-items:center; gap:6px;">
           <span style="width:8px; height:8px; border-radius:50%; background:${statusDot[c.status] || statusDot.new}; flex-shrink:0;"></span>
-          <span class="ni-title" style="font-size:13px;">${c.favorite ? '⭐ ' : ''}${c.front}</span>
+          <span class="ni-title" style="font-size:13px;">${c.favorite ? '⭐ ' : ''}${hlEsc(c.front)}</span>
         </div>
       </button>
     `).join('');
@@ -24363,7 +24390,7 @@ function openFcCardEdit(cardId, presetDeckId){
   fcEditingCardId = cardId;
   fcEditingCardImageId = null;
   const decks = ensureDefaultFcDeck();
-  document.getElementById('fcCardDeckSelect').innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('fcCardDeckSelect').innerHTML = decks.map(d => `<option value="${hlEsc(d.id)}">${hlEsc(d.name)}</option>`).join('');
   if(cardId){
     const card = getFcCards().find(c => c.id === cardId);
     document.getElementById('fcCardEditTitle').textContent = 'Edit Card';
@@ -24476,8 +24503,8 @@ function renderFlashcard(){
 
   const q = flashcardsPool[flashcardsIndex];
   const isCloze = q.cardType === 'cloze';
-  const frontDisplay = isCloze ? q.front.replace(/___/g, '<span style="text-decoration:underline; opacity:0.6;">_____</span>') : q.front;
-  const backDisplay = isCloze ? q.front.replace(/___/g, `<b style="color:var(--correct);">${q.back}</b>`) : `<p style="font-weight:700; color:var(--correct); margin-bottom:8px;">${q.back}</p>`;
+  const frontDisplay = isCloze ? hlEsc(q.front).replace(/___/g, '<span style="text-decoration:underline; opacity:0.6;">_____</span>') : hlEsc(q.front);
+  const backDisplay = isCloze ? hlEsc(q.front).replace(/___/g, `<b style="color:var(--correct);">${hlEsc(q.back)}</b>`) : `<p style="font-weight:700; color:var(--correct); margin-bottom:8px;">${hlEsc(q.back)}</p>`;
   wrap.innerHTML = `
     <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-bottom:10px;">Card ${flashcardsIndex + 1} of ${flashcardsPool.length}</p>
     <div class="flashcard" id="flashcardEl">
@@ -24489,8 +24516,8 @@ function renderFlashcard(){
       <div class="flashcard-back" style="display:none;">
         ${q.imageId ? `<img id="fcStudyBackImg" style="width:100%; max-height:140px; object-fit:contain; border-radius:8px; margin-bottom:10px; display:none;">` : ''}
         ${isCloze ? `<p style="font-weight:700; margin-bottom:8px;">${backDisplay}</p>` : backDisplay}
-        ${q.example ? `<p style="font-size:12px; color:var(--ink-soft); margin-bottom:6px;">${q.example}</p>` : ''}
-        ${q.mnemonic ? `<p style="font-size:12px; color:var(--gold);">${q.mnemonic}</p>` : ''}
+        ${q.example ? `<p style="font-size:12px; color:var(--ink-soft); margin-bottom:6px;">${hlEsc(q.example)}</p>` : ''}
+        ${q.mnemonic ? `<p style="font-size:12px; color:var(--gold);">${hlEsc(q.mnemonic)}</p>` : ''}
       </div>
     </div>
     <div class="flashcard-rate-row" id="flashcardRatingRow" style="display:none; flex-wrap:wrap; gap:8px;">
@@ -24564,7 +24591,7 @@ function renderFcProgress(){
     const deckCards = cards.filter(c => c.deckId === deck.id);
     const deckMastered = deckCards.filter(c => c.status === 'mastered').length;
     const pct = deckCards.length ? Math.round((deckMastered / deckCards.length) * 100) : 0;
-    return `<div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line); font-size:13px;"><span style="color:var(--ink-soft);">${deck.name}</span><span style="font-weight:700; color:var(--ink);">${pct}%</span></div>`;
+    return `<div style="display:flex; justify-content:space-between; padding:6px 0; border-top:1px solid var(--line); font-size:13px;"><span style="color:var(--ink-soft);">${hlEsc(deck.name)}</span><span style="font-weight:700; color:var(--ink);">${pct}%</span></div>`;
   }).join('');
 }
 safeOn('fcAiGenerateBtn', 'click', () => {
@@ -24668,8 +24695,8 @@ function renderFcAiResults(){
       <div style="display:flex; align-items:flex-start; gap:8px;">
         <input type="checkbox" class="fc-ai-include-checkbox" data-idx="${i}" checked style="margin-top:4px;">
         <div style="flex:1;">
-          <input type="text" class="fc-ai-front-input" data-idx="${i}" value="${c.front.replace(/"/g, '&quot;')}" style="width:100%; padding:6px; border:1.5px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); font-size:12.5px; font-weight:700; margin-bottom:6px;">
-          <textarea class="fc-ai-back-input" data-idx="${i}" style="width:100%; min-height:44px; padding:6px; border:1.5px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); font-size:12px;">${c.back}</textarea>
+          <input type="text" class="fc-ai-front-input" data-idx="${i}" value="${hlEsc(c.front)}" style="width:100%; padding:6px; border:1.5px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); font-size:12.5px; font-weight:700; margin-bottom:6px;">
+          <textarea class="fc-ai-back-input" data-idx="${i}" style="width:100%; min-height:44px; padding:6px; border:1.5px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); font-size:12px;">${hlEsc(c.back)}</textarea>
         </div>
       </div>
     </div>
@@ -24758,14 +24785,14 @@ async function renderCommunityDecks(){
       <div class="note-item">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
           <div>
-            <div class="ni-title">${d.verified ? '✓ ' : ''}${d.deckName}</div>
-            <div class="ni-meta">by ${d.creatorName} · ${d.cardCount} card${d.cardCount === 1 ? '' : 's'}</div>
+            <div class="ni-title">${d.verified ? '✓ ' : ''}${hlEsc(d.deckName)}</div>
+            <div class="ni-meta">by ${hlEsc(d.creatorName)} · ${hlEsc(d.cardCount)} card${d.cardCount === 1 ? '' : 's'}</div>
             ${d.verified ? `<div style="font-size:10.5px; color:var(--gold); margin-top:3px;">✓ Health Loksewa Verified</div>` : ''}
-            <div style="font-size:11px; color:var(--ink-soft); margin-top:4px;">${d.avgRating ? `${d.avgRating} (${d.ratingCount} rating${d.ratingCount === 1 ? '' : 's'})` : 'No ratings yet'}</div>
+            <div style="font-size:11px; color:var(--ink-soft); margin-top:4px;">${d.avgRating ? `${hlEsc(d.avgRating)} (${hlEsc(d.ratingCount)} rating${d.ratingCount === 1 ? '' : 's'})` : 'No ratings yet'}</div>
           </div>
-          <button class="calc-btn fc-download-deck-btn" data-publish-id="${d.publishId}" data-deck-name="${d.deckName.replace(/"/g, '&quot;')}" style="margin:0; width:auto; padding:8px 14px; font-size:11.5px;">Download</button>
+          <button class="calc-btn fc-download-deck-btn" data-publish-id="${hlEsc(d.publishId)}" data-deck-name="${hlEsc(d.deckName)}" style="margin:0; width:auto; padding:8px 14px; font-size:11.5px;">Download</button>
         </div>
-        <button class="fc-rate-deck-btn" data-publish-id="${d.publishId}" style="margin-top:8px; background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">Rate this deck</button>
+        <button class="fc-rate-deck-btn" data-publish-id="${hlEsc(d.publishId)}" style="margin-top:8px; background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;">Rate this deck</button>
       </div>
     `).join('');
     document.querySelectorAll('.fc-download-deck-btn').forEach(btn => {
@@ -25789,7 +25816,11 @@ function hlRenderAdminBar_(activeScreen){
     }
   }
   // Pill appears ONLY while Admin view is ON. Off = nothing at all = exactly the student view.
-  if(!hlIsAdminUser_() || onGate || !hlAdminModeOn_()){ if(pill) pill.remove(); return; }
+  if(!hlIsAdminUser_() || onGate || !hlAdminModeOn_()){
+    if(pill) pill.remove();
+    const mb = document.getElementById('hlAdminManageBtn'); if(mb) mb.remove();
+    return;
+  }
   if(!pill){
     pill = document.createElement('button');
     pill.type = 'button';
@@ -25811,6 +25842,7 @@ function hlRenderAdminBar_(activeScreen){
     const banner = document.getElementById('installBanner');
     if(banner && getComputedStyle(banner).display !== 'none' && banner.offsetHeight > 0) lift = Math.max(lift, banner.offsetHeight);
     if(lift > 0) pill.style.bottom = (lift + 8) + 'px';
+    try{ hlRenderManageBtn_(scr, pill); }catch(e){}
   });
 }
 function hlToggleAdminMode_(){
@@ -25902,6 +25934,198 @@ function hlOpenAdminAddModal_(currentQ){
     }
     saveBtn.disabled = false;
   };
+}
+// ==========================================================================================
+// ADMIN CONTENT MANAGER — add / edit / delete the content of every Sheet-driven screen.
+// Only visible with Admin view ON. The real lock is in the backend (verified admin email,
+// allow-list of tabs). Form fields come from the tab's own header row, so saved data always
+// matches the Sheet format. All text here is shown with hlEsc / as plain text.
+// ==========================================================================================
+function hlAdminScreenTabs_(screenId){
+  const map = {
+    inspirationHubScreen: ['Inspiration Hub'], healthGuideScreen: ['Health Guide'], mnemonicsScreen: ['Mnemonics'],
+    quickRefScreen: ['Quick References'], formulaScreen: ['Formulas'], healthDaysScreen: ['Health Days'], faqsScreen: ['FAQs'],
+    dictionaryScreen: ['Dictionary', 'Dictionary PDFs'], enNpDictionaryScreen: ['English Nepali Dictionary'],
+    syllabusScreen: ['Syllabus'], resourcesScreen: ['Resources'], videoScreen: ['Video Lessons'],
+    notificationsScreen: ['Notifications'], homeScreen: ['Home Carousel', 'Quotes', 'Exam Dates', 'Promotions'],
+    whatsNewScreen: ['App Updates'], currentAffairsScreen: ['New Updates'], upgradeScreen: ['Premium Features', 'Pricing'],
+    liveClassScreen: ['Live Class'], immunizationScreen: ['Immunization'], webPortalScreen: ['WebPortalLinks'],
+    newsPortalScreen: ['NewsPortalSources'], taxCalcScreen: ['TaxSlabs', 'TaxDeductionLimits'],
+    salaryCalcScreen: ['SalaryScale', 'SalaryAllowances', 'PayrollRates'], pastQuestionsYearScreen: ['Past Questions List']
+  };
+  if(screenId === 'docListScreen'){
+    const t = document.getElementById('docListTitle');
+    return (t && t.dataset.sheet) ? [t.dataset.sheet] : [];
+  }
+  return map[screenId] || [];
+}
+function hlRenderManageBtn_(scr, pill){
+  let btn = document.getElementById('hlAdminManageBtn');
+  const tabs = scr ? hlAdminScreenTabs_(scr.id) : [];
+  if(!tabs.length){ if(btn) btn.remove(); return; }
+  if(!btn){
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'hlAdminManageBtn';
+    document.body.appendChild(btn);
+  }
+  btn.textContent = 'Manage this screen';
+  btn.onclick = () => hlOpenContentManager_(scr.id, 0);
+  const pillBottom = parseFloat(pill.style.bottom) || 12;
+  btn.style.cssText = 'position:fixed; left:10px; bottom:' + (pillBottom + 34) + 'px; z-index:9990; width:auto; margin:0; padding:5px 11px;'
+    + ' font-size:10.5px; font-weight:800; border-radius:14px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.35);'
+    + ' background:var(--gold); color:#1B2F52; border:none;';
+}
+function hlCmRowLabel_(values, headers){
+  const keys = ['Title', 'Name', 'Topic', 'Term', 'English', 'Subtopic', 'Label', 'Feature', 'Question', 'Quote', 'Message', 'PlanKey', 'Category', 'Key'];
+  for(const k of keys){ if(values[k]) return values[k]; }
+  for(const h of headers){ if(values[h]) return values[h]; }
+  return '(empty row)';
+}
+function hlCmIsLong_(header, value){
+  return /content|description|explanation|body|text|detail|answer|story|message|about|notes|trick|quote|summary/i.test(header) || String(value || '').length > 60;
+}
+async function hlCmPost_(payload){
+  const res = await postJsonWithTimeout(Object.assign({ idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : '') }, payload));
+  return res.json();
+}
+function hlCmErrorText_(data){
+  if(data && data.error === 'changed') return 'This row was changed in the Sheet meanwhile, so nothing was saved. The list has been reloaded — please try again.';
+  if(data && data.error === 'exists') return 'A tab with this name already exists in the Sheet.';
+  if(data && data.error === 'notFound') return 'This tab was not found in the Sheet (or is not editable here).';
+  return hlAdminErrorText_(data);
+}
+function hlCmRefreshScreen_(screenId){
+  try{
+    const fn = SCREEN_REFRESH_MAP && SCREEN_REFRESH_MAP[screenId];
+    if(fn){ fn(); return true; }
+  }catch(e){}
+  return false;
+}
+async function hlOpenContentManager_(screenId, tabIndex){
+  const tabs = hlAdminScreenTabs_(screenId);
+  if(!tabs.length) return;
+  const tab = tabs[Math.min(tabIndex || 0, tabs.length - 1)];
+  const post = (screenId === 'pastQuestionsYearScreen' && typeof currentMcqPost !== 'undefined') ? currentMcqPost : '';
+  let modal = document.getElementById('hlCmModal');
+  if(modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'hlCmModal';
+  modal.style.cssText = 'position:fixed; inset:0; z-index:9995; background:var(--panel); color:var(--ink); overflow-y:auto; padding:14px 14px 40px;';
+  document.body.appendChild(modal);
+  const close = () => modal.remove();
+  const head = (title) => '<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">'
+    + '<div style="flex:1; font-size:15px; font-weight:800;">' + hlEsc(title) + '</div>'
+    + '<button type="button" id="hlCmClose" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div>';
+  const tabPicker = tabs.length > 1
+    ? '<select id="hlCmTabPick" style="width:100%; padding:8px; margin-bottom:10px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink);">'
+      + tabs.map((t, i) => '<option value="' + i + '"' + (t === tab ? ' selected' : '') + '>' + hlEsc(t) + '</option>').join('') + '</select>'
+    : '';
+  const notes = [];
+  if(tab === 'Pricing') notes.push('Payments are checked against this tab. Changing a price changes what students must pay — tell Claude too, so the app\'s backup price matches.');
+  if(tab === 'Past Questions List') notes.push('Removing a name here only hides the paper from the app; its tab (with the questions) stays in the Sheet.');
+  const noteHtml = notes.map(n => '<div style="font-size:11.5px; border:1.5px solid var(--gold); border-radius:8px; padding:8px; margin-bottom:10px;">' + hlEsc(n) + '</div>').join('');
+
+  async function showList(message){
+    modal.innerHTML = head('Manage: ' + tab) + tabPicker + noteHtml
+      + '<div id="hlCmMsg" style="font-size:12px; min-height:16px; margin-bottom:8px;">' + hlEsc(message || 'Loading…') + '</div>'
+      + '<div style="display:flex; gap:8px; margin-bottom:12px;"><button type="button" id="hlCmAdd" style="flex:1; margin:0;">Add new</button>'
+      + (screenId === 'pastQuestionsYearScreen' ? '<button type="button" id="hlCmNewPaper" style="flex:1; margin:0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Create new past paper</button>' : '')
+      + '</div><div id="hlCmList"></div>';
+    modal.querySelector('#hlCmClose').onclick = close;
+    const pick = modal.querySelector('#hlCmTabPick');
+    if(pick) pick.onchange = () => hlOpenContentManager_(screenId, parseInt(pick.value, 10));
+    const np = modal.querySelector('#hlCmNewPaper');
+    if(np) np.onclick = showNewPaper;
+    const msgEl = modal.querySelector('#hlCmMsg');
+    let data;
+    try{ data = await hlCmPost_({ action: 'adminContentRead', tab, post }); }
+    catch(e){ msgEl.textContent = 'Could not reach the server.'; return; }
+    if(!data || !data.ok){ msgEl.textContent = hlCmErrorText_(data); return; }
+    if(!message) msgEl.textContent = data.rows.length + ' item' + (data.rows.length === 1 ? '' : 's') + ' in the "' + data.tab + '" tab.';
+    modal.querySelector('#hlCmAdd').onclick = () => showEditor(data.headers, null);
+    const list = modal.querySelector('#hlCmList');
+    list.innerHTML = data.rows.map((r, i) => {
+      const label = hlCmRowLabel_(r.values, data.headers);
+      return '<div style="border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px;">'
+        + '<div style="font-size:13px; font-weight:700; margin-bottom:6px; word-break:break-word;">' + hlEsc(String(label).slice(0, 120)) + '</div>'
+        + '<div style="display:flex; gap:8px;"><button type="button" class="hlCmEdit" data-i="' + i + '" style="flex:1; margin:0; padding:6px; font-size:12px;">Edit</button>'
+        + (tab === 'Past Questions List' && r.values.Name ? '<button type="button" class="hlCmAddQ" data-i="' + i + '" style="flex:1; margin:0; padding:6px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Add question</button>' : '')
+        + '<button type="button" class="hlCmDel" data-i="' + i + '" style="flex:1; margin:0; padding:6px; font-size:12px; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--line);">Delete</button></div></div>';
+    }).join('') || '<div style="font-size:12.5px; opacity:0.8;">No items yet. Tap "Add new".</div>';
+    list.querySelectorAll('.hlCmEdit').forEach(b => b.onclick = () => showEditor(data.headers, data.rows[parseInt(b.dataset.i, 10)]));
+    // A brand-new paper has no questions yet, so it can't be opened as a quiz — add its questions from here
+    list.querySelectorAll('.hlCmAddQ').forEach(b => b.onclick = () => hlOpenAdminAddModal_({ PastPaper: data.rows[parseInt(b.dataset.i, 10)].values.Name }));
+    list.querySelectorAll('.hlCmDel').forEach(b => b.onclick = async () => {
+      const r = data.rows[parseInt(b.dataset.i, 10)];
+      const ok = await customConfirm('Delete this item for ALL students?\n\n"' + String(hlCmRowLabel_(r.values, data.headers)).slice(0, 100) + '"\n\nA full copy is saved in the "Admin Edit Log" tab, so it can be restored.');
+      if(!ok) return;
+      msgEl.textContent = 'Deleting…';
+      let res;
+      try{ res = await hlCmPost_({ action: 'adminContentDelete', tab, post, row: r.row, original: r.values }); }
+      catch(e){ msgEl.textContent = 'Could not reach the server. Nothing was changed.'; return; }
+      if(res && res.ok){ const refreshed = hlCmRefreshScreen_(screenId); showList('Deleted.' + (refreshed ? ' Students see it now.' : ' Reopen this screen to see it.')); }
+      else showList(hlCmErrorText_(res));
+    });
+  }
+
+  function showEditor(headers, rowObj){
+    const isNew = !rowObj;
+    const vals = rowObj ? rowObj.values : {};
+    modal.innerHTML = head((isNew ? 'Add to: ' : 'Edit: ') + tab) + noteHtml
+      + headers.map((h, i) => {
+          const F = 'width:100%; box-sizing:border-box; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px;';
+          return '<label style="display:block; font-size:11px; font-weight:700; margin:8px 0 3px;">' + hlEsc(h) + '</label>'
+            + (hlCmIsLong_(h, vals[h]) ? '<textarea class="hlCmField" data-h="' + i + '" rows="4" style="' + F + '"></textarea>' : '<input class="hlCmField" data-h="' + i + '" style="' + F + '">');
+        }).join('')
+      + '<div id="hlCmEdMsg" style="font-size:12px; min-height:16px; margin-top:10px;"></div>'
+      + '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="hlCmSave" style="flex:1; margin:0;">' + (isNew ? 'Add' : 'Save') + '</button>'
+      + '<button type="button" id="hlCmBack" style="flex:1; margin:0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Back</button></div>';
+    modal.querySelectorAll('.hlCmField').forEach(el => { el.value = vals[headers[parseInt(el.dataset.h, 10)]] || ''; }); // plain text
+    modal.querySelector('#hlCmClose').onclick = close;
+    modal.querySelector('#hlCmBack').onclick = () => showList();
+    const msg = modal.querySelector('#hlCmEdMsg');
+    const save = modal.querySelector('#hlCmSave');
+    save.onclick = async () => {
+      const values = {};
+      modal.querySelectorAll('.hlCmField').forEach(el => { values[headers[parseInt(el.dataset.h, 10)]] = el.value.trim(); });
+      if(isNew && !Object.values(values).some(v => v)){ msg.textContent = 'Please fill at least one field.'; return; }
+      if(!isNew && headers.every(h => (values[h] || '') === (vals[h] || '').trim())){ msg.textContent = 'Nothing changed.'; return; }
+      save.disabled = true; msg.textContent = 'Saving…';
+      let res;
+      try{ res = await hlCmPost_(isNew ? { action: 'adminContentSave', tab, post, values } : { action: 'adminContentSave', tab, post, row: rowObj.row, original: rowObj.values, values }); }
+      catch(e){ msg.textContent = 'Could not reach the server. Nothing was changed.'; save.disabled = false; return; }
+      if(res && res.ok){ const refreshed = hlCmRefreshScreen_(screenId); showList((isNew ? 'Added.' : 'Saved.') + (refreshed ? ' Students see it now.' : ' Reopen this screen to see it.')); return; }
+      if(res && res.error === 'changed'){ showList(hlCmErrorText_(res)); return; }
+      msg.textContent = hlCmErrorText_(res); save.disabled = false;
+    };
+  }
+
+  function showNewPaper(){
+    modal.innerHTML = head('Create new past paper')
+      + '<div style="font-size:12px; margin-bottom:8px;">A new tab is created in this exam\'s Sheet with the same columns as its question tabs, and its name is added to "Past Questions List". Then tap "Add question" next to it to add its questions.</div>'
+      + '<label style="display:block; font-size:11px; font-weight:700; margin:8px 0 3px;">Paper name (e.g. PHO 2083)</label>'
+      + '<input id="hlCmPaperName" style="width:100%; box-sizing:border-box; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px;">'
+      + '<div id="hlCmPaperMsg" style="font-size:12px; min-height:16px; margin-top:10px;"></div>'
+      + '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="hlCmPaperSave" style="flex:1; margin:0;">Create</button>'
+      + '<button type="button" id="hlCmBack" style="flex:1; margin:0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Back</button></div>';
+    modal.querySelector('#hlCmClose').onclick = close;
+    modal.querySelector('#hlCmBack').onclick = () => showList();
+    const msg = modal.querySelector('#hlCmPaperMsg');
+    const btn = modal.querySelector('#hlCmPaperSave');
+    btn.onclick = async () => {
+      const name = modal.querySelector('#hlCmPaperName').value.trim();
+      if(name.length < 2){ msg.textContent = 'Please type a paper name.'; return; }
+      btn.disabled = true; msg.textContent = 'Creating…';
+      let res;
+      try{ res = await hlCmPost_({ action: 'adminCreatePastPaper', post: post || 'pho', name }); }
+      catch(e){ msg.textContent = 'Could not reach the server. Nothing was changed.'; btn.disabled = false; return; }
+      if(res && res.ok){ hlCmRefreshScreen_(screenId); showList('Created "' + res.name + '". Tap "Add question" next to it to add its questions.'); return; }
+      msg.textContent = hlCmErrorText_(res); btn.disabled = false;
+    };
+  }
+
+  showList();
 }
 async function hlAdminDeleteCurrent_(q){
   if(!q) return;
