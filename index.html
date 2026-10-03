@@ -23541,11 +23541,18 @@ window.showInAppNotificationBanner = function(title, body){
   clearTimeout(inAppNotifTimeout);
   inAppNotifTimeout = setTimeout(() => { banner.style.display = 'none'; }, 6000);
 };
-safeOn('inAppNotifBanner', 'click', () => {
+// These two elements are placed in the HTML AFTER this script, so wiring them while the script
+// runs found nothing and silently failed (the banner tap and the error box's Dismiss button never
+// worked). They are now wired once the whole page has loaded.
+function hlWhenDomReady_(fn){
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, { once: true });
+  else fn();
+}
+hlWhenDomReady_(() => safeOn('inAppNotifBanner', 'click', () => {
   document.getElementById('inAppNotifBanner').style.display = 'none';
   showScreen(whatsNewScreen);
   renderWhatsNew();
-});
+}));
 
 // ---------- TEMPORARY diagnostic tool: catches any real, uncaught JavaScript error anywhere in
 // the app — both thrown errors and unhandled promise rejections (many async functions in this
@@ -23592,14 +23599,45 @@ function showDebugError(message){
   // of the script's top-level execution (every function/variable declared after that point in
   // the file, including chatInitialized, was never created). Falling back to console.error here
   // keeps that early-call case harmless instead of catastrophic.
+  // Oct 2026: the full technical text is shown to ADMINS only. Students see a calm, friendly
+  // message instead (raw errors look broken and reveal internal details). Every error is still
+  // kept on this phone (last 20, "hl_error_log") and in the console, so nothing is lost.
+  try{
+    const log = JSON.parse(localStorage.getItem('hl_error_log') || '[]');
+    log.push({ t: new Date().toISOString(), m: String(message).slice(0, 2000) });
+    localStorage.setItem('hl_error_log', JSON.stringify(log.slice(-20)));
+  }catch(e){}
+  console.error('[Health Loksewa debug]', message);
+  let isAdmin = false;
+  try{
+    if(typeof hlIsAdminUser_ === 'function' && window.currentUser) isAdmin = hlIsAdminUser_();
+    else isAdmin = localStorage.getItem('hl_debug_admin_device') === '1'; // before login is known
+  }catch(e){}
   const textEl = document.getElementById('debugErrorText');
   const overlayEl = document.getElementById('debugErrorOverlay');
-  if(textEl && overlayEl){
+  const titleEl = document.getElementById('debugErrorTitle');
+  if(!(textEl && overlayEl)) return;   // too early in page load — console only (never throw here)
+  if(isAdmin){
+    if(titleEl){ titleEl.textContent = 'A real error occurred \u2014 please screenshot this:'; titleEl.style.color = '#F87171'; }
+    textEl.style.fontFamily = 'monospace';
+    textEl.style.color = '#fca5a5';
     textEl.textContent = message;
+    overlayEl.style.background = '#2a0a0a';
+    overlayEl.style.borderColor = '#F87171';
     overlayEl.style.display = 'block';
-  } else {
-    console.error('[Health Loksewa debug]', message);
+    return;
   }
+  // student: friendly, and not more than once every 30 seconds
+  const now = Date.now();
+  if(window.__hlLastFriendlyError && now - window.__hlLastFriendlyError < 30000) return;
+  window.__hlLastFriendlyError = now;
+  if(titleEl){ titleEl.textContent = 'Something went wrong'; titleEl.style.color = 'var(--ink-on-elevated)'; }
+  textEl.style.fontFamily = 'inherit';
+  textEl.style.color = 'var(--ink-soft-on-elevated)';
+  textEl.textContent = 'Please go back and try again. If it keeps happening, close the app completely and open it again.';
+  overlayEl.style.background = 'var(--panel-elevated)';
+  overlayEl.style.borderColor = 'rgba(255,255,255,0.35)';
+  overlayEl.style.display = 'block';
 }
 window.addEventListener('error', (event) => {
   showDebugError(`${event.message}\n\nFile: ${(event.filename || '').split('/').pop()}:${event.lineno}:${event.colno}`);
@@ -23610,9 +23648,9 @@ window.addEventListener('unhandledrejection', (event) => {
   const stack = (reason && reason.stack) ? '\n\n' + reason.stack.split('\n').slice(0, 3).join('\n') : '';
   showDebugError(`Unhandled promise error: ${message}${stack}`);
 });
-safeOn('debugErrorDismissBtn', 'click', () => {
+hlWhenDomReady_(() => safeOn('debugErrorDismissBtn', 'click', () => {
   document.getElementById('debugErrorOverlay').style.display = 'none';
-});
+}));
 
 function showQuizLoading(message){
   document.getElementById('quizLoadingText').textContent = message || 'Please wait, loading your questions… this may take a moment.';
@@ -25871,6 +25909,9 @@ function hlRenderAdminBar_(activeScreen){
   let onGate = false;
   try{ onGate = Array.isArray(HL_NAV_GATE_SCREENS) && HL_NAV_GATE_SCREENS.includes(scr); }catch(e){}
   // The switch lives in Profile > Account & Privacy ("Admin view"), shown to admin accounts only
+  try{
+    if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
+  }catch(e){}
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
@@ -27384,7 +27425,7 @@ if ('serviceWorker' in navigator) {
   </div>
 
   <div id="debugErrorOverlay" style="display:none; position:fixed; left:12px; right:12px; bottom:calc(100px + env(safe-area-inset-bottom, 0px)); z-index:9999; background:#2a0a0a; border:2px solid #F87171; border-radius:12px; padding:14px; max-height:40vh; overflow-y:auto;">
-    <div style="font-size:12px; font-weight:800; color:#F87171; margin-bottom:6px;">A real error occurred — please screenshot this:</div>
+    <div id="debugErrorTitle" style="font-size:12px; font-weight:800; color:#F87171; margin-bottom:6px;">A real error occurred — please screenshot this:</div>
     <div id="debugErrorText" style="font-size:11px; color:#fca5a5; font-family:monospace; white-space:pre-wrap; word-break:break-word;"></div>
     <button id="debugErrorDismissBtn" style="margin-top:10px; width:100%; padding:8px; background:#F87171; color:#2a0a0a; border:none; border-radius:8px; font-weight:700; font-size:12px;">Dismiss</button>
   </div>
