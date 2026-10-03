@@ -2592,6 +2592,7 @@
           <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon"><i class="bi bi-lock"></i></span> Privacy Policy</button>
           <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong-on-light);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
+          <button class="profile-menu-item" id="menuHealthConsent"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Mood &amp; health tracking <span id="healthConsentStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuAdminView" style="display:none;"><span class="pm-icon"><i class="bi bi-person-gear"></i></span> Admin view <span id="adminViewStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
         </div>
       </details>
@@ -6734,6 +6735,11 @@
   // after a RECENT login, so that is confirmed FIRST — otherwise all data could be wiped and the
   // account itself still refused. Each step is best-effort and reported; nothing here touches
   // any other student's data (Firestore rules also enforce "own data only").
+  window.hlRecordConsent = async (consent) => {
+    const user = auth.currentUser;
+    if(!user) return;
+    try{ await setDoc(doc(db, 'users', user.uid), { privacyConsent: consent }, { merge: true }); }catch(e){}
+  };
   window.hlDeleteAccount = async (onProgress) => {
     const user = auth.currentUser;
     if(!user) throw new Error('Not logged in');
@@ -6932,6 +6938,8 @@
         window.registerForPushNotifications({}).catch(() => {});
         try{ localStorage.removeItem('hl_notif_pending_registration'); }catch(e){}
       }
+      // Privacy consent (once per account) BEFORE anything else — Play Store requirement
+      if(window.hlEnsurePrivacyConsent){ try{ await window.hlEnsurePrivacyConsent(); }catch(e){} }
       window.showScreen(window.moodCheckinScreen || window.postGateScreen);
       if(window.initMoodCheckin) window.initMoodCheckin();
       if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
@@ -10481,8 +10489,9 @@ safeOn('goToStudyTimer', 'click', (e) => {
   showScreen(studyTimerScreen);
   renderStudyTimerToday();
 });
-safeOn('goToMyHealth', 'click', (e) => {
+safeOn('goToMyHealth', 'click', async (e) => {
   e.preventDefault();
+  if(!(await hlRequireHealthConsent_())) return;
   showScreen(myHealthScreen);
   renderWaterTracker();
   renderSleepHistory();
@@ -10493,8 +10502,9 @@ safeOn('goToEverydayTools', 'click', (e) => {
   showScreen(everydayToolsScreen);
   renderWorldClock();
 });
-safeOn('goToWellness', 'click', (e) => {
+safeOn('goToWellness', 'click', async (e) => {
   e.preventDefault();
+  if(!(await hlRequireHealthConsent_())) return;
   showScreen(wellnessScreen);
   renderGratitudeHistory();
   renderHabitList();
@@ -14436,6 +14446,12 @@ let moodDraft = { level:null, emotions:[], causes:[], note:'' };
 let moodFlowFromHome = false; // true when triggered from Home's "+ Check In", not the daily gate
 
 function initMoodCheckin(){
+  if(!hlHasHealthConsent_()){
+    // No mood/health consent: skip the daily mood check-in entirely
+    showScreen(postGateScreen);
+    if(window.renderPostPickerInto) window.renderPostPickerInto('postGateRow');
+    return;
+  }
   const today = todayISO();
   let lastShown = null;
   try{ lastShown = localStorage.getItem(uk('hl_mood_last_shown')); }catch(e){}
@@ -14451,7 +14467,111 @@ function initMoodCheckin(){
 }
 window.initMoodCheckin = initMoodCheckin;
 
-function startMoodCheckinFromHome(){
+// ==========================================================================================
+// PRIVACY CONSENT (Oct 2026, Play Store requirement). Shown once per account (version 1), before
+// anything else after login. Mood & health tracking has its OWN optional consent (off by default):
+// without it the daily mood check-in is skipped and My Health / Wellness / the Home mood button ask
+// first. Mood and health entries are stored on this phone only.
+// ==========================================================================================
+// (a function, not a const: function declarations can never be caught "before initialization")
+function hlHealthKeys_(){ return ['hl_bp_log', 'hl_glucose_log', 'hl_sleep_log', 'hl_water_log', 'hl_gratitude_log', 'hl_mood_entries', 'hl_mood_last_shown']; }
+function hlConsentGet_(){
+  try{ return JSON.parse(localStorage.getItem(uk('hl_consent')) || 'null'); }catch(e){ return null; }
+}
+function hlConsentSave_(c){
+  try{ localStorage.setItem(uk('hl_consent'), JSON.stringify(c)); }catch(e){}
+  try{ if(window.hlRecordConsent) window.hlRecordConsent(c); }catch(e){}
+}
+function hlHasHealthConsent_(){ const c = hlConsentGet_(); return !!(c && c.health === true); }
+async function hlRequireHealthConsent_(){
+  if(hlHasHealthConsent_()) return true;
+  const ok = await customConfirm('Mood and health tracking\n\nThis feature saves your mood, health and wellbeing entries (such as blood pressure, sugar, sleep, water and gratitude notes) on this phone only. They are not sent to our servers or to AI.\n\nAllow mood and health tracking? You can turn it off anytime in Profile > Account & Privacy.');
+  if(!ok) return false;
+  const c = hlConsentGet_() || {};
+  c.health = true; c.healthAt = new Date().toISOString();
+  hlConsentSave_(c);
+  return true;
+}
+window.hlEnsurePrivacyConsent = function(){
+  return new Promise((resolve) => {
+    const c = hlConsentGet_();
+    if(c && c.v >= 1 && c.agreedAt) return resolve();
+    let ov = document.getElementById('hlConsentOverlay');
+    if(ov) ov.remove();
+    ov = document.createElement('div');
+    ov.id = 'hlConsentOverlay';
+    ov.style.cssText = 'position:fixed; inset:0; z-index:9997; background:var(--panel); color:var(--ink); overflow-y:auto; padding:22px 18px calc(110px + env(safe-area-inset-bottom, 0px));'; // extra bottom space: the browser-only install banner can sit over the bottom
+    const li = 'margin:0 0 8px; line-height:1.45;';
+    ov.innerHTML = '<div style="max-width:480px; margin:0 auto;">'
+      + '<div style="font-size:20px; font-weight:800; margin-bottom:6px;">Before you start</div>'
+      + '<div style="font-size:13px; opacity:0.85; margin-bottom:14px;">Here is, in simple words, what Health Loksewa stores and why.</div>'
+      + '<ul style="font-size:13px; padding-left:18px; margin:0 0 12px;">'
+      + '<li style="' + li + '"><b>Your account:</b> your name and email, so you can log in.</li>'
+      + '<li style="' + li + '"><b>Your study:</b> progress, scores, bookmarks and notes, so you can continue where you stopped.</li>'
+      + '<li style="' + li + '"><b>What other students can see:</b> your name and points on the leaderboard, and your posts in Study Groups you join.</li>'
+      + '<li style="' + li + '"><b>AI features:</b> the text you type is sent to AI services (Groq, Google Gemini, OpenRouter) to create an answer. Your name and email are not sent.</li>'
+      + '<li style="' + li + '"><b>Payments:</b> handled by eSewa or Khalti. We never see your wallet password or PIN.</li>'
+      + '<li style="' + li + '"><b>Your control:</b> you can delete your account and all your data anytime in Profile &gt; Account &amp; Privacy &gt; Delete Account.</li>'
+      + '</ul>'
+      + '<div style="display:flex; gap:8px; margin-bottom:16px;">'
+      + '<button type="button" id="hlConsentReadPolicy" style="flex:1; margin:0; padding:8px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Read Privacy Policy</button>'
+      + '<button type="button" id="hlConsentReadTerms" style="flex:1; margin:0; padding:8px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Read Terms</button></div>'
+      + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:12px; cursor:pointer;"><input type="checkbox" id="hlConsentAgree" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>I have read and agree</b> to the Privacy Policy and Terms. (Required)</span></label>'
+      + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:16px; cursor:pointer;"><input type="checkbox" id="hlConsentHealth" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>Allow mood and health tracking</b> (daily mood check-in, blood pressure, sugar, sleep, water, gratitude). Saved on this phone only. (Optional — you can turn it on later.)</span></label>'
+      + '<button type="button" id="hlConsentContinue" disabled style="width:100%; margin:0; padding:12px; font-size:14px; font-weight:800;">Continue</button>'
+      + '</div>';
+    document.body.appendChild(ov);
+    const agree = ov.querySelector('#hlConsentAgree');
+    const cont = ov.querySelector('#hlConsentContinue');
+    agree.onchange = () => { cont.disabled = !agree.checked; };
+    // Reading the policy: hide this page, open the real policy screen, offer a way back
+    const openDoc = (menuId) => {
+      ov.style.display = 'none';
+      try{ document.getElementById(menuId).click(); }catch(e){}
+      let back = document.getElementById('hlConsentBackBtn');
+      if(!back){
+        back = document.createElement('button');
+        back.type = 'button';
+        back.id = 'hlConsentBackBtn';
+        back.textContent = 'Back to agreement';
+        back.style.cssText = 'position:fixed; left:50%; transform:translateX(-50%); bottom:calc(20px + env(safe-area-inset-bottom, 0px)); z-index:9998; width:auto; margin:0; padding:10px 18px; font-size:13px; font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,0.35);';
+        document.body.appendChild(back);
+      }
+      back.onclick = () => { back.remove(); ov.style.display = 'block'; };
+    };
+    ov.querySelector('#hlConsentReadPolicy').onclick = () => openDoc('menuPrivacyPolicy');
+    ov.querySelector('#hlConsentReadTerms').onclick = () => openDoc('menuTerms');
+    cont.onclick = () => {
+      if(!agree.checked) return;
+      const health = ov.querySelector('#hlConsentHealth').checked;
+      const now = new Date().toISOString();
+      const prev = hlConsentGet_() || {};
+      hlConsentSave_(Object.assign(prev, { v: 1, agreedAt: now, health: health || prev.health === true, healthAt: health ? now : (prev.healthAt || null) }));
+      ov.remove();
+      const back = document.getElementById('hlConsentBackBtn'); if(back) back.remove();
+      resolve();
+    };
+  });
+};
+// Profile > Account & Privacy > "Mood & health tracking" On/Off
+safeOn('menuHealthConsent', 'click', async () => {
+  const lbl = document.getElementById('healthConsentStatusLabel');
+  if(!hlHasHealthConsent_()){
+    if(await hlRequireHealthConsent_()){ if(lbl) lbl.textContent = 'On'; }
+    return;
+  }
+  if(!(await customConfirm('Turn off mood and health tracking?\n\nThe daily mood check-in and the My Health / Wellness tools will ask before saving anything again.'))) return;
+  const c = hlConsentGet_() || {};
+  c.health = false; c.healthOffAt = new Date().toISOString();
+  hlConsentSave_(c);
+  if(lbl) lbl.textContent = 'Off';
+  if(await customConfirm('Also delete the mood and health entries already saved on this phone?\n\nThis cannot be undone.')){
+    hlHealthKeys_().forEach(k => { try{ localStorage.removeItem(uk(k)); }catch(e){} });
+    alert('Your mood and health entries have been deleted from this phone.');
+  }
+});
+async function startMoodCheckinFromHome(){
+  if(!(await hlRequireHealthConsent_())) return;
   moodFlowFromHome = true;
   moodDraft = { level:null, emotions:[], causes:[], note:'' };
   showScreen(moodCheckinScreen);
@@ -26007,6 +26127,7 @@ function hlEnsureAdminStyle_(){
 }
 // Small pill shown on EVERY screen, admins only: shows the current mode and switches it in one tap.
 function hlRenderAdminBar_(activeScreen){
+  try{ const hl = document.getElementById('healthConsentStatusLabel'); if(hl) hl.textContent = hlHasHealthConsent_() ? 'On' : 'Off'; }catch(e){}
   let pill = document.getElementById('hlAdminPill');
   const scr = activeScreen || document.querySelector('.screen.active');
   let onGate = false;
