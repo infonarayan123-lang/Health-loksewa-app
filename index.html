@@ -6611,7 +6611,8 @@
     getAuth, signOut, onAuthStateChanged, updateProfile, deleteUser,
     createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
     EmailAuthProvider, reauthenticateWithCredential, updatePassword,
-    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendEmailVerification, reload
+    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendEmailVerification, reload,
+    reauthenticateWithPopup
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
@@ -6728,14 +6729,107 @@
       throw new Error('generic');
     }
   };
-  window.hlDeleteAccount = async () => {
+  // ---- COMPLETE account deletion (Oct 2026; required for Play Store). Removes the student's data
+  // everywhere they could have left it, THEN the login itself. Firebase only deletes an account
+  // after a RECENT login, so that is confirmed FIRST — otherwise all data could be wiped and the
+  // account itself still refused. Each step is best-effort and reported; nothing here touches
+  // any other student's data (Firestore rules also enforce "own data only").
+  window.hlDeleteAccount = async (onProgress) => {
     const user = auth.currentUser;
     if(!user) throw new Error('Not logged in');
-    // Best-effort cleanup of this user's own Firestore profile doc before deleting the
-    // account itself — leaderboard/tournament entries are left as historical records,
-    // matching how the rest of the app already treats them.
-    try{ await deleteDoc(doc(db, 'users', user.uid)); }catch(e){}
-    await deleteUser(user); // throws if Firebase requires a recent re-login — caller shows a friendly message
+    const uid = user.uid;
+    const say = (t) => { try{ if(onProgress) onProgress(t); }catch(e){} };
+    const problems = [];
+    const step = async (label, fn) => { try{ await fn(); }catch(e){ problems.push(label); } };
+
+    // 1) Make sure the login is recent (or confirm it now) BEFORE deleting anything
+    const lastSignIn = user.metadata && user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).getTime() : 0;
+    if(Date.now() - lastSignIn > 4 * 60 * 1000){
+      const providers = (user.providerData || []).map(p => p.providerId);
+      try{
+        if(providers.includes('password')){
+          const pw = prompt('For your security, please enter your password to confirm deleting your account:');
+          if(pw === null) throw new Error('reauth-cancelled');
+          await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, pw));
+        } else {
+          await reauthenticateWithPopup(user, new GoogleAuthProvider());
+        }
+      }catch(e){
+        throw new Error(e && e.message === 'reauth-cancelled' ? 'reauth-cancelled' : 'reauth-failed');
+      }
+    }
+
+    // 2) Study Groups: own posts/replies/shared notes/challenge results, then membership
+    say('Removing your Study Group activity…');
+    await step('study groups', async () => {
+      const groups = await getDocs(query(collection(db, 'groups'), where('memberUids', 'array-contains', uid)));
+      for(const g of groups.docs){
+        const code = g.id, data = g.data();
+        const discs = await getDocs(collection(db, 'groups', code, 'discussions'));
+        for(const d of discs.docs){
+          const reps = await getDocs(query(collection(db, 'groups', code, 'discussions', d.id, 'replies'), where('authorUid', '==', uid)));
+          for(const r of reps.docs){ await step('a group reply', () => deleteDoc(r.ref)); }
+          if(d.data().authorUid === uid) await step('a group post', () => deleteDoc(d.ref));
+        }
+        const res = await getDocs(query(collection(db, 'groups', code, 'sharedResources'), where('sharedBy', '==', uid)));
+        for(const r of res.docs){ await step('a shared note', () => deleteDoc(r.ref)); }
+        const chs = await getDocs(collection(db, 'groups', code, 'challenges'));
+        for(const c of chs.docs){ await step('a challenge result', () => deleteDoc(doc(db, 'groups', code, 'challenges', c.id, 'participants', uid))); }
+        const others = (data.memberUids || []).filter(u => u !== uid);
+        const names = Object.assign({}, data.memberNames || {}); delete names[uid];
+        if(data.createdBy === uid){
+          if(others.length === 0){ await step('your group', () => deleteDoc(g.ref)); }
+          else {
+            // hand the group over to the next member so it keeps working for everyone else
+            const mods = (data.moderatorUids || []).filter(u => u !== uid && u !== others[0]);
+            await step('your group', () => updateDoc(g.ref, { createdBy: others[0], memberUids: others, memberNames: names, moderatorUids: mods }));
+          }
+        } else if((data.moderatorUids || []).includes(uid)){
+          await step('a group membership', () => updateDoc(g.ref, { memberUids: others, memberNames: names, moderatorUids: (data.moderatorUids || []).filter(u => u !== uid) }));
+        } else {
+          await step('a group membership', () => updateDoc(g.ref, { memberUids: others, memberNames: names }));
+        }
+      }
+      const pend = await getDocs(query(collection(db, 'groups'), where('pendingUids', 'array-contains', uid)));
+      for(const g of pend.docs){ await step('a join request', () => updateDoc(g.ref, { pendingUids: (g.data().pendingUids || []).filter(u => u !== uid) })); }
+    });
+
+    // 3) Tournament entries, Daily Battle scores, matchmaking
+    say('Removing your scores…');
+    for(const col of ['tournamentEntries', 'monthlyTournamentEntries']){
+      await step(col, async () => {
+        const q = await getDocs(query(collection(db, col), where('uid', '==', uid)));
+        for(const d of q.docs){ await step('a tournament entry', () => deleteDoc(d.ref)); }
+      });
+    }
+    await step('daily battles', async () => {
+      const days = new Set();
+      for(let i = 0; i <= 62; i++){
+        const d = new Date(); d.setDate(d.getDate() - i);
+        days.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
+        days.add(d.toISOString().slice(0, 10));
+      }
+      await Promise.all([...days].map(day => deleteDoc(doc(db, 'dailyBattles', day, 'participants', uid)).catch(() => {})));
+    });
+    await step('matchmaking', () => deleteDoc(doc(db, 'matchmakingQueue', uid)));
+
+    // 4) Leaderboard, devices, profile
+    say('Removing your profile…');
+    await step('leaderboard', () => deleteDoc(doc(db, 'leaderboard', uid)));
+    await step('devices', async () => {
+      const devs = await getDocs(collection(db, 'users', uid, 'devices'));
+      for(const d of devs.docs){ await deleteDoc(d.ref); }
+    });
+    await step('profile', () => deleteDoc(doc(db, 'users', uid)));
+
+    // 5) The login itself, then this phone's saved data for this account
+    say('Deleting your account…');
+    await deleteUser(user);
+    try{
+      Object.keys(localStorage).forEach(k => { if(k.endsWith('__u_' + uid)) localStorage.removeItem(k); });
+      localStorage.removeItem('hl_user');
+    }catch(e){}
+    return { problems };
   };
 
   function showLoginError(msg){
@@ -21262,10 +21356,19 @@ safeOn('menuDeleteAccount', 'click', async () => {
   const typed = prompt('This permanently deletes your account and cannot be undone.\n\nType DELETE (in capitals) to confirm:');
   if(typed !== 'DELETE') return;
   try{
-    if(window.hlDeleteAccount) await window.hlDeleteAccount();
-    alert('Your account has been deleted.');
+    showQuizLoading('Deleting your data…');
+    const result = window.hlDeleteAccount ? await window.hlDeleteAccount((t) => showQuizLoading(t)) : { problems: [] };
+    hideQuizLoading();
+    if(result && result.problems && result.problems.length){
+      alert('Your account has been deleted. A few items could not be removed automatically (' + result.problems.slice(0, 4).join(', ') + '). Please contact support so we can remove them for you.');
+    } else {
+      alert('Your account and all your data have been deleted.');
+    }
   }catch(e){
-    alert('Could not delete your account right now — you may need to log in again first, then retry. Please try again, or contact support if this keeps happening.');
+    hideQuizLoading();
+    if(e && e.message === 'reauth-cancelled') return;   // they cancelled — nothing was deleted
+    if(e && e.message === 'reauth-failed'){ alert('Could not confirm your login (wrong password, or the sign-in window was blocked). Nothing was deleted.\n\nYou can also log out, log in again, and then delete your account within a few minutes.'); return; }
+    alert('Could not delete your account right now. Please log out, log in again, and retry — or contact support if this keeps happening.');
   }
 });
 try{ applyHighContrastPreference(); }catch(err){ if(window.showDebugError) showDebugError("Startup step failed: applyHighContrastPreference();\n\n" + (err && err.message ? err.message : String(err))); } // apply immediately on app load
