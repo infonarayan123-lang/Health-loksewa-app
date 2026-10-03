@@ -16895,6 +16895,54 @@ function simplePinHash(pin){
   }
   return String(hash);
 }
+// ---- Strong PIN hashing (Oct 2026). simplePinHash above is a weak 32-bit hash: a 6-digit PIN
+// stored with it can be cracked in under a second. New PINs are stored as
+// "pbkdf2$<iterations>$<salt>$<hash>" (PBKDF2-SHA256, random 16-byte salt, 100,000 rounds).
+// OLD PINs keep working: hlPinVerify_ understands both formats, and a successful unlock with an old
+// PIN quietly re-saves it the strong way — nobody is ever locked out by this change.
+async function hlPbkdf2_(pin, saltBytes, iterations){
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(pin)), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations: iterations, hash: 'SHA-256' }, key, 256);
+  return new Uint8Array(bits);
+}
+function hlBytesToB64_(bytes){ let s = ''; bytes.forEach(b => { s += String.fromCharCode(b); }); return btoa(s); }
+function hlB64ToBytes_(b64){ return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
+function hlIsStrongPinHash_(stored){ return String(stored || '').indexOf('pbkdf2$') === 0; }
+async function hlPinHashStrong_(pin){
+  try{
+    if(!(window.crypto && crypto.subtle)) return simplePinHash(pin); // very old browser: keep working
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const hash = await hlPbkdf2_(pin, salt, 100000);
+    return 'pbkdf2$100000$' + hlBytesToB64_(salt) + '$' + hlBytesToB64_(hash);
+  }catch(e){
+    return simplePinHash(pin);
+  }
+}
+async function hlPinVerify_(pin, stored){
+  stored = String(stored || '');
+  if(!hlIsStrongPinHash_(stored)) return simplePinHash(pin) === stored;   // old format
+  try{
+    const parts = stored.split('$');
+    const got = await hlPbkdf2_(pin, hlB64ToBytes_(parts[2]), parseInt(parts[1], 10));
+    const want = hlB64ToBytes_(parts[3]);
+    if(got.length !== want.length) return false;
+    let diff = 0;
+    for(let i = 0; i < got.length; i++) diff |= got[i] ^ want[i];          // compare every byte
+    return diff === 0;
+  }catch(e){
+    return false;
+  }
+}
+// After a successful unlock with an OLD-format App Lock PIN, re-save it the strong way
+async function hlUpgradeAppLockPin_(pin){
+  try{
+    const st = getAppLockSettings();
+    if(st && st.pinHash && !hlIsStrongPinHash_(st.pinHash) && simplePinHash(pin) === st.pinHash){
+      st.pinHash = await hlPinHashStrong_(pin);
+      saveAppLockSettings(st);
+    }
+  }catch(e){}
+}
 
 // ---------- App Lock: PIN always available, plus REAL biometric authentication via WebAuthn
 // where the device genuinely supports it — this is the actual browser standard that can trigger
@@ -17029,9 +17077,15 @@ async function presentAppLockScreenInner(settings){
       if(screenBeforeLock && screenBeforeLock !== appLockScreen) showScreen(screenBeforeLock);
       resolve();
     };
-    const attemptPin = () => {
+    let pinChecking = false;
+    const attemptPin = async () => {
+      if(pinChecking) return;            // a double-tap while checking can't unlock twice
+      pinChecking = true;
       const pin = document.getElementById('appLockPinInput').value;
-      if(simplePinHash(pin) === settings.pinHash){
+      let okPin = false;
+      try{ okPin = await hlPinVerify_(pin, settings.pinHash); } finally { pinChecking = false; }
+      if(okPin){
+        hlUpgradeAppLockPin_(pin);
         finishUnlock();
       } else {
         document.getElementById('appLockError').textContent = 'Incorrect PIN. Try again.';
@@ -17117,18 +17171,18 @@ safeOn('appLockOfferBiometricBtn', 'click', async () => {
     document.getElementById('appLockOfferError').textContent = 'Also set a 6-digit backup PIN above before continuing.';
     return;
   }
-  saveAppLockSettings({ enabled: true, method: 'biometric', pinHash: simplePinHash(pin), credentialId, autoLockSeconds: 60, lockOnMinimize: true });
+  saveAppLockSettings({ enabled: true, method: 'biometric', pinHash: await hlPinHashStrong_(pin), credentialId, autoLockSeconds: 60, lockOnMinimize: true });
   document.getElementById('appLockOfferBackdrop').style.display = 'none';
   document.getElementById('appLockOfferModal').style.display = 'none';
   alert('App Lock enabled with biometric unlock and a PIN backup. Manage this anytime from Profile → Account & Privacy.');
 });
-safeOn('appLockOfferSetBtn', 'click', () => {
+safeOn('appLockOfferSetBtn', 'click', async () => {
   const pin = document.getElementById('appLockOfferPinInput').value;
   if(pin.length !== 6 || !/^\d{6}$/.test(pin)){
     document.getElementById('appLockOfferError').textContent = 'PIN must be exactly 6 digits.';
     return;
   }
-  saveAppLockSettings({ enabled: true, method: 'pin', pinHash: simplePinHash(pin), credentialId: null, autoLockSeconds: 60, lockOnMinimize: true });
+  saveAppLockSettings({ enabled: true, method: 'pin', pinHash: await hlPinHashStrong_(pin), credentialId: null, autoLockSeconds: 60, lockOnMinimize: true });
   document.getElementById('appLockOfferBackdrop').style.display = 'none';
   document.getElementById('appLockOfferModal').style.display = 'none';
   alert('App Lock enabled! You can change or remove it anytime from Profile → Account & Privacy.');
@@ -17167,7 +17221,7 @@ safeOn('drawerLockNoteBtn', 'click', async () => {
 });
 safeOn('lockNoteCancelBtn', 'click', closeLockNoteModal);
 safeOn('lockNoteBackdrop', 'click', closeLockNoteModal);
-safeOn('lockNoteConfirmBtn', 'click', () => {
+safeOn('lockNoteConfirmBtn', 'click', async () => {
   const pin = document.getElementById('lockNotePinInput').value;
   const errorEl = document.getElementById('lockNoteError');
   if(pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)){
@@ -17178,7 +17232,7 @@ safeOn('lockNoteConfirmBtn', 'click', () => {
     const notes = getNotes();
     const idx = notes.findIndex(n => n.id === currentEditingNoteId);
     if(idx !== -1){
-      notes[idx].lockedPinHash = simplePinHash(pin);
+      notes[idx].lockedPinHash = await hlPinHashStrong_(pin);
       saveNotes(notes);
     }
     closeLockNoteModal();
@@ -17186,7 +17240,7 @@ safeOn('lockNoteConfirmBtn', 'click', () => {
   } else {
     // Unlock mode — checked by the caller via a promise-style callback set on window
     if(window.__lockNoteUnlockCallback){
-      const success = window.__lockNoteUnlockCallback(pin);
+      const success = await window.__lockNoteUnlockCallback(pin);
       if(success){
         closeLockNoteModal();
       } else {
@@ -17200,8 +17254,18 @@ safeOn('lockNoteConfirmBtn', 'click', () => {
 function requireNotePinUnlock(pinHash){
   return new Promise((resolve) => {
     openLockNoteModal('unlock');
-    window.__lockNoteUnlockCallback = (enteredPin) => {
-      if(simplePinHash(enteredPin) === pinHash){
+    window.__lockNoteUnlockCallback = async (enteredPin) => {
+      if(await hlPinVerify_(enteredPin, pinHash)){
+        if(!hlIsStrongPinHash_(pinHash)){
+          // old-format note PIN: re-save every note that used it, the strong way
+          try{
+            const strong = await hlPinHashStrong_(enteredPin);
+            const notes = getNotes();
+            let changed = false;
+            notes.forEach(n => { if(n.lockedPinHash === pinHash){ n.lockedPinHash = strong; changed = true; } });
+            if(changed) saveNotes(notes);
+          }catch(e){}
+        }
         window.__lockNoteUnlockCallback = null;
         resolve(true);
         return true;
@@ -20605,7 +20669,9 @@ async function reauthenticateAppLock(){
   }
   const attempt = prompt('Enter your current App Lock PIN to continue:');
   if(attempt === null) return false;
-  return simplePinHash(attempt) === settings.pinHash;
+  const okPin = await hlPinVerify_(attempt, settings.pinHash);
+  if(okPin) hlUpgradeAppLockPin_(attempt);
+  return okPin;
 }
 safeOn('menuAppLock', 'click', () => {
   showScreen(appLockSettingsScreen);
@@ -20673,7 +20739,7 @@ safeOn('alsChangePinBtn', 'click', async () => {
   if(newPin === null) return;
   if(!/^\d{6}$/.test(newPin)){ alert('PIN must be exactly 6 digits — no changes made.'); return; }
   const settings = getAppLockSettings();
-  settings.pinHash = simplePinHash(newPin);
+  settings.pinHash = await hlPinHashStrong_(newPin);
   saveAppLockSettings(settings);
   alert('PIN updated.');
 });
