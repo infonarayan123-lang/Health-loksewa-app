@@ -2591,6 +2591,7 @@
           <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon"><i class="bi bi-key"></i></span> Change Password</button>
           <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon"><i class="bi bi-lock"></i></span> Privacy Policy</button>
+          <button class="profile-menu-item" id="menuDownloadData"><span class="pm-icon"><i class="bi bi-download"></i></span> Download my data</button>
           <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong-on-light);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
           <button class="profile-menu-item" id="menuHealthConsent"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Mood &amp; health tracking <span id="healthConsentStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuAdminView" style="display:none;"><span class="pm-icon"><i class="bi bi-person-gear"></i></span> Admin view <span id="adminViewStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
@@ -6735,6 +6736,49 @@
   // after a RECENT login, so that is confirmed FIRST — otherwise all data could be wiped and the
   // account itself still refused. Each step is best-effort and reported; nothing here touches
   // any other student's data (Firestore rules also enforce "own data only").
+  // "Download my data": READ-ONLY copy of everything stored in the cloud for this student.
+  // Every read is something the security rules already allow the student to read.
+  window.hlExportMyCloudData = async () => {
+    const user = auth.currentUser;
+    if(!user) return null;
+    const uid = user.uid;
+    const out = { account: { uid, email: user.email || '', name: user.displayName || '', createdAt: user.metadata && user.metadata.creationTime || '' } };
+    const plain = (snap) => snap && snap.exists() ? snap.data() : null;
+    const tryGet = async (key, fn) => { try{ out[key] = await fn(); }catch(e){ out[key] = { error: 'could not be read' }; } };
+    await tryGet('profile', async () => { const p = plain(await getDoc(doc(db, 'users', uid))); if(p) delete p.fcmToken; return p; });
+    await tryGet('devices', async () => (await getDocs(collection(db, 'users', uid, 'devices'))).docs.map(d => ({ id: d.id, ...d.data() })));
+    await tryGet('leaderboard', async () => plain(await getDoc(doc(db, 'leaderboard', uid))));
+    await tryGet('weeklyTournamentEntries', async () => (await getDocs(query(collection(db, 'tournamentEntries'), where('uid', '==', uid)))).docs.map(d => d.data()));
+    await tryGet('monthlyTournamentEntries', async () => (await getDocs(query(collection(db, 'monthlyTournamentEntries'), where('uid', '==', uid)))).docs.map(d => d.data()));
+    await tryGet('studyGroups', async () => {
+      const groups = await getDocs(query(collection(db, 'groups'), where('memberUids', 'array-contains', uid)));
+      const list = [];
+      for(const g of groups.docs){
+        const data = g.data();
+        const item = { code: g.id, name: data.name || '', role: data.createdBy === uid ? 'creator' : ((data.moderatorUids || []).includes(uid) ? 'moderator' : 'member'), myPosts: [], myReplies: [], mySharedNotes: [] };
+        const discs = await getDocs(collection(db, 'groups', g.id, 'discussions'));
+        for(const d of discs.docs){
+          if(d.data().authorUid === uid) item.myPosts.push(d.data());
+          const reps = await getDocs(query(collection(db, 'groups', g.id, 'discussions', d.id, 'replies'), where('authorUid', '==', uid)));
+          reps.docs.forEach(r => item.myReplies.push(Object.assign({ onPost: d.data().title || '' }, r.data())));
+        }
+        const res = await getDocs(query(collection(db, 'groups', g.id, 'sharedResources'), where('sharedBy', '==', uid)));
+        res.docs.forEach(r => item.mySharedNotes.push(r.data()));
+        list.push(item);
+      }
+      return list;
+    });
+    await tryGet('dailyBattleScores', async () => {
+      const scores = [];
+      for(let i = 0; i <= 62; i++){
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        try{ const sn = await getDoc(doc(db, 'dailyBattles', key, 'participants', uid)); if(sn.exists()) scores.push(Object.assign({ day: key }, sn.data())); }catch(e){}
+      }
+      return scores;
+    });
+    return out;
+  };
   window.hlRecordConsent = async (consent) => {
     const user = auth.currentUser;
     if(!user) return;
@@ -14553,6 +14597,62 @@ window.hlEnsurePrivacyConsent = function(){
     };
   });
 };
+// ---- "Download my data" (Oct 2026): one JSON file with everything kept for this account —
+// cloud data (read-only) plus this phone's saved data for this account.
+function hlCollectPhoneData_(){
+  const uid = (window.currentUser && window.currentUser.uid) || 'guest';
+  const suffix = '__u_' + uid, out = {};
+  try{
+    Object.keys(localStorage).forEach(k => {
+      if(!k.endsWith(suffix)) return;
+      const name = k.slice(0, -suffix.length);
+      const raw = localStorage.getItem(k);
+      try{ out[name] = JSON.parse(raw); }catch(e){ out[name] = raw; }
+    });
+  }catch(e){}
+  return out;
+}
+async function hlDownloadMyData_(){
+  if(!window.currentUser){ alert('Please log in first.'); return; }
+  showQuizLoading('Collecting your data…');
+  let cloud = null;
+  try{ cloud = window.hlExportMyCloudData ? await window.hlExportMyCloudData() : null; }catch(e){ cloud = null; }
+  hideQuizLoading();
+  const today = new Date();
+  const stamp = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  const data = {
+    about: 'Your data from the Health Loksewa app. "cloud" = saved with your account online; "onThisPhone" = saved only on the phone you downloaded this from.',
+    exportedAt: today.toISOString(),
+    appVersion: (typeof APP_VERSION !== 'undefined' && APP_VERSION) || '',
+    cloud: cloud || { note: 'Could not reach the server — only the data on this phone is included. Try again when online.' },
+    onThisPhone: hlCollectPhoneData_()
+  };
+  const json = JSON.stringify(data, null, 2);
+  const fileName = 'health-loksewa-my-data-' + stamp + '.json';
+  let downloaded = false;
+  try{
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    downloaded = true;
+  }catch(e){}
+  // Some installed apps block normal downloads — offer the phone's Share menu as well
+  try{
+    const file = new File([json], fileName, { type: 'application/json' });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      if(await customConfirm((downloaded ? 'Your data file was downloaded (' + fileName + ').\n\nIf you cannot find it, you can also share or save it now (for example to Google Drive or email).' : 'Save or share your data file (for example to Google Drive or email)?') + '\n\nShare it now?')){
+        await navigator.share({ files: [file], title: 'My Health Loksewa data' });
+      }
+      return;
+    }
+  }catch(e){ /* share cancelled or not available */ }
+  if(downloaded) alert('Your data file was downloaded: ' + fileName + '\n\nYou can find it in your Downloads folder.');
+  else alert('Sorry, this device does not allow downloading files from the app. Please try again from a browser such as Chrome.');
+}
+safeOn('menuDownloadData', 'click', () => { hlDownloadMyData_(); });
 // Profile > Account & Privacy > "Mood & health tracking" On/Off
 safeOn('menuHealthConsent', 'click', async () => {
   const lbl = document.getElementById('healthConsentStatusLabel');
