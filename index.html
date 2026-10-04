@@ -6932,6 +6932,9 @@
       // (The old silent migrateToPerAccountStorage() is no longer called.)
       if(window.hlHandleLegacyData_){ try{ await window.hlHandleLegacyData_(); }catch(e){} }
       if(window.mergeGuestDataIntoAccount) window.mergeGuestDataIntoAccount();
+      // Ask the backend whether this account is an owner (admin tools + free Premium). Not awaited, so
+      // students are never slowed down; owners see the result the moment it arrives.
+      if(window.hlRefreshRoleSoon_){ try{ window.hlRefreshRoleSoon_(); }catch(e){} }
       // Email verification gate — only for brand-new, recently-created email/password accounts.
       // Google Sign-In accounts are already verified by Google itself (checked via providerId),
       // and any account older than 30 days is grandfathered in regardless of its verification
@@ -7495,17 +7498,18 @@
   // ---- Premium status (Path B: manually flipped "premium: true" by Narayan in Firestore) ----
   // Accounts that always get Premium access for free, no payment needed — checked first,
   // before the normal Firestore-based paid-premium check below.
-  // Narayan's three accounts (confirmed Oct 2026). infonarayan123@gmail.com — his main address, also
-  // used on Contact Us — was missing from the original list.
-  const FREE_PREMIUM_EMAILS = ['infonarayan123@gmail.com', 'infonarayan1234@gmail.com', 'narayanrimal659@gmail.com'];
-  // Master accounts skip the "am I allowed?" pre-checks below. Safe: the pre-check protects nothing
-  // by itself — the backend's secure step checks the email Google verified, not this list.
-  function hlIsMasterAccount_(user){ return !!(user && user.email && FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())); }
+  // Owner accounts (free Premium + admin tools): the app no longer carries a list of owner email
+  // addresses (the app's code is public). The BACKEND decides who is an owner; the app only remembers
+  // its yes/no answer for this account — see hlIsAdminUser_() / hlRefreshRole_(). This answer only
+  // decides what is SHOWN; every real action is checked again by the backend.
+  // Owners also skip the "am I allowed?" pre-checks below. Safe: a pre-check protects nothing by
+  // itself — the backend's secure step checks the email Google verified.
+  function hlIsMasterAccount_(user){ try{ return typeof window.hlIsAdminUser_ === 'function' && window.hlIsAdminUser_() === true; }catch(e){ return false; } }
 
   window.getAccessStatus = async function(){
     const user = auth.currentUser;
     if(!user) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
-    if(user.email && FREE_PREMIUM_EMAILS.includes(user.email.toLowerCase())){
+    if(hlIsMasterAccount_(user)){
       return { isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
     }
     try{
@@ -8136,7 +8140,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyldEN7LiwwbVUmngVUJ32YXo0f5INkXvSy-YWlw3-zR60nc_RBSyf8t4-IJq3aiOmWhw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxbVJSZVWJ5jPKqCbEFVzgd41TBFU27mHqptpFWu0yTpaPiEta16Wm84UIZoDIhTYKWbQ/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -26409,10 +26413,72 @@ function renderQuestion(){
 // backend (login token checked with Google + admin email list there), so a student who forces
 // these buttons to appear still cannot change anything. Mode is remembered per device.
 // ==========================================================================================
-function hlAdminEmailsUi_(){ return ['infonarayan123@gmail.com', 'infonarayan1234@gmail.com', 'narayanrimal659@gmail.com']; }
+// ---- Owner status comes from the BACKEND (Oct 2026), not from a list inside the app. The app's code
+// is public, so it must not contain anyone's email address. The backend answers "owner: true/false" for
+// the logged-in account (it checks the login token with Google); the app remembers that answer on this
+// phone for this account, so the admin tools also work offline. A person who edits this remembered
+// answer in their browser only changes what THEIR screen shows — the backend checks again for every
+// real action. (No top-level let/const here on purpose: state lives on window.)
+function hlRoleKey_(uid){ return 'hl_role__u_' + uid; }
+function hlRoleLoad_(uid){
+  try{
+    const c = JSON.parse(localStorage.getItem(hlRoleKey_(uid)) || 'null');
+    if(c && typeof c.owner === 'boolean') return { uid: uid, owner: c.owner, at: Number(c.at) || 0 };
+  }catch(e){}
+  return null;
+}
 function hlIsAdminUser_(){
-  const email = window.currentUser && window.currentUser.email ? String(window.currentUser.email).toLowerCase() : '';
-  return !!email && hlAdminEmailsUi_().includes(email);
+  const u = window.currentUser;
+  if(!u || !u.uid) return false;
+  let r = window.__hlRole;
+  if(!r || r.uid !== u.uid){ r = hlRoleLoad_(u.uid); window.__hlRole = r; }
+  return !!(r && r.uid === u.uid && r.owner === true);
+}
+// Re-draw everything that depends on owner status (called only when the answer actually changed)
+function hlRoleChanged_(){
+  try{ hlRenderAdminBar_(); }catch(e){}
+  try{ if(typeof renderHomePremiumBanner === 'function') renderHomePremiumBanner(); }catch(e){}
+  try{ if(typeof renderPremiumStatus === 'function') renderPremiumStatus(); }catch(e){}
+  try{
+    const active = document.querySelector('.screen.active');
+    if(active && active.id === 'quizScreen' && typeof quizQuestions !== 'undefined' && quizQuestions[currentIndex]) hlRenderAdminQuizControls_(quizQuestions[currentIndex]);
+  }catch(e){}
+}
+function hlRefreshRole_(){
+  const u = window.currentUser;
+  if(!u || !u.uid) return Promise.resolve(null);
+  const uid = u.uid;
+  if(window.__hlRoleInFlight && window.__hlRoleInFlight.uid === uid) return window.__hlRoleInFlight.p;
+  const p = (async () => {
+    try{
+      const token = window.getAiAuthToken ? await window.getAiAuthToken() : '';
+      if(!token) return null;
+      const res = await postJsonWithTimeout({ action: 'whoAmI', idToken: token }, 15000);
+      const data = await res.json();
+      if(!window.currentUser || window.currentUser.uid !== uid) return null;   // a different account logged in meanwhile
+      if(data && data.ok === true && typeof data.owner === 'boolean'){
+        const before = hlIsAdminUser_();
+        const now = Date.now();
+        window.__hlRole = { uid: uid, owner: data.owner, at: now };
+        try{ localStorage.setItem(hlRoleKey_(uid), JSON.stringify({ owner: data.owner, at: now })); }catch(e){}
+        if(before !== data.owner) hlRoleChanged_();
+        return data.owner;
+      }
+    }catch(e){}
+    return null;   // not sure (offline / backend busy): keep whatever was known before
+  })();
+  window.__hlRoleInFlight = { uid: uid, p: p };
+  p.then(() => { if(window.__hlRoleInFlight && window.__hlRoleInFlight.p === p) window.__hlRoleInFlight = null; });
+  return p;
+}
+// Ask at login / app start — but at most once an hour per account (students are not slowed down:
+// nothing waits for this)
+function hlRefreshRoleSoon_(){
+  const u = window.currentUser;
+  if(!u || !u.uid) return;
+  const r = (window.__hlRole && window.__hlRole.uid === u.uid) ? window.__hlRole : hlRoleLoad_(u.uid);
+  if(r && (Date.now() - (r.at || 0)) < 60 * 60 * 1000) return;
+  hlRefreshRole_();
 }
 function hlAdminModeOn_(){
   try{ return hlIsAdminUser_() && localStorage.getItem('hl_admin_mode') === '1'; }catch(e){ return false; }
