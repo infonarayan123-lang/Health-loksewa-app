@@ -5413,6 +5413,7 @@
     <div class="back-link" data-back="calculatorHub">← Back</div>
     <div class="home-body">
       <div class="section-title">My Health</div>
+      <div class="hl-health-privacy-note" style="font-size:11.5px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin-bottom:10px;"></div>
       <p style="font-size:11px; color:var(--ink-soft); margin-bottom:16px;">Personal logs, kept on this device. Not a substitute for professional medical advice — single readings don't diagnose anything; look at the trend.</p>
 
       <div class="calc-card">
@@ -5610,6 +5611,7 @@
     <div class="back-link" data-back="calculatorHub">← Back</div>
     <div class="home-body">
       <div class="section-title">Wellness</div>
+      <div class="hl-health-privacy-note" style="font-size:11.5px; border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin-bottom:10px;"></div>
 
       <div class="calc-card" style="text-align:center;">
         <h4 style="text-align:left;">Meditation Timer</h4>
@@ -10536,6 +10538,8 @@ safeOn('goToStudyTimer', 'click', (e) => {
 safeOn('goToMyHealth', 'click', async (e) => {
   e.preventDefault();
   if(!(await hlRequireHealthConsent_())) return;
+  if(!(await hlRequireHealthUnlock_())) return;
+  hlRenderHealthPrivacyNotes_();
   showScreen(myHealthScreen);
   renderWaterTracker();
   renderSleepHistory();
@@ -10549,6 +10553,8 @@ safeOn('goToEverydayTools', 'click', (e) => {
 safeOn('goToWellness', 'click', async (e) => {
   e.preventDefault();
   if(!(await hlRequireHealthConsent_())) return;
+  if(!(await hlRequireHealthUnlock_())) return;
+  hlRenderHealthPrivacyNotes_();
   showScreen(wellnessScreen);
   renderGratitudeHistory();
   renderHabitList();
@@ -14534,6 +14540,7 @@ async function hlRequireHealthConsent_(){
   const c = hlConsentGet_() || {};
   c.health = true; c.healthAt = new Date().toISOString();
   hlConsentSave_(c);
+  try{ renderHomeMoodRow(); }catch(e){}
   return true;
 }
 window.hlEnsurePrivacyConsent = function(){
@@ -14653,6 +14660,29 @@ async function hlDownloadMyData_(){
   else alert('Sorry, this device does not allow downloading files from the app. Please try again from a browser such as Chrome.');
 }
 safeOn('menuDownloadData', 'click', () => { hlDownloadMyData_(); });
+// ---- Protecting mood & health entries on the phone (Oct 2026). Real encryption is deliberately
+// NOT used: the key would have to live on the same phone (no real protection), and a PIN-based key
+// would lock fingerprint users out and destroy the records if the PIN were forgotten. Instead:
+// if App Lock is on, opening My Health / Wellness / the mood check-in asks for the fingerprint or PIN
+// again (at most once every 10 minutes), and those screens say clearly where the data lives.
+async function hlRequireHealthUnlock_(){
+  let st = null;
+  try{ st = getAppLockSettings(); }catch(e){ return true; }
+  if(!st || !st.enabled) return true;                       // App Lock off: nothing to check
+  if(window.__hlHealthUnlockedAt && Date.now() - window.__hlHealthUnlockedAt < 10 * 60 * 1000) return true;
+  let ok = false;
+  try{ ok = await reauthenticateAppLock(); }catch(e){ ok = false; }
+  if(ok){ window.__hlHealthUnlockedAt = Date.now(); return true; }
+  alert('Could not confirm it is you, so your health entries stay hidden.');
+  return false;
+}
+function hlRenderHealthPrivacyNotes_(){
+  let locked = false;
+  try{ locked = !!getAppLockSettings().enabled; }catch(e){}
+  const text = 'Saved only on this phone. Never sent to our servers or to AI. '
+    + (locked ? 'Protected by your App Lock.' : 'Anyone who can open this app on this phone can see it \u2014 turn on App Lock in Profile > Account & Privacy to protect it.');
+  document.querySelectorAll('.hl-health-privacy-note').forEach(el => { el.textContent = text; });
+}
 // Profile > Account & Privacy > "Mood & health tracking" On/Off
 safeOn('menuHealthConsent', 'click', async () => {
   const lbl = document.getElementById('healthConsentStatusLabel');
@@ -14665,6 +14695,7 @@ safeOn('menuHealthConsent', 'click', async () => {
   c.health = false; c.healthOffAt = new Date().toISOString();
   hlConsentSave_(c);
   if(lbl) lbl.textContent = 'Off';
+  try{ renderHomeMoodRow(); }catch(e){}
   if(await customConfirm('Also delete the mood and health entries already saved on this phone?\n\nThis cannot be undone.')){
     hlHealthKeys_().forEach(k => { try{ localStorage.removeItem(uk(k)); }catch(e){} });
     alert('Your mood and health entries have been deleted from this phone.');
@@ -14672,6 +14703,7 @@ safeOn('menuHealthConsent', 'click', async () => {
 });
 async function startMoodCheckinFromHome(){
   if(!(await hlRequireHealthConsent_())) return;
+  if(!(await hlRequireHealthUnlock_())) return;
   moodFlowFromHome = true;
   moodDraft = { level:null, emotions:[], causes:[], note:'' };
   showScreen(moodCheckinScreen);
@@ -15137,6 +15169,14 @@ function updateHomeStatsAndInsight(mode, buckets){
   }
 }
 function renderHomeMoodRow(){
+  if(!hlHasHealthConsent_()){
+    // Tracking off: show no mood data at all (older entries may still be saved from before consent)
+    document.getElementById('homeMoodTodayIcon').textContent = '·';
+    document.getElementById('homeMoodTodayLabel').textContent = 'Mood tracking is off';
+    document.getElementById('homeMoodTodayCount').textContent = 'Tap to turn on';
+    document.getElementById('homeMoodWeekRow').innerHTML = '';
+    return;
+  }
   const entries = getMoodEntries();
   const today = todayISO();
   const todaysEntries = entries.filter(e => e.date === today);
@@ -20487,7 +20527,6 @@ safeOn('menuContactUs', 'click', () => {
     <p><a href="tel:+9779811685190">+977 981-1685190</a></p>
 
     <h3>Email</h3>
-    <p><a href="mailto:infonarayan123@gmail.com">infonarayan123@gmail.com</a></p>
     <p><a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>
 
     <h3>Follow / Message Us</h3>
