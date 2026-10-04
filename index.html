@@ -6926,10 +6926,11 @@
       }
     }
     if(user){
-      // Claim any pre-existing unnamespaced local data for this account before anything else
-      // reads it — must run before the verification gate and everything after it, since several
-      // of those paths read per-account data (streaks, progress, etc.)
-      if(window.migrateToPerAccountStorage) window.migrateToPerAccountStorage();
+      // Old unlabeled study data on this phone (saved before accounts kept their data apart): ASK whose
+      // it is instead of silently giving it to whoever logs in first (see hlHandleLegacyData_). Must
+      // finish before the verification gate and everything after it, since those read per-account data.
+      // (The old silent migrateToPerAccountStorage() is no longer called.)
+      if(window.hlHandleLegacyData_){ try{ await window.hlHandleLegacyData_(); }catch(e){} }
       if(window.mergeGuestDataIntoAccount) window.mergeGuestDataIntoAccount();
       // Email verification gate — only for brand-new, recently-created email/password accounts.
       // Google Sign-In accounts are already verified by Google itself (checked via providerId),
@@ -11743,7 +11744,7 @@ function renderHrHistory(){
 }
 
 function getSpo2Entries(){
-  try{ return JSON.parse(localStorage.getItem('hl_spo2_log') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_spo2_log')) || '[]'); }catch(e){ return []; }
 }
 safeOn('spo2SaveBtn', 'click', () => {
   const value = parseFloat(document.getElementById('spo2Value').value);
@@ -11756,7 +11757,7 @@ safeOn('spo2SaveBtn', 'click', () => {
   const now = new Date();
   const entries = getSpo2Entries();
   entries.push({ date: todayISO(), time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' }), value, pulse: isNaN(pulse) ? null : pulse });
-  try{ localStorage.setItem('hl_spo2_log', JSON.stringify(entries.slice(-50))); }catch(e){}
+  try{ localStorage.setItem(uk('hl_spo2_log'), JSON.stringify(entries.slice(-50))); }catch(e){}
   resultEl.innerHTML = `<div class="calc-result">Saved: ${value}%${!isNaN(pulse) ? ' · Pulse ' + pulse : ''}</div>`;
   document.getElementById('spo2Value').value = '';
   document.getElementById('spo2Pulse').value = '';
@@ -14379,7 +14380,7 @@ PER_ACCOUNT_STORAGE_KEYS = [
   'hl_study_minutes_log','hl_study_planner_settings','hl_study_planner_today',
   'hl_tournament_best_rank','hl_tournament_history','hl_update_read_counts',
   'hl_water_log','hl_wrong_questions','hl_bp_log','hl_glucose_log','hl_gratitude_log',
-  'hl_habit_log','hl_hr_log','hl_sleep_log','hl_last_known_rank_month_overall',
+  'hl_habit_log','hl_hr_log','hl_sleep_log','hl_spo2_log','hl_last_known_rank_month_overall',
   'hl_last_known_rank_week_overall','hl_selected_posts','hl_exam_type',
   'hl_onboarding_done','hl_onboarding_answers',
 ];
@@ -14400,6 +14401,123 @@ function migrateToPerAccountStorage(){
     localStorage.setItem('hl_per_account_migration_claimed', 'true');
   }catch(e){}
 }
+// ==========================================================================================
+// OLD STUDY DATA ON A SHARED PHONE (Oct 2026).
+// Before accounts kept their data apart, the app saved study data under plain names. The old
+// migration gave ALL of it, silently, to whichever account logged in first — on a shared phone that
+// could hand one person's notes, mistakes and health entries to someone else — and the plain copies
+// were never removed, so they stayed on the phone even after "Delete Account".
+// Now: (1) the account is ASKED whether that data is theirs; (2) on Yes it is MOVED (copied, checked,
+// then the plain copy removed); (3) on No nothing is touched or deleted — it stays for its owner, and
+// this account is not asked again; (4) on phones that already migrated earlier, the leftover plain
+// copies are dead (nothing reads them any more — checked across the whole app) and are removed.
+// ==========================================================================================
+function hlLegacyKeys_(){
+  try{ return Array.isArray(PER_ACCOUNT_STORAGE_KEYS) ? PER_ACCOUNT_STORAGE_KEYS : []; }catch(e){ return []; }
+}
+function hlLegacyFlag_(name){ try{ return localStorage.getItem(name) === 'true'; }catch(e){ return false; } }
+// The blood-oxygen log joined the per-account list later, so it has its own "claimed" marker
+function hlLegacyIsClaimed_(k){ return hlLegacyFlag_(k === 'hl_spo2_log' ? 'hl_legacy_spo2_claimed' : 'hl_per_account_migration_claimed'); }
+function hlLegacySetClaimed_(){
+  try{ localStorage.setItem('hl_per_account_migration_claimed', 'true'); localStorage.setItem('hl_legacy_spo2_claimed', 'true'); }catch(e){}
+}
+function hlLegacyMeaningful_(v){
+  if(v === null || v === undefined) return false;
+  const t = String(v).trim();
+  return !(t === '' || t === '[]' || t === '{}' || t === 'null' || t === 'false' || t === '""');
+}
+function hlLegacyPending_(){
+  const out = [];
+  hlLegacyKeys_().forEach(k => {
+    if(hlLegacyIsClaimed_(k)) return;
+    let v = null; try{ v = localStorage.getItem(k); }catch(e){}
+    if(hlLegacyMeaningful_(v)) out.push(k);
+  });
+  return out;
+}
+function hlLegacyCleanupDead_(){
+  try{
+    hlLegacyKeys_().forEach(k => { if(hlLegacyIsClaimed_(k)) localStorage.removeItem(k); });
+    if(hlLegacyFlag_('hl_per_account_migration_claimed')){
+      // old leaderboard rank baselines were also saved under plain names (now per-account)
+      Object.keys(localStorage).forEach(k => { if(k.indexOf('hl_last_known_rank_') === 0 && k.indexOf('__u_') === -1) localStorage.removeItem(k); });
+    }
+  }catch(e){}
+}
+// Copies into the account, checks it is really there, then removes the plain copy.
+// Never overwrites what the account already has (same rule as the old migration).
+function hlLegacyMove_(keys, uid){
+  let allOk = true;
+  keys.forEach(k => {
+    try{
+      const legacy = localStorage.getItem(k);
+      if(legacy === null) return;
+      const own = k + '__u_' + uid;
+      if(localStorage.getItem(own) === null) localStorage.setItem(own, legacy);
+      if(localStorage.getItem(own) !== null) localStorage.removeItem(k); else allOk = false;
+    }catch(e){ allOk = false; }
+  });
+  return allOk;
+}
+function hlLegacyLabels_(keys){
+  const rules = [
+    ['notes', /notes/], ['bookmarks', /bookmark/], ['mistakes', /wrong_questions|mistakes/], ['flash cards', /^hl_fc_/],
+    ['AI chat history', /chat_history/], ['health and wellbeing entries', /bp_log|glucose|hr_log|spo2|sleep|water|gratitude|habit|mood/],
+    ['study progress', /progress|chapter_stats|question_count|mock_test|past_question|learning_points|badges|streak|daily_activity|study_minutes|focus|screentime|tournament/],
+    ['exam choices', /selected_posts|exam_type|onboarding/]
+  ];
+  const out = [];
+  rules.forEach(([label, re]) => { if(keys.some(k => re.test(k))) out.push(label); });
+  return out;
+}
+function hlAskLegacyOwnership_(keys, email){
+  return new Promise((resolve) => {
+    let ov = document.getElementById('hlLegacyOverlay');
+    if(ov) ov.remove();
+    ov = document.createElement('div');
+    ov.id = 'hlLegacyOverlay';
+    ov.style.cssText = 'position:fixed; inset:0; z-index:9997; background:var(--panel); color:var(--ink); overflow-y:auto; padding:26px 18px calc(110px + env(safe-area-inset-bottom, 0px));';
+    const labels = hlLegacyLabels_(keys);
+    ov.innerHTML = '<div style="max-width:480px; margin:0 auto;">'
+      + '<div style="font-size:20px; font-weight:800; margin-bottom:8px;">Old study data found</div>'
+      + '<div style="font-size:13.5px; line-height:1.55; margin-bottom:10px;">An older version of Health Loksewa saved study data on this phone' + (labels.length ? ' (' + hlEsc(labels.join(', ')) + ')' : '') + '. You are logging in as <b>' + hlEsc(email || 'this account') + '</b>.</div>'
+      + '<div style="font-size:15px; font-weight:800; margin:14px 0 8px;">Is this data yours?</div>'
+      + '<div style="font-size:12px; opacity:0.85; line-height:1.5; margin-bottom:16px;">If it is yours, it moves into this account. If it belongs to someone else (for example another person who uses this phone), it is NOT added to this account. Nothing is deleted either way.</div>'
+      + '<button type="button" id="hlLegacyYes" style="width:100%; margin:0 0 10px; padding:12px; font-size:14px; font-weight:800;">Yes, it is mine</button>'
+      + '<button type="button" id="hlLegacyNo" style="width:100%; margin:0; padding:12px; font-size:14px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">No, it is not mine</button>'
+      + '</div>';
+    document.body.appendChild(ov);
+    ov.querySelector('#hlLegacyYes').onclick = () => { ov.remove(); resolve(true); };
+    ov.querySelector('#hlLegacyNo').onclick = async () => {
+      const sure = await customConfirm('Are you sure?\n\nThe old data will NOT be added to ' + (email || 'this account') + '. It is not deleted: it stays on this phone for its owner. You will not be asked again for this account.');
+      if(sure){ ov.remove(); resolve(false); }
+    };
+  });
+}
+async function hlHandleLegacyDataInner_(){
+  const uid = window.currentUser && window.currentUser.uid;
+  if(!uid) return;
+  const pending = hlLegacyPending_();
+  if(pending.length === 0){
+    hlLegacySetClaimed_();     // nothing (left) to claim — so later logins skip all of this
+    hlLegacyCleanupDead_();
+    return;
+  }
+  const declinedKey = 'hl_legacy_declined__u_' + uid;
+  try{ if(localStorage.getItem(declinedKey) === '1') return; }catch(e){}   // already said "not mine"
+  const mine = await hlAskLegacyOwnership_(pending, window.currentUser.email);
+  if(!mine){ try{ localStorage.setItem(declinedKey, '1'); }catch(e){} return; }
+  if(hlLegacyMove_(pending, uid)){ hlLegacySetClaimed_(); hlLegacyCleanupDead_(); }
+}
+// One question at a time even if the login code runs twice quickly
+function hlHandleLegacyData_(){
+  if(window.__hlLegacyInFlight) return window.__hlLegacyInFlight;
+  window.__hlLegacyInFlight = (async () => {
+    try{ await hlHandleLegacyDataInner_(); } catch(e){} finally { window.__hlLegacyInFlight = null; }
+  })();
+  return window.__hlLegacyInFlight;
+}
+
 // Safety net, runs every login (not gated by a one-time flag): if anything was ever written under
 // the 'guest' namespace — e.g. a brief window before Firebase auth actually resolves on a given
 // page load, if any code happened to read/write per-account data during that window — this
@@ -14525,7 +14643,7 @@ window.initMoodCheckin = initMoodCheckin;
 // first. Mood and health entries are stored on this phone only.
 // ==========================================================================================
 // (a function, not a const: function declarations can never be caught "before initialization")
-function hlHealthKeys_(){ return ['hl_bp_log', 'hl_glucose_log', 'hl_hr_log', 'hl_sleep_log', 'hl_water_log', 'hl_gratitude_log', 'hl_habit_log', 'hl_mood_entries', 'hl_mood_last_shown']; }
+function hlHealthKeys_(){ return ['hl_bp_log', 'hl_glucose_log', 'hl_hr_log', 'hl_spo2_log', 'hl_sleep_log', 'hl_water_log', 'hl_gratitude_log', 'hl_habit_log', 'hl_mood_entries', 'hl_mood_last_shown']; }
 function hlConsentGet_(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_consent')) || 'null'); }catch(e){ return null; }
 }
@@ -14536,7 +14654,7 @@ function hlConsentSave_(c){
 function hlHasHealthConsent_(){ const c = hlConsentGet_(); return !!(c && c.health === true); }
 async function hlRequireHealthConsent_(){
   if(hlHasHealthConsent_()) return true;
-  const ok = await customConfirm('Mood and health tracking\n\nThis feature saves your mood, health and wellbeing entries (such as blood pressure, sugar, heart rate, sleep, water, habits and gratitude notes) on this phone only. They are not sent to our servers or to AI.\n\nAllow mood and health tracking? You can turn it off anytime in Profile > Account & Privacy.');
+  const ok = await customConfirm('Mood and health tracking\n\nThis feature saves your mood, health and wellbeing entries (such as blood pressure, sugar, heart rate, blood oxygen, sleep, water, habits and gratitude notes) on this phone only. They are not sent to our servers or to AI.\n\nAllow mood and health tracking? You can turn it off anytime in Profile > Account & Privacy.');
   if(!ok) return false;
   const c = hlConsentGet_() || {};
   c.health = true; c.healthAt = new Date().toISOString();
@@ -14569,7 +14687,7 @@ window.hlEnsurePrivacyConsent = function(){
       + '<button type="button" id="hlConsentReadPolicy" style="flex:1; margin:0; padding:8px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Read Privacy Policy</button>'
       + '<button type="button" id="hlConsentReadTerms" style="flex:1; margin:0; padding:8px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Read Terms</button></div>'
       + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:12px; cursor:pointer;"><input type="checkbox" id="hlConsentAgree" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>I have read and agree</b> to the Privacy Policy and Terms. (Required)</span></label>'
-      + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:16px; cursor:pointer;"><input type="checkbox" id="hlConsentHealth" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>Allow mood and health tracking</b> (daily mood check-in, blood pressure, sugar, heart rate, sleep, water, habits, gratitude). Saved on this phone only. (Optional — you can turn it on later.)</span></label>'
+      + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:16px; cursor:pointer;"><input type="checkbox" id="hlConsentHealth" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>Allow mood and health tracking</b> (daily mood check-in, blood pressure, sugar, heart rate, blood oxygen, sleep, water, habits, gratitude). Saved on this phone only. (Optional — you can turn it on later.)</span></label>'
       + '<button type="button" id="hlConsentContinue" disabled style="width:100%; margin:0; padding:12px; font-size:14px; font-weight:800;">Continue</button>'
       + '</div>';
     document.body.appendChild(ov);
@@ -14688,7 +14806,7 @@ function hlRenderHealthPrivacyNotes_(){
 // time (works whether tracking is on or off). Never touches notes, progress, bookmarks or anything else.
 function hlHealthDataSummary_(){
   const labels = { hl_mood_entries: 'mood check-ins', hl_bp_log: 'blood pressure readings', hl_glucose_log: 'sugar readings',
-                   hl_hr_log: 'heart rate readings', hl_sleep_log: 'sleep entries', hl_gratitude_log: 'gratitude notes',
+                   hl_hr_log: 'heart rate readings', hl_spo2_log: 'blood oxygen readings', hl_sleep_log: 'sleep entries', hl_gratitude_log: 'gratitude notes',
                    hl_water_log: 'water tracker records', hl_habit_log: 'habit tracker records' };
   const found = [];
   Object.keys(labels).forEach(k => {
@@ -19646,9 +19764,9 @@ async function renderLeaderboard(){
   if(myIndex !== -1){
     const myRank = myIndex + 1;
     let lastRank = null;
-    try{ lastRank = JSON.parse(localStorage.getItem(rankKey) || 'null'); }catch(e){}
+    try{ lastRank = JSON.parse(localStorage.getItem(uk(rankKey)) || 'null'); }catch(e){}
     const change = lastRank ? lastRank - myRank : 0;
-    try{ localStorage.setItem(rankKey, JSON.stringify(myRank)); }catch(e){}
+    try{ localStorage.setItem(uk(rankKey), JSON.stringify(myRank)); }catch(e){}
 
     const me = results[myIndex];
     rankCardWrap.innerHTML = `
@@ -20660,8 +20778,8 @@ safeOn('menuPrivacyPolicy', 'click', () => {
     <h3>4. Information kept only on your phone</h3>
     <ul>
       <li>Your notes, bookmarks, mistakes, flash cards, study timer and similar study tools.</li>
-      <li><b>Mood and health logs</b> (daily mood check-in, blood pressure, sugar, heart rate, sleep, water, habits, gratitude notes) are saved only if you allow "Mood and health tracking". They stay on your phone and are not sent to our servers or to AI. You can turn this off anytime, and delete these entries anytime with Profile &gt; Account &amp; Privacy &gt; Delete my health data.</li>
-      <li><b>How much is kept on your phone:</b> the most recent 200 mood check-ins; the most recent 50 each of blood pressure, sugar and heart rate readings; the most recent 30 sleep entries; the most recent 60 gratitude notes; the most recent 200 wrong questions. When a new entry is saved beyond these limits, the oldest is removed. The water and habit trackers keep small daily records until you delete them.</li>
+      <li><b>Mood and health logs</b> (daily mood check-in, blood pressure, sugar, heart rate, blood oxygen, sleep, water, habits, gratitude notes) are saved only if you allow "Mood and health tracking". They stay on your phone and are not sent to our servers or to AI. You can turn this off anytime, and delete these entries anytime with Profile &gt; Account &amp; Privacy &gt; Delete my health data.</li>
+      <li><b>How much is kept on your phone:</b> the most recent 200 mood check-ins; the most recent 50 each of blood pressure, sugar, heart rate and blood oxygen readings; the most recent 30 sleep entries; the most recent 60 gratitude notes; the most recent 200 wrong questions. When a new entry is saved beyond these limits, the oldest is removed. The water and habit trackers keep small daily records until you delete them.</li>
     </ul>
 
     <h3>5. AI features</h3>
