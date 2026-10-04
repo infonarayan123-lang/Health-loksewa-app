@@ -2594,6 +2594,7 @@
           <button class="profile-menu-item" id="menuDownloadData"><span class="pm-icon"><i class="bi bi-download"></i></span> Download my data</button>
           <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong-on-light);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
           <button class="profile-menu-item" id="menuHealthConsent"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Mood &amp; health tracking <span id="healthConsentStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
+          <button class="profile-menu-item" id="menuDeleteHealthData"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Delete my health data</button>
           <button class="profile-menu-item" id="menuAdminView" style="display:none;"><span class="pm-icon"><i class="bi bi-person-gear"></i></span> Admin view <span id="adminViewStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
         </div>
       </details>
@@ -14524,7 +14525,7 @@ window.initMoodCheckin = initMoodCheckin;
 // first. Mood and health entries are stored on this phone only.
 // ==========================================================================================
 // (a function, not a const: function declarations can never be caught "before initialization")
-function hlHealthKeys_(){ return ['hl_bp_log', 'hl_glucose_log', 'hl_sleep_log', 'hl_water_log', 'hl_gratitude_log', 'hl_mood_entries', 'hl_mood_last_shown']; }
+function hlHealthKeys_(){ return ['hl_bp_log', 'hl_glucose_log', 'hl_hr_log', 'hl_sleep_log', 'hl_water_log', 'hl_gratitude_log', 'hl_habit_log', 'hl_mood_entries', 'hl_mood_last_shown']; }
 function hlConsentGet_(){
   try{ return JSON.parse(localStorage.getItem(uk('hl_consent')) || 'null'); }catch(e){ return null; }
 }
@@ -14535,7 +14536,7 @@ function hlConsentSave_(c){
 function hlHasHealthConsent_(){ const c = hlConsentGet_(); return !!(c && c.health === true); }
 async function hlRequireHealthConsent_(){
   if(hlHasHealthConsent_()) return true;
-  const ok = await customConfirm('Mood and health tracking\n\nThis feature saves your mood, health and wellbeing entries (such as blood pressure, sugar, sleep, water and gratitude notes) on this phone only. They are not sent to our servers or to AI.\n\nAllow mood and health tracking? You can turn it off anytime in Profile > Account & Privacy.');
+  const ok = await customConfirm('Mood and health tracking\n\nThis feature saves your mood, health and wellbeing entries (such as blood pressure, sugar, heart rate, sleep, water, habits and gratitude notes) on this phone only. They are not sent to our servers or to AI.\n\nAllow mood and health tracking? You can turn it off anytime in Profile > Account & Privacy.');
   if(!ok) return false;
   const c = hlConsentGet_() || {};
   c.health = true; c.healthAt = new Date().toISOString();
@@ -14568,7 +14569,7 @@ window.hlEnsurePrivacyConsent = function(){
       + '<button type="button" id="hlConsentReadPolicy" style="flex:1; margin:0; padding:8px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Read Privacy Policy</button>'
       + '<button type="button" id="hlConsentReadTerms" style="flex:1; margin:0; padding:8px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Read Terms</button></div>'
       + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:12px; cursor:pointer;"><input type="checkbox" id="hlConsentAgree" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>I have read and agree</b> to the Privacy Policy and Terms. (Required)</span></label>'
-      + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:16px; cursor:pointer;"><input type="checkbox" id="hlConsentHealth" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>Allow mood and health tracking</b> (daily mood check-in, blood pressure, sugar, sleep, water, gratitude). Saved on this phone only. (Optional — you can turn it on later.)</span></label>'
+      + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin-bottom:16px; cursor:pointer;"><input type="checkbox" id="hlConsentHealth" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>Allow mood and health tracking</b> (daily mood check-in, blood pressure, sugar, heart rate, sleep, water, habits, gratitude). Saved on this phone only. (Optional — you can turn it on later.)</span></label>'
       + '<button type="button" id="hlConsentContinue" disabled style="width:100%; margin:0; padding:12px; font-size:14px; font-weight:800;">Continue</button>'
       + '</div>';
     document.body.appendChild(ov);
@@ -14683,6 +14684,32 @@ function hlRenderHealthPrivacyNotes_(){
     + (locked ? 'Protected by your App Lock.' : 'Anyone who can open this app on this phone can see it \u2014 turn on App Lock in Profile > Account & Privacy to protect it.');
   document.querySelectorAll('.hl-health-privacy-note').forEach(el => { el.textContent = text; });
 }
+// ---- "Delete my health data" (Oct 2026): removes the mood and health entries saved on THIS phone, any
+// time (works whether tracking is on or off). Never touches notes, progress, bookmarks or anything else.
+function hlHealthDataSummary_(){
+  const labels = { hl_mood_entries: 'mood check-ins', hl_bp_log: 'blood pressure readings', hl_glucose_log: 'sugar readings',
+                   hl_hr_log: 'heart rate readings', hl_sleep_log: 'sleep entries', hl_gratitude_log: 'gratitude notes',
+                   hl_water_log: 'water tracker records', hl_habit_log: 'habit tracker records' };
+  const found = [];
+  Object.keys(labels).forEach(k => {
+    let raw = null;
+    try{ raw = localStorage.getItem(uk(k)); }catch(e){}
+    if(raw === null) return;
+    let v; try{ v = JSON.parse(raw); }catch(e){ v = null; }
+    if(Array.isArray(v)){ if(v.length) found.push({ key: k, text: v.length + ' ' + labels[k] }); }
+    else if(v && typeof v === 'object'){ if(Object.keys(v).filter(x => x !== 'goal').length) found.push({ key: k, text: labels[k] }); }
+  });
+  return found;
+}
+safeOn('menuDeleteHealthData', 'click', async () => {
+  const found = hlHealthDataSummary_();
+  if(!found.length){ alert('There is no mood or health data saved on this phone.'); return; }
+  const list = found.map(f => '\u2022 ' + f.text).join('\n');
+  if(!(await customConfirm('Delete your mood and health data from this phone?\n\n' + list + '\n\nThis cannot be undone. Your notes, progress and everything else stay.\n\nTip: use "Download my data" first if you want a copy.'))) return;
+  hlHealthKeys_().filter(k => k !== 'hl_mood_last_shown').forEach(k => { try{ localStorage.removeItem(uk(k)); }catch(e){} });
+  try{ renderHomeMoodRow(); }catch(e){}
+  alert('Your mood and health data was deleted from this phone.');
+});
 // Profile > Account & Privacy > "Mood & health tracking" On/Off
 safeOn('menuHealthConsent', 'click', async () => {
   const lbl = document.getElementById('healthConsentStatusLabel');
@@ -20643,12 +20670,12 @@ safeOn('menuPrivacyPolicy', 'click', () => {
     <h3>4. Information kept only on your phone</h3>
     <ul>
       <li>Your notes, bookmarks, mistakes, flash cards, study timer and similar study tools.</li>
-      <li><b>Mood and health logs</b> (daily mood check-in, blood pressure, sugar, sleep, water, gratitude notes) are saved only if you allow "Mood and health tracking". They stay on your phone and are not sent to our servers or to AI. You can turn this off and delete these entries anytime.</li>
-      <li>Some records keep only recent entries (for example, the most recent 200 wrong questions).</li>
+      <li><b>Mood and health logs</b> (daily mood check-in, blood pressure, sugar, heart rate, sleep, water, habits, gratitude notes) are saved only if you allow "Mood and health tracking". They stay on your phone and are not sent to our servers or to AI. You can turn this off anytime, and delete these entries anytime with Profile &gt; Account &amp; Privacy &gt; Delete my health data.</li>
+      <li><b>How much is kept on your phone:</b> the most recent 200 mood check-ins; the most recent 50 each of blood pressure, sugar and heart rate readings; the most recent 30 sleep entries; the most recent 60 gratitude notes; the most recent 200 wrong questions. When a new entry is saved beyond these limits, the oldest is removed. The water and habit trackers keep small daily records until you delete them.</li>
     </ul>
 
     <h3>5. AI features</h3>
-    <p>The AI Assistant, Notes AI, AI flash card generation, AI answer checking, and the "Ask AI" buttons send the text you type or choose (for example a question, a note or a news headline) to AI services to create an answer: <b>Groq</b>, <b>Google Gemini</b> and <b>OpenRouter</b> (OpenRouter may pass it to the AI model it selects). Your name, email and account details are not sent. We keep only a simple usage record (which service and feature was used, and whether it worked), not your text. Please do not type private or sensitive personal information into AI features. AI answers can contain mistakes; always check important facts.</p>
+    <p>The AI Assistant, Notes AI, AI flash card generation, AI answer checking, and the "Ask AI" buttons send the text you type or choose (for example a question, a note or a news headline) to AI services to create an answer: <b>Groq</b>, <b>Google Gemini</b> and <b>OpenRouter</b> (OpenRouter may pass it to the AI model it selects). Your name, email and account details are not sent. We keep only a simple usage record (which service and feature was used, and whether it worked), not your text and not linked to your account. Please do not type private or sensitive personal information into AI features. AI answers can contain mistakes; always check important facts.</p>
 
     <h3>6. Payments</h3>
     <p>Premium payments are made through <b>eSewa</b> or <b>Khalti</b>. We receive only the confirmation and amount needed to turn on Premium. We never see or store your wallet password, PIN or card details.</p>
@@ -20665,7 +20692,7 @@ safeOn('menuPrivacyPolicy', 'click', () => {
     <p>We do not use advertising or tracking services, and we never sell or rent your information.</p>
 
     <h3>8. How long we keep information</h3>
-    <p>We keep your account information while your account exists. When you delete your account, it is removed as described below. Information on your phone stays until you delete it, delete your account, or remove the App.</p>
+    <p>We keep your account information (including Premium dates and daily usage counts) while your account exists. When you delete your account, it is removed as described below. If you start a payment and do not finish it, a temporary reference to that attempt (your account ID and the amount) stays on our server until it is cleared. Published deck contents, deck ratings, "helpful" votes and the AI usage record are not linked to your account and may remain after you delete it. Information on your phone stays until you delete it, delete your account, or remove the App.</p>
 
     <h3>9. Your choices and rights</h3>
     <ul>
@@ -27835,7 +27862,7 @@ if ('serviceWorker' in navigator) {
        since it's just normal HTML, not a browser-native API call. -->
   <div id="customConfirmBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10000;"></div>
   <div id="customConfirmModal" style="display:none; position:fixed; left:8%; right:8%; top:30%; background:var(--panel-elevated); border-radius:16px; padding:22px; z-index:10001;">
-    <p id="customConfirmText" style="font-size:14px; color:var(--ink-on-elevated); margin-bottom:20px; line-height:1.5;"></p>
+    <p id="customConfirmText" style="font-size:14px; color:var(--ink-on-elevated); margin-bottom:20px; line-height:1.5; white-space:pre-line;"></p>
     <div style="display:flex; gap:10px;">
       <button id="customConfirmCancelBtn" style="flex:1; padding:11px; background:none; border:1.5px solid var(--ink-on-elevated); border-radius:9px; color:var(--ink-on-elevated); font-weight:700; font-size:13px;">Cancel</button>
       <button id="customConfirmOkBtn" style="flex:1; padding:11px; background:var(--crimson); border:none; border-radius:9px; color:#fff; font-weight:700; font-size:13px;">OK</button>
