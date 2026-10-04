@@ -8140,7 +8140,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxbVJSZVWJ5jPKqCbEFVzgd41TBFU27mHqptpFWu0yTpaPiEta16Wm84UIZoDIhTYKWbQ/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwzOoCDJZiDNmCyLuoBFtAuBs4FqiZTwK5RdpQieZh2kQvqBZe-0ZBnn3TSwCM-bW5ywA/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -9539,7 +9539,7 @@ async function createGroupChallenge(){
   const btn = document.getElementById('gdCreateChallengeBtn');
   btn.disabled = true; btn.textContent = 'Creating…';
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=random&count=${GROUP_CHALLENGE_QUESTION_COUNT}`);
+    const res = await hlContentFetch_(`${SHEET_API_URL}?action=random&count=${GROUP_CHALLENGE_QUESTION_COUNT}`);
     const pool = await res.json();
     if(!pool || pool.length === 0){ alert('No questions available yet.'); btn.disabled = false; btn.textContent = 'Start This Week\'s Challenge'; return; }
     const { doc, setDoc, collection, serverTimestamp } = window.hlFirestoreFns;
@@ -9900,7 +9900,7 @@ async function renderTournamentScreen(){
   actionArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center;">Loading…</p>`;
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=weeklyTournamentQuestions&post=${currentTournamentPost}&count=${mockConfig.questionCount}`);
+    const res = await hlContentFetch_(`${SHEET_API_URL}?action=weeklyTournamentQuestions&post=${currentTournamentPost}&count=${mockConfig.questionCount}`);
     const data = await res.json();
     const weekKey = data.weekKey;
 
@@ -9985,7 +9985,7 @@ async function renderMonthlyTournamentScreen(){
   actionArea.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center;">Loading…</p>`;
 
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=monthlyTournamentQuestions&post=${currentTournamentPost}&count=${mockConfig.questionCount}`);
+    const res = await hlContentFetch_(`${SHEET_API_URL}?action=monthlyTournamentQuestions&post=${currentTournamentPost}&count=${mockConfig.questionCount}`);
     const data = await res.json();
     const monthKey = data.monthKey;
 
@@ -14549,7 +14549,59 @@ function mergeGuestDataIntoAccount(){
 function fetchWithTimeout(url, timeoutMs = 35000){
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+  return hlContentFetch_(url, { signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+}
+// ---- Questions now need a login (Oct 2026). The backend no longer hands questions to anonymous visitors
+// (anyone who knew its address could download the whole question bank). Every request for questions goes
+// through this helper, which sends it as a login-checked request instead; everything else passes through
+// exactly as before. The caller gets the same list of questions it always did. If the backend refuses
+// (allowance used up, login problem) a clear message is raised, which the callers already show like any
+// other loading problem. Function declaration on purpose: it is always available, even if an earlier
+// statement in the page ever failed.
+function hlProtectedContentActions_(){ return ['random', 'setQuestions', 'weeklyTournamentQuestions', 'monthlyTournamentQuestions']; }
+function hlWaitText_(minutes){
+  const m = Math.max(1, Number(minutes) || 10);
+  return m <= 90 ? 'about ' + m + ' minute' + (m === 1 ? '' : 's') : 'about ' + Math.ceil(m / 60) + ' hours';
+}
+async function hlContentFetch_(url, init){
+  let params = null, base = '';
+  try{
+    base = String(window.SHEET_API_URL || '');
+    if(base && typeof url === 'string' && url.indexOf(base + '?') === 0){
+      const sp = new URLSearchParams(url.slice(base.length + 1));
+      if(hlProtectedContentActions_().includes(sp.get('action'))){ params = {}; sp.forEach((v, k) => { params[k] = v; }); }
+    }
+  }catch(e){ params = null; }
+  if(!params) return fetch(url, init);                       // not a question request: exactly as before
+  let token = '';
+  try{ token = window.getAiAuthToken ? await window.getAiAuthToken() : ''; }catch(e){ token = ''; }
+  const res = await fetch(base, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'content', idToken: token, params: params }),
+    signal: init && init.signal
+  });
+  // questions arrive as a list (tournaments as {questions:[...]}); a refusal is an object with an "error"
+  let data = null;
+  try{ data = await res.clone().json(); }catch(e){ return res; }
+  if(data && !Array.isArray(data) && typeof data.error === 'string'){
+    if(data.error === 'rateLimited') hlRefuse_('You have loaded a lot of questions in a short time. Please wait ' + hlWaitText_(data.minutes) + ' and try again.');
+    if(data.error === 'loginRequired') hlRefuse_('Please close the app completely and open it again, then try once more.');
+    throw new Error('Could not load the questions right now. Please try again.');
+  }
+  return res;
+}
+// The backend said no for a reason the student can do something about. Tell them clearly ONCE (several
+// requests often fail together), and raise an error marked as a refusal so callers do not call it "offline".
+function hlRefuse_(message){
+  const now = Date.now();
+  if(!window.__hlRefusalAt || now - window.__hlRefusalAt > 20000){
+    window.__hlRefusalAt = now;
+    try{ alert(message); }catch(e){}
+  }
+  const err = new Error(message);
+  err.hlRefusal = true;
+  throw err;
 }
 // Same as fetchWithTimeout, but a POST with a JSON body (text/plain avoids the CORS preflight,
 // same as the AI requests). Used by the secure Mock Test / Past Questions requests.
@@ -24563,7 +24615,7 @@ async function downloadSetAsPdf(subject, setNumber){
 
   try{
     const url = `${SHEET_API_URL}?action=setQuestions&subject=${encodeURIComponent(subject)}&setNumber=${setNumber}&setSize=${SET_SIZE}&post=${currentMcqPost}`;
-    const res = await fetch(url);
+    const res = await hlContentFetch_(url);
     const questions = await res.json();
 
     if(questions.length === 0){
@@ -24727,7 +24779,7 @@ async function startSet(subject, setNumber, totalSets){
 
     hideQuizLoading();
     if(cachedPool && cachedPool.length > 0){
-      alert('You appear to be offline — loading this Set from your last saved copy instead.');
+      alert((err && err.hlRefusal) ? 'Loading this Set from your last saved copy instead.' : 'You appear to be offline — loading this Set from your last saved copy instead.');
       launchQuiz(shuffle([...cachedPool]), subject, setNumber, totalSets);
     } else {
       showDebugError('Could not load this set.\n\nReal error: ' + friendlyFetchError(err) + '\n\n(This Set hasn\'t been downloaded before, so it isn\'t available offline yet.)');
@@ -25575,7 +25627,7 @@ async function startQuickBattleSearch(){
 
     if(candidate){
       // Fetch questions BEFORE the transaction — network calls don't belong inside one
-      const res = await fetch(`${SHEET_API_URL}?action=random&count=10&post=${currentMcqPost}`);
+      const res = await hlContentFetch_(`${SHEET_API_URL}?action=random&count=10&post=${currentMcqPost}`);
       const pool = await res.json();
       if(!pool || pool.length === 0){
         battleCancelSearch();
@@ -25652,7 +25704,7 @@ async function createBattle(){
   }
   showQuizLoading('Preparing your Battle Challenge…');
   try{
-    const res = await fetch(`${SHEET_API_URL}?action=random&count=10&post=${currentMcqPost}`);
+    const res = await hlContentFetch_(`${SHEET_API_URL}?action=random&count=10&post=${currentMcqPost}`);
     const pool = await res.json();
     if(!pool || pool.length === 0){
       hideQuizLoading();
@@ -25878,7 +25930,7 @@ async function getOrCreateDailyBattleQuestions(){
   const ref = dailyBattleDocRef();
   const snap = await getDoc(ref);
   if(snap.exists()) return snap.data();
-  const res = await fetch(`${SHEET_API_URL}?action=random&count=${DAILY_BATTLE_QUESTION_COUNT}`);
+  const res = await hlContentFetch_(`${SHEET_API_URL}?action=random&count=${DAILY_BATTLE_QUESTION_COUNT}`);
   const pool = await res.json();
   const data = { subject: 'Mixed Public Health', questions: pool, totalQuestions: pool.length, createdAt: serverTimestamp() };
   try{ await setDoc(ref, data); }catch(e){} // if another user's request wins the race, that's fine — same-day content either way
@@ -26281,7 +26333,7 @@ safeOn('startBtn', 'click', async () => {
   try{
     // Server does the random picking — the phone never downloads more than it needs
     const url = `${SHEET_API_URL}?action=random&count=${selectedCount}&subject=${encodeURIComponent(selectedSubject)}`;
-    const res = await fetch(url);
+    const res = await hlContentFetch_(url);
     const pool = await res.json();
 
     if(pool.length === 0){
