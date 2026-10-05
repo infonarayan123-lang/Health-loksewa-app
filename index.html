@@ -2610,6 +2610,7 @@
           <button class="profile-menu-item" id="menuRateUs"><span class="pm-icon"><i class="bi bi-star"></i></span> Rate Us</button>
           <button class="profile-menu-item" id="menuCommunityRules"><span class="pm-icon"><i class="bi bi-people"></i></span> Community Rules</button>
           <button class="profile-menu-item" id="menuReportProblem"><span class="pm-icon"><i class="bi bi-flag"></i></span> Report a problem or user</button>
+          <button class="profile-menu-item" id="menuAdminReports" style="display:none;"><span class="pm-icon"><i class="bi bi-shield-exclamation"></i></span> Reports (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -26824,6 +26825,83 @@ async function hlRequireCommunityRules_(){
 safeOn('menuBlockedUsers', 'click', () => { hlOpenBlockedUsers_(); });
 safeOn('menuCommunityRules', 'click', () => { openLegalInfo('Community Rules', hlCommunityRulesHtml_()); });
 safeOn('menuReportProblem', 'click', () => { hlOpenReportDialog_({ title: 'Report a problem or user', general: true, type: 'other', ref: 'general:' + Date.now() }); });
+// ==========================================================================================
+// ADMIN: review reports inside the app (Oct 2026). Shown only to owner accounts with Admin view ON; the database
+// rules check the Google-verified owner email again for every read and change. For each report the owner can
+// remove a reported post / reply / shared note, mark it resolved, or dismiss it. Things the app cannot do itself
+// (delete a community deck row in the Sheet, disable an account) get plain instructions on the card.
+// ==========================================================================================
+function hlReportTypeLabel_(t){ return ({ post: 'Post', reply: 'Reply', note: 'Shared note', member: 'Person', deck: 'Community deck', opponent: 'Battle opponent', ai: 'AI answer', other: 'General report' })[t] || String(t); }
+function hlReportReasonLabel_(k){ const m = hlReportReasons_().find(x => x[0] === k); return m ? m[1] : String(k); }
+function hlReportMillis_(c){ try{ return (c && typeof c.toMillis === 'function') ? c.toMillis() : 0; }catch(e){ return 0; } }
+function hlReportTimeText_(c){ try{ return (c && typeof c.toDate === 'function') ? c.toDate().toLocaleString() : ''; }catch(e){ return ''; } }
+async function hlOpenAdminReports_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlReportsOverlay', 'flex-start');
+  const S = 'color:var(--ink-soft-on-elevated);';
+  let showResolved = false;
+  const frame = (inner) => '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">' + inner + '</div>';
+  const closeBtn = '<button type="button" id="hlRpClose" style="width:100%; margin:12px 0 0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button>';
+  const bindClose = () => { const c = ov.querySelector('#hlRpClose'); if(c) c.onclick = () => ov.remove(); };
+  async function mark(id, status, resolution){
+    const { doc, updateDoc, serverTimestamp } = window.hlFirestoreFns;
+    await updateDoc(doc(window.hlFirestore, 'reports', id), { status: status, resolvedAt: serverTimestamp(), resolvedBy: window.currentUser.uid, resolution: resolution });
+  }
+  async function load(){
+    ov.innerHTML = frame('<div style="font-size:15px; font-weight:800; margin-bottom:8px;">Reports</div><div style="font-size:12.5px; ' + S + '">Loading…</div>');
+    const docs = [];
+    try{
+      const { getDocs, collection, query, where, limit } = window.hlFirestoreFns;
+      for(const st of (showResolved ? ['resolved', 'dismissed'] : ['open'])){
+        const snap = await getDocs(query(collection(window.hlFirestore, 'reports'), where('status', '==', st), limit(60)));
+        snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
+      }
+    }catch(e){
+      ov.innerHTML = frame('<div style="font-size:15px; font-weight:800; margin-bottom:8px;">Reports</div><div style="font-size:12.5px;">' + ((e && e.code === 'permission-denied') ? 'This account is not allowed to review reports.' : 'Could not load reports. Please check your connection.') + '</div>' + closeBtn);
+      bindClose(); return;
+    }
+    docs.sort((a, b) => hlReportMillis_(b.createdAt) - hlReportMillis_(a.createdAt));
+    render(docs);
+  }
+  function render(docs){
+    const cards = docs.map(r => {
+      const removable = ['post', 'reply', 'note'].includes(r.type) && typeof r.ref === 'string' && r.ref.indexOf('groups/') === 0;
+      let help = '';
+      if(r.type === 'deck') help = 'To remove this deck: open your Google Sheet, tab "PublicDecks", and delete the row whose PublishId is ' + hlEsc(String(r.ref || '').replace(/^deck:/, '')) + '. Then tap Resolved.';
+      else if(['member', 'opponent', 'other'].includes(r.type) && r.targetUid) help = 'To stop this person: Firebase console > Authentication > search for this ID > Disable account. Then tap Resolved.';
+      const buttons = showResolved
+        ? '<div style="font-size:11.5px; ' + S + '">' + hlEsc(r.status || '') + (r.resolution ? ' - ' + hlEsc(r.resolution) : '') + '</div>'
+        : '<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">'
+          + (removable ? '<button type="button" class="hl-rp-remove" data-id="' + hlEsc(r.id) + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--line);">Remove content</button>' : '')
+          + '<button type="button" class="hl-rp-resolve" data-id="' + hlEsc(r.id) + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px;">Resolved</button>'
+          + '<button type="button" class="hl-rp-dismiss" data-id="' + hlEsc(r.id) + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Dismiss</button></div>';
+      return '<div class="hl-rp-card" data-id="' + hlEsc(r.id) + '" style="border-top:1px solid rgba(255,255,255,0.15); padding:10px 0;">'
+        + '<div style="font-size:12.5px; font-weight:800;">' + hlEsc(hlReportTypeLabel_(r.type)) + ' - ' + hlEsc(hlReportReasonLabel_(r.reason)) + '</div>'
+        + '<div style="font-size:11px; ' + S + '">' + hlEsc(hlReportTimeText_(r.createdAt)) + (r.targetName ? ' - ' + hlEsc(r.targetName) : '') + '</div>'
+        + (r.snippet ? '<div style="font-size:12.5px; margin:6px 0; padding:6px 8px; border-radius:6px; background:rgba(255,255,255,0.08); word-break:break-word;">' + hlEsc(r.snippet) + '</div>' : '')
+        + (r.details ? '<div style="font-size:12px; ' + S + ' word-break:break-word;">Their note: ' + hlEsc(r.details) + '</div>' : '')
+        + (r.targetUid ? '<div style="font-size:11px; ' + S + ' word-break:break-all;">Person ID: ' + hlEsc(r.targetUid) + '</div>' : '')
+        + (help ? '<div style="font-size:11.5px; margin-top:6px; padding:6px 8px; border:1px dashed rgba(255,255,255,0.35); border-radius:6px; word-break:break-word;">' + help + '</div>' : '')
+        + buttons + '</div>';
+    }).join('');
+    ov.innerHTML = frame('<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><div style="font-size:15px; font-weight:800;">Reports - ' + (showResolved ? 'closed' : 'open') + ' (' + docs.length + ')</div>'
+      + '<button type="button" id="hlRpToggle" style="margin:0; width:auto; padding:5px 10px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">' + (showResolved ? 'Show open' : 'Show closed') + '</button></div>'
+      + (docs.length === 0 ? '<div style="font-size:12.5px; margin:12px 0; ' + S + '">' + (showResolved ? 'No closed reports.' : 'No open reports. All clear.') + '</div>' : cards) + closeBtn);
+    bindClose();
+    ov.querySelector('#hlRpToggle').onclick = () => { showResolved = !showResolved; load(); };
+    const byId = (id) => docs.find(x => x.id === id);
+    const act = async (btn, fn, failText) => { btn.disabled = true; try{ await fn(); await load(); }catch(e){ btn.disabled = false; alert((e && e.code === 'permission-denied') ? 'This account is not allowed to do that.' : failText); } };
+    ov.querySelectorAll('.hl-rp-resolve').forEach(b => { b.onclick = () => act(b, () => mark(b.dataset.id, 'resolved', 'reviewed'), 'Could not save. Please try again.'); });
+    ov.querySelectorAll('.hl-rp-dismiss').forEach(b => { b.onclick = () => act(b, () => mark(b.dataset.id, 'dismissed', 'no action'), 'Could not save. Please try again.'); });
+    ov.querySelectorAll('.hl-rp-remove').forEach(b => { b.onclick = async () => {
+      const r = byId(b.dataset.id); if(!r) return;
+      if(!(await customConfirm('Remove this ' + hlReportTypeLabel_(r.type).toLowerCase() + ' for everyone?\n\n"' + String(r.snippet || '').slice(0, 100) + '"\n\nThis cannot be undone.'))) return;
+      act(b, async () => { const { doc, deleteDoc } = window.hlFirestoreFns; await deleteDoc(doc(window.hlFirestore, ...r.ref.split('/'))); await mark(r.id, 'resolved', 'content removed'); }, 'Could not remove it. It may already be gone, or you are offline.');
+    }; });
+  }
+  load();
+}
+safeOn('menuAdminReports', 'click', () => { hlOpenAdminReports_(); });
 function hlOpenOpponentMenu_(){
   const o = window.__hlBattleOpp;
   if(!o || !o.uid) return;
@@ -26944,6 +27022,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
+  try{ const rb = document.getElementById('menuAdminReports'); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }catch(e){}   // the Reports item shows only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
