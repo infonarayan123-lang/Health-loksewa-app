@@ -2591,6 +2591,7 @@
           <button class="profile-menu-item" id="menuChangePassword"><span class="pm-icon"><i class="bi bi-key"></i></span> Change Password</button>
           <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon"><i class="bi bi-lock"></i></span> Privacy Policy</button>
+          <button class="profile-menu-item" id="menuBlockedUsers"><span class="pm-icon"><i class="bi bi-slash-circle"></i></span> Blocked users</button>
           <button class="profile-menu-item" id="menuDownloadData"><span class="pm-icon"><i class="bi bi-download"></i></span> Download my data</button>
           <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong-on-light);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
           <button class="profile-menu-item" id="menuHealthConsent"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Mood &amp; health tracking <span id="healthConsentStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
@@ -2607,6 +2608,8 @@
           <button class="profile-menu-item" id="menuAboutUs"><span class="pm-icon"><i class="bi bi-info-circle"></i></span> About Us</button>
           <button class="profile-menu-item" id="menuFeedback"><span class="pm-icon"><i class="bi bi-chat-dots"></i></span> Feedback</button>
           <button class="profile-menu-item" id="menuRateUs"><span class="pm-icon"><i class="bi bi-star"></i></span> Rate Us</button>
+          <button class="profile-menu-item" id="menuCommunityRules"><span class="pm-icon"><i class="bi bi-people"></i></span> Community Rules</button>
+          <button class="profile-menu-item" id="menuReportProblem"><span class="pm-icon"><i class="bi bi-flag"></i></span> Report a problem or user</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -3774,6 +3777,7 @@
           <div style="font-size:11px; color:var(--ink-soft);">OPPONENT</div>
           <div style="font-size:14px; font-weight:700; color:var(--ink); margin:4px 0;" id="battleLobbyOppName">Waiting for opponent…</div>
           <div style="font-size:11.5px;" id="battleLobbyOppStatus"></div>
+          <button type="button" id="battleLobbyOppMenuBtn" style="display:none; margin:6px 0 0; padding:3px 8px; font-size:11px; background:none; border:none; color:var(--ink-soft); text-decoration:underline; cursor:pointer;">Report or block</button>
         </div>
       </div>
 
@@ -3821,6 +3825,7 @@
         <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0;"><span style="color:var(--ink-soft);">Correct</span><span id="battleResultCorrect" style="font-weight:700; color:var(--correct);"></span></div>
         <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">Wrong</span><span id="battleResultWrong" style="font-weight:700; color:var(--wrong);"></span></div>
       </div>
+      <button type="button" id="battleResultOppMenuBtn" style="display:none; margin:0 0 12px; padding:4px 10px; font-size:12px; background:none; border:none; color:var(--ink-soft); text-decoration:underline; cursor:pointer;">Report or block your opponent</button>
       <button class="start-btn" id="battleResultDoneBtn">Done</button>
     </div>
   </div>
@@ -5931,6 +5936,7 @@
         <p style="font-size:13px; color:var(--ink); line-height:1.5; margin-bottom:10px;" id="dtContent"></p>
         <div style="font-size:11px; color:var(--ink-soft); margin-bottom:10px;"><span id="dtAuthor"></span></div>
         <button class="calc-btn" id="dtLikeBtn" style="margin:0; width:auto; padding:5px 12px; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);"><span id="dtLikeCount">0</span></button>
+        <button class="calc-btn" id="dtMenuBtn" aria-label="More options" style="display:none; margin:0; margin-left:8px; width:auto; padding:5px 12px; font-size:13px; background:var(--panel); color:var(--ink-soft); border:1.5px solid var(--line);">&#8943;</button>
         <button class="calc-btn" id="dtPinBtn" style="display:none; margin:0; margin-left:8px; width:auto; padding:5px 12px; font-size:11.5px; background:var(--panel); color:var(--gold); border:1.5px solid var(--gold);">Pin</button>
       </div>
       <div class="section-title" style="font-size:14px;" id="dtReplyCountLabel">Replies</div>
@@ -6751,6 +6757,8 @@
     await tryGet('profile', async () => { const p = plain(await getDoc(doc(db, 'users', uid))); if(p) delete p.fcmToken; return p; });
     await tryGet('devices', async () => (await getDocs(collection(db, 'users', uid, 'devices'))).docs.map(d => ({ id: d.id, ...d.data() })));
     await tryGet('leaderboard', async () => plain(await getDoc(doc(db, 'leaderboard', uid))));
+    await tryGet('blockedUsers', async () => (await getDocs(collection(db, 'users', uid, 'blocked'))).docs.map(d => ({ id: d.id, ...d.data() })));
+    await tryGet('reportsISent', async () => (await getDocs(query(collection(db, 'reports'), where('reporterUid', '==', uid)))).docs.map(d => d.data()));
     await tryGet('weeklyTournamentEntries', async () => (await getDocs(query(collection(db, 'tournamentEntries'), where('uid', '==', uid)))).docs.map(d => d.data()));
     await tryGet('monthlyTournamentEntries', async () => (await getDocs(query(collection(db, 'monthlyTournamentEntries'), where('uid', '==', uid)))).docs.map(d => d.data()));
     await tryGet('studyGroups', async () => {
@@ -6873,6 +6881,14 @@
       const devs = await getDocs(collection(db, 'users', uid, 'devices'));
       for(const d of devs.docs){ await deleteDoc(d.ref); }
     });
+    await step('blocked list', async () => {
+      const bl = await getDocs(collection(db, 'users', uid, 'blocked'));
+      for(const d of bl.docs){ await deleteDoc(d.ref); }
+    });
+    await step('reports you sent', async () => {
+      const rp = await getDocs(query(collection(db, 'reports'), where('reporterUid', '==', uid)));
+      for(const d of rp.docs){ await deleteDoc(d.ref); }
+    });
     await step('profile', () => deleteDoc(doc(db, 'users', uid)));
 
     // 5) The login itself, then this phone's saved data for this account
@@ -6935,6 +6951,7 @@
       // Ask the backend whether this account is an owner (admin tools + free Premium). Not awaited, so
       // students are never slowed down; owners see the result the moment it arrives.
       if(window.hlRefreshRoleSoon_){ try{ window.hlRefreshRoleSoon_(); }catch(e){} }
+      if(window.hlSyncBlocked_){ try{ window.hlSyncBlocked_(); }catch(e){} }   // block list: not waited for
       // Email verification gate — only for brand-new, recently-created email/password accounts.
       // Google Sign-In accounts are already verified by Google itself (checked via providerId),
       // and any account older than 30 days is grandfathered in regardless of its verification
@@ -9176,6 +9193,7 @@ safeOn('gcContinueBtn', 'click', () => {
 });
 safeOn('gcCreateBtn', 'click', async () => {
   if(!window.createStudyGroup) return;
+  if(!(await hlRequireCommunityRules_())) return;
   const btn = document.getElementById('gcCreateBtn');
   btn.disabled = true; btn.textContent = 'Creating…';
   const code = await window.createStudyGroup({
@@ -9379,7 +9397,7 @@ function renderGroupMembers(group){
 
   const memberRow = (m, roleLabel) => `
     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-top:1px solid var(--line);">
-      <span style="font-size:12.5px;">${roleLabel} ${hlEsc(m.name)}${m.uid === myUid ? ' (You)' : ''}</span>
+      <span style="font-size:12.5px;">${roleLabel} ${hlEsc(m.name)}${m.uid === myUid ? ' (You)' : ''}${hlIsBlocked_(m.uid) ? ' <i style="color:var(--ink-soft);">(blocked)</i>' : ''}${m.uid !== myUid ? ` <button type="button" class="hl-member-menu" data-uid="${hlEsc(m.uid)}" data-name="${hlEsc(m.name)}" aria-label="More options" style="background:none; border:none; color:var(--ink-soft); font-size:16px; padding:0 6px; cursor:pointer;">&#8943;</button>` : ''}</span>
       ${isAdmin && m.uid !== group.createdBy ? `
         <div style="display:flex; gap:6px;">
           <button class="calc-btn gd-mod-toggle" data-uid="${hlEsc(m.uid)}" data-ismod="${mods.includes(m.uid)}" style="margin:0; width:auto; padding:4px 8px; font-size:10px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">${mods.includes(m.uid) ? 'Demote' : 'Make Mod'}</button>
@@ -9392,6 +9410,9 @@ function renderGroupMembers(group){
     ${moderators.length > 0 ? `<div class="content-card" style="margin-bottom:10px;"><h4 style="margin-bottom:4px; font-size:13px;">Moderators</h4>${moderators.map(m => memberRow(m, '')).join('')}</div>` : ''}
     <div class="content-card"><h4 style="margin-bottom:4px; font-size:13px;">Members (${members.length})</h4>${members.map(m => memberRow(m, '')).join('')}</div>
   `;
+  wrap.querySelectorAll('.hl-member-menu').forEach(btn => {
+    btn.onclick = () => hlOpenContentMenu_({ type: 'member', noun: 'this person', ref: 'user:' + btn.dataset.uid, targetUid: btn.dataset.uid, targetName: btn.dataset.name || 'Student', snippet: 'Member of group ' + currentGroupDetailCode });
+  });
   wrap.querySelectorAll('.gd-mod-toggle').forEach(btn => {
     btn.addEventListener('click', async () => {
       await window.setGroupModerator(currentGroupDetailCode, btn.dataset.uid, btn.dataset.ismod !== 'true');
@@ -9602,7 +9623,7 @@ async function renderGroupResources(){
     const { getDocs, collection } = window.hlFirestoreFns;
     const snap = await getDocs(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'sharedResources'));
     const resources = [];
-    snap.forEach(d => resources.push({ id: d.id, ...d.data() }));
+    snap.forEach(d => { const x = { id: d.id, ...d.data() }; if(!hlIsBlocked_(x.sharedBy)) resources.push(x); });   // blocked people's shared notes stay hidden
     resources.sort((a, b) => new Date(b.sharedAt || 0) - new Date(a.sharedAt || 0));
     if(resources.length === 0){
       wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">Nothing shared yet — share a note from My Notes with the group.</p>`;
@@ -9611,10 +9632,14 @@ async function renderGroupResources(){
     wrap.innerHTML = resources.map(r => `
       <div class="content-card" style="margin-bottom:8px;">
         <div style="font-size:12.5px; font-weight:700;">${hlEsc(r.title)}</div>
-        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:6px;">Shared by ${hlEsc(r.sharedByName || 'Student')}</div>
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:6px;">Shared by ${hlEsc(r.sharedByName || 'Student')}${r.sharedBy && r.sharedBy !== (window.currentUser && window.currentUser.uid) ? ` <button type="button" class="hl-note-menu" data-idx="${resources.indexOf(r)}" aria-label="More options" style="background:none; border:none; color:var(--ink-soft); font-size:16px; padding:0 6px; cursor:pointer;">&#8943;</button>` : ''}</div>
         <button class="chat-save-btn gd-save-resource" data-idx="${resources.indexOf(r)}" style="display:inline-block;">Save to My Notes</button>
       </div>
     `).join('');
+    wrap.querySelectorAll('.hl-note-menu').forEach(btn => {
+      btn.onclick = () => { const r = resources[parseInt(btn.dataset.idx, 10)]; if(!r) return;
+        hlOpenContentMenu_({ type: 'note', noun: 'this shared note', ref: 'groups/' + currentGroupDetailCode + '/sharedResources/' + r.id, targetUid: r.sharedBy || null, targetName: r.sharedByName || 'Student', snippet: r.title || '' }); };
+    });
     wrap.querySelectorAll('.gd-save-resource').forEach(btn => {
       btn.addEventListener('click', () => {
         const r = resources[parseInt(btn.dataset.idx, 10)];
@@ -9636,6 +9661,7 @@ async function renderGroupResources(){
 safeOn('gdShareResourceBtn', 'click', async () => {
   const notes = getNotes().filter(n => !n.deletedAt);
   if(notes.length === 0){ alert('You don\'t have any notes yet to share.'); return; }
+  if(!(await hlRequireCommunityRules_())) return;
   const options = notes.map((n, i) => `${i + 1}. ${n.title || 'Untitled'}`).join('\n');
   const choice = prompt(`Which note do you want to share with the group?\n\n${options}`);
   if(choice === null) return;
@@ -9671,7 +9697,7 @@ async function renderGroupDiscussions(){
     const { getDocs, collection } = window.hlFirestoreFns;
     const snap = await getDocs(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions'));
     const discussions = [];
-    snap.forEach(d => discussions.push({ id: d.id, ...d.data() }));
+    snap.forEach(d => { const x = { id: d.id, ...d.data() }; if(!hlIsBlocked_(x.authorUid)) discussions.push(x); });   // blocked people's posts stay hidden
     discussions.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || new Date(b.createdAt) - new Date(a.createdAt));
     if(discussions.length === 0){
       wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px;">No discussions yet — start the first one!</p>`;
@@ -9700,6 +9726,7 @@ safeOn('gdStartDiscussionBtn', 'click', () => {
 safeOn('sdPostBtn', 'click', async () => {
   const title = document.getElementById('sdTitle').value.trim();
   if(!title){ alert('Please enter a title first.'); return; }
+  if(!(await hlRequireCommunityRules_())) return;
   try{
     const { doc, setDoc } = window.hlFirestoreFns;
     await setDoc(doc(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', 'disc_' + Date.now()), {
@@ -9727,6 +9754,14 @@ async function openDiscussionThread(discussionId){
   document.getElementById('dtTitle').textContent = d.title;
   document.getElementById('dtContent').textContent = d.content || '';
   document.getElementById('dtAuthor').textContent = d.authorName;
+  if(hlIsBlocked_(d.authorUid)){ document.getElementById('dtTitle').textContent = 'Hidden post'; document.getElementById('dtContent').textContent = 'You have blocked this person.'; }
+  const dtMenu = document.getElementById('dtMenuBtn');
+  if(dtMenu){
+    const mine = !!(d.authorUid && window.currentUser && d.authorUid === window.currentUser.uid);
+    dtMenu.style.display = mine ? 'none' : 'inline-block';
+    dtMenu.onclick = () => hlOpenContentMenu_({ type: 'post', noun: 'this post', ref: 'groups/' + currentGroupDetailCode + '/discussions/' + discussionId,
+      targetUid: d.authorUid || null, targetName: d.authorName || 'Student', snippet: (d.title || '') + ' - ' + (d.content || '') });
+  }
   const liked = window.currentUser && (d.likes || []).includes(window.currentUser.uid);
   document.getElementById('dtLikeBtn').style.color = liked ? 'var(--gold)' : '';
   document.getElementById('dtLikeCount').textContent = (d.likes || []).length;
@@ -9743,17 +9778,22 @@ async function openDiscussionThread(discussionId){
 
   const repliesSnap = await getDocs(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', discussionId, 'replies'));
   const replies = [];
-  repliesSnap.forEach(r => replies.push(r.data()));
+  repliesSnap.forEach(r => { const x = { id: r.id, ...r.data() }; if(!hlIsBlocked_(x.authorUid)) replies.push(x); });   // blocked people's replies stay hidden
   replies.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   document.getElementById('dtReplyCountLabel').textContent = `Replies (${replies.length})`;
+  const myUidR = window.currentUser ? window.currentUser.uid : null;
   document.getElementById('dtRepliesList').innerHTML = replies.length === 0
     ? `<p style="color:var(--ink-soft); font-size:12.5px;">No replies yet.</p>`
-    : replies.map(r => `
+    : replies.map((r, i) => `
       <div class="content-card" style="margin-bottom:8px;">
-        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">${hlEsc(r.authorName)}</div>
+        <div style="font-size:11px; color:var(--ink-soft); margin-bottom:3px;">${hlEsc(r.authorName)}${r.authorUid && r.authorUid !== myUidR ? ` <button type="button" class="hl-reply-menu" data-idx="${i}" aria-label="More options" style="background:none; border:none; color:var(--ink-soft); font-size:16px; padding:0 6px; cursor:pointer;">&#8943;</button>` : ''}</div>
         <div style="font-size:13px; color:var(--ink);">${hlEsc(r.content)}</div>
       </div>
     `).join('');
+  document.querySelectorAll('#dtRepliesList .hl-reply-menu').forEach(btn => {
+    btn.onclick = () => { const r = replies[parseInt(btn.dataset.idx, 10)]; if(!r) return;
+      hlOpenContentMenu_({ type: 'reply', noun: 'this reply', ref: 'groups/' + currentGroupDetailCode + '/discussions/' + discussionId + '/replies/' + r.id, targetUid: r.authorUid || null, targetName: r.authorName || 'Student', snippet: r.content || '' }); };
+  });
 }
 safeOn('dtLikeBtn', 'click', async () => {
   if(!currentDiscussionId || !window.currentUser) return;
@@ -9774,6 +9814,7 @@ safeOn('dtReplySendBtn', 'click', async () => {
   const input = document.getElementById('dtReplyInput');
   const content = input.value.trim();
   if(!content || !currentDiscussionId || !window.currentUser) return;
+  if(!(await hlRequireCommunityRules_())) return;
   try{
     const { doc, getDoc, setDoc, collection } = window.hlFirestoreFns;
     await setDoc(doc(collection(window.hlFirestore, 'groups', currentGroupDetailCode, 'discussions', currentDiscussionId, 'replies')), {
@@ -18203,9 +18244,10 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
       const data = await res.json();
       const reply = data.reply || "Sorry, couldn't get a response. Please try again.";
       resultEl.innerHTML = `
-        <div style="background:var(--panel-elevated); border-radius:8px; padding:10px; font-size:12.5px; color:var(--ink); line-height:1.5; white-space:pre-wrap;">${reply}</div>
+        <div style="background:var(--panel-elevated); border-radius:8px; padding:10px; font-size:12.5px; color:var(--ink); line-height:1.5; white-space:pre-wrap;">${hlEsc(reply)}</div>
         <button class="calc-btn" id="noteAiInsertBtn" style="margin-top:8px; font-size:12px;">↓ Insert into note</button>
       `;
+      hlAppendAiReportLink_(resultEl, 'notesAi', reply);
       document.getElementById('noteAiInsertBtn').addEventListener('click', () => {
         textarea.value = textarea.value + '\n\n' + reply;
         scheduleAutoSave();
@@ -20822,6 +20864,8 @@ safeOn('menuPrivacyPolicy', 'click', () => {
       <li>The date you last opened the App (used only to send study reminders), and a record that you accepted this policy.</li>
       <li><b>My Devices:</b> the type of device and browser you use (for example "Android, Chrome") and when it was last active, so you can see and log out your devices.</li>
       <li>A notification token, if you turn notifications on, so we can send the notifications you chose.</li>
+      <li><b>Blocked users and Community Rules:</b> if you block someone, we save who you blocked with your account, so the block works on all your devices and you are not matched with them in Quick Battle. We also save that you accepted the Community Rules.</li>
+      <li><b>Reports you send:</b> if you report a post, reply, note, person or deck, we receive what you reported (up to 300 letters of its text, or of the AI answer you flagged), the reason, any note you add, your account ID and the time. Only we can read reports, and the person you report is not told who reported them. Reports you sent are deleted when you delete your account.</li>
     </ul>
 
     <h3>3. What other students can see</h3>
@@ -20862,7 +20906,7 @@ safeOn('menuPrivacyPolicy', 'click', () => {
     <ul>
       <li>Change your name, reset your password, and turn notifications on or off in your Profile.</li>
       <li>Turn "Mood and health tracking" on or off, and delete those entries, in Profile &gt; Account &amp; Privacy.</li>
-      <li><b>Delete your account yourself</b> in Profile &gt; Account &amp; Privacy &gt; Delete Account. This removes your profile, devices, Leaderboard entry, Tournament and Battle scores, your Study Group posts, replies and shared notes, your group memberships and join requests, and the data saved for your account on that phone. Groups you created are handed over to another member (or deleted if you were the only member).</li>
+      <li><b>Delete your account yourself</b> in Profile &gt; Account &amp; Privacy &gt; Delete Account. This removes your profile, devices, blocked-users list, the reports you sent, Leaderboard entry, Tournament and Battle scores, your Study Group posts, replies and shared notes, your group memberships and join requests, and the data saved for your account on that phone. Groups you created are handed over to another member (or deleted if you were the only member).</li>
       <li>Community flash card decks you published are not linked to your account. If you want one removed, contact us.</li>
     </ul>
 
@@ -20881,22 +20925,7 @@ safeOn('menuPrivacyPolicy', 'click', () => {
 });
 
 safeOn('menuTerms', 'click', () => {
-  openLegalInfo('Terms and Conditions', `
-    <p style="color:var(--ink-soft); font-size:12px;">Last updated: July 2026</p>
-    <p>By using Health Loksewa, you agree to these Terms.</p>
-    <h3>About This App</h3>
-    <p>Health Loksewa is an independent, privately-developed study tool. It is <b>not affiliated with, endorsed by, or officially connected to</b> the Public Service Commission (Lok Sewa Aayog), the Government of Nepal, or any government body.</p>
-    <h3>Educational Purpose Only</h3>
-    <p>All content is provided for self-study purposes. We make reasonable efforts to ensure accuracy but do not guarantee every question or document is error-free. Always cross-check important information with official PSC publications.</p>
-    <h3>Your Account</h3>
-    <p>You're responsible for keeping your password confidential and for all activity under your account.</p>
-    <h3>Acceptable Use</h3>
-    <p>Don't misuse the app, attempt unauthorized access, scrape content, or post abusive content through the AI Assistant or any other feature.</p>
-    <h3>No Warranty</h3>
-    <p>The app is provided "as is." We are not liable for exam results or decisions made based on app content.</p>
-    <h3>Contact</h3>
-    <p>Questions about these Terms: <a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>
-  `);
+  openLegalInfo('Terms and Conditions', hlTermsHtml_());
 });
 
 // ---------- Dark mode is now the default brand look. The toggle switches to Light mode instead. ----------
@@ -25413,6 +25442,7 @@ function renderFcAiResults(){
       </div>
     </div>
   `).join('');
+  hlAppendAiReportLink_(document.getElementById('fcAiResultsWrap'), 'flashcardGen', fcGeneratedDrafts.map(c => c.front + ' / ' + c.back).join('; '), document.getElementById('fcAiResultsList'));
   document.querySelectorAll('.fc-ai-front-input').forEach(input => {
     input.addEventListener('input', (e) => { fcGeneratedDrafts[parseInt(e.target.dataset.idx, 10)].front = e.target.value; });
   });
@@ -25453,6 +25483,7 @@ safeOn('fcPublishDeckBtn', 'click', async () => {
   const deck = getFcDecks().find(d => d.id === fcCurrentDeckId);
   const cards = getFcCards().filter(c => c.deckId === fcCurrentDeckId);
   if(!deck || cards.length === 0){ alert('This deck has no cards to publish yet.'); return; }
+  if(!(await hlRequireCommunityRules_())) return;
   const creatorName = prompt('Your name (shown as the creator of this deck):', '');
   if(creatorName === null) return; // cancelled
   const btn = document.getElementById('fcPublishDeckBtn');
@@ -25512,6 +25543,14 @@ async function renderCommunityDecks(){
     });
     document.querySelectorAll('.fc-rate-deck-btn').forEach(btn => {
       btn.addEventListener('click', () => rateCommunityDeck(btn.dataset.publishId));
+      const rb = document.createElement('button');
+      rb.type = 'button'; rb.className = 'fc-report-deck-btn'; rb.textContent = 'Report';
+      rb.style.cssText = 'margin:8px 0 0 12px; background:none; border:none; color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline;';
+      rb.addEventListener('click', () => {
+        const dk = decks.find(x => String(x.publishId) === String(btn.dataset.publishId)) || {};
+        hlOpenContentMenu_({ type: 'deck', noun: 'this deck', ref: 'deck:' + btn.dataset.publishId, targetUid: null, targetName: dk.creatorName || null, snippet: (dk.deckName || '') });
+      });
+      btn.insertAdjacentElement('afterend', rb);
     });
   }catch(err){
     listEl.innerHTML = `<p style="color:var(--wrong); font-size:13px; text-align:center; padding:20px 0;">Could not load community decks — check your connection.</p>`;
@@ -25623,7 +25662,7 @@ async function startQuickBattleSearch(){
     // Look for anyone else already waiting
     const q = query(collection(window.hlFirestore, 'matchmakingQueue'), where('matched', '==', false), limit(5));
     const waitingSnap = await getDocs(q);
-    const candidate = waitingSnap.docs.find(d => d.id !== myUid);
+    const candidate = waitingSnap.docs.find(d => d.id !== myUid && !hlIsBlocked_(d.id));   // never pair with someone you blocked
 
     if(candidate){
       // Fetch questions BEFORE the transaction — network calls don't belong inside one
@@ -25635,7 +25674,8 @@ async function startQuickBattleSearch(){
         return;
       }
       const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const claimed = await runTransaction(window.hlFirestore, async (tx) => {
+      let claimed = false;
+      try{ claimed = await runTransaction(window.hlFirestore, async (tx) => {
         const candidateRef = doc(window.hlFirestore, 'matchmakingQueue', candidate.id);
         const freshSnap = await tx.get(candidateRef);
         if(!freshSnap.exists() || freshSnap.data().matched) return false; // someone else claimed them first
@@ -25652,7 +25692,7 @@ async function startQuickBattleSearch(){
           createdAt: serverTimestamp(),
         });
         return true;
-      });
+      }); }catch(txErr){ claimed = false; }   // a refusal (for example this person has blocked you) just means: keep waiting in the queue
       if(claimed){
         currentBattleCode = code;
         currentBattleRole = 'creator';
@@ -25795,6 +25835,9 @@ function battleSubscribeLobby(code, role){
     document.getElementById('battleLobbyYouName').textContent = youName || 'You';
     document.getElementById('battleLobbyYouStatus').innerHTML = youReady ? '<span style="color:var(--correct);">✓ Ready</span>' : 'Waiting…';
     document.getElementById('battleLobbyOppName').textContent = oppName || 'Waiting for opponent…';
+    window.__hlBattleOpp = { uid: (role === 'creator' ? b.joinerUid : b.creatorUid) || null, name: oppName || '', code: code };
+    const oppBtn = document.getElementById('battleLobbyOppMenuBtn');
+    if(oppBtn) oppBtn.style.display = (window.__hlBattleOpp.uid && oppName) ? 'inline-block' : 'none';
     document.getElementById('battleLobbyOppStatus').innerHTML = !oppName ? '' : (oppReady ? '<span style="color:var(--correct);">✓ Ready</span>' : 'Not ready yet');
 
     if(b.status === 'live'){
@@ -25890,6 +25933,9 @@ function battleSubscribeLive(code, role){
   });
 }
 function showBattleLiveResult(b, role){
+  window.__hlBattleOpp = { uid: (role === 'creator' ? b.joinerUid : b.creatorUid) || null, name: (role === 'creator' ? b.joinerName : b.creatorName) || '', code: currentBattleCode };
+  const oppResBtn = document.getElementById('battleResultOppMenuBtn');
+  if(oppResBtn) oppResBtn.style.display = window.__hlBattleOpp.uid ? 'inline-block' : 'none';
   const youScore = role === 'creator' ? b.creatorCorrect : b.joinerCorrect;
   const oppScore = role === 'creator' ? b.joinerCorrect : b.creatorCorrect;
   const total = b.totalQuestions;
@@ -26471,6 +26517,321 @@ function renderQuestion(){
 // phone for this account, so the admin tools also work offline. A person who edits this remembered
 // answer in their browser only changes what THEIR screen shows — the backend checks again for every
 // real action. (No top-level let/const here on purpose: state lives on window.)
+// ==========================================================================================
+// COMMUNITY SAFETY (Oct 2026): report, block and Community Rules.
+// Study Groups, discussions, shared notes, published flash card decks and Battles let students meet each
+// other, so students must be able to REPORT content and people, BLOCK people, and must agree to Community
+// Rules before posting. Reports go to the "reports" collection (read by the team in the Firebase console;
+// each student can see and delete only their own). The block list is saved with the student's account
+// (users/<me>/blocked) and also kept on the phone so hiding works instantly and offline.
+// Blocking hides that person's posts, replies and shared notes, and keeps them out of Quick Battle with you.
+// ==========================================================================================
+function hlReportReasons_(){
+  return [['spam', 'Spam or advertising'], ['abuse', 'Abuse or harassment'], ['hate', 'Hate or discrimination'],
+          ['sexual', 'Sexual or inappropriate content'], ['violence', 'Violence or self-harm'],
+          ['misleading', 'Wrong or misleading information'], ['other', 'Something else']];
+}
+function hlSimpleHash_(str){
+  let h = 5381;
+  for(let i = 0; i < str.length; i++){ h = ((h << 5) + h + str.charCodeAt(i)) | 0; }
+  return (h >>> 0).toString(36);
+}
+function hlCommunityRulesHtml_(){
+  return `
+    <p>Study Groups, discussions, shared notes, published flash card decks and Battles let students talk to each other. To keep them safe and useful for exam study, everyone who uses them agrees to these rules.</p>
+    <h3>1. Be respectful</h3>
+    <p>No bullying, harassment, threats or insults. Disagree politely.</p>
+    <h3>2. No hate</h3>
+    <p>Do not attack or demean people because of their race, caste, ethnicity, religion, gender, disability, region or sexual orientation.</p>
+    <h3>3. No sexual or violent content</h3>
+    <p>No nudity, sexual content, graphic violence, or content that encourages self-harm.</p>
+    <h3>4. Protect children</h3>
+    <p>Content that sexually exploits or endangers children is strictly forbidden. We remove it, close the account, and report it to the authorities where the law requires.</p>
+    <h3>5. No spam, scams or advertising</h3>
+    <p>Do not post adverts, referral links or requests for money.</p>
+    <h3>6. Keep it about study, and keep it honest</h3>
+    <p>Do not share other people's private information (phone numbers, addresses, photos). Do not post material you do not have the right to share. Do not post wrong answers on purpose to mislead others.</p>
+    <h3>What happens if the rules are broken</h3>
+    <p>We review reports. We may remove content, warn a student, or suspend or remove an account, without notice.</p>
+    <h3>Your tools</h3>
+    <p>Tap the <b>&#8943;</b> button next to a post, reply, shared note, member, deck or opponent to <b>report</b> it or <b>block</b> the person. Blocking hides their posts, replies and shared notes from you, and they will not be matched with you in Quick Battle. You can unblock anyone in Profile &gt; Account &amp; Privacy &gt; Blocked users. To report something else, use Profile &gt; Support and About &gt; Report a problem or user.</p>
+    <p>Questions: healthloksewa026@gmail.com</p>`;
+}
+function hlTermsHtml_(){
+  return `
+    <p style="color:var(--ink-soft); font-size:12px;">Last updated: October 2026</p>
+    <p>These Terms are between you and Health Loksewa ("we", "us"), the operator of this app. By using the app you agree to them. If you do not agree, please do not use the app.</p>
+    <h3>1. What this app is</h3>
+    <p>Health Loksewa is an independent study app for Nepal Loksewa health service exams. It is not run by, or connected to, the Public Service Commission or any government body.</p>
+    <h3>2. Study help, not advice</h3>
+    <p>Questions, notes, answers and explanations are for exam preparation. We work to keep them accurate, but mistakes can happen, so check important facts in official sources. Nothing in the app is medical advice, and we cannot promise any exam result.</p>
+    <h3>3. Who can use the app</h3>
+    <p>You must be at least 13 years old. If you are under 18, please use the app with the permission of a parent or guardian.</p>
+    <h3>4. Your account</h3>
+    <p>Give correct information, keep your password private, and do not let others use your account. You are responsible for what happens under your account. You can delete your account at any time in Profile &gt; Account &amp; Privacy &gt; Delete Account.</p>
+    <h3>5. Premium and payments</h3>
+    <p>Premium unlocks extra features for the period shown when you buy it. Prices are shown in Nepali rupees. Payments are handled by eSewa or Khalti; we never see your wallet password or PIN. Premium is for your own use and cannot be shared or resold.</p>
+    <p>Payments are normally not refundable once Premium has been activated. If you were charged but Premium did not turn on, or you were charged twice, email us with your payment reference and we will fix it or refund the extra payment.</p>
+    <p>We may change prices or features for future purchases. Changes do not affect a period you have already paid for.</p>
+    <h3>6. Community features and your content</h3>
+    <p>Study Groups, discussions, shared notes, published flash card decks and Battles are for students. What you post stays yours, but you allow us to store it and show it to other users inside the app. You are responsible for what you post.</p>
+    <p>You must follow the <b>Community Rules</b> (Profile &gt; Support and About &gt; Community Rules). We may remove content, warn you, or suspend or remove accounts that break them, without notice. Sexual exploitation or endangerment of children is never allowed: we will remove it, close the account, and report it to the authorities where the law requires. You can report content and people, and block people, inside the app.</p>
+    <h3>7. AI features</h3>
+    <p>AI answers are made by automated systems and can be wrong or incomplete. Do not rely on them for decisions that matter, and do not type private information into them. If an answer is wrong or offensive, use the report button under it.</p>
+    <h3>8. Using the app fairly</h3>
+    <p>Do not try to break, overload or get into the app without permission, copy its questions or notes in bulk, use automated tools to collect content, or resell the content. The questions, notes and design are protected, and you may use them for your own study only.</p>
+    <h3>9. Other services</h3>
+    <p>The app relies on services from others (such as Google Firebase, AI providers, eSewa, Khalti and YouTube). Their own terms and policies apply to those services.</p>
+    <h3>10. Ending your use</h3>
+    <p>You may stop using the app at any time. We may suspend or end access if these Terms or the Community Rules are broken, or if needed to keep the app and its students safe.</p>
+    <h3>11. No guarantees, and limits on our responsibility</h3>
+    <p>The app is provided "as is". We try to keep it available and correct, but we do not promise it will always work without errors or interruptions. To the extent the law allows, we are not responsible for losses from using or not being able to use the app, including exam results.</p>
+    <h3>12. Changes to these Terms</h3>
+    <p>We may update these Terms. We will change the date above and, for important changes, tell you in the app. If you keep using the app after a change, you accept the new Terms.</p>
+    <h3>13. Law</h3>
+    <p>These Terms follow the laws of Nepal.</p>
+    <h3>14. Contact</h3>
+    <p>Questions: <a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>`;
+}
+// ---- flagging AI answers (Google Play requires an in-app way to report offensive or wrong AI content) ----
+function hlReportAiOutput_(feature, text){
+  const t = String(text || '');
+  return hlOpenReportDialog_({ title: 'Report this AI answer', about: t.slice(0, 120), type: 'ai', ref: 'ai:' + feature + ':' + hlSimpleHash_(t),
+    targetUid: null, targetName: null, snippet: t, thanks: 'Thank you. Your report helps us make the AI safer and more accurate.' });
+}
+function hlAppendAiReportLink_(parent, feature, text, afterEl){
+  if(!parent) return;
+  parent.querySelectorAll('.hl-ai-report').forEach(x => x.remove());
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'hl-ai-report'; b.textContent = 'Report this AI answer';
+  b.style.cssText = 'display:block; margin:8px 0 0; padding:2px 0; background:none; border:none; color:var(--ink-soft); font-size:11.5px; text-decoration:underline; cursor:pointer;';
+  b.addEventListener('click', (e) => { e.stopPropagation(); hlReportAiOutput_(feature, text); });
+  if(afterEl) afterEl.insertAdjacentElement('afterend', b); else parent.appendChild(b);
+}
+function addReportAiButtonToBubble(bubble, text){
+  const b = document.createElement('button');
+  b.className = 'chat-save-btn hl-ai-report'; b.type = 'button'; b.textContent = '🚩';
+  b.title = 'Report this answer'; b.setAttribute('aria-label', 'Report this AI answer');
+  b.addEventListener('click', (e) => { e.stopPropagation(); hlReportAiOutput_('chat', text); });
+  bubble.appendChild(b);
+}
+// ---- the block list ----
+function hlBlockedKey_(){ return uk('hl_blocked'); }
+function hlBlockedMap_(){
+  try{ const m = JSON.parse(localStorage.getItem(hlBlockedKey_()) || '{}'); return (m && typeof m === 'object' && !Array.isArray(m)) ? m : {}; }
+  catch(e){ return {}; }
+}
+function hlSaveBlockedMap_(m){ try{ localStorage.setItem(hlBlockedKey_(), JSON.stringify(m)); }catch(e){} }
+function hlIsBlocked_(uid){ return !!uid && Object.prototype.hasOwnProperty.call(hlBlockedMap_(), String(uid)); }
+// Saves any block made while offline, then loads the server's list. The result = server list + blocks still waiting to be saved.
+async function hlSyncBlocked_(){
+  const u = window.currentUser;
+  if(!u || !u.uid || !window.hlFirestore || !window.hlFirestoreFns) return;
+  const uid = u.uid;
+  const { doc, setDoc, getDocs, collection } = window.hlFirestoreFns;
+  try{
+    const local = hlBlockedMap_();
+    for(const k of Object.keys(local)){
+      if(local[k] && local[k].synced === false){
+        try{
+          await setDoc(doc(window.hlFirestore, 'users', uid, 'blocked', k), { name: String(local[k].name || 'Student').slice(0, 100), at: String(local[k].at || new Date().toISOString()).slice(0, 40) });
+          local[k].synced = true;
+        }catch(e){}
+      }
+    }
+    const snap = await getDocs(collection(window.hlFirestore, 'users', uid, 'blocked'));
+    const merged = {};
+    snap.forEach(d => { const x = d.data() || {}; merged[d.id] = { name: x.name || 'Student', at: x.at || '', synced: true }; });
+    Object.keys(local).forEach(k => { if(local[k] && local[k].synced === false) merged[k] = local[k]; });
+    if(!window.currentUser || window.currentUser.uid !== uid) return;   // a different account logged in meanwhile
+    hlSaveBlockedMap_(merged);
+  }catch(e){}
+}
+function hlRefreshUgcScreens_(){
+  try{
+    const active = document.querySelector('.screen.active');
+    const id = active ? active.id : '';
+    if(id === 'discussionThreadScreen' && currentDiscussionId) openDiscussionThread(currentDiscussionId);
+    else if(id === 'groupDetailScreen'){
+      renderGroupDiscussions(); renderGroupResources();
+      if(currentGroupDetailGroup) renderGroupMembers(currentGroupDetailGroup);
+    }
+  }catch(e){}
+}
+async function hlBlockUser_(uid, name){
+  const me = window.currentUser && window.currentUser.uid;
+  if(!uid || !me || uid === me) return false;
+  const label = String(name || 'this student');
+  const yes = await customConfirm('Block ' + label + '?\n\nYou will no longer see their posts, replies or shared notes, and you will not be matched with them in Quick Battle.\n\nYou can unblock them any time in Profile > Account & Privacy > Blocked users.');
+  if(!yes) return false;
+  const m = hlBlockedMap_();
+  m[String(uid)] = { name: label.slice(0, 100), at: new Date().toISOString(), synced: false };
+  hlSaveBlockedMap_(m);
+  hlRefreshUgcScreens_();
+  hlSyncBlocked_();                    // saves it with the account (not waited for: the block already works on this phone)
+  return true;
+}
+async function hlUnblockUser_(uid){
+  const u = window.currentUser;
+  if(!u || !u.uid || !uid) return false;
+  try{
+    const { doc, deleteDoc } = window.hlFirestoreFns;
+    await deleteDoc(doc(window.hlFirestore, 'users', u.uid, 'blocked', String(uid)));
+  }catch(e){ alert('Could not unblock right now. Please check your connection and try again.'); return false; }
+  const m = hlBlockedMap_(); delete m[String(uid)]; hlSaveBlockedMap_(m);
+  hlRefreshUgcScreens_();
+  return true;
+}
+function hlMakeOverlay_(id, align){
+  const old = document.getElementById(id); if(old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = id;
+  ov.style.cssText = 'position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.55); display:flex; align-items:' + (align || 'center') + '; justify-content:center; padding:' + (align === 'flex-end' ? '0' : '16px') + '; overflow-y:auto;';   // above the install banner (9998)
+  document.body.appendChild(ov);
+  return ov;
+}
+function hlOpenBlockedUsers_(){
+  const ov = hlMakeOverlay_('hlBlockedOverlay');
+  const render = () => {
+    const m = hlBlockedMap_(); const ids = Object.keys(m);
+    ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:440px; max-height:85vh; overflow-y:auto; color:var(--ink-on-elevated);">'
+      + '<div style="font-size:15px; font-weight:800; margin-bottom:8px;">Blocked users</div>'
+      + (ids.length === 0 ? '<div style="font-size:12.5px; color:var(--ink-soft-on-elevated); margin:8px 0 14px;">You have not blocked anyone.</div>'
+        : '<div style="font-size:11.5px; color:var(--ink-soft-on-elevated); margin-bottom:8px;">You do not see their posts, replies or shared notes, and you are not matched with them in Quick Battle.</div>'
+          + ids.map(k => '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 0; border-top:1px solid rgba(255,255,255,0.15);"><span style="font-size:13px; word-break:break-word;">' + hlEsc(m[k].name || 'Student') + '</span><button type="button" class="hl-unblock" data-uid="' + hlEsc(k) + '" style="margin:0; width:auto; padding:5px 12px; font-size:12px;">Unblock</button></div>').join(''))
+      + '<button type="button" id="hlBlockedClose" style="width:100%; margin:12px 0 0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div>';
+    ov.querySelector('#hlBlockedClose').onclick = () => ov.remove();
+    ov.querySelectorAll('.hl-unblock').forEach(b => { b.onclick = async () => { if(await hlUnblockUser_(b.dataset.uid)) render(); }; });
+  };
+  render();
+}
+// ---- reporting ----
+async function hlSubmitReport_(r){
+  const u = window.currentUser;
+  if(!u || !u.uid || !window.hlFirestore || !window.hlFirestoreFns) throw new Error('not-ready');
+  const { doc, setDoc, serverTimestamp } = window.hlFirestoreFns;
+  const id = u.uid + '_' + hlSimpleHash_(r.type + '|' + r.ref);       // the same item gives the same id, so it cannot be reported twice
+  const data = { type: r.type, reason: r.reason, ref: String(r.ref).slice(0, 200), reporterUid: u.uid, createdAt: serverTimestamp(), status: 'open' };
+  if(r.details) data.details = String(r.details).slice(0, 300);
+  if(r.snippet) data.snippet = String(r.snippet).slice(0, 300);
+  data.targetUid = r.targetUid ? String(r.targetUid).slice(0, 128) : null;
+  data.targetName = r.targetName ? String(r.targetName).slice(0, 100) : null;
+  await setDoc(doc(window.hlFirestore, 'reports', id), data);
+}
+function hlOpenReportDialog_(ctx){
+  return new Promise((resolve) => {
+    const ov = hlMakeOverlay_('hlReportOverlay');
+    const T = 'color:var(--ink-on-elevated);', S = 'color:var(--ink-soft-on-elevated);';
+    const F = 'width:100%; box-sizing:border-box; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px;';
+    const reasons = hlReportReasons_().map(([k, label]) => '<label style="display:flex; gap:8px; align-items:center; font-size:13px; padding:5px 0; cursor:pointer;"><input type="radio" name="hlReason" value="' + k + '" style="width:18px; height:18px;"> <span>' + label + '</span></label>').join('');
+    ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:440px; max-height:90vh; overflow-y:auto; ' + T + '">'
+      + '<div style="font-size:15px; font-weight:800; margin-bottom:4px;">' + hlEsc(ctx.title || 'Report') + '</div>'
+      + (ctx.about ? '<div style="font-size:12px; margin-bottom:8px; ' + S + ' word-break:break-word;">' + hlEsc(ctx.about) + '</div>' : '')
+      + '<div style="font-size:12.5px; font-weight:700; margin:8px 0 2px;">What is wrong?</div>' + reasons
+      + (ctx.general ? '<label style="display:block; font-size:11.5px; font-weight:700; margin:10px 0 3px; ' + S + '">Name of the person (optional)</label><input id="hlRepName" maxlength="100" style="' + F + '">' : '')
+      + '<label style="display:block; font-size:11.5px; font-weight:700; margin:10px 0 3px; ' + S + '">' + (ctx.general ? 'Tell us what happened' : 'More details (optional)') + '</label>'
+      + '<textarea id="hlRepDetails" rows="3" maxlength="300" style="' + F + '"></textarea>'
+      + '<div id="hlRepMsg" style="font-size:12px; min-height:16px; margin-top:8px;"></div>'
+      + '<div style="display:flex; gap:8px; margin-top:10px;"><button type="button" id="hlRepSend" class="start-btn" style="flex:1; margin:0; padding:12px; font-size:14px;">Send report</button><button type="button" id="hlRepCancel" style="flex:1; margin:0; padding:12px; font-size:14px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); border-radius:12px;">Cancel</button></div></div>';
+    const msg = ov.querySelector('#hlRepMsg'), send = ov.querySelector('#hlRepSend');
+    ov.querySelector('#hlRepCancel').onclick = () => { ov.remove(); resolve(false); };
+    send.onclick = async () => {
+      const picked = ov.querySelector('input[name="hlReason"]:checked');
+      const details = ov.querySelector('#hlRepDetails').value.trim();
+      if(!picked){ msg.textContent = 'Please choose what is wrong.'; return; }
+      if(ctx.general && details.length < 5){ msg.textContent = 'Please tell us what happened.'; return; }
+      send.disabled = true; msg.textContent = 'Sending…';
+      try{
+        const nameEl = ov.querySelector('#hlRepName');
+        await hlSubmitReport_({ type: ctx.type, reason: picked.value, details: details, ref: ctx.ref, targetUid: ctx.targetUid || null,
+          targetName: (nameEl && nameEl.value.trim()) || ctx.targetName || null, snippet: ctx.snippet || '' });
+        ov.remove();
+        alert(ctx.thanks || 'Thank you. We review every report. Content that breaks the Community Rules is removed.');
+        resolve(true);
+      }catch(e){
+        msg.textContent = (e && e.code === 'permission-denied') ? 'We could not send this report. If you already reported this, we already have it. Thank you.' : 'Could not send the report. Please check your connection and try again.';
+        send.disabled = false;
+      }
+    };
+  });
+}
+// The "..." menu next to a post, reply, note, member, deck or opponent
+function hlOpenContentMenu_(ctx){
+  const me = window.currentUser && window.currentUser.uid;
+  if(!me) return;
+  if(ctx.targetUid && ctx.targetUid === me) return;                    // nothing to report or block on your own content
+  const noun = ctx.noun || 'this';
+  const name = ctx.targetName || 'this person';
+  const ov = hlMakeOverlay_('hlUgcMenu', 'flex-end');
+  const B = (id, label, danger) => '<button type="button" id="' + id + '" style="width:100%; margin:0 0 8px; padding:12px; font-size:14px; font-weight:700; background:var(--panel); color:' + (danger ? 'var(--wrong-on-light)' : 'var(--ink)') + '; border:1.5px solid var(--line); border-radius:10px; word-break:break-word;">' + label + '</button>';
+  const isPerson = ctx.type === 'member';
+  ov.innerHTML = '<div style="width:100%; max-width:480px; background:var(--panel-elevated); border-radius:16px 16px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px));">'
+    + (isPerson ? '' : B('hlMenuReportItem', 'Report ' + hlEsc(noun), true))
+    + (ctx.targetUid ? B('hlMenuReportUser', 'Report ' + hlEsc(name), true) + B('hlMenuBlock', 'Block ' + hlEsc(name), false) : '')
+    + B('hlMenuCancel', 'Cancel', false) + '</div>';
+  const close = () => ov.remove();
+  ov.addEventListener('click', (e) => { if(e.target === ov) close(); });
+  ov.querySelector('#hlMenuCancel').onclick = close;
+  const bi = ov.querySelector('#hlMenuReportItem');
+  if(bi) bi.onclick = () => { close(); hlOpenReportDialog_({ title: 'Report ' + noun, about: ctx.snippet ? String(ctx.snippet).slice(0, 120) : '', type: ctx.type, ref: ctx.ref, targetUid: ctx.targetUid, targetName: ctx.targetName, snippet: ctx.snippet }); };
+  const bu = ov.querySelector('#hlMenuReportUser');
+  if(bu) bu.onclick = () => { close(); hlOpenReportDialog_({ title: 'Report ' + name, type: 'member', ref: 'user:' + ctx.targetUid, targetUid: ctx.targetUid, targetName: ctx.targetName, snippet: ctx.snippet }); };
+  const bb = ov.querySelector('#hlMenuBlock');
+  if(bb) bb.onclick = () => { close(); hlBlockUser_(ctx.targetUid, ctx.targetName); };
+}
+// ---- Community Rules agreement: once per account, before the first thing others will see ----
+function hlHasCommunityRules_(){
+  try{ const c = JSON.parse(localStorage.getItem(uk('hl_community_rules')) || 'null'); return !!(c && c.v >= 2); }catch(e){ return false; }
+}
+async function hlRequireCommunityRules_(){
+  if(hlHasCommunityRules_()) return true;
+  try{       // maybe accepted before on another device
+    if(window.hlFirestore && window.hlFirestoreFns && window.currentUser){
+      const { doc, getDoc } = window.hlFirestoreFns;
+      const snap = await getDoc(doc(window.hlFirestore, 'users', window.currentUser.uid));
+      const cr = snap.exists() ? snap.data().communityRules : null;
+      if(cr && cr.v >= 2){ localStorage.setItem(uk('hl_community_rules'), JSON.stringify({ v: cr.v, at: cr.at || '' })); return true; }
+    }
+  }catch(e){}
+  return new Promise((resolve) => {
+    const ov = hlMakeOverlay_('hlRulesOverlay');
+    ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:460px; max-height:90vh; overflow-y:auto; color:var(--ink-on-elevated);">'
+      + '<div style="font-size:16px; font-weight:800; margin-bottom:6px;">Terms and Community Rules</div>'
+      + '<style>#hlRulesOverlay .legal-info-content h3{ color:var(--navy); }</style>'
+      + '<div class="legal-info-content" style="font-size:12.5px; line-height:1.55; padding-bottom:6px; color:var(--ink-on-elevated);">' + hlCommunityRulesHtml_() + '</div>'
+      + '<details style="margin:6px 0 4px;"><summary style="font-size:13px; font-weight:700; cursor:pointer;">Read the Terms and Conditions</summary><div class="legal-info-content" style="font-size:12.5px; line-height:1.55; padding-bottom:6px; color:var(--ink-on-elevated);">' + hlTermsHtml_() + '</div></details>'
+      + '<label style="display:flex; gap:10px; align-items:flex-start; font-size:13px; margin:10px 0; cursor:pointer;"><input type="checkbox" id="hlRulesAgree" style="width:20px; height:20px; flex-shrink:0; margin-top:1px;"> <span><b>I have read and agree</b> to the Community Rules and the Terms and Conditions.</span></label>'
+      + '<div style="display:flex; gap:8px;"><button type="button" id="hlRulesOk" class="start-btn" disabled style="flex:1; margin:0; padding:12px; font-size:14px;">Continue</button><button type="button" id="hlRulesNo" style="flex:1; margin:0; padding:12px; font-size:14px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); border-radius:12px;">Cancel</button></div></div>';
+    const agree = ov.querySelector('#hlRulesAgree'), ok = ov.querySelector('#hlRulesOk');
+    agree.onchange = () => { ok.disabled = !agree.checked; };
+    ov.querySelector('#hlRulesNo').onclick = () => { ov.remove(); resolve(false); };
+    ok.onclick = () => {
+      if(!agree.checked) return;
+      const rec = { v: 2, at: new Date().toISOString() };   // version 2 = Terms (October 2026) + Community Rules
+      try{ localStorage.setItem(uk('hl_community_rules'), JSON.stringify(rec)); }catch(e){}
+      try{
+        if(window.hlFirestore && window.hlFirestoreFns && window.currentUser){
+          const { doc, setDoc } = window.hlFirestoreFns;
+          setDoc(doc(window.hlFirestore, 'users', window.currentUser.uid), { communityRules: rec }, { merge: true }).catch(() => {});
+        }
+      }catch(e){}
+      ov.remove();
+      resolve(true);
+    };
+  });
+}
+// ---- the new Profile menu items and the opponent buttons ----
+safeOn('menuBlockedUsers', 'click', () => { hlOpenBlockedUsers_(); });
+safeOn('menuCommunityRules', 'click', () => { openLegalInfo('Community Rules', hlCommunityRulesHtml_()); });
+safeOn('menuReportProblem', 'click', () => { hlOpenReportDialog_({ title: 'Report a problem or user', general: true, type: 'other', ref: 'general:' + Date.now() }); });
+function hlOpenOpponentMenu_(){
+  const o = window.__hlBattleOpp;
+  if(!o || !o.uid) return;
+  hlOpenContentMenu_({ type: 'opponent', noun: 'your opponent', ref: 'battles/' + (o.code || ''), targetUid: o.uid, targetName: o.name || 'Opponent', snippet: '' });
+}
+safeOn('battleLobbyOppMenuBtn', 'click', hlOpenOpponentMenu_);
+safeOn('battleResultOppMenuBtn', 'click', hlOpenOpponentMenu_);
+
 function hlRoleKey_(uid){ return 'hl_role__u_' + uid; }
 function hlRoleLoad_(uid){
   try{
@@ -27993,6 +28354,7 @@ async function sendChatMessage(){
     thinkingBubble.classList.remove('thinking');
     addSpeakButtonToBubble(thinkingBubble, reply);
     addSaveToNotesButtonToBubble(thinkingBubble, reply);
+    addReportAiButtonToBubble(thinkingBubble, reply);
     chatHistory.push({role:'assistant', content:reply});
     const trimmedHistory = chatHistory.slice(-20);
     try{ localStorage.setItem(uk('hl_chat_history'), JSON.stringify(trimmedHistory)); }catch(e){}
@@ -28053,6 +28415,7 @@ Give: (1) a score out of 10, (2) 2-3 short bullet points on what's good, (3) 2-3
     const reply = data.reply || "Sorry, I couldn't check that. Please try again.";
     resultWrap.innerHTML = `<div class="content-card"><div id="answerCheckerReplyText" style="white-space:pre-wrap; font-size:13.5px; color:var(--ink); line-height:1.6;"></div></div>`;
     document.getElementById('answerCheckerReplyText').textContent = reply;
+    hlAppendAiReportLink_(resultWrap.querySelector('.content-card'), 'answerCheck', reply);
   }catch(err){
     resultWrap.innerHTML = `<div class="content-card"><p style="color:var(--wrong); font-size:13.5px;">Sorry, I couldn't connect right now. Please check your internet and try again.</p></div>`;
   }finally{
