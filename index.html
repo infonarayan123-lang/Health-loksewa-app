@@ -8158,7 +8158,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzw-5BPHZ6X-5-cF7pb_8gzjCTa4K3l9vAcKzetyZVifwjc34cv0_l9ckQ1wSCfI0Xegw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwm_LNWdod37TyhXS0TYXq3ipRSqIKefqVyK8WUvaM8e6Mgr_FLzDy6sEZwieahus1huA/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -26867,12 +26867,15 @@ async function hlOpenAdminReports_(){
     const cards = docs.map(r => {
       const removable = ['post', 'reply', 'note'].includes(r.type) && typeof r.ref === 'string' && r.ref.indexOf('groups/') === 0;
       let help = '';
-      if(r.type === 'deck') help = 'To remove this deck: open your Google Sheet, tab "PublicDecks", and delete the row whose PublishId is ' + hlEsc(String(r.ref || '').replace(/^deck:/, '')) + '. Then tap Resolved.';
+      const deckId = String(r.ref || '').replace(/^deck:/, '');
+      const removableDeck = r.type === 'deck' && /^[A-Za-z0-9_\-]{1,80}$/.test(deckId);
+      if(r.type === 'deck') help = 'Remove deck deletes every card of this deck (Publish ID ' + hlEsc(deckId) + ') for everyone; a copy stays in your Admin Edit Log. You can also delete its rows by hand in the PublicDecks tab of your Sheet, then tap Resolved.';
       else if(['member', 'opponent', 'other'].includes(r.type) && r.targetUid) help = 'To stop this person: Firebase console > Authentication > search for this ID > Disable account. Then tap Resolved.';
       const buttons = showResolved
         ? '<div style="font-size:11.5px; ' + S + '">' + hlEsc(r.status || '') + (r.resolution ? ' - ' + hlEsc(r.resolution) : '') + '</div>'
         : '<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">'
           + (removable ? '<button type="button" class="hl-rp-remove" data-id="' + hlEsc(r.id) + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--line);">Remove content</button>' : '')
+          + (removableDeck ? '<button type="button" class="hl-rp-removedeck" data-id="' + hlEsc(r.id) + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--line);">Remove deck</button>' : '')
           + '<button type="button" class="hl-rp-resolve" data-id="' + hlEsc(r.id) + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px;">Resolved</button>'
           + '<button type="button" class="hl-rp-dismiss" data-id="' + hlEsc(r.id) + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Dismiss</button></div>';
       return '<div class="hl-rp-card" data-id="' + hlEsc(r.id) + '" style="border-top:1px solid rgba(255,255,255,0.15); padding:10px 0;">'
@@ -26893,6 +26896,24 @@ async function hlOpenAdminReports_(){
     const act = async (btn, fn, failText) => { btn.disabled = true; try{ await fn(); await load(); }catch(e){ btn.disabled = false; alert((e && e.code === 'permission-denied') ? 'This account is not allowed to do that.' : failText); } };
     ov.querySelectorAll('.hl-rp-resolve').forEach(b => { b.onclick = () => act(b, () => mark(b.dataset.id, 'resolved', 'reviewed'), 'Could not save. Please try again.'); });
     ov.querySelectorAll('.hl-rp-dismiss').forEach(b => { b.onclick = () => act(b, () => mark(b.dataset.id, 'dismissed', 'no action'), 'Could not save. Please try again.'); });
+    ov.querySelectorAll('.hl-rp-removedeck').forEach(b => { b.onclick = async () => {
+      const r = byId(b.dataset.id); if(!r) return;
+      const deckId = String(r.ref || '').replace(/^deck:/, '');
+      if(!(await customConfirm('Remove the deck "' + String(r.snippet || deckId).slice(0, 80) + '" for everyone?\n\nEvery card of it is deleted from the Community. A copy stays in your Admin Edit Log.'))) return;
+      b.disabled = true;
+      try{
+        const token = window.getAiAuthToken ? await window.getAiAuthToken() : '';
+        const res = await postJsonWithTimeout({ action: 'adminDeleteDeck', idToken: token, publishId: deckId });
+        const data = await res.json();
+        if(data && (data.ok === true || data.error === 'notFound')){
+          await mark(r.id, 'resolved', data.ok === true ? 'deck removed' : 'deck was already gone');
+          if(data.error === 'notFound') alert('That deck was already gone, so the report is now closed.');
+          await load(); return;
+        }
+        b.disabled = false;
+        alert(data && data.error ? hlAdminErrorText_(data) : 'Could not remove the deck. Make sure the backend is updated, or delete its rows in the PublicDecks tab by hand.');
+      }catch(e){ b.disabled = false; alert('Could not remove the deck right now. Please check your connection and try again.'); }
+    }; });
     ov.querySelectorAll('.hl-rp-remove').forEach(b => { b.onclick = async () => {
       const r = byId(b.dataset.id); if(!r) return;
       if(!(await customConfirm('Remove this ' + hlReportTypeLabel_(r.type).toLowerCase() + ' for everyone?\n\n"' + String(r.snippet || '').slice(0, 100) + '"\n\nThis cannot be undone.'))) return;
