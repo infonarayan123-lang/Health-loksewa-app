@@ -2611,6 +2611,7 @@
           <button class="profile-menu-item" id="menuCommunityRules"><span class="pm-icon"><i class="bi bi-people"></i></span> Community Rules</button>
           <button class="profile-menu-item" id="menuReportProblem"><span class="pm-icon"><i class="bi bi-flag"></i></span> Report a problem or user</button>
           <button class="profile-menu-item" id="menuAdminReports" style="display:none;"><span class="pm-icon"><i class="bi bi-shield-exclamation"></i></span> Reports (admin)</button>
+          <button class="profile-menu-item" id="menuAdminSwitches" style="display:none;"><span class="pm-icon"><i class="bi bi-toggles"></i></span> Feature switches (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -6952,6 +6953,7 @@
       // Ask the backend whether this account is an owner (admin tools + free Premium). Not awaited, so
       // students are never slowed down; owners see the result the moment it arrives.
       if(window.hlRefreshRoleSoon_){ try{ window.hlRefreshRoleSoon_(); }catch(e){} }
+      if(window.hlStartFeatureSwitches_){ try{ window.hlStartFeatureSwitches_(); }catch(e){} }
       if(window.hlSyncBlocked_){ try{ window.hlSyncBlocked_(); }catch(e){} }   // block list: not waited for
       // Email verification gate — only for brand-new, recently-created email/password accounts.
       // Google Sign-In accounts are already verified by Google itself (checked via providerId),
@@ -8158,7 +8160,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwm_LNWdod37TyhXS0TYXq3ipRSqIKefqVyK8WUvaM8e6Mgr_FLzDy6sEZwieahus1huA/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyooRk2LB3Jqt4bjk0BeCwHs6x2wihG8pqOr1GRBnw8D0QCZyzeiBMMwbYQT_ONY5e63g/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -8617,6 +8619,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function showScreen(el){
+  if(hlScreenBlocked_(el)){   // this feature is switched off: stay where you are (or go Home if there is nowhere to stay)
+    const cur0 = document.querySelector('.screen.active');
+    if((!cur0 || HL_NAV_GATE_SCREENS.includes(cur0)) && typeof homeScreen !== 'undefined' && homeScreen && homeScreen !== el) return showScreen(homeScreen);
+    return;
+  }
   const currentActive = document.querySelector('.screen.active');
   if(currentActive){
     logScreenTimeElapsed();
@@ -18206,6 +18213,7 @@ NOTE_AI_PROMPTS = {
 }catch(err){ NOTE_AI_PROMPTS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "NOTE_AI_PROMPTS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 document.querySelectorAll('[data-ai-action]').forEach(btn => {
   btn.addEventListener('click', async () => {
+    if(!hlFeatureGate_('ai')) return;
     const textarea = document.getElementById('noteBodyInput');
     const selected = textarea.value.slice(textarea.selectionStart, textarea.selectionEnd);
     const sourceText = selected || textarea.value;
@@ -20555,6 +20563,7 @@ function showPremiumLockModal(message){
 
 // ---------- eSewa Payment: fully automatic (currently on test/sandbox credentials) ----------
 safeOn('esewaPayBtn', 'click', async () => {
+  if(!hlFeatureGate_('payments')) return;
   let userInfo = null;
   try{ userInfo = JSON.parse(localStorage.getItem('hl_user') || 'null'); }catch(e){}
   if(!userInfo || !userInfo.uid){
@@ -20605,6 +20614,7 @@ safeOn('esewaPayBtn', 'click', async () => {
 
 // ---------- Khalti Payment: fully automatic ----------
 safeOn('khaltiPayBtn', 'click', async () => {
+  if(!hlFeatureGate_('payments')) return;
   let userInfo = null;
   try{ userInfo = JSON.parse(localStorage.getItem('hl_user') || 'null'); }catch(e){}
   if(!userInfo || !userInfo.uid){
@@ -25363,6 +25373,7 @@ document.querySelectorAll('.fc-ai-diff-btn').forEach(btn => {
 // individually editable card drafts, not a wall of text the user has to copy-paste. ----------
 let fcGeneratedDrafts = [];
 safeOn('fcAiGenerateSubmitBtn', 'click', async () => {
+  if(!hlFeatureGate_('ai')) return;
   const btn = document.getElementById('fcAiGenerateSubmitBtn');
   const source = document.getElementById('fcAiSourceSelect').value;
   const num = parseInt(document.querySelector('.fc-ai-num-btn.active').dataset.num, 10);
@@ -26616,6 +26627,117 @@ function addReportAiButtonToBubble(bubble, text){
   b.addEventListener('click', (e) => { e.stopPropagation(); hlReportAiOutput_('chat', text); });
   bubble.appendChild(b);
 }
+// ==========================================================================================
+// FEATURE SWITCHES (Oct 2026): the owners can switch a whole feature off for everyone, from the phone, within seconds.
+// One small Firebase document (config/featureSwitches) holds the on/off values; every signed-in student's app listens to
+// it and remembers the last known state. A missing or unreadable document means EVERYTHING IS ON. The check is made in
+// showScreen (so every tile and button is covered) plus the few actions that are not screens. Owners with Admin view ON
+// are never blocked, so they can test. Only STARTING a payment is blocked — activating someone who already paid never is.
+// ==========================================================================================
+var hlFeatureCache_ = null, hlFeatureUnsub_ = null, hlFeatureAlertAt_ = 0;
+function hlFeatureDefs_(){
+  return {
+    ai:          { name: 'AI features',                 screens: ['aiChatScreen', 'answerCheckerScreen', 'fcAiGenerateScreen'] },
+    battles:     { name: 'Battles',                     screens: ['battleScreen', 'battleLobbyScreen', 'quickBattleSearchScreen'] },
+    tournaments: { name: 'Tournaments',                 screens: ['tournamentScreen', 'monthlyTournamentScreen', 'tournamentPostScreen'] },
+    groups:      { name: 'Study Groups',                screens: ['studyGroupsScreen', 'groupCreateScreen', 'groupPreviewScreen', 'groupDetailScreen', 'startDiscussionScreen', 'discussionThreadScreen'] },
+    decks:       { name: 'Community flash card decks',  screens: ['fcCommunityScreen'] },
+    payments:    { name: 'Premium payments',            screens: [] }
+  };
+}
+function hlFeatureState_(){
+  if(hlFeatureCache_) return hlFeatureCache_;
+  try{
+    const c = JSON.parse(localStorage.getItem('hl_feature_switches') || 'null');
+    hlFeatureCache_ = (c && typeof c === 'object') ? { off: (c.off && typeof c.off === 'object') ? c.off : {}, msg: (c.msg && typeof c.msg === 'object') ? c.msg : {} } : { off: {}, msg: {} };
+  }catch(e){ hlFeatureCache_ = { off: {}, msg: {} }; }
+  return hlFeatureCache_;
+}
+function hlFeatureBypass_(){ try{ return !!(hlIsAdminUser_() && hlAdminModeOn_()); }catch(e){ return false; } }
+function hlFeatureIsOff_(key){ return hlFeatureState_().off[key] === true && !hlFeatureBypass_(); }
+function hlFeatureNotify_(key){
+  const now = Date.now(); if(now - hlFeatureAlertAt_ < 1500) return; hlFeatureAlertAt_ = now;
+  const d = hlFeatureDefs_()[key], m = hlFeatureState_().msg[key];
+  try{ alert((d ? d.name : 'This feature') + ' is switched off for now.\n\n' + (m || 'We are fixing something. Please try again a little later.')); }catch(e){}
+}
+function hlFeatureGate_(key){ if(!hlFeatureIsOff_(key)) return true; hlFeatureNotify_(key); return false; }
+function hlFeatureOfScreen_(el){
+  if(!el || !el.id) return null;
+  const defs = hlFeatureDefs_();
+  for(const k in defs){ if(defs[k].screens.indexOf(el.id) >= 0) return k; }
+  return null;
+}
+function hlScreenBlocked_(el){ const k = hlFeatureOfScreen_(el); if(k && hlFeatureIsOff_(k)){ hlFeatureNotify_(k); return true; } return false; }
+// someone is already inside a feature that has just been switched off: take them Home (a running battle is never cut off)
+function hlEnforceSwitchesNow_(){
+  try{
+    const cur = document.querySelector('.screen.active'), k = hlFeatureOfScreen_(cur);
+    if(k && hlFeatureIsOff_(k)){ hlFeatureNotify_(k); if(typeof homeScreen !== 'undefined' && homeScreen) showScreen(homeScreen); }
+  }catch(e){}
+}
+function hlApplyFeatureDoc_(d){
+  const off = {}, msg = {}, defs = hlFeatureDefs_();
+  if(d && typeof d === 'object'){
+    Object.keys(defs).forEach(k => {
+      if(d[k] === false){ off[k] = true; const m = d['msg_' + k]; if(typeof m === 'string' && m.trim()) msg[k] = m.trim().slice(0, 140); }
+    });
+  }
+  hlFeatureCache_ = { off: off, msg: msg };
+  try{ localStorage.setItem('hl_feature_switches', JSON.stringify(hlFeatureCache_)); }catch(e){}
+  hlEnforceSwitchesNow_();
+}
+function hlStartFeatureSwitches_(){
+  if(hlFeatureUnsub_ || !window.hlFirestore || !window.hlFirestoreFns) return;
+  try{
+    const { doc, onSnapshot } = window.hlFirestoreFns;
+    hlFeatureUnsub_ = onSnapshot(doc(window.hlFirestore, 'config', 'featureSwitches'),
+      (snap) => { hlApplyFeatureDoc_(snap && snap.exists() ? snap.data() : null); },
+      () => { hlFeatureUnsub_ = null; });    // signed out / offline: keep the last known state; the next login starts it again
+  }catch(e){ hlFeatureUnsub_ = null; }
+}
+// ---- the owners' on/off screen (Profile > Support and About > Feature switches, Admin view ON) ----
+function hlOpenFeatureSwitches_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlSwitchesOverlay', 'flex-start');
+  const defs = hlFeatureDefs_(), st = hlFeatureState_(), S = 'color:var(--ink-soft-on-elevated);';
+  const rows = Object.keys(defs).map(k =>
+    '<div style="border-top:1px solid rgba(255,255,255,0.15); padding:10px 0;">'
+    + '<label style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; cursor:pointer;"><input type="checkbox" class="hl-sw-on" data-key="' + k + '" ' + (st.off[k] ? '' : 'checked') + ' style="width:22px; height:22px; flex-shrink:0;"> <span>' + hlEsc(defs[k].name) + '</span> <span class="hl-sw-state" data-key="' + k + '" style="font-weight:700; font-size:12px; margin-left:auto;"></span></label>'
+    + '<input type="text" class="hl-sw-msg" data-key="' + k + '" maxlength="140" placeholder="Message students will see (optional)" value="' + hlEsc(st.msg[k] || '') + '" style="width:100%; margin-top:6px; font-size:12.5px;">'
+    + '</div>').join('');
+  ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">'
+    + '<div style="font-size:15px; font-weight:800; margin-bottom:4px;">Feature switches</div>'
+    + '<div style="font-size:12px; line-height:1.5; margin-bottom:8px; ' + S + '">Tick = ON. Un-tick to switch a feature OFF for everyone; people who are online are told within seconds. Your own accounts can still use it while Admin view is ON, so you can test. Premium payments OFF only stops NEW payments; people who already paid are still activated. Old copies of the app are not affected.</div>'
+    + rows
+    + '<div id="hlSwMsg" style="font-size:12px; margin:10px 0 0; min-height:16px;"></div>'
+    + '<div style="display:flex; gap:8px; margin-top:8px;"><button type="button" id="hlSwSave" style="flex:1; margin:0;">Save</button><button type="button" id="hlSwClose" style="flex:1; margin:0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div></div>';
+  const paint = () => ov.querySelectorAll('.hl-sw-on').forEach(cb => {
+    const k = cb.dataset.key, lab = ov.querySelector('.hl-sw-state[data-key="' + k + '"]'), msgIn = ov.querySelector('.hl-sw-msg[data-key="' + k + '"]');
+    lab.textContent = cb.checked ? 'ON' : 'OFF'; lab.style.color = cb.checked ? 'var(--right-on-light, #1b8a5a)' : 'var(--wrong-on-light, #c0392b)';
+    msgIn.style.display = cb.checked ? 'none' : '';
+  });
+  ov.querySelectorAll('.hl-sw-on').forEach(cb => { cb.onchange = paint; }); paint();
+  ov.querySelector('#hlSwClose').onclick = () => ov.remove();
+  ov.querySelector('#hlSwSave').onclick = async () => {
+    const out = {}, msgEl = ov.querySelector('#hlSwMsg'), btn = ov.querySelector('#hlSwSave');
+    ov.querySelectorAll('.hl-sw-on').forEach(cb => {
+      const k = cb.dataset.key; out[k] = cb.checked;
+      const m = (ov.querySelector('.hl-sw-msg[data-key="' + k + '"]').value || '').trim().slice(0, 140);
+      if(!cb.checked && m) out['msg_' + k] = m;
+    });
+    btn.disabled = true; msgEl.textContent = 'Saving…';
+    try{
+      const { doc, setDoc, serverTimestamp } = window.hlFirestoreFns;
+      await setDoc(doc(window.hlFirestore, 'config', 'featureSwitches'), Object.assign(out, { updatedAt: serverTimestamp(), updatedBy: window.currentUser.uid }));
+      msgEl.textContent = 'Saved. It reaches everyone who is online within a few seconds.';
+      btn.disabled = false;
+    }catch(e){
+      btn.disabled = false;
+      msgEl.textContent = (e && e.code === 'permission-denied') ? 'This account is not allowed to change the switches.' : 'Could not save. Please check your connection and try again.';
+    }
+  };
+}
+safeOn('menuAdminSwitches', 'click', () => { hlOpenFeatureSwitches_(); });
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
 function hlBlockedMap_(){
@@ -27043,7 +27165,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
-  try{ const rb = document.getElementById('menuAdminReports'); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }catch(e){}   // the Reports item shows only while Admin view is ON
+  try{ ['menuAdminReports', 'menuAdminSwitches'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
@@ -28408,6 +28530,7 @@ function speakText(text, btn){
 }
 
 async function sendChatMessage(){
+  if(!hlFeatureGate_('ai')) return;
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if(!text) return;
@@ -28473,6 +28596,7 @@ async function sendChatMessage(){
 // resource-intensive task type (routed Gemini-first for grading quality), so it gets the
 // tightest cap of any AI feature, matching the per-feature limit table. ----------
 async function submitAnswerCheck(){
+  if(!hlFeatureGate_('ai')) return;
   const question = document.getElementById('answerCheckerQuestion').value.trim();
   const answer = document.getElementById('answerCheckerAnswer').value.trim();
   const resultWrap = document.getElementById('answerCheckerResult');
