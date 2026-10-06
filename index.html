@@ -1889,6 +1889,19 @@
     font-weight:700; font-size:14.5px; cursor:pointer;
   }
 </style>
+<style id="spStyle">
+.sp-tabs{ display:flex; gap:8px; margin:6px 0 12px; }
+.sp-tab{ flex:1; margin:0; padding:9px 10px; font-size:13px; font-weight:700; border-radius:10px; border:1.5px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; }
+.sp-tab.active{ background:rgba(20,163,168,0.18); color:var(--crimson); border-color:var(--crimson); }
+.sp-section{ margin:12px 0 6px; padding:10px 12px; border-radius:12px; background:var(--panel); border:1px solid var(--line); }
+.sp-section h4{ margin:0; font-size:14.5px; color:var(--ink); }
+.sp-sub{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+.sp-unit{ margin:10px 0 4px; font-size:13px; font-weight:800; color:var(--ink); }
+.sp-unit span{ font-weight:600; color:var(--ink-soft); }
+.sp-topic{ display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; text-align:left; margin:4px 0; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--panel-elevated); color:var(--ink-on-elevated); font-size:13.5px; cursor:pointer; }
+.sp-badges{ font-size:11px; color:var(--ink-soft-on-elevated); white-space:nowrap; }
+.sp-block-title{ font-size:13px; font-weight:800; margin:14px 0 6px; color:var(--ink); }
+</style>
 </head>
 <body>
 <div id="app">
@@ -2290,6 +2303,11 @@
           <div class="dc-icon"><i class="bi bi-book"></i></div>
           <div class="dc-label">Syllabus</div>
           <div class="dc-sub">Units &amp; downloadable PDFs</div>
+        </button>
+        <button class="dash-card c-syllabus" id="cardSecondPaper">
+          <div class="dc-icon"><i class="bi bi-journal-text"></i></div>
+          <div class="dc-label">Second Paper</div>
+          <div class="dc-sub">Syllabus, notes &amp; PDFs</div>
         </button>
         <button class="dash-card c-current" id="cardSmartToolsHome">
           <div class="dc-icon"><i class="bi bi-tools"></i></div>
@@ -6449,6 +6467,25 @@
     </div>
   </div>
 
+  <!-- SECOND PAPER: syllabus (sections > units > topics), notes and PDF resources -->
+  <div class="screen" id="secondPaperScreen">
+    <div class="back-link" data-back="secondPaperBack">← Back</div>
+    <div class="home-body">
+      <div class="section-title">Second Paper</div>
+      <div id="spIntro" style="font-size:12.5px; color:var(--ink-soft); margin-bottom:8px;"></div>
+      <div class="sp-tabs"><button type="button" class="sp-tab active" id="spTabSyllabus">Syllabus</button><button type="button" class="sp-tab" id="spTabPdfs">PDF Resources</button></div>
+      <div id="spContent"></div>
+    </div>
+  </div>
+  <div class="screen" id="secondPaperTopicScreen">
+    <div class="back-link" data-back="secondPaperTopicBack">← Back</div>
+    <div class="home-body">
+      <div class="section-title" id="spTopicTitle"></div>
+      <div id="spTopicSub" style="font-size:12.5px; color:var(--ink-soft); margin-bottom:10px;"></div>
+      <div id="spTopicContent"></div>
+    </div>
+  </div>
+
   <!-- SUBJECT-WISE MCQs: STEP 0 — pick a post, same pattern as Syllabus -->
   <div class="screen" id="mcqPostScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
@@ -8160,7 +8197,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyooRk2LB3Jqt4bjk0BeCwHs6x2wihG8pqOr1GRBnw8D0QCZyzeiBMMwbYQT_ONY5e63g/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwykrfUyaq-JXZQ2YlQ6xV9-uuSFdGF8zmc9kuLsrJF1-n3yl7YoCv-BTzeB3mNgH3A-A/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -8202,6 +8239,8 @@ const gkScreen = document.getElementById('gkScreen');
 const ainSangrahaScreen = document.getElementById('ainSangrahaScreen');
 const samsamayikScreen = document.getElementById('samsamayikScreen');
 const docListScreen = document.getElementById('docListScreen');
+const secondPaperScreen = document.getElementById('secondPaperScreen');
+const secondPaperTopicScreen = document.getElementById('secondPaperTopicScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const webPortalScreen = document.getElementById('webPortalScreen');
 const newsPortalScreen = document.getElementById('newsPortalScreen');
@@ -8362,7 +8401,7 @@ const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
 let ALL_SCREENS;
 try{
-ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, liveClassScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen];
+ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, liveClassScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, secondPaperScreen, secondPaperTopicScreen];
 }catch(err){ ALL_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ALL_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 window.showScreen = showScreen;
 window.notifOnboardingScreen = notifOnboardingScreen;
@@ -8927,7 +8966,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
+  const learnScreens = [learnScreen, secondPaperScreen, secondPaperTopicScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen, notificationPrefsScreen];
@@ -22625,6 +22664,10 @@ document.querySelectorAll('.back-link').forEach(b => {
       navigateBack(docListBackTarget);
     } else if(key === 'comingSoonBack'){
       navigateBack(comingSoonBackTarget);
+    } else if(key === 'secondPaperBack'){
+      navigateBack(homeScreen);
+    } else if(key === 'secondPaperTopicBack'){
+      navigateBack(secondPaperScreen);
     } else if(key === 'legalInfoBack'){
       navigateBack(legalInfoBackTarget);
     } else if(key === 'studyGroupsBack'){
@@ -26769,6 +26812,184 @@ function hlOpenFeatureSwitches_(){
   };
 }
 safeOn('menuAdminSwitches', 'click', () => { hlOpenFeatureSwitches_(); });
+// ==========================================================================================
+// SECOND PAPER (Oct 2026): the PHO subjective paper — syllabus (sections > units > topics), notes and PDF links, all from
+// three tabs of the Google Sheet (Second Paper Syllabus / Notes / PDFs), edited by the owners in the app (Manage this screen)
+// or in the Sheet. Nothing is hard-coded: different commissions have different syllabi. Everything shown is escaped;
+// links must be http(s). The last copy is kept on the phone, and the server answers "unchanged" when it is still current.
+// ==========================================================================================
+var hlSp_ = { data: null, tab: 'syllabus', failed: false, tree: [], ctx: null, generalNotes: [], topicNotes: [] };
+function hlSpKey_(v){ return String(v == null ? '' : v).trim().toLowerCase().replace(/\s+/g, ' '); }
+function hlSpUrl_(v){ const t = String(v == null ? '' : v).trim(); return /^https?:\/\/\S+$/i.test(t) ? t : ''; }
+function hlSpOrder_(v){ const n = parseFloat(v); return isFinite(n) ? n : Infinity; }
+function hlSpCmp_(a, b){ const d = hlSpOrder_(a) - hlSpOrder_(b); return d === d ? d : 0; }
+function hlSpLabel_(prefix, v){ const t = String(v == null ? '' : v).trim(); return !t ? '' : (new RegExp('^' + prefix, 'i').test(t) ? t : prefix + ' ' + t); }
+function hlSpVisible_(r){ const v = String(r.Visible == null ? '' : r.Visible).trim().toLowerCase(); return !(v === 'no' || v === 'n' || v === 'false' || v === 'hide' || v === 'hidden' || v === '0'); }
+function hlSpNorm_(d){
+  const arr = (x) => (Array.isArray(x) ? x : []).filter(r => r && typeof r === 'object').map(r => { const o = {}; Object.keys(r).forEach(k => { o[k] = (r[k] == null) ? '' : String(r[k]); }); return o; });
+  return { syllabus: arr(d && d.syllabus), notes: arr(d && d.notes), pdfs: arr(d && d.pdfs), hash: (d && d.hash) ? String(d.hash) : '' };
+}
+function hlSpTree_(syl){
+  const sections = [], sIdx = {};
+  syl.filter(hlSpVisible_).forEach(r => {
+    const sk = hlSpKey_(r.Section);
+    let sec = sIdx[sk];
+    if(!sec){ sec = sIdx[sk] = { name: r.Section, title: '', marks: '', units: [], uIdx: {} }; sections.push(sec); }
+    if(!sec.title && r.SectionTitle) sec.title = r.SectionTitle;
+    if(!sec.marks && r.SectionMarks) sec.marks = r.SectionMarks;
+    const uk2 = hlSpKey_(r.Unit);
+    let un = sec.uIdx[uk2];
+    if(!un){ un = sec.uIdx[uk2] = { unit: r.Unit, title: '', marks: '', topics: [] }; sec.units.push(un); }
+    if(!un.title && r.UnitTitle) un.title = r.UnitTitle;
+    if(!un.marks && r.UnitMarks) un.marks = r.UnitMarks;
+    if(r.Topic) un.topics.push({ name: r.Topic, order: r.Order, seq: un.topics.length });
+  });
+  sections.forEach(sec => sec.units.forEach(un => un.topics.sort((a, b) => hlSpCmp_(a.order, b.order) || (a.seq - b.seq))));
+  return sections;
+}
+function hlSpItems_(list, section, unit, topic){
+  const s2 = hlSpKey_(section), u2 = hlSpKey_(unit), t2 = hlSpKey_(topic);
+  return list.filter(hlSpVisible_).filter(x => hlSpKey_(x.Section) === s2 && hlSpKey_(x.Unit) === u2 && hlSpKey_(x.Topic) === t2).sort((a, b) => hlSpCmp_(a.Order, b.Order));
+}
+// A note's text: blank line = new paragraph, "# " = heading, "- " = bullet, **bold**. Escaped first, so nothing typed can run.
+function hlSpFormatBody_(text){
+  const lines = String(text == null ? '' : text).replace(/\r\n?/g, '\n').split('\n');
+  const inline = (t) => hlEsc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  let html = '', inList = false;
+  const closeList = () => { if(inList){ html += '</ul>'; inList = false; } };
+  lines.forEach(raw => {
+    const line = raw.trim();
+    if(!line){ closeList(); return; }
+    let m;
+    if((m = line.match(/^#{1,3}\s+(.*)$/))){ closeList(); html += '<h3>' + inline(m[1]) + '</h3>'; }
+    else if((m = line.match(/^[-•*]\s+(.*)$/))){ if(!inList){ html += '<ul>'; inList = true; } html += '<li>' + inline(m[1]) + '</li>'; }
+    else { closeList(); html += '<p>' + inline(line) + '</p>'; }
+  });
+  closeList();
+  return html || '<p>No text yet.</p>';
+}
+function hlSpPaintTabs_(){
+  document.getElementById('spTabSyllabus').classList.toggle('active', hlSp_.tab === 'syllabus');
+  document.getElementById('spTabPdfs').classList.toggle('active', hlSp_.tab === 'pdfs');
+}
+function hlSpEmptyText_(what){
+  return '<p style="color:var(--ink-soft); font-size:13px;">' + what + '</p>'
+    + (hlAdminModeOn_() ? '<p style="color:var(--ink-soft); font-size:12px;">Admin: tap “Manage this screen” to add rows.</p>' : '');
+}
+function hlSpRender_(){
+  const box = document.getElementById('spContent'), intro = document.getElementById('spIntro'), d = hlSp_.data;
+  if(!d){
+    intro.textContent = '';
+    box.innerHTML = hlSp_.failed
+      ? '<p style="color:var(--ink-soft); font-size:13px;">Could not load the Second Paper. Please check your connection.</p><button type="button" id="spRetry" style="width:auto; padding:8px 14px; margin:6px 0;">Try again</button>'
+      : '<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>';
+    return;
+  }
+  hlSp_.tree = hlSpTree_(d.syllabus);
+  const seen = {}; let total = 0;
+  hlSp_.tree.forEach(sec => { const m = parseFloat(sec.marks), k = hlSpKey_(sec.name); if(isFinite(m) && !seen[k]){ seen[k] = 1; total += m; } });
+  intro.textContent = (total > 0 ? 'Total ' + total + ' marks. ' : '') + 'Tap a topic for its notes and PDFs.';
+  if(hlSp_.tab === 'pdfs') hlSpRenderPdfs_(box); else hlSpRenderSyllabus_(box);
+}
+function hlSpBadges_(notes, pdfs){ return (notes ? '📝 ' + notes : '') + (notes && pdfs ? '  ' : '') + (pdfs ? '📄 ' + pdfs : ''); }
+function hlSpRenderSyllabus_(box){
+  const d = hlSp_.data;
+  hlSp_.generalNotes = hlSpItems_(d.notes, '', '', '');
+  let html = '';
+  if(hlSp_.generalNotes.length){
+    html += '<div class="sp-section"><h4>General notes</h4>' + hlSp_.generalNotes.map((n, i) =>
+      '<button type="button" class="sp-topic" data-act="gnote" data-i="' + i + '"><span>' + hlEsc(n.Title || 'Note') + '</span><span class="sp-badges">📝</span></button>').join('') + '</div>';
+  }
+  if(!hlSp_.tree.length){ box.innerHTML = html + hlSpEmptyText_('The Second Paper syllabus is being prepared. Please check back soon.'); return; }
+  hlSp_.tree.forEach((sec, si) => {
+    html += '<div class="sp-section"><h4>' + hlEsc(hlSpLabel_('Section', sec.name) || 'Syllabus') + (sec.title ? ' — ' + hlEsc(sec.title) : '') + '</h4>'
+      + (sec.marks ? '<div class="sp-sub">' + hlEsc(sec.marks) + ' marks</div>' : '');
+    sec.units.forEach((un, ui) => {
+      html += '<div class="sp-unit">' + hlEsc([hlSpLabel_('Unit', un.unit), un.title].filter(Boolean).join(' — ') || 'Topics') + (un.marks ? ' <span>· ' + hlEsc(un.marks) + ' marks</span>' : '') + '</div>';
+      const unitNotes = hlSpItems_(d.notes, sec.name, un.unit, '').length, unitPdfs = hlSpItems_(d.pdfs, sec.name, un.unit, '').length;
+      if(unitNotes || unitPdfs) html += '<button type="button" class="sp-topic" data-act="topic" data-si="' + si + '" data-ui="' + ui + '" data-ti="-1"><span>Whole unit</span><span class="sp-badges">' + hlSpBadges_(unitNotes, unitPdfs) + '</span></button>';
+      un.topics.forEach((tp, ti) => {
+        const nn = hlSpItems_(d.notes, sec.name, un.unit, tp.name).length, pp = hlSpItems_(d.pdfs, sec.name, un.unit, tp.name).length;
+        html += '<button type="button" class="sp-topic" data-act="topic" data-si="' + si + '" data-ui="' + ui + '" data-ti="' + ti + '"><span>' + hlEsc(tp.name) + '</span><span class="sp-badges">' + hlSpBadges_(nn, pp) + '</span></button>';
+      });
+    });
+    html += '</div>';
+  });
+  box.innerHTML = html;
+}
+function hlSpPdfCard_(p){
+  const href = hlSpUrl_(p.Link), ctx = [hlSpLabel_('Unit', p.Unit), p.Topic].filter(Boolean).join(' · ');
+  const inner = (ctx ? '<div class="ca-date">' + hlEsc(ctx) + '</div>' : '') + '<h4>' + hlEsc(p.Title || 'PDF') + '</h4>' + (p.Description ? '<p>' + hlEsc(p.Description) + '</p>' : '');
+  return href ? '<a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="' + hlEsc(href) + '" target="_blank" rel="noopener">' + inner + '</a>' : '<div class="content-card">' + inner + '</div>';
+}
+function hlSpRenderPdfs_(box){
+  const pdfs = hlSp_.data.pdfs.filter(hlSpVisible_);
+  if(!pdfs.length){ box.innerHTML = hlSpEmptyText_('No PDFs yet. Please check back soon.'); return; }
+  const groups = [], idx = {};
+  const grp = (key, label) => { if(!idx[key]){ idx[key] = { label: label, items: [] }; groups.push(idx[key]); } return idx[key]; };
+  grp('', 'General');
+  hlSp_.tree.forEach(sec => { const k = hlSpKey_(sec.name); if(k) grp(k, [hlSpLabel_('Section', sec.name), sec.title].filter(Boolean).join(' — ')); });
+  pdfs.slice().sort((a, b) => hlSpCmp_(a.Order, b.Order)).forEach(p => { const k = hlSpKey_(p.Section); grp(k, k ? hlSpLabel_('Section', p.Section) : 'General').items.push(p); });
+  box.innerHTML = groups.filter(g => g.items.length).map(g => '<div class="sp-block-title">' + hlEsc(g.label) + '</div>' + g.items.map(hlSpPdfCard_).join('')).join('');
+}
+function hlSpRenderTopic_(){
+  const c = hlSp_.ctx, d = hlSp_.data; if(!c || !d) return;
+  const notes = hlSpItems_(d.notes, c.section, c.unit, c.topic), pdfs = hlSpItems_(d.pdfs, c.section, c.unit, c.topic);
+  hlSp_.topicNotes = notes;
+  document.getElementById('spTopicTitle').textContent = c.topic || 'Whole unit';
+  document.getElementById('spTopicSub').textContent = [hlSpLabel_('Section', c.section), hlSpLabel_('Unit', c.unit)].filter(Boolean).join(' · ');
+  let html = '';
+  if(notes.length) html += '<div class="sp-block-title">Notes</div>' + notes.map((n, i) => '<button type="button" class="sp-topic" data-act="tnote" data-i="' + i + '"><span>' + hlEsc(n.Title || 'Note') + '</span><span class="sp-badges">Read →</span></button>').join('');
+  if(pdfs.length) html += '<div class="sp-block-title">PDF resources</div>' + pdfs.map(hlSpPdfCard_).join('');
+  document.getElementById('spTopicContent').innerHTML = html || hlSpEmptyText_('No notes or PDFs for this topic yet. Please check back soon.');
+}
+function hlSpOpenNote_(n, backScreen){
+  const link = hlSpUrl_(n.Link);
+  openLegalInfo(n.Title || 'Note', hlSpFormatBody_(n.Body) + (link ? '<p><a href="' + hlEsc(link) + '" target="_blank" rel="noopener">Open the PDF</a></p>' : ''));
+  legalInfoBackTarget = backScreen;
+}
+async function hlSpLoad_(){
+  try{
+    const h = (hlSp_.data && hlSp_.data.hash) ? '&h=' + encodeURIComponent(hlSp_.data.hash) : '';
+    const res = await fetch(`${SHEET_API_URL}?action=secondPaper${h}`);
+    const d = await res.json();
+    if(d && d.unchanged === true && hlSp_.data){ hlSp_.failed = false; return; }
+    if(d && Array.isArray(d.syllabus)){
+      hlSp_.data = hlSpNorm_(d); hlSp_.failed = false;
+      try{ localStorage.setItem('hl_cache_secondpaper', JSON.stringify(d)); }catch(e){}
+    } else throw new Error('unexpected answer');
+  }catch(err){ if(!hlSp_.data) hlSp_.failed = true; }
+  hlSpRender_();
+  if(document.querySelector('.screen.active') === secondPaperTopicScreen) hlSpRenderTopic_();
+}
+async function hlSpOpen_(){
+  hlSp_.tab = 'syllabus'; hlSpPaintTabs_();
+  let cached = null; try{ cached = JSON.parse(localStorage.getItem('hl_cache_secondpaper') || 'null'); }catch(e){}
+  hlSp_.data = (cached && Array.isArray(cached.syllabus)) ? hlSpNorm_(cached) : null; hlSp_.failed = false;
+  hlSpRender_();
+  showScreen(secondPaperScreen);
+  await hlSpLoad_();
+}
+safeOn('cardSecondPaper', 'click', () => { hlSpOpen_(); });
+safeOn('spTabSyllabus', 'click', () => { hlSp_.tab = 'syllabus'; hlSpPaintTabs_(); hlSpRender_(); });
+safeOn('spTabPdfs', 'click', () => { hlSp_.tab = 'pdfs'; hlSpPaintTabs_(); hlSpRender_(); });
+safeOn('spContent', 'click', (e) => {
+  const retry = e.target.closest('#spRetry'); if(retry){ hlSp_.failed = false; hlSpRender_(); hlSpLoad_(); return; }
+  const b = e.target.closest('button[data-act]'); if(!b || !hlSp_.data) return;
+  if(b.dataset.act === 'gnote'){ const n = hlSp_.generalNotes[+b.dataset.i]; if(n) hlSpOpenNote_(n, secondPaperScreen); return; }
+  if(b.dataset.act === 'topic'){
+    const sec = hlSp_.tree[+b.dataset.si], un = sec && sec.units[+b.dataset.ui], ti = +b.dataset.ti, tp = un && (ti >= 0 ? un.topics[ti] : null);
+    if(!sec || !un || (ti >= 0 && !tp)) return;
+    hlSp_.ctx = { section: sec.name, unit: un.unit, topic: tp ? tp.name : '' };
+    hlSpRenderTopic_(); showScreen(secondPaperTopicScreen);
+  }
+});
+safeOn('spTopicContent', 'click', (e) => {
+  const b = e.target.closest('button[data-act="tnote"]'); if(!b) return;
+  const n = hlSp_.topicNotes[+b.dataset.i]; if(n) hlSpOpenNote_(n, secondPaperTopicScreen);
+});
+// after the owner edits through "Manage this screen", reload (and pull-to-refresh uses the same map)
+setTimeout(() => { try{ SCREEN_REFRESH_MAP.secondPaperScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperTopicScreen = () => { hlSpLoad_(); }; }catch(e){} }, 0);
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
 function hlBlockedMap_(){
@@ -27345,7 +27566,9 @@ function hlAdminScreenTabs_(screenId){
     whatsNewScreen: ['App Updates'], currentAffairsScreen: ['New Updates'], upgradeScreen: ['Premium Features', 'Pricing'],
     liveClassScreen: ['Live Class'], immunizationScreen: ['Immunization'], webPortalScreen: ['WebPortalLinks'],
     newsPortalScreen: ['NewsPortalSources'], taxCalcScreen: ['TaxSlabs', 'TaxDeductionLimits'],
-    salaryCalcScreen: ['SalaryScale', 'SalaryAllowances', 'PayrollRates'], pastQuestionsYearScreen: ['Past Questions List']
+    salaryCalcScreen: ['SalaryScale', 'SalaryAllowances', 'PayrollRates'], pastQuestionsYearScreen: ['Past Questions List'],
+    secondPaperScreen: ['Second Paper Syllabus', 'Second Paper Notes', 'Second Paper PDFs'],
+    secondPaperTopicScreen: ['Second Paper Notes', 'Second Paper PDFs']
   };
   if(screenId === 'docListScreen'){
     const t = document.getElementById('docListTitle');
