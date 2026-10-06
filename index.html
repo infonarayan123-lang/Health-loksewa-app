@@ -14420,7 +14420,7 @@ try{
 PER_ACCOUNT_STORAGE_KEYS = [
   'hl_bookmark_collection_map','hl_bookmark_collections','hl_bookmarks','hl_custom_bookmarks',
   'hl_healthday_bookmarks','hl_mnemonic_bookmarks','hl_pdf_bookmarks','hl_quickref_bookmarks',
-  'hl_chapter_stats','hl_chat_history','hl_custom_mnemonics',
+  'hl_chapter_stats','hl_topic_done_log','hl_chat_history','hl_custom_mnemonics',
   'hl_daily_activity','hl_dailyfire_last_date','hl_dailyfire_streak',
   'hl_earned_badges','hl_fc_cards','hl_fc_decks','hl_focus_sessions',
   'hl_learning_points','hl_longest_streak','hl_mistakes_mastered_count','hl_mnemonic_helpful_voted',
@@ -15263,6 +15263,7 @@ function recordDailyActivity(questionsCount, correctCount){
 }
 function bucketActivity(mode){
   const log = getDailyActivityLog();
+  const tlog = getTopicDoneLog();
   const now = new Date();
   const buckets = [];
   if(mode === 'daily'){
@@ -15270,19 +15271,20 @@ function bucketActivity(mode){
       const d = new Date(now); d.setDate(d.getDate() - i);
       const key = d.toISOString().slice(0, 10);
       const entry = log[key] || { questions: 0, correct: 0 };
-      buckets.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), questions: entry.questions, correct: entry.correct, studyTimeSec: getStudyTimeForDate(key) });
+      buckets.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), questions: entry.questions, correct: entry.correct, studyTimeSec: getStudyTimeForDate(key), topics: topicsDoneInPeriod_(tlog, key) });
     }
   } else if(mode === 'weekly'){
     for(let i = 7; i >= 0; i--){
-      let qSum = 0, cSum = 0, tSum = 0;
+      let qSum = 0, cSum = 0, tSum = 0, tpSum = 0;
       for(let d = 0; d < 7; d++){
         const day = new Date(now); day.setDate(day.getDate() - (i * 7 + d));
         const key = day.toISOString().slice(0, 10);
         const entry = log[key];
         if(entry){ qSum += entry.questions; cSum += entry.correct; }
         tSum += getStudyTimeForDate(key);
+        tpSum += topicsDoneInPeriod_(tlog, key);
       }
-      buckets.push({ label: `W${8 - i}`, questions: qSum, correct: cSum, studyTimeSec: tSum });
+      buckets.push({ label: `W${8 - i}`, questions: qSum, correct: cSum, studyTimeSec: tSum, topics: tpSum });
     }
   } else if(mode === 'monthly'){
     for(let i = 11; i >= 0; i--){
@@ -15296,14 +15298,14 @@ function bucketActivity(mode){
         const dayKey = monthKey + '-' + String(dd).padStart(2, '0');
         tSum += getStudyTimeForDate(dayKey);
       }
-      buckets.push({ label: d.toLocaleDateString('en-US', { month: 'short' }), questions: qSum, correct: cSum, studyTimeSec: tSum });
+      buckets.push({ label: d.toLocaleDateString('en-US', { month: 'short' }), questions: qSum, correct: cSum, studyTimeSec: tSum, topics: topicsDoneInPeriod_(tlog, monthKey) });
     }
   } else { // yearly
     for(let i = 4; i >= 0; i--){
       const year = String(now.getFullYear() - i);
       let qSum = 0, cSum = 0;
       Object.keys(log).forEach(k => { if(k.startsWith(year)){ qSum += log[k].questions; cSum += log[k].correct; } });
-      buckets.push({ label: year, questions: qSum, correct: cSum, studyTimeSec: 0 }); // no year-scale study time history retained
+      buckets.push({ label: year, questions: qSum, correct: cSum, studyTimeSec: 0, topics: topicsDoneInPeriod_(tlog, year) }); // no year-scale study time history retained
     }
   }
   return buckets;
@@ -15319,19 +15321,12 @@ function getMetricValue(bucket, metric){
   if(metric === 'accuracy') return bucket.questions > 0 ? Math.round((bucket.correct / bucket.questions) * 100) : 0;
   if(metric === 'questions') return bucket.questions;
   if(metric === 'studyTime') return Math.round(bucket.studyTimeSec / 60); // minutes
+  if(metric === 'topics') return bucket.topics || 0;   // topics newly completed in that period
   return 0;
 }
 function renderHomeChart(mode){
   document.querySelectorAll('.home-chart-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
   const svg = document.getElementById('homeChartSvg');
-
-  if(currentHomeMetric === 'topics'){
-    const chapters = Object.values(getChapterStats());
-    const completed = chapters.filter(isChapterComplete).length;
-    svg.innerHTML = `<text x="160" y="55" text-anchor="middle" fill="var(--ink-soft)" font-size="11" font-family="Inter,sans-serif">${completed} topic${completed === 1 ? '' : 's'} completed so far</text><text x="160" y="72" text-anchor="middle" fill="var(--ink-soft)" font-size="9" font-family="Inter,sans-serif" opacity="0.7">History isn't tracked by date yet</text>`;
-    updateHomeStatsAndInsight(mode, null);
-    return;
-  }
 
   const buckets = bucketActivity(mode);
   const values = buckets.map(b => getMetricValue(b, currentHomeMetric));
@@ -15416,6 +15411,12 @@ function updateHomeStatsAndInsight(mode, buckets){
     insightEl.textContent = `Your accuracy dropped by ${accTrend.pct}% this period. Review your recent mistakes before attempting another difficult set.`;
   } else {
     insightEl.textContent = `Your accuracy is steady at ${acc}% this period. Consistency is progress too.`;
+  }
+  if(currentHomeMetric === 'topics' && buckets){   // Topics Completed: say plainly what the line shows, and since when it is recorded
+    const half2 = Math.ceil(buckets.length / 2); let newly = 0; buckets.slice(half2).forEach(b => { newly += (b.topics || 0); });
+    const total = Object.values(getChapterStats()).filter(isChapterComplete).length, tl = getTopicDoneLog();
+    insightEl.textContent = `${newly} topic${newly === 1 ? '' : 's'} newly completed this period. ${total} completed in total. `
+      + (tl && tl.since ? `Dates are recorded from ${tl.since}; topics completed before that are counted in the total but have no date.` : 'Dates start being recorded from your next answer.');
   }
 }
 function renderHomeMoodRow(){
@@ -23586,14 +23587,44 @@ function getChapterStats(){
 function saveChapterStats(stats){
   try{ localStorage.setItem(uk('hl_chapter_stats'), JSON.stringify(stats)); }catch(e){}
 }
+// ---- Topics Completed history (Oct 2026): the date a topic FIRST became complete, kept per account. Topics already complete
+// when tracking begins are remembered as 'earlier' (they have no known date, so they are never shown as new). ----
+function getTopicDoneLog(){
+  try{ const o = JSON.parse(localStorage.getItem(uk('hl_topic_done_log')) || 'null'); if(o && typeof o === 'object' && o.done && typeof o.done === 'object') return o; }catch(e){}
+  return null;
+}
+function hlTopicLogEnsure_(stats){
+  try{
+    if(getTopicDoneLog()) return;
+    const log = { since: todayISO(), done: {} };
+    Object.keys(stats).forEach(k => { if(isChapterComplete(stats[k])) log.done[k] = 'earlier'; });
+    localStorage.setItem(uk('hl_topic_done_log'), JSON.stringify(log));
+  }catch(e){}
+}
+function hlTopicLogNote_(key, c){
+  try{
+    const log = getTopicDoneLog();
+    if(!log || !c || !isChapterComplete(c) || log.done[key]) return;
+    log.done[key] = todayISO();
+    localStorage.setItem(uk('hl_topic_done_log'), JSON.stringify(log));
+  }catch(e){}
+}
+function topicsDoneInPeriod_(log, prefix){
+  if(!log || !log.done) return 0;
+  let n = 0;
+  for(const k in log.done){ const d = log.done[k]; if(typeof d === 'string' && d.indexOf(prefix) === 0) n++; }
+  return n;
+}
 function recordChapterAnswer(subject, chapter, isCorrect){
   if(!subject || !chapter) return; // some question sources may not have Chapter populated
   const stats = getChapterStats();
+  hlTopicLogEnsure_(stats);   // BEFORE this answer is counted
   const key = subject + '::' + chapter;
   if(!stats[key]) stats[key] = { subject, chapter, correct: 0, attempted: 0, confidence: 0 };
   stats[key].attempted++;
   if(isCorrect) stats[key].correct++;
   saveChapterStats(stats);
+  hlTopicLogNote_(key, stats[key]);   // AFTER: a topic that has just become complete gets today's date (first time only)
 }
 function getChaptersForSubject(subject){
   const stats = getChapterStats();
