@@ -6475,10 +6475,8 @@
   <div class="screen" id="secondPaperScreen">
     <div class="back-link" data-back="secondPaperBack">← Back</div>
     <div class="home-body">
-      <div class="section-title">Second Paper</div>
+      <div class="section-title" id="spTitle">Second Paper</div>
       <div id="spIntro" style="font-size:12.5px; color:var(--ink-soft); margin-bottom:8px;"></div>
-      <div class="sp-tabs" style="margin-bottom:8px;"><button type="button" class="sp-tab" id="spTabNotesPdf">📚 Section Notes (PDF)</button><button type="button" class="sp-tab" id="spTabSolutions">✅ Solutions (PDF)</button></div>
-      <div class="sp-tabs"><button type="button" class="sp-tab active" id="spTabSyllabus">Syllabus</button><button type="button" class="sp-tab" id="spTabQuestions">Past Questions</button><button type="button" class="sp-tab" id="spTabPdfs">PDFs</button></div>
       <div id="spContent"></div>
     </div>
   </div>
@@ -22683,7 +22681,7 @@ document.querySelectorAll('.back-link').forEach(b => {
     } else if(key === 'comingSoonBack'){
       navigateBack(comingSoonBackTarget);
     } else if(key === 'secondPaperBack'){
-      navigateBack(homeScreen);
+      if(hlSp_.tab !== 'menu'){ hlSp_.tab = 'menu'; hlSpPaintTabs_(); hlSpRender_(); } else { navigateBack(homeScreen); }
     } else if(key === 'secondPaperYearBack'){
       navigateBack(secondPaperScreen);
     } else if(key === 'secondPaperTopicBack'){
@@ -26862,7 +26860,7 @@ function hlSpTree_(syl){
     if(!un){ un = sec.uIdx[uk2] = { unit: r.Unit, title: '', marks: '', topics: [] }; sec.units.push(un); }
     if(!un.title && r.UnitTitle) un.title = r.UnitTitle;
     if(!un.marks && r.UnitMarks) un.marks = r.UnitMarks;
-    if(r.Topic) un.topics.push({ name: r.Topic, order: r.Order, seq: un.topics.length });
+    if(r.Topic){ const tk = hlSpKey_(r.Topic); if(!un.tset) un.tset = {}; if(!un.tset[tk]){ un.tset[tk] = 1; un.topics.push({ name: r.Topic, order: r.Order, seq: un.topics.length }); } }   // each topic once, however many notes/questions/PDFs mention it
   });
   sections.forEach(sec => sec.units.forEach(un => un.topics.sort((a, b) => hlSpCmp_(a.order, b.order) || (a.seq - b.seq))));
   return sections;
@@ -26888,8 +26886,27 @@ function hlSpFormatBody_(text){
   closeList();
   return html || '<p>No text yet.</p>';
 }
-function hlSpPaintTabs_(){
-  [['spTabNotesPdf', 'notespdf'], ['spTabSolutions', 'solutions'], ['spTabSyllabus', 'syllabus'], ['spTabQuestions', 'questions'], ['spTabPdfs', 'pdfs']].forEach(pair => document.getElementById(pair[0]).classList.toggle('active', hlSp_.tab === pair[1]));
+function hlSpPaintTabs_(){   // the screen title follows the chosen box
+  const names = { menu: 'Second Paper', notespdf: 'Section Wise Notes (PDF)', solutions: 'Past Question Solutions (PDF)', syllabus: 'Topic Wise Notes', questions: 'Past Questions', pdfs: 'PDFs' };
+  const el = document.getElementById('spTitle'); if(el) el.textContent = names[hlSp_.tab] || 'Second Paper';
+}
+// the three boxes: same look as the Home boxes, one per row, each box a full row
+function hlSpRenderMenu_(box){
+  const items = [
+    { v: 'notespdf',  cls: 'c-syllabus', icon: 'bi-collection',   label: 'Section Wise Notes (PDF)',      sub: 'Topic-wise PDF notes under each section' },
+    { v: 'solutions', cls: 'c-mock',     icon: 'bi-patch-check',  label: 'Past Question Solutions (PDF)', sub: 'Solved papers, for example Loksewa 2077' },
+    { v: 'syllabus',  cls: 'c-quiz',     icon: 'bi-journal-text', label: 'Topic Wise Notes',              sub: 'Notes, past questions and PDFs for every topic' }
+  ];
+  box.innerHTML = '<div class="dash-grid" style="grid-template-columns:1fr;">' + items.map(it =>
+    '<button type="button" class="dash-card ' + it.cls + '" data-act="spview" data-v="' + it.v + '" id="spBox_' + it.v + '"><div class="dc-icon"><i class="bi ' + it.icon + '"></i></div><div class="dc-label">' + it.label + '</div><div class="dc-sub">' + it.sub + '</div></button>').join('') + '</div>';
+}
+// the Topic Wise Notes list is built from the Syllabus tab (if filled) PLUS every section/unit/topic found in the notes, questions and PDFs
+function hlSpTreeRows_(d){
+  const rows = d.syllabus.slice();
+  [d.notes, d.questions, d.pdfs].forEach(list => list.filter(hlSpVisible_).forEach(r => {
+    if(r.Topic) rows.push({ Section: r.Section || '', SectionTitle: '', SectionMarks: '', Unit: r.Unit || '', UnitTitle: '', UnitMarks: '', Topic: r.Topic, Order: '' });
+  }));
+  return rows;
 }
 function hlSpEmptyText_(what){
   return '<p style="color:var(--ink-soft); font-size:13px;">' + what + '</p>'
@@ -26897,6 +26914,7 @@ function hlSpEmptyText_(what){
 }
 function hlSpRender_(){
   const box = document.getElementById('spContent'), intro = document.getElementById('spIntro'), d = hlSp_.data;
+  if(hlSp_.tab === 'menu'){ intro.textContent = 'Choose what you want to study.'; hlSpRenderMenu_(box); return; }
   if(!d){
     intro.textContent = '';
     box.innerHTML = hlSp_.failed
@@ -26904,7 +26922,7 @@ function hlSpRender_(){
       : '<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>';
     return;
   }
-  hlSp_.tree = hlSpTree_(d.syllabus);
+  hlSp_.tree = hlSpTree_(hlSpTreeRows_(d));
   const seen = {}; let total = 0;
   hlSp_.tree.forEach(sec => { const m = parseFloat(sec.marks), k = hlSpKey_(sec.name); if(isFinite(m) && !seen[k]){ seen[k] = 1; total += m; } });
   if(hlSp_.tab === 'notespdf'){ intro.textContent = 'Tap a topic to read its PDF notes. They open inside the app (view only).'; hlSpRenderNotesPdf_(box); }
@@ -26922,7 +26940,7 @@ function hlSpRenderSyllabus_(box){
     html += '<div class="sp-section"><h4>General notes</h4>' + hlSp_.generalNotes.map((n, i) =>
       '<button type="button" class="sp-topic" data-act="gnote" data-i="' + i + '"><span>' + hlEsc(n.Title || 'Note') + '</span><span class="sp-badges">📝</span></button>').join('') + '</div>';
   }
-  if(!hlSp_.tree.length){ box.innerHTML = html + hlSpEmptyText_('The Second Paper syllabus is being prepared. Please check back soon.'); return; }
+  if(!hlSp_.tree.length){ box.innerHTML = html + hlSpEmptyText_('Topic-wise notes are being prepared. Please check back soon.'); return; }
   hlSp_.tree.forEach((sec, si) => {
     html += '<div class="sp-section"><h4>' + hlEsc(hlSpLabel_('Section', sec.name) || 'Syllabus') + (sec.title ? ' — ' + hlEsc(sec.title) : '') + '</h4>'
       + (sec.marks ? '<div class="sp-sub">' + hlEsc(sec.marks) + ' marks</div>' : '');
@@ -27055,7 +27073,7 @@ function hlSpOpenPdf_(title, link){
   currentDocViewerItem = { title: title || 'PDF', link: url, viewOnly: true };
   showScreen(docViewerScreen);
 }
-function hlSpPickTab_(){ const d = hlSp_.data; return (d && d.sectionNotes.some(r => hlSpVisible_(r) && hlSpUrl_(r.Link))) ? 'notespdf' : 'syllabus'; }
+function hlSpPickTab_(){ return 'menu'; }   // the Second Paper always opens on its three boxes
 function hlSpRenderNotesPdf_(box){
   const rows = hlSp_.data.sectionNotes.filter(hlSpVisible_).filter(r => hlSpUrl_(r.Link) && (r.Topic || r.Title));
   hlSp_.pdfNotes = [];
@@ -27100,7 +27118,7 @@ async function hlSpLoad_(){
   if(document.querySelector('.screen.active') === secondPaperYearScreen) hlSpRenderYear_();
 }
 async function hlSpOpen_(){
-  hlSp_.tab = 'syllabus'; hlSp_.userPicked = false;
+  hlSp_.tab = 'menu'; hlSp_.userPicked = false;
   let cached = null; try{ cached = JSON.parse(localStorage.getItem('hl_cache_secondpaper') || 'null'); }catch(e){}
   hlSp_.data = (cached && Array.isArray(cached.syllabus)) ? hlSpNorm_(cached) : null; hlSp_.failed = false;
   hlSp_.tab = hlSpPickTab_(); hlSpPaintTabs_();
@@ -27109,12 +27127,11 @@ async function hlSpOpen_(){
   await hlSpLoad_();
 }
 safeOn('cardSecondPaper', 'click', () => { hlSpOpen_(); });
-[['spTabNotesPdf', 'notespdf'], ['spTabSolutions', 'solutions'], ['spTabSyllabus', 'syllabus'], ['spTabQuestions', 'questions'], ['spTabPdfs', 'pdfs']].forEach(pair => {
-  safeOn(pair[0], 'click', () => { hlSp_.tab = pair[1]; hlSp_.userPicked = true; hlSpPaintTabs_(); hlSpRender_(); });
-});
 safeOn('spContent', 'click', (e) => {
   const retry = e.target.closest('#spRetry'); if(retry){ hlSp_.failed = false; hlSpRender_(); hlSpLoad_(); return; }
-  const b = e.target.closest('button[data-act]'); if(!b || !hlSp_.data) return;
+  const b = e.target.closest('button[data-act]'); if(!b) return;
+  if(b.dataset.act === 'spview'){ hlSp_.tab = b.dataset.v; hlSp_.userPicked = true; hlSpPaintTabs_(); hlSpRender_(); return; }
+  if(!hlSp_.data) return;
   if(b.dataset.act === 'spnote'){ const r = hlSp_.pdfNotes && hlSp_.pdfNotes[+b.dataset.i]; if(r) hlSpOpenPdf_(r.Topic || r.Title, r.Link); return; }
   if(b.dataset.act === 'spsol'){ const r = hlSp_.solutions && hlSp_.solutions[+b.dataset.i]; if(r) hlSpOpenPdf_(r.Title, r.Link); return; }
   if(b.dataset.act === 'gnote'){ const n = hlSp_.generalNotes[+b.dataset.i]; if(n) hlSpOpenNote_(n, secondPaperScreen); return; }
