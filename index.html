@@ -1902,6 +1902,17 @@
 .sp-badges{ font-size:11px; color:var(--ink-soft-on-elevated); white-space:nowrap; }
 .sp-block-title{ font-size:13px; font-weight:800; margin:14px 0 6px; color:var(--ink); }
 </style>
+<style id="qfStyle">
+.qf-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 10px; padding:8px 12px; border:1px solid var(--line); border-radius:12px; background:var(--panel); cursor:pointer; }
+.qf-text{ display:flex; flex-direction:column; font-size:12.5px; color:var(--ink); }
+.qf-text span{ font-size:11px; color:var(--ink-soft); margin-top:1px; }
+.qf-switch{ position:relative; width:46px; height:26px; flex-shrink:0; }
+.qf-switch input{ position:absolute; top:0; left:0; width:100%; height:100%; margin:0; padding:0; border:0; opacity:0; cursor:pointer; z-index:2; }
+.qf-slider{ position:absolute; top:0; left:0; right:0; bottom:0; border-radius:26px; background:var(--line); transition:background .2s; }
+.qf-slider::after{ content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:transform .2s; }
+.qf-switch input:checked + .qf-slider{ background:var(--crimson); }
+.qf-switch input:checked + .qf-slider::after{ transform:translateX(20px); }
+</style>
 </head>
 <body>
 <div id="app">
@@ -2630,6 +2641,7 @@
           <button class="profile-menu-item" id="menuReportProblem"><span class="pm-icon"><i class="bi bi-flag"></i></span> Report a problem or user</button>
           <button class="profile-menu-item" id="menuAdminReports" style="display:none;"><span class="pm-icon"><i class="bi bi-shield-exclamation"></i></span> Reports (admin)</button>
           <button class="profile-menu-item" id="menuAdminSwitches" style="display:none;"><span class="pm-icon"><i class="bi bi-toggles"></i></span> Feature switches (admin)</button>
+          <button class="profile-menu-item" id="menuAdminUsers" style="display:none;"><span class="pm-icon"><i class="bi bi-people"></i></span> Users &amp; Premium (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -6497,6 +6509,16 @@
     </div>
   </div>
 
+  <!-- SPECIAL SETS: named mock papers (for example Lumbini Bises, Sudurpaschim Special) added by the owners in the app -->
+  <div class="screen" id="specialSetsScreen">
+    <div class="back-link" data-back="specialSetsBack">← Back</div>
+    <div class="home-body">
+      <div class="section-title">Special Sets</div>
+      <div id="spsIntro" style="font-size:12.5px; color:var(--ink-soft); margin-bottom:10px;"></div>
+      <div id="spsContent"></div>
+    </div>
+  </div>
+
   <!-- SUBJECT-WISE MCQs: STEP 0 — pick a post, same pattern as Syllabus -->
   <div class="screen" id="mcqPostScreen">
     <div class="back-link" data-back="home">← Back to Home</div>
@@ -6604,6 +6626,10 @@
       <div class="omr-strip" id="omrStrip"></div>
     </div>
     <div class="quiz-body">
+      <label class="qf-row" id="feedbackSwitchRow" style="display:none;">
+        <span class="qf-text"><b>Show answers at the end</b><span id="feedbackSwitchState"></span></span>
+        <span class="qf-switch"><input type="checkbox" id="feedbackSwitch" checked aria-label="Show answers at the end"><span class="qf-slider"></span></span>
+      </label>
       <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div class="q-tag" id="qTag">EPIDEMIOLOGY</div>
         <button class="bookmark-star-btn" id="bookmarkStarBtn" title="Bookmark this question" aria-label="Bookmark this question">☆</button>
@@ -8208,7 +8234,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxmqL-0c74zuW-i7xa1o1LPQ15ZpmgJVGuFyYRETPBI-a5YOFNFRf6LNuypQHBdJvMHNg/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzJM1hcPenjFJ-xa8EnzdQOyGco1ugk2ylj08sSdsGdQgiyyx68h4jDvRGasr9mxb3X2Q/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -8253,6 +8279,7 @@ const docListScreen = document.getElementById('docListScreen');
 const secondPaperScreen = document.getElementById('secondPaperScreen');
 const secondPaperTopicScreen = document.getElementById('secondPaperTopicScreen');
 const secondPaperYearScreen = document.getElementById('secondPaperYearScreen');
+const specialSetsScreen = document.getElementById('specialSetsScreen');
 const resourcesScreen = document.getElementById('resourcesScreen');
 const webPortalScreen = document.getElementById('webPortalScreen');
 const newsPortalScreen = document.getElementById('newsPortalScreen');
@@ -8413,7 +8440,7 @@ const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
 let ALL_SCREENS;
 try{
-ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, liveClassScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, secondPaperScreen, secondPaperTopicScreen, secondPaperYearScreen];
+ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, liveClassScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, secondPaperScreen, secondPaperTopicScreen, secondPaperYearScreen, specialSetsScreen];
 }catch(err){ ALL_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ALL_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 window.showScreen = showScreen;
 window.notifOnboardingScreen = notifOnboardingScreen;
@@ -8608,7 +8635,7 @@ function getFeatureArea(screenEl){
       quickRefScreen, quickRefDetailScreen, studyResourcesScreen, formulaScreen, dictionaryScreen, healthDaysScreen,
       healthDayDetailScreen, healthDayCalendarScreen],
     'Practice & MCQs': [practiceScreen, quizScreen, resultsScreen, subjectPickScreen, setSelectScreen, setupScreen,
-      mcqPostScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentScreen, tournamentPostScreen,
+      mcqPostScreen, mockPostScreen, specialSetsScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentScreen, tournamentPostScreen,
       rapidFireScreen, rapidFireSetupScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen,
       battleResultScreen, dailyBattleResultScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen,
       revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, mistakeBookScreen, bookmarksScreen,
@@ -8979,7 +9006,7 @@ function updateBottomNav(activeScreen){
 
   const homeScreens = [window.homeScreen];
   const learnScreens = [learnScreen, secondPaperScreen, secondPaperTopicScreen, secondPaperYearScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
-  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
+  const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, specialSetsScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen, notificationPrefsScreen];
 
@@ -14471,7 +14498,7 @@ try{
 PER_ACCOUNT_STORAGE_KEYS = [
   'hl_bookmark_collection_map','hl_bookmark_collections','hl_bookmarks','hl_custom_bookmarks',
   'hl_healthday_bookmarks','hl_mnemonic_bookmarks','hl_pdf_bookmarks','hl_quickref_bookmarks',
-  'hl_chapter_stats','hl_topic_done_log','hl_chat_history','hl_custom_mnemonics',
+  'hl_chapter_stats','hl_topic_done_log','hl_quiz_instant','hl_chat_history','hl_custom_mnemonics',
   'hl_daily_activity','hl_dailyfire_last_date','hl_dailyfire_streak',
   'hl_earned_badges','hl_fc_cards','hl_fc_decks','hl_focus_sessions',
   'hl_learning_points','hl_longest_streak','hl_mistakes_mastered_count','hl_mnemonic_helpful_voted',
@@ -22682,6 +22709,8 @@ document.querySelectorAll('.back-link').forEach(b => {
       navigateBack(comingSoonBackTarget);
     } else if(key === 'secondPaperBack'){
       if(hlSp_.tab !== 'menu'){ hlSp_.tab = 'menu'; hlSpPaintTabs_(); hlSpRender_(); } else { navigateBack(homeScreen); }
+    } else if(key === 'specialSetsBack'){
+      navigateBack(mockPostScreen);
     } else if(key === 'secondPaperYearBack'){
       navigateBack(secondPaperScreen);
     } else if(key === 'secondPaperTopicBack'){
@@ -24251,7 +24280,7 @@ function renderMockPosts(){
       <div class="dc-label" style="font-size:14px;">${post.label}</div>
       <div class="dc-sub">${post.questionCount} Qs · ${post.minutes} min · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
     </button>
-  `).join('');
+  `).join('') + hlSpecialSetsCardHtml_();
 
   document.querySelectorAll('.mock-post-btn').forEach(card => {
     card.addEventListener('click', () => {
@@ -26576,6 +26605,7 @@ function renderQuestion(){
 
   document.getElementById('feedbackBox').className = 'feedback';
   document.getElementById('feedbackBox').innerHTML = '';
+  try{ hlSyncFeedbackSwitch_(); }catch(e){}
   const examHint = document.getElementById('examModeHint');
   if(examHint) examHint.style.display = isLearningQuiz() ? 'none' : 'block';
   document.getElementById('nextBtn').disabled = true;
@@ -27156,7 +27186,208 @@ safeOn('spYearContent', 'click', (e) => {
   const q = hlSp_.yearQs && hlSp_.yearQs[+b.dataset.i]; if(q) hlSpOpenQuestion_(q, secondPaperYearScreen);
 });
 // after the owner edits through "Manage this screen", reload (and pull-to-refresh uses the same map)
-setTimeout(() => { try{ SCREEN_REFRESH_MAP.secondPaperScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperTopicScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperYearScreen = () => { hlSpLoad_(); }; }catch(e){} }, 0);
+setTimeout(() => { try{ SCREEN_REFRESH_MAP.secondPaperScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperTopicScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperYearScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.specialSetsScreen = () => { hlSpsLoad_(); }; }catch(e){} }, 0);
+// ==========================================================================================
+// SPECIAL SETS (Oct 2026): named mock papers — for example "Lumbini Bises" or "Sudurpaschim Special" — that the owners add
+// IN THE APP (Manage this screen > Add; the question tab is created automatically in the Google Sheet). Students open them
+// from Mock Test > Special Sets. The questions come only through a protected request (login; Premium sets need Premium).
+// A set runs like a paper: its own minutes and marks per question, scored and shown in the results like a past paper.
+// ==========================================================================================
+var hlSps_ = { list: null, failed: false, shown: [] };
+function hlSpecialSetsCardHtml_(){
+  return '<button type="button" class="dash-card c-mock" id="mockSpecialBtn" style="grid-column:1 / -1;"><div class="dc-icon"><i class="bi bi-stars"></i></div><div class="dc-label">Special Sets</div><div class="dc-sub">Province and special papers</div></button>';
+}
+(function(){ const g = document.getElementById('mockPostGrid'); if(g) g.addEventListener('click', (e) => { if(e.target.closest('#mockSpecialBtn')) hlOpenSpecialSets_(); }); })();
+function hlSpsPostKey_(v){ const t = hlSpKey_(v); if(!t) return ''; const p = MOCK_POSTS.find(x => hlSpKey_(x.key) === t || hlSpKey_(x.label) === t); return p ? p.key : ''; }
+function hlSpsPostLabel_(key){ const p = MOCK_POSTS.find(x => x.key === key); return p ? p.label : ''; }
+function hlSpsNorm_(arr){
+  const num = (v) => { const x = parseFloat(v); return (isFinite(x) && x > 0) ? x : 0; };
+  return (Array.isArray(arr) ? arr : []).filter(r => r && typeof r === 'object' && r.Name).map(r => ({ Name: String(r.Name), Description: String(r.Description || ''), Post: String(r.Post || ''),
+    Access: r.Access === 'Premium' ? 'Premium' : 'Free', Minutes: num(r.Minutes), MarksEach: num(r.MarksEach), Order: String(r.Order == null ? '' : r.Order), Count: parseInt(r.Count, 10) || 0 }));
+}
+function hlSpsVisibleList_(){
+  const admin = hlAdminModeOn_();
+  let sel = []; try{ sel = getSelectedPosts() || []; }catch(e){}
+  const rows = (hlSps_.list || []).map((r, i) => ({ r: r, i: i })).filter(x => {
+    if(!admin && x.r.Count === 0) return false;                       // students never see an empty set
+    const pk = hlSpsPostKey_(x.r.Post);
+    if(pk && sel.length > 0 && !sel.includes(pk) && !admin) return false;   // a set for one post is shown to students who chose that post
+    return true;
+  });
+  rows.sort((a, b) => hlSpCmp_(a.r.Order, b.r.Order) || (a.i - b.i));
+  return rows.map(x => x.r);
+}
+function hlSpsRender_(){
+  const box = document.getElementById('spsContent'), intro = document.getElementById('spsIntro'), admin = hlAdminModeOn_();
+  intro.textContent = admin ? 'Admin: use "Manage this screen" to add, rename or delete a set (a new set creates its question tab for you). Use the buttons under a set to add its questions.' : 'Province and special papers. Choose one to start.';
+  if(hlSps_.list === null){
+    box.innerHTML = hlSps_.failed ? '<p style="color:var(--ink-soft); font-size:13px;">Could not load the Special Sets. Please check your connection.</p><button type="button" id="spsRetry" style="width:auto; padding:8px 14px; margin:6px 0;">Try again</button>' : '<p style="color:var(--ink-soft); font-size:13px;">Loading…</p>';
+    return;
+  }
+  const list = hlSpsVisibleList_(); hlSps_.shown = list;
+  if(!list.length){ box.innerHTML = hlSpEmptyText_('Special Sets are being prepared. Please check back soon.'); return; }
+  box.innerHTML = list.map((s, i) => {
+    const meta = [hlSpsPostLabel_(hlSpsPostKey_(s.Post)) || s.Post, hlSpPlural_(s.Count, 'question'), s.Minutes ? s.Minutes + ' min' : '', s.Access === 'Premium' ? 'Premium 🔒' : 'Free'].filter(Boolean).join(' · ');
+    return '<a class="link-card" href="#" data-sps="' + i + '" style="margin-bottom:' + (admin ? '4' : '10') + 'px;"><div class="lc-text"><h4>' + hlEsc(s.Name) + '</h4>' + (s.Description ? '<p>' + hlEsc(s.Description) + '</p>' : '') + '<p>' + hlEsc(meta) + '</p></div><div class="lc-arrow">→</div></a>'
+      + (admin ? '<div style="display:flex; gap:8px; margin:0 0 12px;"><button type="button" class="sps-admin" data-act="bulk" data-sps="' + i + '" style="flex:1; margin:0; padding:6px; font-size:12px;">＋ Add many questions</button><button type="button" class="sps-admin" data-act="one" data-sps="' + i + '" style="flex:1; margin:0; padding:6px; font-size:12px;">＋ Add one question</button></div>' : '');
+  }).join('');
+}
+async function hlSpsLoad_(){
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=specialSets`); const d = await res.json();
+    if(Array.isArray(d)){
+      hlSps_.list = hlSpsNorm_(d); hlSps_.failed = false;
+      try{ localStorage.setItem('hl_cache_specialsets', JSON.stringify(d)); }catch(e){}
+    } else if(hlSps_.list === null){ hlSps_.list = []; hlSps_.failed = false; }   // a backend that does not know Special Sets yet: nothing to show, not an error
+  }catch(err){ if(hlSps_.list === null) hlSps_.failed = true; }
+  hlSpsRender_();
+}
+async function hlOpenSpecialSets_(){
+  let cached = null; try{ cached = JSON.parse(localStorage.getItem('hl_cache_specialsets') || 'null'); }catch(e){}
+  hlSps_.list = Array.isArray(cached) ? hlSpsNorm_(cached) : null; hlSps_.failed = false;
+  hlSpsRender_(); showScreen(specialSetsScreen);
+  await hlSpsLoad_();
+}
+function hlSpsRefreshWhenModalCloses_(){   // after the owner adds questions, the counts are refreshed
+  let n = 0; const timer = setInterval(() => { n++; if(!document.getElementById('hlAdminEditModal') || n > 400){ clearInterval(timer); hlSpsLoad_(); } }, 800);
+}
+async function hlStartSpecialSet_(set){
+  await showReadCarefullyReminder();
+  currentSetInfo = null;
+  pastQuestionActive = true;     // scored and listed like a past paper
+  showQuizLoading('Please wait, loading this set… this may take a moment.');
+  try{
+    const res = await postJsonWithTimeout({ action: 'specialSetQuestions', idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''), setName: set.Name });
+    const pool = await res.json();
+    if(!Array.isArray(pool)){
+      hideQuizLoading(); pastQuestionActive = false;
+      if(pool && pool.error === 'limit'){
+        if(await showPremiumLockModal('This Special Set is for Premium members. Upgrade to Premium to open it?')){ premiumBackTarget = specialSetsScreen; showScreen(upgradeScreen); renderPremiumStatus(); }
+      } else if(pool && pool.error === 'auth'){ alert('Please close the app completely and open it again, then try once more.');
+      } else if(pool && pool.error === 'unavailable'){ alert('Premium could not be checked right now. Please try again in a minute.');
+      } else if(pool && pool.error === 'notFound'){ alert('This set is not available any more.'); hlSpsLoad_();
+      } else { alert('Could not load this set right now. Please try again.'); }
+      return;
+    }
+    if(pool.length === 0){ hideQuizLoading(); pastQuestionActive = false; alert('No questions in this set yet.'); return; }
+    quizQuestions = pool.map(q => ({ ...q, PastPaper: set.Name }));   // PastPaper = the set's name (so the owner's Edit/Delete question buttons find it)
+    currentIndex = 0;
+    answers = new Array(quizQuestions.length).fill(null);
+    secondsLeft = (set.Minutes > 0 ? set.Minutes : 60) * 60;
+    currentMarksPerQuestion = set.MarksEach > 0 ? set.MarksEach : 1;
+    buildOmrStrip(); hideQuizLoading(); showScreen(quizScreen); startTimer(); renderQuestion();
+  }catch(err){ hideQuizLoading(); pastQuestionActive = false; showDebugError('Could not load this set.\n\nReal error: ' + friendlyFetchError(err)); }
+}
+safeOn('spsContent', 'click', (e) => {
+  if(e.target.closest('#spsRetry')){ hlSps_.failed = false; hlSpsRender_(); hlSpsLoad_(); return; }
+  const adm = e.target.closest('button.sps-admin');
+  if(adm){
+    const s = hlSps_.shown && hlSps_.shown[+adm.dataset.sps]; if(!s) return;
+    if(adm.dataset.act === 'bulk') hlOpenAdminBulkModal_(s.Name, [s.Name], 'pho'); else hlOpenAdminAddModal_({ PastPaper: s.Name });
+    hlSpsRefreshWhenModalCloses_(); return;
+  }
+  const a = e.target.closest('a[data-sps]');
+  if(a){ e.preventDefault(); const s = hlSps_.shown && hlSps_.shown[+a.dataset.sps]; if(s) hlStartSpecialSet_(s); }
+});
+// ==========================================================================================
+// ADMIN: Users & Premium (Oct 2026). Owners only (Profile > Support and About > Users & Premium, Admin view ON); the backend checks the
+// owner again for every search and change. Search a student by email / name / phone, then add Premium months or remove Premium.
+// Everything is shown as plain text; every search and change is saved in the Admin Edit Log tab of the Sheet.
+// ==========================================================================================
+function hlOpenAdminUsers_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlUsersOverlay', 'flex-start');
+  const S = 'color:var(--ink-soft-on-elevated);';
+  const F = 'box-sizing:border-box; padding:9px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px;';
+  let users = [];
+  ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">'
+    + '<div style="font-size:15px; font-weight:800;">Users &amp; Premium</div>'
+    + '<div style="font-size:12px; line-height:1.5; margin:4px 0 10px; ' + S + '">Search a student by email, name or phone (at least 3 letters). Then add Premium months or remove Premium. Every search and change is saved in the "Admin Edit Log" tab of your Sheet.</div>'
+    + '<div style="display:flex; gap:8px;"><input id="hlUsQuery" type="text" maxlength="80" placeholder="Email, name or phone" style="' + F + ' flex:1; width:auto;"><button type="button" id="hlUsSearch" style="width:auto; margin:0; padding:8px 14px;">Search</button></div>'
+    + '<div id="hlUsMsg" style="font-size:12px; margin:10px 0 0; min-height:16px;"></div><div id="hlUsList"></div>'
+    + '<button type="button" id="hlUsClose" style="width:100%; margin:12px 0 0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div>';
+  const msg = ov.querySelector('#hlUsMsg'), list = ov.querySelector('#hlUsList');
+  const say = (t) => { msg.textContent = t; };
+  const card = (u, i) => '<div class="hl-us-card" data-i="' + i + '" style="border-top:1px solid rgba(255,255,255,0.15); padding:10px 0;">'
+    + '<div style="font-size:14px; font-weight:800;">' + hlEsc(u.name || '(no name)') + '</div>'
+    + '<div style="font-size:12px; word-break:break-all;">' + hlEsc(u.email) + (u.phone ? ' · ' + hlEsc(u.phone) : '') + '</div>'
+    + '<div style="font-size:11.5px; ' + S + '">Joined ' + hlEsc(u.createdAt || '—') + '</div>'
+    + '<div class="hl-us-status" style="font-size:12.5px; font-weight:800; margin:4px 0; color:' + (u.premium ? 'var(--right-on-light, #1b8a5a)' : 'var(--ink-soft-on-elevated)') + ';">'
+      + (u.premium ? 'Premium until ' + hlEsc(u.premiumExpiresAt || 'no end date') : 'Free' + (u.premiumExpiresAt ? ' (Premium ended ' + hlEsc(u.premiumExpiresAt) + ')' : '')) + '</div>'
+    + '<div style="display:flex; gap:6px; flex-wrap:wrap;">'
+    + [1, 3, 6, 12].map(m => '<button type="button" class="hl-us-btn" data-i="' + i + '" data-m="' + m + '" style="margin:0; width:auto; padding:6px 10px; font-size:12px;">+' + m + ' month' + (m > 1 ? 's' : '') + '</button>').join('')
+    + (u.premium ? '<button type="button" class="hl-us-btn" data-i="' + i + '" data-m="0" style="margin:0; width:auto; padding:6px 10px; font-size:12px; background:var(--panel); color:var(--wrong-on-light, #c0392b); border:1.5px solid var(--line);">Remove Premium</button>' : '')
+    + '</div></div>';
+  const paint = () => { list.innerHTML = users.map(card).join(''); };
+  const post = async (payload) => { const token = window.getAiAuthToken ? await window.getAiAuthToken() : ''; const res = await postJsonWithTimeout(Object.assign({ idToken: token }, payload)); return res.json(); };
+  const errText = (d) => (d && d.error === 'invalid' && d.message) ? d.message : (d && d.error === 'notFound') ? 'That student was not found.' : (d && d.error === 'unavailable') ? 'The database could not be reached. Please try again.' : (d && d.error) ? hlAdminErrorText_(d) : 'Something went wrong. Please try again.';
+  ov.querySelector('#hlUsSearch').onclick = async () => {
+    const q = ov.querySelector('#hlUsQuery').value.trim();
+    if(q.length < 3){ say('Type at least 3 letters.'); return; }
+    say('Searching…'); users = []; paint();
+    try{
+      const d = await post({ action: 'adminFindUsers', query: q });
+      if(d && d.ok){ users = d.users || []; paint(); say(users.length ? users.length + ' found' + (d.more ? ' (showing the first 20; type more letters to narrow it)' : '') : 'No student found.'); }
+      else say(errText(d));
+    }catch(e){ say('Could not reach the server. Please check your connection.'); }
+  };
+  ov.querySelector('#hlUsQuery').addEventListener('keydown', (e) => { if(e.key === 'Enter') ov.querySelector('#hlUsSearch').click(); });
+  list.addEventListener('click', async (e) => {
+    const b = e.target.closest('button.hl-us-btn'); if(!b) return;
+    const i = +b.dataset.i, u = users[i], m = +b.dataset.m; if(!u) return;
+    const revoke = (m === 0), who = (u.name || u.email) + ' (' + u.email + ')';
+    if(!(await customConfirm(revoke ? 'Remove Premium from ' + who + '?' : 'Add ' + m + ' month' + (m > 1 ? 's' : '') + ' of Premium to ' + who + '?'))) return;
+    b.disabled = true; say('Saving…');
+    try{
+      const d = await post({ action: 'adminSetPremium', uid: u.uid, mode: revoke ? 'revoke' : 'extend', months: m });
+      if(d && d.ok && d.user){ users[i] = d.user; paint(); say(revoke ? 'Premium removed.' : 'Done. Premium until ' + (d.user.premiumExpiresAt || '') + '.'); }
+      else { b.disabled = false; say(errText(d)); }
+    }catch(err){ b.disabled = false; say('Could not reach the server. Please check your connection.'); }
+  });
+  ov.querySelector('#hlUsClose').onclick = () => ov.remove();
+}
+safeOn('menuAdminUsers', 'click', () => { hlOpenAdminUsers_(); });
+// ==========================================================================================
+// ANSWER FEEDBACK CHOICE (Oct 2026). In Mock Test, Subject-wise MCQs and Rapid Fire the student chooses WHEN answers are shown:
+//   "Show answers at the end" ON  (the default, the system the app always had): no feedback during the test; the explanations
+//                                 and the results come at the end.
+//   "Show answers at the end" OFF: right after each answer the correct/wrong colours and the explanation appear BELOW the question
+//                                 (the same as Revision mode: Listen and Save buttons included).
+// Battles, Tournaments, Past Papers and Special Sets are exam-style and never show this switch. The choice is kept per account.
+// ==========================================================================================
+function hlFeedbackKinds_(){ return ['mock', 'set', 'rapid']; }
+function hlQuizKindNow_(){
+  if(mockTestActive) return 'mock';
+  if(pastQuestionActive) return 'past';
+  if(currentTournamentWeekKey) return 'weekly';
+  if(currentMonthlyTournamentMonthKey) return 'monthly';
+  if(currentRapidFireMode) return 'rapid';
+  if(currentSetInfo && currentSetInfo.subject === 'Revision') return 'revision';
+  if(currentSetInfo && currentSetInfo.setNumber > 0) return 'set';
+  return 'other';
+}
+function hlInstantFeedbackPref_(){ try{ return localStorage.getItem(uk('hl_quiz_instant')) === '1'; }catch(e){ return false; } }
+function hlSyncFeedbackSwitch_(){
+  const row = document.getElementById('feedbackSwitchRow'), box = document.getElementById('feedbackSwitch'); if(!row || !box) return;
+  row.style.display = hlFeedbackKinds_().includes(hlQuizKindNow_()) ? 'flex' : 'none';
+  box.checked = !hlInstantFeedbackPref_();
+  const st = document.getElementById('feedbackSwitchState');
+  if(st) st.textContent = box.checked ? 'Answers and explanations come at the end' : 'Explanation shows below each question';
+}
+(function(){
+  const box = document.getElementById('feedbackSwitch'); if(!box) return;
+  box.addEventListener('change', () => {
+    try{ localStorage.setItem(uk('hl_quiz_instant'), box.checked ? '0' : '1'); }catch(e){}
+    hlSyncFeedbackSwitch_();
+    const h = document.getElementById('examModeHint'); if(h) h.style.display = isLearningQuiz() ? 'none' : 'block';   // the "Test mode" note only while answers wait for the end
+    const a = answers[currentIndex];
+    if(!box.checked && a && a.chosen && !a.idk && quizQuestions[currentIndex]){   // turned OFF after already picking an answer: show its explanation now
+      const letter = a.chosen; answers[currentIndex] = null; handleAnswer(letter);
+    } else {
+      refreshOmrStrip();
+    }
+  });
+})();
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
 function hlBlockedMap_(){
@@ -27584,7 +27815,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
-  try{ ['menuAdminReports', 'menuAdminSwitches'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
+  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
@@ -27736,7 +27967,8 @@ function hlAdminScreenTabs_(screenId){
     salaryCalcScreen: ['SalaryScale', 'SalaryAllowances', 'PayrollRates'], pastQuestionsYearScreen: ['Past Questions List'],
     secondPaperScreen: ['Second Paper Syllabus', 'Second Paper Notes', 'Second Paper Questions', 'Second Paper PDFs', 'Second Paper Section Notes', 'Second Paper Solutions'],
     secondPaperTopicScreen: ['Second Paper Notes', 'Second Paper Questions', 'Second Paper PDFs'],
-    secondPaperYearScreen: ['Second Paper Questions']
+    secondPaperYearScreen: ['Second Paper Questions'],
+    specialSetsScreen: ['Special Sets']
   };
   if(screenId === 'docListScreen'){
     const t = document.getElementById('docListTitle');
@@ -28165,7 +28397,8 @@ function toggleBookmark(q){
 // the end. Read from currentSetInfo.subject — the same signal finishQuiz already trusts — because
 // launchQuiz() rewrites it fresh for every quiz, whereas revisionModeActive can be left stuck on.
 function isLearningQuiz(){
-  return !!(currentSetInfo && currentSetInfo.subject === 'Revision');
+  if(currentSetInfo && currentSetInfo.subject === 'Revision') return true;                       // Revision mode: always explained question by question
+  return hlFeedbackKinds_().includes(hlQuizKindNow_()) && hlInstantFeedbackPref_();            // or the student turned "Show answers at the end" OFF
 }
 // One shared "save this question + explanation to My Notes" used by both the learning feedback box
 // and the end-of-test review.
@@ -28465,7 +28698,7 @@ function detectResultMode(){
   if(currentTournamentWeekKey) return 'weekly';
   if(currentMonthlyTournamentMonthKey) return 'monthly';
   if(currentRapidFireMode) return 'rapid';
-  if(isLearningQuiz()) return 'revision';
+  if(currentSetInfo && currentSetInfo.subject === 'Revision') return 'revision';
   if(currentSetInfo && currentSetInfo.setNumber > 0) return 'set';
   return 'other';
 }
