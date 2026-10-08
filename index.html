@@ -2642,6 +2642,7 @@
           <button class="profile-menu-item" id="menuAdminReports" style="display:none;"><span class="pm-icon"><i class="bi bi-shield-exclamation"></i></span> Reports (admin)</button>
           <button class="profile-menu-item" id="menuAdminSwitches" style="display:none;"><span class="pm-icon"><i class="bi bi-toggles"></i></span> Feature switches (admin)</button>
           <button class="profile-menu-item" id="menuAdminUsers" style="display:none;"><span class="pm-icon"><i class="bi bi-people"></i></span> Users &amp; Premium (admin)</button>
+          <button class="profile-menu-item" id="menuAdminNotify" style="display:none;"><span class="pm-icon"><i class="bi bi-megaphone"></i></span> Send notification (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -7630,7 +7631,7 @@
       if(data.trialStartedAt){
         const startedMs = new Date(data.trialStartedAt).getTime();
         const hoursElapsed = (Date.now() - startedMs) / 3600000;
-        if(hoursElapsed < 48){
+        if(hoursElapsed >= -1 && hoursElapsed < 48){   // a date in the future (more than an hour ahead, allowing for a slightly wrong phone clock) is not a real trial
           return { isPremium: true, source: 'trial', trialHoursLeft: Math.max(1, Math.ceil(48 - hoursElapsed)), trialEnded: false, premiumStartDate: null, premiumEndDate: null };
         }
         return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: true, premiumStartDate: null, premiumEndDate: null };
@@ -7752,7 +7753,14 @@
   };
 
   window.updateAuthUI = updateAuthUI; // exposed so the classic script's notification-gate button handlers can resume the auth flow once answered
-  onAuthStateChanged(auth, (user) => updateAuthUI(user));
+  onAuthStateChanged(auth, (user) => {
+    // Shared phones (Oct 2026): when a DIFFERENT account (or nobody) is signed in than before, the previous student's AI chat is cleared
+    // from the screen and from memory, so the next student never sees it. (The first call of a session just records who is signed in.)
+    const uidNow = user ? user.uid : null;
+    if(window.__hlSeenUid !== undefined && window.__hlSeenUid !== uidNow){ try{ if(window.hlResetChatForAccountChange_) window.hlResetChatForAccountChange_(); }catch(e){} }
+    window.__hlSeenUid = uidNow;
+    updateAuthUI(user);
+  });
 
   // ---- Email Verification screen: Continue re-checks the real, current status (Firebase
   // doesn't push an update automatically when the link is clicked elsewhere — the app has to ask
@@ -10437,7 +10445,7 @@ function renderHealthDays(searchTerm){
     : HEALTH_DAYS;
   const wrap = document.getElementById('healthDaysListContent');
   if(filtered.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No results for "${searchTerm}".</p>`;
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No results for "${hlEsc(searchTerm)}".</p>`;
     return;
   }
   wrap.innerHTML = filtered.map((d, i) => {
@@ -10447,11 +10455,11 @@ function renderHealthDays(searchTerm){
     return `
     <div class="healthday-item health-day-row" data-index="${i}" style="cursor:pointer;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="hd-date">${d.date}</div>
+        <div class="hd-date">${hlEsc(d.date)}</div>
         ${badge}
       </div>
-      <div class="hd-title">${d.title}</div>
-      <div class="hd-desc">${d.desc}</div>
+      <div class="hd-title">${hlRich_(d.title)}</div>
+      <div class="hd-desc">${hlRich_(d.desc)}</div>
     </div>
   `;
   }).join('');
@@ -10510,9 +10518,9 @@ function showHealthDayMonthList(monthIndex){
   }
   listEl.innerHTML = monthDays.map((d, i) => `
     <div class="healthday-item hd-calendar-row" data-index="${i}" style="cursor:pointer;">
-      <div class="hd-date">${d.date}</div>
-      <div class="hd-title">${d.title}</div>
-      <div class="hd-desc">${d.desc}</div>
+      <div class="hd-date">${hlEsc(d.date)}</div>
+      <div class="hd-title">${hlRich_(d.title)}</div>
+      <div class="hd-desc">${hlRich_(d.desc)}</div>
     </div>
   `).join('');
   document.querySelectorAll('.hd-calendar-row').forEach(row => {
@@ -10573,8 +10581,8 @@ function renderEnNpResults(term){
   }
   wrap.innerHTML = matches.slice(0, 200).map(t => `
     <div class="content-card" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:13.5px;">${t.English || ''}</span>
-      <span style="font-size:13.5px; font-weight:700; color:var(--teal);">${t.Nepali || ''}</span>
+      <span style="font-size:13.5px;">${hlEsc(t.English || '')}</span>
+      <span style="font-size:13.5px; font-weight:700; color:var(--teal);">${hlEsc(t.Nepali || '')}</span>
     </div>
   `).join('') + googleTranslateBtn;
 }
@@ -10718,7 +10726,7 @@ safeOn('goToSalaryComparison', 'click', async (e) => {
   e.preventDefault();
   showScreen(salaryComparisonScreen);
   await loadSalaryScaleOptions(); // ensures salaryScaleCache is populated
-  const options = salaryScaleCache ? salaryScaleCache.map((r, i) => `<option value="${i}">${r.Service ? r.Service + ' — ' : ''}${r.Post}</option>`).join('') : `<option value="">No data</option>`;
+  const options = salaryScaleCache ? salaryScaleCache.map((r, i) => `<option value="${i}">${hlEsc(r.Service ? r.Service + ' — ' : '')}${hlEsc(r.Post)}</option>`).join('') : `<option value="">No data</option>`;
   document.getElementById('compPostA').innerHTML = options;
   document.getElementById('compPostB').innerHTML = options;
 });
@@ -12602,7 +12610,7 @@ safeOn('swService', 'change', (e) => {
     postEl.innerHTML = `<option value="">-- पहिले सेवा छान्नुहोस् --</option>`;
     return;
   }
-  postEl.innerHTML = `<option value="">-- पद छान्नुहोस् --</option>` + salaryServiceGroups[svc].map((r, i) => `<option value="${i}">${r.Post}${r.MaxGrade ? ' (अधिकतम ' + r.MaxGrade + ' ग्रेड)' : ''}</option>`).join('');
+  postEl.innerHTML = `<option value="">-- पद छान्नुहोस् --</option>` + salaryServiceGroups[svc].map((r, i) => `<option value="${i}">${hlEsc(r.Post)}${hlEsc(r.MaxGrade ? ' (अधिकतम ' + r.MaxGrade + ' ग्रेड)' : '')}</option>`).join('');
 });
 safeOn('swManualSalaryToggle', 'change', (e) => {
   document.getElementById('swManualSalaryField').style.display = e.target.checked ? 'block' : 'none';
@@ -12943,9 +12951,9 @@ function renderInspirationHubList(){
   }
   wrap.innerHTML = stories.map((s, i) => `
     <button class="note-item insp-story-row" data-idx="${i}" style="width:100%; text-align:left; border:none; cursor:pointer; margin-bottom:10px; display:block;">
-      <div style="font-size:10px; color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:3px;">${s.Category || 'Story'}</div>
-      <div class="ni-title" style="font-size:14px; font-family:'Tinos',serif;">${s.Title}</div>
-      ${s.Person ? `<div class="ni-meta">${s.Person}</div>` : ''}
+      <div style="font-size:10px; color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:3px;">${hlEsc(s.Category || 'Story')}</div>
+      <div class="ni-title" style="font-size:14px; font-family:'Tinos',serif;">${hlRich_(s.Title)}</div>
+      ${s.Person ? `<div class="ni-meta">${hlRich_(s.Person)}</div>` : ''}
     </button>
   `).join('');
   wrap.querySelectorAll('.insp-story-row').forEach(row => {
@@ -13076,13 +13084,13 @@ async function loadStudyResourcesData(){
 // searches are stored locally so a repeat lookup is one tap instead of retyping. ----------
 let DICTIONARY = [];
 function getDictionaryRecentSearches(){
-  try{ return JSON.parse(localStorage.getItem('hl_dictionary_recent') || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem(uk('hl_dictionary_recent')) || '[]'); }catch(e){ return []; }
 }
 function addDictionaryRecentSearch(term){
   let recent = getDictionaryRecentSearches().filter(t => t.toLowerCase() !== term.toLowerCase());
   recent.unshift(term);
   recent = recent.slice(0, 8);
-  try{ localStorage.setItem('hl_dictionary_recent', JSON.stringify(recent)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_dictionary_recent'), JSON.stringify(recent)); }catch(e){}
 }
 function renderDictionaryRecentChips(){
   const wrap = document.getElementById('dictionaryRecentChips');
@@ -13117,8 +13125,8 @@ function renderDictionaryTerms(searchTerm){
   } else {
     listEl.innerHTML = matches.map(d => `
       <div class="content-card" style="margin-bottom:8px;">
-        <h4 style="margin-bottom:4px;">${d.term}</h4>
-        <p style="font-size:13px; color:var(--ink-soft);">${d.definition}</p>
+        <h4 style="margin-bottom:4px;">${hlRich_(d.term)}</h4>
+        <p style="font-size:13px; color:var(--ink-soft);">${hlRich_(d.definition)}</p>
       </div>
     `).join('');
   }
@@ -13154,10 +13162,10 @@ function renderFaqs(){
   wrap.innerHTML = FAQS.map((f, i) => `
     <div class="faq-item" data-faq="${i}">
       <div class="faq-question">
-        <span>${f.q}</span>
+        <span>${hlRich_(f.q)}</span>
         <span class="faq-chevron">▾</span>
       </div>
-      <div class="faq-answer">${f.a}</div>
+      <div class="faq-answer">${hlRich_(f.a)}</div>
     </div>
   `).join('');
   document.querySelectorAll('.faq-item').forEach(item => {
@@ -13277,16 +13285,16 @@ function renderMnemonics(searchTerm){
     if(locked){
       return `
         <div class="mnemonic-item mnemonic-locked" data-locked-mnemonic="1">
-          <div class="mi-topic">${m.topic}</div>
-          <div class="mi-trick" style="filter:blur(4px); user-select:none;">${m.trick}</div>
+          <div class="mi-topic">${hlRich_(m.topic)}</div>
+          <div class="mi-trick" style="filter:blur(4px); user-select:none;">${hlRich_(m.trick)}</div>
           <div class="mi-explain" style="color:var(--gold); font-weight:600;">Upgrade to Premium to unlock</div>
         </div>`;
     }
     return `
-      <div class="mnemonic-item mnemonic-row" data-mnemonic-id="${m.id}" style="cursor:pointer;">
-        <div class="mi-topic">${isMnemonicBookmarked(m.id) ? '⭐ ' : ''}${m.isCustom ? '✍️ ' : ''}${m.topic}</div>
-        <div class="mi-trick">${m.trick}</div>
-        <div style="font-size:10.5px; color:var(--ink-soft); margin-top:2px;">${m.category}</div>
+      <div class="mnemonic-item mnemonic-row" data-mnemonic-id="${hlEsc(m.id)}" style="cursor:pointer;">
+        <div class="mi-topic">${isMnemonicBookmarked(m.id) ? '⭐ ' : ''}${m.isCustom ? '✍️ ' : ''}${hlRich_(m.topic)}</div>
+        <div class="mi-trick">${hlRich_(m.trick)}</div>
+        <div style="font-size:10.5px; color:var(--ink-soft); margin-top:2px;">${hlEsc(m.category)}</div>
       </div>`;
   }).join('');
 
@@ -13487,10 +13495,10 @@ function renderMnemonicPracticeCard(){
     <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-bottom:10px;">${mnPracticeIndex + 1} of ${mnPracticePool.length}</p>
     <div class="content-card" style="text-align:center; min-height:140px; display:flex; flex-direction:column; justify-content:center;">
       <p style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">What mnemonic helps remember:</p>
-      <h4 style="font-size:17px;">${m.topic}</h4>
+      <h4 style="font-size:17px;">${hlRich_(m.topic)}</h4>
       <div id="mnPracticeAnswer" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
-        <p style="font-size:16px; font-weight:800; color:var(--gold); margin-bottom:8px;">${m.trick}</p>
-        <p style="font-size:12.5px; color:var(--ink-soft);">${m.explain}</p>
+        <p style="font-size:16px; font-weight:800; color:var(--gold); margin-bottom:8px;">${hlRich_(m.trick)}</p>
+        <p style="font-size:12.5px; color:var(--ink-soft);">${hlRich_(m.explain)}</p>
       </div>
     </div>
     <button class="calc-btn" id="mnPracticeRevealBtn" style="margin-top:14px;">Reveal</button>
@@ -13517,7 +13525,7 @@ function renderMnemonicPracticeCard(){
 function extractYouTubeId(url){
   if(!url) return '';
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/))([^&?/]+)/);
-  return match ? match[1] : '';
+  return (match && /^[A-Za-z0-9_-]{6,20}$/.test(match[1])) ? match[1] : '';   // anything else is not a video id (blocks quote tricks)
 }
 async function renderLiveClassScreen(){
   const wrap = document.getElementById('liveClassContent');
@@ -13538,7 +13546,7 @@ async function renderLiveClassScreen(){
             <span style="width:8px; height:8px; border-radius:50%; background:#e53e3e; display:inline-block;"></span>
             <span style="font-weight:700; color:#e53e3e; font-size:13px;">LIVE NOW</span>
           </div>
-          <div style="font-weight:700; font-size:15px; margin-bottom:12px; color:var(--ink);">${info.title || 'Live Class'}</div>
+          <div style="font-weight:700; font-size:15px; margin-bottom:12px; color:var(--ink);">${hlRich_(info.title || 'Live Class')}</div>
           <div class="vi-frame-wrap">
             <iframe src="https://www.youtube.com/embed/${vid}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen title="Live Class"></iframe>
           </div>
@@ -13546,8 +13554,8 @@ async function renderLiveClassScreen(){
     } else if(info.status === 'Scheduled'){
       wrap.innerHTML = `
         <div style="font-size:48px; margin-bottom:12px;">📅</div>
-        <div style="font-weight:700; font-size:16px; color:var(--ink); margin-bottom:6px;">${info.title || 'Upcoming Live Class'}</div>
-        <div style="color:var(--ink-soft); font-size:14px;">${info.scheduledDate || ''}${info.scheduledTime ? ' at ' + info.scheduledTime : ''}</div>
+        <div style="font-weight:700; font-size:16px; color:var(--ink); margin-bottom:6px;">${hlRich_(info.title || 'Upcoming Live Class')}</div>
+        <div style="color:var(--ink-soft); font-size:14px;">${hlEsc(info.scheduledDate || '')}${hlEsc(info.scheduledTime ? ' at ' + info.scheduledTime : '')}</div>
         <div style="color:var(--ink-soft); font-size:12.5px; margin-top:10px;">Come back here when it's time — the class will play right in this screen.</div>`;
     } else {
       wrap.innerHTML = `
@@ -13576,10 +13584,10 @@ async function renderVideoLessons(){
       return `
         <div class="video-item">
           <div class="vi-frame-wrap">
-            ${vid ? `<iframe src="https://www.youtube.com/embed/${vid}" allowfullscreen title="${v.Title}"></iframe>` : ''}
+            ${vid ? `<iframe src="https://www.youtube.com/embed/${vid}" allowfullscreen title="${hlEsc(v.Title)}"></iframe>` : ''}
           </div>
-          <div class="vi-title">${v.Title}</div>
-          <div class="vi-desc">${v.Description || ''}</div>
+          <div class="vi-title">${hlRich_(v.Title)}</div>
+          <div class="vi-desc">${hlRich_(v.Description || '')}</div>
         </div>
       `;
     }).join('');
@@ -13614,8 +13622,8 @@ async function renderHealthGuide(){
         <h4 style="margin-bottom:10px;">${cat}</h4>
         ${groups[cat].map((r, i) => `
           <div class="faq-item" data-hg="${cat}-${i}">
-            <div class="faq-question"><span>${r.Title}</span><span class="faq-chevron">▾</span></div>
-            <div class="faq-answer">${r.Content}
+            <div class="faq-question"><span>${hlRich_(r.Title)}</span><span class="faq-chevron">▾</span></div>
+            <div class="faq-answer">${hlRich_(r.Content)}
               <div style="margin-top:10px;"><button class="hg-ai-btn" data-cat="${encodeURIComponent(cat)}" data-i="${i}" style="background:none; border:1px solid var(--line); border-radius:8px; color:var(--ink-soft); font-size:12px; font-weight:600; padding:6px 10px; cursor:pointer;">Ask AI about this</button></div>
             </div>
           </div>
@@ -14439,17 +14447,17 @@ async function renderImmunization(){
 
     wrap.innerHTML = Object.keys(groups).map(cat => `
       <div class="content-card" style="margin-bottom:14px;">
-        <h4 style="margin-bottom:10px;">${cat}</h4>
+        <h4 style="margin-bottom:10px;">${hlEsc(cat)}</h4>
         ${groups[cat].map(r => `
           <div style="padding:10px 0; border-bottom:1px solid var(--line);">
-            <div style="color:var(--ink); font-size:13.5px; font-weight:700;">${r.Vaccine}</div>
-            <div style="color:var(--ink-soft); font-size:11.5px; margin-top:2px;">${r.Age || ''}${r.Route ? ' · ' + r.Route : ''}</div>
-            ${r.Diseases ? `<div style="color:var(--ink-soft); font-size:11.5px; margin-top:2px;">Protects against: ${r.Diseases}</div>` : ''}
+            <div style="color:var(--ink); font-size:13.5px; font-weight:700;">${hlRich_(r.Vaccine)}</div>
+            <div style="color:var(--ink-soft); font-size:11.5px; margin-top:2px;">${hlRich_(r.Age || '')}${hlRich_(r.Route ? ' · ' + r.Route : '')}</div>
+            ${r.Diseases ? `<div style="color:var(--ink-soft); font-size:11.5px; margin-top:2px;">Protects against: ${hlRich_(r.Diseases)}</div>` : ''}
           </div>
         `).join('')}
       </div>
     `).join('') + `
-      <p style="font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:6px;">Source: ${clean[0].Source || 'DoHS/CHD guidelines'}${clean[0].LastUpdated ? ' · Updated ' + clean[0].LastUpdated : ''} — please confirm with a health facility for current details.</p>
+      <p style="font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:6px;">Source: ${hlRich_(clean[0].Source || 'DoHS/CHD guidelines')}${hlEsc(clean[0].LastUpdated ? ' · Updated ' + clean[0].LastUpdated : '')} — please confirm with a health facility for current details.</p>
     `;
   }catch(err){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">Could not load the Immunization Schedule. Check your internet connection.</p>`;
@@ -14498,7 +14506,7 @@ try{
 PER_ACCOUNT_STORAGE_KEYS = [
   'hl_bookmark_collection_map','hl_bookmark_collections','hl_bookmarks','hl_custom_bookmarks',
   'hl_healthday_bookmarks','hl_mnemonic_bookmarks','hl_pdf_bookmarks','hl_quickref_bookmarks',
-  'hl_chapter_stats','hl_topic_done_log','hl_quiz_instant','hl_chat_history','hl_custom_mnemonics',
+  'hl_chapter_stats','hl_topic_done_log','hl_quiz_instant','hl_dictionary_recent','hl_7day_revision_plan','hl_chat_history','hl_custom_mnemonics',
   'hl_daily_activity','hl_dailyfire_last_date','hl_dailyfire_streak',
   'hl_earned_badges','hl_fc_cards','hl_fc_decks','hl_focus_sessions',
   'hl_learning_points','hl_longest_streak','hl_mistakes_mastered_count','hl_mnemonic_helpful_voted',
@@ -15552,10 +15560,10 @@ async function loadHomePromo(){
     if(!promo) return;
     const wrap = document.getElementById('homePromoBanner');
     wrap.innerHTML = `
-      <div class="promo-banner" id="homePromoCard" style="${promo.BgColor ? `background:${promo.BgColor};` : ''}">
+      <div class="promo-banner" id="homePromoCard" style="${promo.BgColor ? `background:${hlSafeCss_(promo.BgColor)};` : ''}">
         <div class="pb-label">Sponsored</div>
-        <div class="pb-title">${promo.Title}</div>
-        ${promo.Subtitle ? `<div class="pb-sub">${promo.Subtitle}</div>` : ''}
+        <div class="pb-title">${hlRich_(promo.Title)}</div>
+        ${promo.Subtitle ? `<div class="pb-sub">${hlRich_(promo.Subtitle)}</div>` : ''}
       </div>
     `;
     wrap.style.display = 'block';
@@ -15831,7 +15839,7 @@ function renderRevisionSummary(){
     attentionCard.innerHTML = `
       <div class="content-card">
         <h4 style="margin-bottom:8px;">Needs Attention</h4>
-        ${attention.map(a => `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">${a.subject}</span><span style="font-weight:700; color:var(--wrong);">${a.count} mistake${a.count === 1 ? '' : 's'}</span></div>`).join('')}
+        ${attention.map(a => `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--ink-soft);">${hlEsc(a.subject)}</span><span style="font-weight:700; color:var(--wrong);">${a.count} mistake${a.count === 1 ? '' : 's'}</span></div>`).join('')}
       </div>
     `;
   }
@@ -15882,8 +15890,8 @@ function renderRevisionSubjectPicker(){
     return;
   }
   wrap.innerHTML = subjects.map(s => `
-    <button class="note-item revision-subject-row" data-subject="${s.subject.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-      <span class="ni-title" style="font-size:13px;">${s.subject}</span>
+    <button class="note-item revision-subject-row" data-subject="${hlEsc(s.subject)}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+      <span class="ni-title" style="font-size:13px;">${hlEsc(s.subject)}</span>
       <span style="font-size:12px; color:var(--gold); font-weight:700;">${s.count}</span>
     </button>
   `).join('');
@@ -16214,12 +16222,12 @@ function generate7DayPlan(){
   days.push({ label: 'Weak Areas', type: 'weak', value: null });
   days.push({ label: 'Full Revision', type: 'full', value: null });
   const plan = { days, startDate: todayISO() };
-  try{ localStorage.setItem('hl_7day_revision_plan', JSON.stringify(plan)); }catch(e){}
+  try{ localStorage.setItem(uk('hl_7day_revision_plan'), JSON.stringify(plan)); }catch(e){}
   return plan;
 }
 function get7DayPlan(){
   try{
-    const saved = JSON.parse(localStorage.getItem('hl_7day_revision_plan') || 'null');
+    const saved = JSON.parse(localStorage.getItem(uk('hl_7day_revision_plan')) || 'null');
     if(saved) return saved;
   }catch(e){}
   return generate7DayPlan();
@@ -16353,7 +16361,7 @@ function renderMistakeBook(){
             <span style="color:${cat.color}; font-weight:700;">${cat.label}</span>
             <span style="color:var(--ink-soft);">${statusText}</span>
           </div>
-          <div class="bq-text">${q.Question}</div>
+          <div class="bq-text">${hlRich_(q.Question)}</div>
           <div style="font-size:10.5px; color:var(--ink-soft); margin-top:2px;">Wrong ${q.wrongCount || 1}× · Correct reviews ${q.correctReviews || 0}</div>
           <button class="bookmark-remove-btn" data-key="${encodeURIComponent(questionKey(q))}">✕ Remove</button>
           <button class="mistake-ai-btn" data-key="${encodeURIComponent(questionKey(q))}" style="font-size:11.5px; color:var(--ink-soft); background:none; border:none; font-weight:700; cursor:pointer; padding:0; margin-left:16px;">Ask AI</button>
@@ -16362,7 +16370,7 @@ function renderMistakeBook(){
     }).join('');
     return `
       <div class="content-card" style="margin-bottom:14px;">
-        <h4 style="margin-bottom:10px;">${subj} <span style="color:var(--ink-soft); font-weight:400; font-size:12px;">(${groups[subj].length})</span></h4>
+        <h4 style="margin-bottom:10px;">${hlEsc(subj)} <span style="color:var(--ink-soft); font-weight:400; font-size:12px;">(${groups[subj].length})</span></h4>
         ${itemsHtml}
       </div>
     `;
@@ -16479,14 +16487,14 @@ function renderFormulas(searchTerm){
 
   const wrap = document.getElementById('formulaListContent');
   if(filtered.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No formulas match "${searchTerm}".</p>`;
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No formulas match "${hlEsc(searchTerm)}".</p>`;
     return;
   }
   wrap.innerHTML = filtered.map((f, i) => `
     <div class="formula-item">
-      <div class="fi-name">${f.name}</div>
-      <div class="fi-formula">${f.formula}</div>
-      <div class="fi-note">${f.note}</div>
+      <div class="fi-name">${hlRich_(f.name)}</div>
+      <div class="fi-formula">${hlRich_(f.formula)}</div>
+      <div class="fi-note">${hlRich_(f.note)}</div>
       <button class="chat-save-btn" data-formula-idx="${i}" style="display:block; margin-top:6px;" title="Save to My Notes">Save</button>
     </div>
   `).join('');
@@ -16667,16 +16675,16 @@ function renderNoteCard(n){
   const isLocked = !!n.lockedPinHash;
   const bodyPreview = isLocked ? '' : (n.body || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').slice(0, notesViewMode === 'grid' ? 60 : 140);
   return `
-    <div class="note-item" data-note-id="${n.id}">
+    <div class="note-item" data-note-id="${hlEsc(n.id)}">
       ${n.pinned ? '<div class="ni-pin">📌</div>' : ''}
       <div class="ni-header">
         <div>
-          <div class="ni-title">${n.revisionStatus ? `<span class="ni-revision-dot" style="background:${dotColor};"></span>` : ''}${isLocked ? '🔒 ' : ''}${n.title || 'Untitled Note'}</div>
-          <div class="ni-meta">${n.folder || 'General'} · ${formatDualDate(new Date(n.updatedAt || Date.now()))}</div>
+          <div class="ni-title">${n.revisionStatus ? `<span class="ni-revision-dot" style="background:${dotColor};"></span>` : ''}${isLocked ? '🔒 ' : ''}${hlEsc(n.title || 'Untitled Note')}</div>
+          <div class="ni-meta">${hlEsc(n.folder || 'General')} · ${formatDualDate(new Date(n.updatedAt || Date.now()))}</div>
         </div>
       </div>
       <div class="ni-body">${isLocked ? 'PIN-locked — tap to unlock' : bodyPreview + (bodyPreview.length >= (notesViewMode === 'grid' ? 60 : 140) ? '…' : '')}</div>
-      ${(!isLocked && n.tags && n.tags.length) ? `<div class="ni-tags">${n.tags.map(t => `<span class="ni-tag">#${t}</span>`).join('')}</div>` : ''}
+      ${(!isLocked && n.tags && n.tags.length) ? `<div class="ni-tags">${n.tags.map(t => `<span class="ni-tag">#${hlEsc(t)}</span>`).join('')}</div>` : ''}
     </div>
   `;
 }
@@ -17280,7 +17288,7 @@ function renderQuickRefHub(){
   const wrap = document.getElementById('quickRefCategoryWrap');
   wrap.innerHTML = QUICK_REF_CATEGORIES.map(cat => `
     <div class="content-card" style="margin-bottom:12px;">
-      <h4 style="margin-bottom:8px;">${cat.icon} ${cat.name}</h4>
+      <h4 style="margin-bottom:8px;">${cat.icon} ${hlEsc(cat.name)}</h4>
       ${cat.subtopics.map(sub => `
         <button class="note-item quickref-row" data-subtopic="${sub.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
           <span class="ni-title" style="font-size:13px;">${isQuickRefBookmarked(sub) ? '🔖 ' : ''}${sub}</span>
@@ -18107,8 +18115,8 @@ async function renderNoteAttachments(note){
     <div style="padding:8px 0; border-bottom:1px solid var(--line);">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         ${item.type && item.type.startsWith('audio/')
-          ? `<span style="font-size:12.5px; color:var(--ink);">${item.name}</span>`
-          : `<a href="${item.dataUrl}" download="${item.name}" style="font-size:12.5px; color:var(--ink); text-decoration:none;">${item.name}</a>`}
+          ? `<span style="font-size:12.5px; color:var(--ink);">${hlEsc(item.name)}</span>`
+          : `<a href="${hlEsc(item.dataUrl)}" download="${hlEsc(item.name)}" style="font-size:12.5px; color:var(--ink); text-decoration:none;">${hlEsc(item.name)}</a>`}
         <button class="note-attachment-remove-btn" data-attach-id="${item.attachId}" style="background:none; border:none; color:var(--wrong); font-size:12px; cursor:pointer;">✕</button>
       </div>
       ${item.type && item.type.startsWith('audio/') ? `<audio controls src="${item.dataUrl}" style="width:100%; margin-top:6px; height:32px;"></audio>` : ''}
@@ -18367,8 +18375,8 @@ function renderNoteTrash(){
   }
   wrap.innerHTML = trashed.map(n => `
     <div class="note-item">
-      <div class="ni-title">${n.title || 'Untitled Note'}</div>
-      <div class="ni-meta">${n.folder || 'General'} · Deleted ${formatDualDate(new Date(n.deletedAt))}</div>
+      <div class="ni-title">${hlEsc(n.title || 'Untitled Note')}</div>
+      <div class="ni-meta">${hlEsc(n.folder || 'General')} · Deleted ${formatDualDate(new Date(n.deletedAt))}</div>
       <div class="ni-actions">
         <button style="color:var(--navy);" data-restore="${n.id}">↩️ Restore</button>
         <button style="color:var(--wrong);" data-purge="${n.id}">Delete Forever</button>
@@ -19299,7 +19307,7 @@ function renderProgressHistory(){
     ? `<p style="color:var(--ink-soft); font-size:12.5px; text-align:center; padding:20px 0;">No activity in this range yet.</p>`
     : entries.map(e => `
       <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid var(--line);">
-        <span style="font-size:12.5px;">${e.icon} ${e.text}</span>
+        <span style="font-size:12.5px;">${e.icon} ${hlEsc(e.text)}</span>
         <span style="font-size:11px; color:var(--ink-soft);">${formatDualDate(new Date(e.date + 'T00:00:00'))}</span>
       </div>`).join('');
 }
@@ -19376,7 +19384,7 @@ function renderLearnHubProgress(){
     ? `<p style="font-size:12px; color:var(--ink-soft);">No major mismatches found — your confidence generally matches your performance.</p>`
     : mismatches.slice(0,5).map(c => `
       <div style="font-size:12px; padding:5px 0; border-top:1px solid var(--line);">
-        <b>${c.chapter}</b> (${c.subject})<br>
+        <b>${hlEsc(c.chapter)}</b> (${hlEsc(c.subject)})<br>
         <span style="color:var(--ink-soft);">Accuracy ${c.acc}% · Confidence ${c.confidence}/5 — ${c.gap > 0 ? 'performing better than you feel' : 'feeling more confident than results show'}</span>
       </div>`).join('');
 }
@@ -19390,8 +19398,8 @@ function renderSubjectProgressList(){
     return;
   }
   wrap.innerHTML = subjects.map(s => `
-    <button class="note-item sp-subject-row" data-subject="${s.subject.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; margin-bottom:10px; display:block;">
-      <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;"><span>${s.subject}</span><span style="font-weight:700;">${s.pct}%</span></div>
+    <button class="note-item sp-subject-row" data-subject="${hlEsc(s.subject)}" style="width:100%; text-align:left; border:none; cursor:pointer; margin-bottom:10px; display:block;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;"><span>${hlEsc(s.subject)}</span><span style="font-weight:700;">${s.pct}%</span></div>
       <div style="background:var(--panel); border-radius:6px; height:8px; overflow:hidden;"><div style="background:${s.pct >= 70 ? 'var(--correct)' : (s.pct >= 50 ? 'var(--gold)' : 'var(--wrong)')}; height:100%; width:${s.pct}%;"></div></div>
     </button>
   `).join('');
@@ -19429,7 +19437,7 @@ function openSubjectDetail(subject){
       return `
         <div class="sd-topic-row" data-idx="${i}" style="padding:7px 0; border-top:1px solid var(--line); cursor:pointer;">
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:12.5px;">
-            <span>${statusIcon[status]} ${c.chapter}</span>
+            <span>${statusIcon[status]} ${hlEsc(c.chapter)}</span>
             <span style="color:var(--ink-soft);">${pct}% (${c.attempted})</span>
           </div>
           <div style="font-size:11px; margin-top:2px; color:var(--gold);">${stars}</div>
@@ -19452,7 +19460,7 @@ function openSubjectDetail(subject){
   const weakCard = document.getElementById('sdWeakTopicsCard');
   weakCard.innerHTML = weakChapters.length === 0
     ? `<p style="font-size:12.5px; color:var(--ink-soft);">No weak topics identified yet in this subject.</p>`
-    : `<h4 style="margin-bottom:8px;">Weak Topics</h4>${weakChapters.slice(0,5).map(c => `<div style="font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);">${c.chapter}</div>`).join('')}`;
+    : `<h4 style="margin-bottom:8px;">Weak Topics</h4>${weakChapters.slice(0,5).map(c => `<div style="font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);">${hlEsc(c.chapter)}</div>`).join('')}`;
 }
 safeOn('sdStudyWeakBtn', 'click', () => {
   if(!currentSubjectDetail) return;
@@ -19592,7 +19600,7 @@ function renderWeakAreas(){
     ? `<p style="color:var(--ink-soft); font-size:12.5px;">Complete a few Sets to see weak subjects here.</p>`
     : weakSubjects.map(s => `
       <div style="margin-bottom:10px;">
-        <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;"><span>${s.subject}</span><span style="font-weight:700; color:var(--wrong);">${s.pct}%</span></div>
+        <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;"><span>${hlEsc(s.subject)}</span><span style="font-weight:700; color:var(--wrong);">${s.pct}%</span></div>
         <div style="background:var(--panel); border-radius:6px; height:7px; overflow:hidden;"><div style="background:var(--wrong); height:100%; width:${s.pct}%;"></div></div>
       </div>`).join('');
 
@@ -19601,12 +19609,12 @@ function renderWeakAreas(){
     .sort((a,b) => (a.correct/a.attempted) - (b.correct/b.attempted)).slice(0, 6);
   document.getElementById('waTopicsList').innerHTML = weakTopics.length === 0
     ? `<p style="color:var(--ink-soft); font-size:12.5px;">No weak topics identified yet.</p>`
-    : weakTopics.map(c => `<div class="content-card" style="margin-bottom:6px; padding:8px 12px;"><span style="font-size:12.5px;">${c.chapter} <span style="color:var(--ink-soft);">(${c.subject})</span></span></div>`).join('');
+    : weakTopics.map(c => `<div class="content-card" style="margin-bottom:6px; padding:8px 12px;"><span style="font-size:12.5px;">${hlEsc(c.chapter)} <span style="color:var(--ink-soft);">(${hlEsc(c.subject)})</span></span></div>`).join('');
 
   const repeated = getWrongQuestions().filter(w => (w.wrongCount || 1) >= 2).sort((a,b) => (b.wrongCount||1) - (a.wrongCount||1)).slice(0, 6);
   document.getElementById('waRepeatedList').innerHTML = repeated.length === 0
     ? `<p style="color:var(--ink-soft); font-size:12.5px;">No repeated mistakes yet — good sign!</p>`
-    : repeated.map(w => `<div class="content-card" style="margin-bottom:6px; padding:8px 12px;"><div style="font-size:12px;">${w.Question}</div><div style="font-size:10.5px; color:var(--wrong); margin-top:2px;">Wrong ${w.wrongCount || 1}× </div></div>`).join('');
+    : repeated.map(w => `<div class="content-card" style="margin-bottom:6px; padding:8px 12px;"><div style="font-size:12px;">${hlRich_(w.Question)}</div><div style="font-size:10.5px; color:var(--wrong); margin-top:2px;">Wrong ${w.wrongCount || 1}× </div></div>`).join('');
 }
 safeOn('waPracticeBtn', 'click', () => {
   showScreen(revisionScreen);
@@ -19885,7 +19893,7 @@ function renderLeaderboardSubjectChips(){
   // Subject options are honestly drawn from the user's OWN tracked subjects — there's no
   // static, app-wide subject list to pull from (subjects are Sheet-driven and vary by exam post)
   const mySubjects = Object.keys(getLpData().subjectPoints || {}).sort();
-  const chip = (label, value) => `<button class="note-folder-chip lb-subject-chip ${lbActiveSubject === value ? 'active' : ''}" data-subject="${value || ''}" style="white-space:nowrap;">${label}</button>`;
+  const chip = (label, value) => `<button class="note-folder-chip lb-subject-chip ${lbActiveSubject === value ? 'active' : ''}" data-subject="${hlEsc(value || '')}" style="white-space:nowrap;">${hlEsc(label)}</button>`;
   wrap.innerHTML = chip('Overall', null) + mySubjects.map(s => chip(s, s)).join('');
   document.querySelectorAll('.lb-subject-chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -20217,7 +20225,7 @@ function renderMbhList(searchTerm){
           <span style="font-size:10.5px; color:var(--ink-soft);">${meta.icon} ${meta.label}</span>
           ${item.collection ? `<span style="font-size:10px; color:var(--gold); font-weight:700;">${item.collection}</span>` : ''}
         </div>
-        <div style="font-size:13.5px; font-weight:700; color:var(--ink);">${item.title}</div>
+        <div style="font-size:13.5px; font-weight:700; color:var(--ink);">${hlEsc(item.title)}</div>
         ${item.subtitle ? `<div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">${item.subtitle}</div>` : ''}
         <div style="display:flex; gap:8px; margin-top:10px;">
           <button class="calc-btn mbh-open-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px;">Open</button>
@@ -20285,10 +20293,10 @@ function renderBookmarks(){
     return `
     <div class="bookmark-item" data-index="${i}">
       <div class="bq-subject">${metaLine}</div>
-      <div class="bq-text bookmark-toggle" data-index="${i}">${q.Question} <span class="bq-expand-hint">(tap to ${'{expand}'})</span></div>
+      <div class="bq-text bookmark-toggle" data-index="${i}">${hlRich_(q.Question)} <span class="bq-expand-hint">(tap to ${'{expand}'})</span></div>
       <div class="bq-details" id="bqDetails${i}" style="display:none;">
         ${optionsHtml}
-        ${q.Explanation ? `<div class="bq-explanation">${q.Explanation}</div>` : ''}
+        ${q.Explanation ? `<div class="bq-explanation">${hlRich_(q.Explanation)}</div>` : ''}
       </div>
       <button class="bookmark-remove-btn" data-index="${i}">✕ Remove</button>
     </div>
@@ -20354,9 +20362,9 @@ async function loadPremiumFeaturesTable(targetId = 'premiumFeaturesTable'){
         <tbody>
           ${rows.map(r => `
             <tr>
-              <td class="pf-col-feature">${r.Feature || ''}</td>
-              <td>${r.Free || ''}</td>
-              <td>${r.Premium || ''}</td>
+              <td class="pf-col-feature">${hlRich_(r.Feature || '')}</td>
+              <td>${hlRich_(r.Free || '')}</td>
+              <td>${hlRich_(r.Premium || '')}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -22067,15 +22075,15 @@ function renderCarousel(){
   track.innerHTML = CAROUSEL_SLIDES.map((s, i) => {
     if(s.image){
       return `
-        <div class="carousel-slide cs-image-slide" style="background-image:url('${s.image}'); cursor:pointer;" data-index="${i}">
-          <div><h4>${s.title}</h4><p>${s.sub}</p></div>
+        <div class="carousel-slide cs-image-slide" style="background-image:url('${hlSafeCssUrl_(s.image)}'); cursor:pointer;" data-index="${i}">
+          <div><h4>${hlRich_(s.title)}</h4><p>${hlRich_(s.sub)}</p></div>
         </div>
       `;
     }
     return `
-      <div class="carousel-slide" style="background:${s.bg}; cursor:pointer;" data-index="${i}">
-        <div class="cs-icon">${s.icon}</div>
-        <div><h4>${s.title}</h4><p>${s.sub}</p></div>
+      <div class="carousel-slide" style="background:${hlSafeCss_(s.bg)}; cursor:pointer;" data-index="${i}">
+        <div class="cs-icon">${hlEsc(s.icon)}</div>
+        <div><h4>${hlRich_(s.title)}</h4><p>${hlRich_(s.sub)}</p></div>
       </div>
     `;
   }).join('');
@@ -22299,9 +22307,9 @@ function paintNotifications(entries){
     const clickable = n._type === 'qotd' || n._type === 'revision' || !!n.Link;
     return `
       <div class="content-card notif-entry-card" data-clickable="${clickable}" style="${clickable ? 'cursor:pointer;' : ''}">
-        <div class="ca-date">${n.Date || ''}</div>
-        <h4>${stripEmojiText(n.Title)}</h4>
-        <p>${stripEmojiText(n.Description)}</p>
+        <div class="ca-date">${hlEsc(n.Date || '')}</div>
+        <h4>${hlRich_(stripEmojiText(n.Title))}</h4>
+        <p>${hlRich_(stripEmojiText(n.Description))}</p>
       </div>
     `;
   };
@@ -22387,8 +22395,8 @@ async function renderWhatsNew(){
     : newOnes.map(u => `
       <div class="content-card" style="margin-bottom:10px;">
         <div style="font-size:10.5px; color:var(--ink-soft); margin-bottom:3px;">${u.Date ? formatDualDate(new Date(u.Date)) : ''}</div>
-        <h4 style="margin-bottom:6px;">${u.Title}</h4>
-        <p style="font-size:13px; color:var(--ink); line-height:1.5;">${u.Description || ''}</p>
+        <h4 style="margin-bottom:6px;">${hlRich_(u.Title)}</h4>
+        <p style="font-size:13px; color:var(--ink); line-height:1.5;">${hlRich_(u.Description || '')}</p>
       </div>
     `).join('');
 
@@ -22397,8 +22405,8 @@ async function renderWhatsNew(){
     : archived.map(u => `
       <div class="content-card" style="margin-bottom:8px; opacity:0.75;">
         <div style="font-size:10px; color:var(--ink-soft); margin-bottom:3px;">${u.Date ? formatDualDate(new Date(u.Date)) : ''}</div>
-        <h4 style="margin-bottom:4px; font-size:13px;">${u.Title}</h4>
-        <p style="font-size:12px; color:var(--ink-soft); line-height:1.4;">${u.Description || ''}</p>
+        <h4 style="margin-bottom:4px; font-size:13px;">${hlRich_(u.Title)}</h4>
+        <p style="font-size:12px; color:var(--ink-soft); line-height:1.4;">${hlRich_(u.Description || '')}</p>
       </div>
     `).join('');
 
@@ -22641,7 +22649,7 @@ async function loadQuestionOfDay(){
 function paintQotdQuestion(q, todayKey){
   const letters = ['A','B','C','D'];
   document.getElementById('qotdCardContent').innerHTML = `
-    <div class="qotd-q-text">${q.Question}</div>
+    <div class="qotd-q-text">${hlRich_(q.Question)}</div>
     <div id="qotdOptions">
       ${letters.map(l => `
         <button class="qotd-opt-btn" data-letter="${l}">
@@ -22671,7 +22679,7 @@ function paintQotdAnswered(data){
       <h3>Thank you for your response!</h3>
       <p>${correct ? "You got it right — well done! 🌟" : "Not quite — here's the correct answer below."}</p>
     </div>
-    <div class="qotd-q-text" style="margin-top:8px;">${question.Question}</div>
+    <div class="qotd-q-text" style="margin-top:8px;">${hlRich_(question.Question)}</div>
     <div id="qotdOptions">
       ${letters.map(l => {
         let cls = '';
@@ -22680,7 +22688,7 @@ function paintQotdAnswered(data){
         return `<div class="qotd-opt-btn ${cls}" style="cursor:default;"><b>${l}.</b> ${question['Option' + l]}</div>`;
       }).join('')}
     </div>
-    <div class="qotd-explanation-box">${question.Explanation || ''}</div>
+    <div class="qotd-explanation-box">${hlRich_(question.Explanation || '')}</div>
     <p style="text-align:center; opacity:0.85; font-size:11.5px; margin-top:10px;">Come back tomorrow for a new question! 🗓️</p>
   `;
 }
@@ -22780,13 +22788,13 @@ function paintResources(items){
     group.items.push(item);
   });
   document.getElementById('resourcesList').innerHTML = groups.map(group => `
-    <div class="link-group-label">${group.label}</div>
+    <div class="link-group-label">${hlRich_(group.label)}</div>
     ${group.items.map(item => `
-      <a class="link-card" href="${item.Link}" target="_blank" rel="noopener">
-        <div class="lc-icon">${item.Icon || '🔗'}</div>
+      <a class="link-card" href="${hlSafeUrl(item.Link)}" target="_blank" rel="noopener">
+        <div class="lc-icon">${hlEsc(item.Icon || '🔗')}</div>
         <div class="lc-text">
-          <h4>${item.Name}</h4>
-          <p>${item.Description}</p>
+          <h4>${hlRich_(item.Name)}</h4>
+          <p>${hlRich_(item.Description)}</p>
         </div>
         <div class="lc-arrow">↗</div>
       </a>
@@ -22988,9 +22996,9 @@ async function loadWebPortalCategory(category){
     return;
   }
   listEl.innerHTML = links.map(l => `
-    <a href="${l.url}" target="_blank" rel="noopener" class="calc-card" style="display:block; text-decoration:none; margin-bottom:10px;">
-      <div style="font-size:14px; font-weight:700; color:var(--ink);">${l.name}</div>
-      <div style="font-size:11.5px; color:var(--ink-soft); margin-top:3px;">${l.sub}</div>
+    <a href="${hlSafeUrl(l.url)}" target="_blank" rel="noopener" class="calc-card" style="display:block; text-decoration:none; margin-bottom:10px;">
+      <div style="font-size:14px; font-weight:700; color:var(--ink);">${hlRich_(l.name)}</div>
+      <div style="font-size:11.5px; color:var(--ink-soft); margin-top:3px;">${hlRich_(l.sub)}</div>
     </a>
   `).join('');
 }
@@ -23073,7 +23081,7 @@ async function renderNewsPortal(){
   // Pills render instantly — nothing about any specific portal's articles loads until tapped,
   // matching Web Portal's category-tab pattern exactly.
   sourcesEl.innerHTML = savedPillHtml + sources.map(s => `
-    <button class="calc-btn news-source-pill" data-key="${s.Key}" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${s.Key === newsPortalSelectedKey ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">${s.Name}</button>
+    <button class="calc-btn news-source-pill" data-key="${hlEsc(s.Key)}" style="margin:0; width:auto; padding:9px 16px; white-space:nowrap; ${s.Key === newsPortalSelectedKey ? '' : 'background:var(--panel); color:var(--ink); border:1.5px solid var(--line);'}">${hlEsc(s.Name)}</button>
   `).join('');
   document.querySelectorAll('.news-source-pill').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -23150,7 +23158,7 @@ function renderNewsArticleCards(articles, sourceName){
         <div style="min-width:0;">
           <div style="font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.3;">${hlEsc(a.Title || '')}</div>
           <div style="font-size:11.5px; color:var(--ink-soft); margin-top:4px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${hlEsc(a.Snippet || '')}</div>
-          <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${formatRssTime(a.TimeLabel)}${a.SourceName ? ' · ' + hlEsc(a.SourceName) : ''}</div>
+          <div style="font-size:10.5px; color:var(--ink-soft); margin-top:6px;">${hlEsc(formatRssTime(a.TimeLabel))}${a.SourceName ? ' · ' + hlEsc(a.SourceName) : ''}</div>
         </div>
       </a>
       <div style="display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line);">
@@ -23302,7 +23310,7 @@ function renderSyllabusPosts(){
     return `
     <button class="dash-card ${visual.css} syllabus-post-btn" data-index="${i}">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${visual.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-label" style="font-size:14px;">${hlEsc(post.label)}</div>
       <div class="dc-sub">Federal + all 7 provinces</div>
     </button>
   `;
@@ -23427,10 +23435,10 @@ function paintDocList(items){
     return;
   }
   document.getElementById('docListContent').innerHTML = items.map(c => `
-    <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${c.Link}" target="_blank" rel="noopener">
-      <div class="ca-date">${c.Date}</div>
-      <h4>${c.Title}</h4>
-      <p>${c.Description}</p>
+    <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${hlSafeUrl(c.Link)}" target="_blank" rel="noopener">
+      <div class="ca-date">${hlEsc(c.Date)}</div>
+      <h4>${hlRich_(c.Title)}</h4>
+      <p>${hlRich_(c.Description)}</p>
     </a>
   `).join('');
 }
@@ -23469,10 +23477,10 @@ function paintUpdates(updates){
     return;
   }
   document.getElementById('currentAffairsList').innerHTML = updates.map(c => `
-    <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${c.Link}" target="_blank" rel="noopener">
-      <div class="ca-date">${c.Date}</div>
-      <h4>${c.Title}</h4>
-      <p>${c.Description}</p>
+    <a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="${hlSafeUrl(c.Link)}" target="_blank" rel="noopener">
+      <div class="ca-date">${hlEsc(c.Date)}</div>
+      <h4>${hlRich_(c.Title)}</h4>
+      <p>${hlRich_(c.Description)}</p>
     </a>
   `).join('');
 }
@@ -23538,8 +23546,8 @@ function renderSubjectPick(){
       const marks = marksForThisPost[s.name];
       const marksLabel = marks ? ` (${marks} marks)` : '';
       return `
-      <a class="link-card" href="#" data-subject="${s.name}">
-        <div class="lc-text"><h4>${s.name}${marksLabel}</h4><p>Tap to begin</p></div>
+      <a class="link-card" href="#" data-subject="${hlEsc(s.name)}">
+        <div class="lc-text"><h4>${hlEsc(s.name)}${marksLabel}</h4><p>Tap to begin</p></div>
         <div class="lc-arrow">→</div>
       </a>
     `;
@@ -24273,18 +24281,20 @@ function renderMcqPosts(){
 
 function renderMockPosts(){
   const selected = getSelectedPosts();
-  const posts = selected.length > 0 ? MOCK_POSTS.filter(p => selected.includes(p.key)) : MOCK_POSTS;
+  hlLoadExamSettings_();   // the Exam Settings tab (size / time / marks per exam); refreshes this list if something changed
+  const allPosts = hlMockPosts_();
+  const posts = selected.length > 0 ? allPosts.filter(p => selected.includes(p.key)) : allPosts;
   document.getElementById('mockPostGrid').innerHTML = posts.map(post => `
     <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+      <div class="dc-label" style="font-size:14px;">${hlEsc(post.label)}</div>
       <div class="dc-sub">${post.questionCount} Qs · ${post.minutes} min · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
     </button>
   `).join('') + hlSpecialSetsCardHtml_();
 
   document.querySelectorAll('.mock-post-btn').forEach(card => {
     card.addEventListener('click', () => {
-      const post = MOCK_POSTS.find(p => p.key === card.dataset.key);
+      const post = hlMockPosts_().find(p => p.key === card.dataset.key);
       if(post.ready){
         startMockTest(post);
       } else {
@@ -24538,8 +24548,8 @@ function renderPastQuestionsList(){
     return;
   }
   document.getElementById('pastQuestionsYearList').innerHTML = papers.map(paper => `
-    <a class="link-card" href="#" data-paper="${paper}">
-      <div class="lc-text"><h4>${paper}</h4><p>Real past exam questions</p></div>
+    <a class="link-card" href="#" data-paper="${hlEsc(paper)}">
+      <div class="lc-text"><h4>${hlEsc(paper)}</h4><p>Real past exam questions</p></div>
       <div class="lc-arrow">→</div>
     </a>
   `).join('');
@@ -26105,15 +26115,18 @@ function dailyBattleDocRef(){
   return doc(window.hlFirestore, 'dailyBattles', todayISO());
 }
 async function getOrCreateDailyBattleQuestions(){
-  const { getDoc, setDoc, serverTimestamp } = window.hlFirestoreFns;
+  const { getDoc } = window.hlFirestoreFns;
   const ref = dailyBattleDocRef();
-  const snap = await getDoc(ref);
+  let snap = await getDoc(ref);
   if(snap.exists()) return snap.data();
-  const res = await hlContentFetch_(`${SHEET_API_URL}?action=random&count=${DAILY_BATTLE_QUESTION_COUNT}`);
-  const pool = await res.json();
-  const data = { subject: 'Mixed Public Health', questions: pool, totalQuestions: pool.length, createdAt: serverTimestamp() };
-  try{ await setDoc(ref, data); }catch(e){} // if another user's request wins the race, that's fine — same-day content either way
-  return data;
+  // Nobody has opened today's battle yet: ask the BACKEND to prepare it. The backend picks the questions and writes the day's record
+  // (a phone can no longer write it), then everyone reads the same record, exactly as before.
+  const res = await postJsonWithTimeout({ action: 'ensureDailyBattle', idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''), day: todayISO() });
+  const out = await res.json();
+  if(!out || out.ok !== true) throw new Error('Could not prepare today\'s Battle');
+  snap = await getDoc(ref);
+  if(!snap.exists()) throw new Error('Today\'s Battle is not ready yet');
+  return snap.data();
 }
 async function renderDailyBattleCard(){
   const btn = document.getElementById('dailyBattleJoinBtn');
@@ -26433,11 +26446,11 @@ function runGlobalSearch(query){
 
   const localResultsHtml = totalMatches === 0
     ? `<p style="color:var(--ink-soft); font-size:13.5px; margin-bottom:12px;">No matches found in Health Loksewa's own content.</p>`
-    : section('🩺', 'Health Dictionary', dictionaryMatches, d => `<div class="search-result-item"><b>${d.term}</b><p>${d.definition}</p></div>`) +
-      section('🔢', 'Formulas', formulaMatches, f => `<div class="search-result-item"><b>${f.name}</b><p>${f.formula}</p></div>`) +
-      section('🧩', 'Mnemonics', mnemonicMatches, m => `<div class="search-result-item"><b>${m.topic}</b><p>${m.trick}</p></div>`) +
-      section('📅', 'Health Days', healthDayMatches, h => `<div class="search-result-item"><b>${h.title}</b><p>${h.date}</p></div>`) +
-      section('❓', 'FAQs', faqMatches, f => `<div class="search-result-item"><b>${f.q}</b><p>${f.a}</p></div>`);
+    : section('🩺', 'Health Dictionary', dictionaryMatches, d => `<div class="search-result-item"><b>${hlRich_(d.term)}</b><p>${hlRich_(d.definition)}</p></div>`) +
+      section('🔢', 'Formulas', formulaMatches, f => `<div class="search-result-item"><b>${hlRich_(f.name)}</b><p>${hlRich_(f.formula)}</p></div>`) +
+      section('🧩', 'Mnemonics', mnemonicMatches, m => `<div class="search-result-item"><b>${hlRich_(m.topic)}</b><p>${hlRich_(m.trick)}</p></div>`) +
+      section('📅', 'Health Days', healthDayMatches, h => `<div class="search-result-item"><b>${hlRich_(h.title)}</b><p>${hlEsc(h.date)}</p></div>`) +
+      section('❓', 'FAQs', faqMatches, f => `<div class="search-result-item"><b>${hlRich_(f.q)}</b><p>${hlRich_(f.a)}</p></div>`);
 
   // Google/Google Books are always offered alongside local results, not just when local search
   // comes up empty — a genuine external link-out with the same query, not embedded/scraped
@@ -26478,7 +26491,7 @@ safeOn('globalSearchInput', 'focus', () => {
     <div class="content-card">
       <h4 style="margin-bottom:10px;">Recent Searches</h4>
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        ${recent.map(t => `<button class="note-folder-chip global-search-recent-chip" data-term="${t.replace(/"/g, '&quot;')}">${t}</button>`).join('')}
+        ${recent.map(t => `<button class="note-folder-chip global-search-recent-chip" data-term="${hlEsc(t)}">${hlEsc(t)}</button>`).join('')}
       </div>
     </div>
   `;
@@ -27186,7 +27199,7 @@ safeOn('spYearContent', 'click', (e) => {
   const q = hlSp_.yearQs && hlSp_.yearQs[+b.dataset.i]; if(q) hlSpOpenQuestion_(q, secondPaperYearScreen);
 });
 // after the owner edits through "Manage this screen", reload (and pull-to-refresh uses the same map)
-setTimeout(() => { try{ SCREEN_REFRESH_MAP.secondPaperScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperTopicScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperYearScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.specialSetsScreen = () => { hlSpsLoad_(); }; }catch(e){} }, 0);
+setTimeout(() => { try{ SCREEN_REFRESH_MAP.secondPaperScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperTopicScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperYearScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.specialSetsScreen = () => { hlSpsLoad_(); }; SCREEN_REFRESH_MAP.mockPostScreen = () => { hlLoadExamSettings_(true); renderMockPosts(); }; /* newest settings, then redraw the list as before */ }catch(e){} }, 0);
 // ==========================================================================================
 // SPECIAL SETS (Oct 2026): named mock papers — for example "Lumbini Bises" or "Sudurpaschim Special" — that the owners add
 // IN THE APP (Manage this screen > Add; the question tab is created automatically in the Google Sheet). Students open them
@@ -27388,6 +27401,189 @@ function hlSyncFeedbackSwitch_(){
     }
   });
 })();
+// ==========================================================================================
+// SHARED PHONES (Oct 2026): the AI chat of the previous student must never be shown to the next one. Before, signing out left the
+// chat bubbles on screen and chatInitialized stayed true, so the next account saw them until the page was reloaded. Called when the
+// signed-in account changes (see onAuthStateChanged).
+// ==========================================================================================
+function hlResetChatForAccountChange_(){
+  chatInitialized = false;
+  chatHistory = [];
+  const box = document.getElementById('chatMessages'); if(box) box.innerHTML = '';
+  const inp = document.getElementById('chatInput'); if(inp) inp.value = '';
+}
+window.hlResetChatForAccountChange_ = hlResetChatForAccountChange_;
+// ==========================================================================================
+// SHEET TEXT IS ALWAYS MADE SAFE (Oct 2026). Everything typed in the Google Sheet (or built into the app) that appears on a screen
+// passes through one of these before it is put into the page, so a stray < or a hostile cell can never act as code:
+//   hlEsc(v)            plain text: nothing is allowed to act as markup (names, dates, dropdown items, attributes)
+//   hlRich_(v)          descriptive text: the same, EXCEPT harmless formatting you may have typed in the Sheet keeps working:
+//                       <b> <strong> <i> <em> <u> <sub> <sup> <p> <ul> <ol> <li> <br>, links <a href="https://..."> (opened in a new tab),
+//                       and entities such as &nbsp; / &deg;. Tags with attributes (onclick, style...), <script>, <img>... stay visible as text.
+//   hlSafeUrl(u)        a link: only real http(s) addresses (blocks javascript:)
+//   hlSafeCss_(v)       a colour or gradient for a style attribute (no ; : quotes url() or script words)
+//   hlSafeCssUrl_(u)    an image address for CSS url('...')
+// ==========================================================================================
+function hlRich_(v){
+  if(v === null || v === undefined) return '';
+  let t = hlEsc(String(v));
+  t = t.replace(/&lt;(\/?)(b|strong|i|em|u|sub|sup|p|ul|ol|li|br)\s*\/?&gt;/gi, (m, slash, tag) => '<' + slash + tag.toLowerCase() + '>');
+  t = t.replace(/&lt;a\s+href=(?:&quot;|&#39;)(https?:\/\/[^&"'<>\s]+(?:&amp;[^&"'<>\s]*)*)(?:&quot;|&#39;)\s*&gt;([\s\S]*?)&lt;\/a&gt;/gi, (m, href, txt) => '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + txt + '</a>');
+  t = t.replace(/&amp;(#\d{1,6}|#x[0-9a-fA-F]{1,6}|[a-zA-Z]{2,10});/g, '&$1;');
+  return t;
+}
+function hlSafeCss_(v){
+  const t = String(v == null ? '' : v).trim();
+  if(!t || t.length > 160) return '';
+  if(!/^[#a-zA-Z0-9(),.%\s-]+$/.test(t)) return '';
+  if(/url\s*\(|expression|javascript|import/i.test(t)) return '';
+  return t;
+}
+function hlSafeCssUrl_(u){
+  const v = String(u == null ? '' : u).trim();
+  if(!/^https?:\/\//i.test(v)) return '';
+  return hlEsc(v.replace(/['"()\s\\<>]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')));   // quotes, brackets and spaces are encoded: the address cannot break out of url('...')
+}
+// ==========================================================================================
+// ADMIN: Send notification (Oct 2026). Owners only (Profile > Support and About > Send notification, Admin view ON); the backend checks
+// the owner again for every request. Choose the kind (each has the student's own switch in Profile > Notifications), type a title and a
+// message, CHECK who will receive it, TEST it on your own phone, then SEND. Sending runs in batches with a progress line and a Stop
+// button; if the connection drops it can be continued (the backend never sends the same batch twice). The title and message are only
+// ever shown as plain text.
+// ==========================================================================================
+function hlOpenAdminNotify_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlNotifyOverlay', 'flex-start');
+  const S = 'color:var(--ink-soft-on-elevated);';
+  const F = 'box-sizing:border-box; width:100%; padding:9px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px; font-family:inherit;';
+  const B = 'width:100%; margin:8px 0 0;';
+  ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">'
+    + '<div style="font-size:15px; font-weight:800;">Send notification</div>'
+    + '<div style="font-size:12px; line-height:1.5; margin:4px 0 10px; ' + S + '">Students who switched this kind off in Profile &gt; Notifications, are in Quiet Hours, or never set up notifications are skipped. Always test on your own phone first.</div>'
+    + '<label style="font-size:12px; font-weight:700;">Kind</label>'
+    + '<select id="hlNfKind" style="' + F + ' margin:4px 0 10px;"><option value="announcement">Important notice</option><option value="discount">Discount or offer</option><option value="whatsNew">New content or app update</option></select>'
+    + '<label style="font-size:12px; font-weight:700;">Title <span id="hlNfTitleCount" style="font-weight:400; ' + S + '">0/60</span></label>'
+    + '<input id="hlNfTitle" type="text" maxlength="60" placeholder="e.g. PHO exam form is open" style="' + F + ' margin:4px 0 10px;">'
+    + '<label style="font-size:12px; font-weight:700;">Message <span id="hlNfMsgCount" style="font-weight:400; ' + S + '">0/180</span></label>'
+    + '<textarea id="hlNfMsg" maxlength="180" rows="3" placeholder="Short and clear. One line, plain text." style="' + F + ' margin:4px 0 4px; resize:vertical;"></textarea>'
+    + '<button type="button" id="hlNfCheck" style="' + B + '">1. Check who will receive it</button>'
+    + '<button type="button" id="hlNfTest" style="' + B + '">2. Send a test to my phone only</button>'
+    + '<button type="button" id="hlNfSend" style="' + B + '">3. Send to students</button>'
+    + '<button type="button" id="hlNfStop" style="' + B + ' display:none; background:var(--panel); color:var(--wrong); border:1.5px solid var(--line);">Stop sending</button>'
+    + '<button type="button" id="hlNfResume" style="' + B + ' display:none;"></button>'
+    + '<div id="hlNfInfo" style="font-size:12.5px; line-height:1.5; margin:10px 0 0; min-height:18px;"></div>'
+    + '<button type="button" id="hlNfClose" style="width:100%; margin:12px 0 0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div>';
+  const $ = (id) => ov.querySelector('#' + id);
+  const st = { preview: null, previewKind: '', running: false, stop: false };
+  const KEY = uk('hl_broadcast_run');
+  const say = (t) => { $('hlNfInfo').textContent = t; };
+  const read = () => ({ category: $('hlNfKind').value, title: $('hlNfTitle').value.trim(), message: $('hlNfMsg').value.replace(/\s+/g, ' ').trim() });
+  const problem = (m) => (m.title.length < 1 || m.title.length > 60) ? 'Type a title (up to 60 letters).' : (m.message.length < 1 || m.message.length > 180) ? 'Type a message (up to 180 letters).' : '';
+  const post = async (payload) => { const token = window.getAiAuthToken ? await window.getAiAuthToken() : ''; const res = await postJsonWithTimeout(Object.assign({ idToken: token }, payload)); return res.json(); };
+  const errText = (d) => !d ? 'Something went wrong. Please try again.'
+    : d.error === 'tooSoon' ? 'A notification was sent a moment ago. Please wait about ' + Math.max(1, Math.ceil((d.waitSeconds || 60) / 60)) + ' minute(s). This protects students from double messages.'
+    : d.error === 'runMismatch' ? 'This send was interrupted or the message was changed. Please wait 10 minutes and start again.'
+    : d.error === 'noToken' || d.error === 'invalid' ? (d.message || 'Please check the fields.')
+    : d.error === 'sendFailed' ? 'The notification service refused the message. Please try again in a minute.'
+    : d.error === 'tooMany' ? 'There are more students than this tool can safely send to in one go.'
+    : d.error === 'unavailable' ? 'The server could not be reached. Please try again.'
+    : hlAdminErrorText_(d);
+  const refresh = () => {
+    const m = read(), bad = problem(m);
+    $('hlNfTitleCount').textContent = m.title.length + '/60'; $('hlNfMsgCount').textContent = m.message.length + '/180';
+    $('hlNfCheck').disabled = st.running;
+    $('hlNfTest').disabled = st.running || !!bad;
+    $('hlNfSend').disabled = st.running || !!bad || !(st.preview && st.previewKind === m.category);
+    $('hlNfStop').style.display = st.running ? 'block' : 'none';
+    ['hlNfKind', 'hlNfTitle', 'hlNfMsg'].forEach(id => { $(id).disabled = st.running; });
+    $('hlNfClose').disabled = st.running;
+  };
+  const saved = () => { try{ const r = JSON.parse(localStorage.getItem(KEY) || 'null'); return (r && Date.now() - r.at < 30 * 60 * 1000) ? r : null; }catch(e){ return null; } };
+  const store = (r) => { try{ if(r) localStorage.setItem(KEY, JSON.stringify(Object.assign({ at: Date.now() }, r))); else localStorage.removeItem(KEY); }catch(e){} };
+  const showResume = () => {
+    const r = saved(), btn = $('hlNfResume');
+    if(r && !st.running){ btn.style.display = 'block'; btn.textContent = 'Continue the unfinished send ("' + r.m.title + '") from ' + r.offset + ' of ' + r.total; } else btn.style.display = 'none';
+  };
+  async function loop(offset, runId, m, total){
+    st.running = true; st.stop = false; refresh(); showResume();
+    try{
+      while(true){
+        say('Sending… ' + (total ? Math.min(offset, total) + ' of ' + total : 'starting'));
+        const d = await post(Object.assign({ action: 'adminBroadcast', mode: 'send', offset: offset }, runId ? { runId: runId } : {}, m));
+        if(!d || !d.ok){ say(errText(d)); if(d && (d.error === 'runMismatch' || d.error === 'tooSoon' || d.error === 'invalid')) store(null); return; }
+        runId = d.runId; total = d.total;
+        if(d.done){
+          store(null);
+          say('Finished. Sent: ' + d.totals.sent + '. Could not be reached (old or removed phones): ' + d.totals.failed + '. Skipped (switched off, Quiet Hours, or notifications not set up): ' + d.totals.skipped + '.');
+          return;
+        }
+        offset = d.nextOffset; store({ runId: runId, offset: offset, total: total, m: m });
+        if(st.stop){ say('Stopped at ' + offset + ' of ' + total + '. You can continue it below.'); return; }
+      }
+    }catch(e){
+      store({ runId: runId, offset: offset, total: total, m: m });
+      say('The connection was lost at ' + offset + ' of ' + (total || '?') + '. Nothing is sent twice: use "Continue" below when you are back online.');
+    }finally{ st.running = false; refresh(); showResume(); }
+  }
+  ['hlNfKind', 'hlNfTitle', 'hlNfMsg'].forEach(id => $(id).addEventListener('input', () => { if(id === 'hlNfKind'){ st.preview = null; say(''); } refresh(); }));
+  $('hlNfCheck').onclick = async () => {
+    const m = read(); say('Checking…');
+    try{
+      const d = await post({ action: 'adminBroadcastPreview', category: m.category });
+      if(d && d.ok){
+        st.preview = d.counts; st.previewKind = m.category; const c = d.counts;
+        say(c.willReceive + ' of ' + c.total + ' students will receive it. Not included: ' + c.optedOut + ' switched this kind off, ' + c.quiet + ' in Quiet Hours, ' + (c.noToken + c.noPrefs) + ' never set up notifications.' + (d.tooMany ? ' (More students than the safe limit: sending is blocked.)' : ''));
+      } else say(errText(d));
+    }catch(e){ say('Could not reach the server. Please check your connection.'); }
+    refresh();
+  };
+  $('hlNfTest').onclick = async () => {
+    const m = read(); if(problem(m)){ say(problem(m)); return; }
+    say('Sending a test to your phone…');
+    try{ const d = await post(Object.assign({ action: 'adminBroadcast', mode: 'test' }, m)); say(d && d.ok ? 'Sent to your phone only. Check how it looks, then send to students.' : errText(d)); }
+    catch(e){ say('Could not reach the server. Please check your connection.'); }
+  };
+  $('hlNfSend').onclick = async () => {
+    const m = read(); if(problem(m)){ say(problem(m)); return; }
+    if(!(st.preview && st.previewKind === m.category)){ say('First press "Check who will receive it".'); return; }
+    if(!(await customConfirm('Send "' + m.title + '" to about ' + st.preview.willReceive + ' students now? This cannot be taken back.'))) return;
+    loop(0, null, m, st.preview.total);
+  };
+  $('hlNfStop').onclick = () => { st.stop = true; say('Stopping after the current batch…'); };
+  $('hlNfResume').onclick = () => { const r = saved(); if(r) loop(r.offset, r.runId, r.m, r.total); };
+  $('hlNfClose').onclick = () => { if(!st.running) ov.remove(); };
+  refresh(); showResume();
+}
+safeOn('menuAdminNotify', 'click', () => { hlOpenAdminNotify_(); });
+// ==========================================================================================
+// EXAM SETTINGS (Oct 2026): the Mock Test size (questions), time (minutes) and marks per question of each exam come from the Google
+// Sheet tab "Exam Settings", which the owners edit in the app (Mock Test > Manage this screen). Built-in values (MOCK_POSTS) are the
+// fallback for anything missing or impossible. ONLY the Mock Test uses this: tournaments keep reading MOCK_POSTS directly, because the
+// database rules bind every tournament entry to the fixed exam size.
+// ==========================================================================================
+let hlExamSettings_ = (function(){ try{ const c = JSON.parse(localStorage.getItem('hl_cache_examsettings') || 'null'); return Array.isArray(c) ? c : null; }catch(e){ return null; } })();
+let hlExamSettingsAt_ = 0;
+function hlMockPosts_(){
+  const s = Array.isArray(hlExamSettings_) ? hlExamSettings_ : [];
+  const num = (v, lo, hi) => { const x = parseFloat(v); return (isFinite(x) && x >= lo && x <= hi) ? x : null; };
+  return MOCK_POSTS.map(p => {
+    const r = s.find(x => x && x.Post === p.key); if(!r) return p;
+    const q = num(r.Questions, 5, 200), m = num(r.Minutes, 1, 300), e = num(r.MarksEach, 0.25, 10);
+    const label = (typeof r.Label === 'string' && r.Label.trim() && r.Label.trim().length <= 40) ? r.Label.trim() : null;
+    return Object.assign({}, p, { label: label || p.label, questionCount: q ? Math.round(q) : p.questionCount, minutes: m || p.minutes, marksEach: e || p.marksEach });
+  });
+}
+async function hlLoadExamSettings_(force){
+  if(!force && Date.now() - hlExamSettingsAt_ < 5 * 60 * 1000) return;
+  hlExamSettingsAt_ = Date.now();
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=examSettings`); const d = await res.json();
+    if(!Array.isArray(d)) return;   // an older backend that does not know Exam Settings: keep the built-in values
+    const before = JSON.stringify(hlExamSettings_);
+    hlExamSettings_ = d; try{ localStorage.setItem('hl_cache_examsettings', JSON.stringify(d)); }catch(e){}
+    if(before !== JSON.stringify(d) && mockPostScreen.classList.contains('active')) renderMockPosts();
+  }catch(e){ hlExamSettingsAt_ = 0; }
+}
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
 function hlBlockedMap_(){
@@ -27815,7 +28011,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
-  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
+  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
@@ -27968,7 +28164,8 @@ function hlAdminScreenTabs_(screenId){
     secondPaperScreen: ['Second Paper Syllabus', 'Second Paper Notes', 'Second Paper Questions', 'Second Paper PDFs', 'Second Paper Section Notes', 'Second Paper Solutions'],
     secondPaperTopicScreen: ['Second Paper Notes', 'Second Paper Questions', 'Second Paper PDFs'],
     secondPaperYearScreen: ['Second Paper Questions'],
-    specialSetsScreen: ['Special Sets']
+    specialSetsScreen: ['Special Sets'],
+    mockPostScreen: ['Exam Settings']
   };
   if(screenId === 'docListScreen'){
     const t = document.getElementById('docListTitle');
@@ -28456,9 +28653,9 @@ function handleAnswer(letter){
   // During Mistake review specifically, show what was chosen wrong last time — more useful than
   // plain correct/wrong per the document's own example, since it highlights the actual confusion
   const prevAnswerLine = (mistakeReviewActive && q.lastWrongAnswer)
-    ? `<p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Your previous answer: <b>${q.lastWrongAnswer}. ${q['Option' + q.lastWrongAnswer] || ''}</b> ❌</p>`
+    ? `<p style="font-size:12px; color:var(--ink-soft); margin-top:6px;">Your previous answer: <b>${hlEsc(q.lastWrongAnswer)}. ${hlEsc(q['Option' + q.lastWrongAnswer] || '')}</b> ❌</p>`
     : '';
-  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + q.CorrectAnswer}</b>${prevAnswerLine}${q.Explanation || ''}${q.Explanation ? `<div style="display:flex; gap:8px; margin-top:6px;"><button class="chat-save-btn" id="saveExplanationBtn" style="display:block;" title="Save to My Notes">Save explanation</button><button class="chat-save-btn" id="listenExplanationBtn" style="display:block;">Listen</button></div>` : ''}`;
+  fb.innerHTML = `<b>${isCorrect ? '✓ Correct' : '✗ Incorrect — correct answer is ' + hlEsc(q.CorrectAnswer)}</b>${prevAnswerLine}${hlRich_(q.Explanation || '')}${q.Explanation ? `<div style="display:flex; gap:8px; margin-top:6px;"><button class="chat-save-btn" id="saveExplanationBtn" style="display:block;" title="Save to My Notes">Save explanation</button><button class="chat-save-btn" id="listenExplanationBtn" style="display:block;">Listen</button></div>` : ''}`;
   if(q.Explanation){
     document.getElementById('listenExplanationBtn').addEventListener('click', (e) => {
       speakText(q.Explanation, e.currentTarget);
@@ -28817,12 +29014,12 @@ function renderSubjectBreakdown(){
       <h4>${field}-wise Performance</h4>
       ${rows.map(r => `
         <div class="rc-hbar-row">
-          <div class="rc-hbar-top"><span>${r.name}</span><span>${r.correct}/${r.total} · <b style="color:${r.tier.color}">${r.tier.label}</b></span></div>
+          <div class="rc-hbar-top"><span>${hlEsc(r.name)}</span><span>${r.correct}/${r.total} · <b style="color:${r.tier.color}">${r.tier.label}</b></span></div>
           <div class="rc-hbar-track"><div class="rc-hbar-fill" style="width:${r.pct}%; background:${r.tier.color};"></div></div>
         </div>`).join('')}
       ${canRecommend ? `
-        <div class="breakdown-recommend">Recommended: Practice more ${weakest.name}</div>
-        <button class="start-btn" id="practiceWeakBtn" style="margin-top:10px;">Practice ${weakest.name} Now</button>` : ''}
+        <div class="breakdown-recommend">Recommended: Practice more ${hlEsc(weakest.name)}</div>
+        <button class="start-btn" id="practiceWeakBtn" style="margin-top:10px;">Practice ${hlEsc(weakest.name)} Now</button>` : ''}
     </div>`;
 
   if(canRecommend){
@@ -28854,7 +29051,7 @@ function reviewRow(q, i, status, chosen){
              : chosen === 'IDK' ? '<div class="rc-legend-note" style="margin:-2px 0 8px;">You marked this as "I don\'t know".</div>' : '';
   const tag = ((q.Subject || '') + (q.Chapter ? ' · ' + q.Chapter : '')).trim();
   const explanation = q.Explanation
-    ? `<div class="rv-exp"><div class="rv-exp-title">Explanation</div>${q.Explanation}</div>`
+    ? `<div class="rv-exp"><div class="rv-exp-title">Explanation</div>${hlRich_(q.Explanation)}</div>`
     : `<div class="rv-exp rv-exp-none">No explanation is available for this question yet.</div>`;
   return `<div class="rv-card" id="rv-q${i}" data-status="${status}">
     <div class="rv-head">
@@ -28862,7 +29059,7 @@ function reviewRow(q, i, status, chosen){
       <span class="rv-pill ${status.toLowerCase()}">${status}</span>
       ${tag ? `<span class="rv-tag">${tag}</span>` : ''}
     </div>
-    <div class="rv-q">${q.Question}</div>
+    <div class="rv-q">${hlRich_(q.Question)}</div>
     ${note}
     <div class="rv-opts">${optsHtml}</div>
     ${explanation}

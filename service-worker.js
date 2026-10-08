@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pho-loksewa-v506';
+const CACHE_NAME = 'pho-loksewa-v511';
 const FILES_TO_CACHE = [
   './index.html',
   './manifest.json',
@@ -42,7 +42,8 @@ messaging.onBackgroundMessage((payload) => {
     badge: './icon-192.png',
     data: { url: (payload.data && payload.data.url) || './index.html' }
   };
-  self.registration.showNotification(title, options);
+  // Showing can fail (for example if the student switched notifications off in Android settings): that must never raise an error here
+  try { return self.registration.showNotification(title, options).catch(() => {}); } catch (e) { /* nothing to show */ }
 });
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
@@ -73,12 +74,17 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Live data that must NEVER be stored: the quiz/Sheet backend and Google/Firebase services (sign-in, database, push). (Oct 2026)
+const NEVER_CACHE_HOSTS = ['script.google.com', 'script.googleusercontent.com', 'firestore.googleapis.com', 'identitytoolkit.googleapis.com',
+  'securetoken.googleapis.com', 'firebaseinstallations.googleapis.com', 'fcmregistrations.googleapis.com', 'fcm.googleapis.com'];
+
 self.addEventListener('fetch', (event) => {
-  // Always go to network for the live question data (Google Sheet),
-  // but use cache for the app shell itself so it opens instantly.
-  if (event.request.url.includes('script.google.com')) {
-    return; // let it go straight to network, don't cache quiz data
-  }
+  // Only plain loads (GET) are ever handled. A POST (sending a message, signing in, saving) cannot be stored, and trying to
+  // produced a silent error on every such request.
+  if (event.request.method !== 'GET') return;
+  let host = '';
+  try { host = new URL(event.request.url).hostname; } catch (e) { return; }
+  if (NEVER_CACHE_HOSTS.includes(host)) return; // live data goes straight to the network, never cached
 
   // NETWORK-FIRST for the app shell: always try to get the latest code first.
   // Only fall back to the cached copy if there's genuinely no internet connection.
@@ -87,8 +93,12 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((freshResponse) => {
-        const clone = freshResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        // Keep a copy only of a GOOD answer: an error page (404/500) must never replace the good saved copy. (Files from other
+        // sites such as the app's libraries arrive as "opaque" answers; those are kept so the app still opens offline.)
+        if (freshResponse && (freshResponse.ok || freshResponse.type === 'opaque')) {
+          const clone = freshResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
+        }
         return freshResponse;
       })
       .catch(() => caches.match(event.request))
