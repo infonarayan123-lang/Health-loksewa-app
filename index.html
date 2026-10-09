@@ -2642,7 +2642,6 @@
           <button class="profile-menu-item" id="menuAdminReports" style="display:none;"><span class="pm-icon"><i class="bi bi-shield-exclamation"></i></span> Reports (admin)</button>
           <button class="profile-menu-item" id="menuAdminSwitches" style="display:none;"><span class="pm-icon"><i class="bi bi-toggles"></i></span> Feature switches (admin)</button>
           <button class="profile-menu-item" id="menuAdminUsers" style="display:none;"><span class="pm-icon"><i class="bi bi-people"></i></span> Users &amp; Premium (admin)</button>
-          <button class="profile-menu-item" id="menuAdminNotify" style="display:none;"><span class="pm-icon"><i class="bi bi-megaphone"></i></span> Send notification (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -8242,7 +8241,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzJM1hcPenjFJ-xa8EnzdQOyGco1ugk2ylj08sSdsGdQgiyyx68h4jDvRGasr9mxb3X2Q/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyLIEn2OvaVaKMvDC_CGxy4u2loGYknJ5YV16RyrKvE80_3N05j9CSQd0DhuhEXszBbjg/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -13084,13 +13083,13 @@ async function loadStudyResourcesData(){
 // searches are stored locally so a repeat lookup is one tap instead of retyping. ----------
 let DICTIONARY = [];
 function getDictionaryRecentSearches(){
-  try{ return JSON.parse(localStorage.getItem(uk('hl_dictionary_recent')) || '[]'); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem('hl_dictionary_recent') || '[]'); }catch(e){ return []; }
 }
 function addDictionaryRecentSearch(term){
   let recent = getDictionaryRecentSearches().filter(t => t.toLowerCase() !== term.toLowerCase());
   recent.unshift(term);
   recent = recent.slice(0, 8);
-  try{ localStorage.setItem(uk('hl_dictionary_recent'), JSON.stringify(recent)); }catch(e){}
+  try{ localStorage.setItem('hl_dictionary_recent', JSON.stringify(recent)); }catch(e){}
 }
 function renderDictionaryRecentChips(){
   const wrap = document.getElementById('dictionaryRecentChips');
@@ -14506,7 +14505,7 @@ try{
 PER_ACCOUNT_STORAGE_KEYS = [
   'hl_bookmark_collection_map','hl_bookmark_collections','hl_bookmarks','hl_custom_bookmarks',
   'hl_healthday_bookmarks','hl_mnemonic_bookmarks','hl_pdf_bookmarks','hl_quickref_bookmarks',
-  'hl_chapter_stats','hl_topic_done_log','hl_quiz_instant','hl_dictionary_recent','hl_7day_revision_plan','hl_chat_history','hl_custom_mnemonics',
+  'hl_chapter_stats','hl_topic_done_log','hl_quiz_instant','hl_chat_history','hl_custom_mnemonics',
   'hl_daily_activity','hl_dailyfire_last_date','hl_dailyfire_streak',
   'hl_earned_badges','hl_fc_cards','hl_fc_decks','hl_focus_sessions',
   'hl_learning_points','hl_longest_streak','hl_mistakes_mastered_count','hl_mnemonic_helpful_voted',
@@ -16222,12 +16221,12 @@ function generate7DayPlan(){
   days.push({ label: 'Weak Areas', type: 'weak', value: null });
   days.push({ label: 'Full Revision', type: 'full', value: null });
   const plan = { days, startDate: todayISO() };
-  try{ localStorage.setItem(uk('hl_7day_revision_plan'), JSON.stringify(plan)); }catch(e){}
+  try{ localStorage.setItem('hl_7day_revision_plan', JSON.stringify(plan)); }catch(e){}
   return plan;
 }
 function get7DayPlan(){
   try{
-    const saved = JSON.parse(localStorage.getItem(uk('hl_7day_revision_plan')) || 'null');
+    const saved = JSON.parse(localStorage.getItem('hl_7day_revision_plan') || 'null');
     if(saved) return saved;
   }catch(e){}
   return generate7DayPlan();
@@ -24281,20 +24280,18 @@ function renderMcqPosts(){
 
 function renderMockPosts(){
   const selected = getSelectedPosts();
-  hlLoadExamSettings_();   // the Exam Settings tab (size / time / marks per exam); refreshes this list if something changed
-  const allPosts = hlMockPosts_();
-  const posts = selected.length > 0 ? allPosts.filter(p => selected.includes(p.key)) : allPosts;
+  const posts = selected.length > 0 ? MOCK_POSTS.filter(p => selected.includes(p.key)) : MOCK_POSTS;
   document.getElementById('mockPostGrid').innerHTML = posts.map(post => `
     <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}">
       <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${hlEsc(post.label)}</div>
+      <div class="dc-label" style="font-size:14px;">${post.label}</div>
       <div class="dc-sub">${post.questionCount} Qs · ${post.minutes} min · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
     </button>
   `).join('') + hlSpecialSetsCardHtml_();
 
   document.querySelectorAll('.mock-post-btn').forEach(card => {
     card.addEventListener('click', () => {
-      const post = hlMockPosts_().find(p => p.key === card.dataset.key);
+      const post = MOCK_POSTS.find(p => p.key === card.dataset.key);
       if(post.ready){
         startMockTest(post);
       } else {
@@ -27199,7 +27196,7 @@ safeOn('spYearContent', 'click', (e) => {
   const q = hlSp_.yearQs && hlSp_.yearQs[+b.dataset.i]; if(q) hlSpOpenQuestion_(q, secondPaperYearScreen);
 });
 // after the owner edits through "Manage this screen", reload (and pull-to-refresh uses the same map)
-setTimeout(() => { try{ SCREEN_REFRESH_MAP.secondPaperScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperTopicScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperYearScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.specialSetsScreen = () => { hlSpsLoad_(); }; SCREEN_REFRESH_MAP.mockPostScreen = () => { hlLoadExamSettings_(true); renderMockPosts(); }; /* newest settings, then redraw the list as before */ }catch(e){} }, 0);
+setTimeout(() => { try{ SCREEN_REFRESH_MAP.secondPaperScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperTopicScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.secondPaperYearScreen = () => { hlSpLoad_(); }; SCREEN_REFRESH_MAP.specialSetsScreen = () => { hlSpsLoad_(); }; }catch(e){} }, 0);
 // ==========================================================================================
 // SPECIAL SETS (Oct 2026): named mock papers — for example "Lumbini Bises" or "Sudurpaschim Special" — that the owners add
 // IN THE APP (Manage this screen > Add; the question tab is created automatically in the Google Sheet). Students open them
@@ -27443,146 +27440,6 @@ function hlSafeCssUrl_(u){
   const v = String(u == null ? '' : u).trim();
   if(!/^https?:\/\//i.test(v)) return '';
   return hlEsc(v.replace(/['"()\s\\<>]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')));   // quotes, brackets and spaces are encoded: the address cannot break out of url('...')
-}
-// ==========================================================================================
-// ADMIN: Send notification (Oct 2026). Owners only (Profile > Support and About > Send notification, Admin view ON); the backend checks
-// the owner again for every request. Choose the kind (each has the student's own switch in Profile > Notifications), type a title and a
-// message, CHECK who will receive it, TEST it on your own phone, then SEND. Sending runs in batches with a progress line and a Stop
-// button; if the connection drops it can be continued (the backend never sends the same batch twice). The title and message are only
-// ever shown as plain text.
-// ==========================================================================================
-function hlOpenAdminNotify_(){
-  if(!hlAdminModeOn_()) return;
-  const ov = hlMakeOverlay_('hlNotifyOverlay', 'flex-start');
-  const S = 'color:var(--ink-soft-on-elevated);';
-  const F = 'box-sizing:border-box; width:100%; padding:9px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px; font-family:inherit;';
-  const B = 'width:100%; margin:8px 0 0;';
-  ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">'
-    + '<div style="font-size:15px; font-weight:800;">Send notification</div>'
-    + '<div style="font-size:12px; line-height:1.5; margin:4px 0 10px; ' + S + '">Students who switched this kind off in Profile &gt; Notifications, are in Quiet Hours, or never set up notifications are skipped. Always test on your own phone first.</div>'
-    + '<label style="font-size:12px; font-weight:700;">Kind</label>'
-    + '<select id="hlNfKind" style="' + F + ' margin:4px 0 10px;"><option value="announcement">Important notice</option><option value="discount">Discount or offer</option><option value="whatsNew">New content or app update</option></select>'
-    + '<label style="font-size:12px; font-weight:700;">Title <span id="hlNfTitleCount" style="font-weight:400; ' + S + '">0/60</span></label>'
-    + '<input id="hlNfTitle" type="text" maxlength="60" placeholder="e.g. PHO exam form is open" style="' + F + ' margin:4px 0 10px;">'
-    + '<label style="font-size:12px; font-weight:700;">Message <span id="hlNfMsgCount" style="font-weight:400; ' + S + '">0/180</span></label>'
-    + '<textarea id="hlNfMsg" maxlength="180" rows="3" placeholder="Short and clear. One line, plain text." style="' + F + ' margin:4px 0 4px; resize:vertical;"></textarea>'
-    + '<button type="button" id="hlNfCheck" style="' + B + '">1. Check who will receive it</button>'
-    + '<button type="button" id="hlNfTest" style="' + B + '">2. Send a test to my phone only</button>'
-    + '<button type="button" id="hlNfSend" style="' + B + '">3. Send to students</button>'
-    + '<button type="button" id="hlNfStop" style="' + B + ' display:none; background:var(--panel); color:var(--wrong); border:1.5px solid var(--line);">Stop sending</button>'
-    + '<button type="button" id="hlNfResume" style="' + B + ' display:none;"></button>'
-    + '<div id="hlNfInfo" style="font-size:12.5px; line-height:1.5; margin:10px 0 0; min-height:18px;"></div>'
-    + '<button type="button" id="hlNfClose" style="width:100%; margin:12px 0 0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div>';
-  const $ = (id) => ov.querySelector('#' + id);
-  const st = { preview: null, previewKind: '', running: false, stop: false };
-  const KEY = uk('hl_broadcast_run');
-  const say = (t) => { $('hlNfInfo').textContent = t; };
-  const read = () => ({ category: $('hlNfKind').value, title: $('hlNfTitle').value.trim(), message: $('hlNfMsg').value.replace(/\s+/g, ' ').trim() });
-  const problem = (m) => (m.title.length < 1 || m.title.length > 60) ? 'Type a title (up to 60 letters).' : (m.message.length < 1 || m.message.length > 180) ? 'Type a message (up to 180 letters).' : '';
-  const post = async (payload) => { const token = window.getAiAuthToken ? await window.getAiAuthToken() : ''; const res = await postJsonWithTimeout(Object.assign({ idToken: token }, payload)); return res.json(); };
-  const errText = (d) => !d ? 'Something went wrong. Please try again.'
-    : d.error === 'tooSoon' ? 'A notification was sent a moment ago. Please wait about ' + Math.max(1, Math.ceil((d.waitSeconds || 60) / 60)) + ' minute(s). This protects students from double messages.'
-    : d.error === 'runMismatch' ? 'This send was interrupted or the message was changed. Please wait 10 minutes and start again.'
-    : d.error === 'noToken' || d.error === 'invalid' ? (d.message || 'Please check the fields.')
-    : d.error === 'sendFailed' ? 'The notification service refused the message. Please try again in a minute.'
-    : d.error === 'tooMany' ? 'There are more students than this tool can safely send to in one go.'
-    : d.error === 'unavailable' ? 'The server could not be reached. Please try again.'
-    : hlAdminErrorText_(d);
-  const refresh = () => {
-    const m = read(), bad = problem(m);
-    $('hlNfTitleCount').textContent = m.title.length + '/60'; $('hlNfMsgCount').textContent = m.message.length + '/180';
-    $('hlNfCheck').disabled = st.running;
-    $('hlNfTest').disabled = st.running || !!bad;
-    $('hlNfSend').disabled = st.running || !!bad || !(st.preview && st.previewKind === m.category);
-    $('hlNfStop').style.display = st.running ? 'block' : 'none';
-    ['hlNfKind', 'hlNfTitle', 'hlNfMsg'].forEach(id => { $(id).disabled = st.running; });
-    $('hlNfClose').disabled = st.running;
-  };
-  const saved = () => { try{ const r = JSON.parse(localStorage.getItem(KEY) || 'null'); return (r && Date.now() - r.at < 30 * 60 * 1000) ? r : null; }catch(e){ return null; } };
-  const store = (r) => { try{ if(r) localStorage.setItem(KEY, JSON.stringify(Object.assign({ at: Date.now() }, r))); else localStorage.removeItem(KEY); }catch(e){} };
-  const showResume = () => {
-    const r = saved(), btn = $('hlNfResume');
-    if(r && !st.running){ btn.style.display = 'block'; btn.textContent = 'Continue the unfinished send ("' + r.m.title + '") from ' + r.offset + ' of ' + r.total; } else btn.style.display = 'none';
-  };
-  async function loop(offset, runId, m, total){
-    st.running = true; st.stop = false; refresh(); showResume();
-    try{
-      while(true){
-        say('Sending… ' + (total ? Math.min(offset, total) + ' of ' + total : 'starting'));
-        const d = await post(Object.assign({ action: 'adminBroadcast', mode: 'send', offset: offset }, runId ? { runId: runId } : {}, m));
-        if(!d || !d.ok){ say(errText(d)); if(d && (d.error === 'runMismatch' || d.error === 'tooSoon' || d.error === 'invalid')) store(null); return; }
-        runId = d.runId; total = d.total;
-        if(d.done){
-          store(null);
-          say('Finished. Sent: ' + d.totals.sent + '. Could not be reached (old or removed phones): ' + d.totals.failed + '. Skipped (switched off, Quiet Hours, or notifications not set up): ' + d.totals.skipped + '.');
-          return;
-        }
-        offset = d.nextOffset; store({ runId: runId, offset: offset, total: total, m: m });
-        if(st.stop){ say('Stopped at ' + offset + ' of ' + total + '. You can continue it below.'); return; }
-      }
-    }catch(e){
-      store({ runId: runId, offset: offset, total: total, m: m });
-      say('The connection was lost at ' + offset + ' of ' + (total || '?') + '. Nothing is sent twice: use "Continue" below when you are back online.');
-    }finally{ st.running = false; refresh(); showResume(); }
-  }
-  ['hlNfKind', 'hlNfTitle', 'hlNfMsg'].forEach(id => $(id).addEventListener('input', () => { if(id === 'hlNfKind'){ st.preview = null; say(''); } refresh(); }));
-  $('hlNfCheck').onclick = async () => {
-    const m = read(); say('Checking…');
-    try{
-      const d = await post({ action: 'adminBroadcastPreview', category: m.category });
-      if(d && d.ok){
-        st.preview = d.counts; st.previewKind = m.category; const c = d.counts;
-        say(c.willReceive + ' of ' + c.total + ' students will receive it. Not included: ' + c.optedOut + ' switched this kind off, ' + c.quiet + ' in Quiet Hours, ' + (c.noToken + c.noPrefs) + ' never set up notifications.' + (d.tooMany ? ' (More students than the safe limit: sending is blocked.)' : ''));
-      } else say(errText(d));
-    }catch(e){ say('Could not reach the server. Please check your connection.'); }
-    refresh();
-  };
-  $('hlNfTest').onclick = async () => {
-    const m = read(); if(problem(m)){ say(problem(m)); return; }
-    say('Sending a test to your phone…');
-    try{ const d = await post(Object.assign({ action: 'adminBroadcast', mode: 'test' }, m)); say(d && d.ok ? 'Sent to your phone only. Check how it looks, then send to students.' : errText(d)); }
-    catch(e){ say('Could not reach the server. Please check your connection.'); }
-  };
-  $('hlNfSend').onclick = async () => {
-    const m = read(); if(problem(m)){ say(problem(m)); return; }
-    if(!(st.preview && st.previewKind === m.category)){ say('First press "Check who will receive it".'); return; }
-    if(!(await customConfirm('Send "' + m.title + '" to about ' + st.preview.willReceive + ' students now? This cannot be taken back.'))) return;
-    loop(0, null, m, st.preview.total);
-  };
-  $('hlNfStop').onclick = () => { st.stop = true; say('Stopping after the current batch…'); };
-  $('hlNfResume').onclick = () => { const r = saved(); if(r) loop(r.offset, r.runId, r.m, r.total); };
-  $('hlNfClose').onclick = () => { if(!st.running) ov.remove(); };
-  refresh(); showResume();
-}
-safeOn('menuAdminNotify', 'click', () => { hlOpenAdminNotify_(); });
-// ==========================================================================================
-// EXAM SETTINGS (Oct 2026): the Mock Test size (questions), time (minutes) and marks per question of each exam come from the Google
-// Sheet tab "Exam Settings", which the owners edit in the app (Mock Test > Manage this screen). Built-in values (MOCK_POSTS) are the
-// fallback for anything missing or impossible. ONLY the Mock Test uses this: tournaments keep reading MOCK_POSTS directly, because the
-// database rules bind every tournament entry to the fixed exam size.
-// ==========================================================================================
-let hlExamSettings_ = (function(){ try{ const c = JSON.parse(localStorage.getItem('hl_cache_examsettings') || 'null'); return Array.isArray(c) ? c : null; }catch(e){ return null; } })();
-let hlExamSettingsAt_ = 0;
-function hlMockPosts_(){
-  const s = Array.isArray(hlExamSettings_) ? hlExamSettings_ : [];
-  const num = (v, lo, hi) => { const x = parseFloat(v); return (isFinite(x) && x >= lo && x <= hi) ? x : null; };
-  return MOCK_POSTS.map(p => {
-    const r = s.find(x => x && x.Post === p.key); if(!r) return p;
-    const q = num(r.Questions, 5, 200), m = num(r.Minutes, 1, 300), e = num(r.MarksEach, 0.25, 10);
-    const label = (typeof r.Label === 'string' && r.Label.trim() && r.Label.trim().length <= 40) ? r.Label.trim() : null;
-    return Object.assign({}, p, { label: label || p.label, questionCount: q ? Math.round(q) : p.questionCount, minutes: m || p.minutes, marksEach: e || p.marksEach });
-  });
-}
-async function hlLoadExamSettings_(force){
-  if(!force && Date.now() - hlExamSettingsAt_ < 5 * 60 * 1000) return;
-  hlExamSettingsAt_ = Date.now();
-  try{
-    const res = await fetch(`${SHEET_API_URL}?action=examSettings`); const d = await res.json();
-    if(!Array.isArray(d)) return;   // an older backend that does not know Exam Settings: keep the built-in values
-    const before = JSON.stringify(hlExamSettings_);
-    hlExamSettings_ = d; try{ localStorage.setItem('hl_cache_examsettings', JSON.stringify(d)); }catch(e){}
-    if(before !== JSON.stringify(d) && mockPostScreen.classList.contains('active')) renderMockPosts();
-  }catch(e){ hlExamSettingsAt_ = 0; }
 }
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
@@ -28011,7 +27868,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
-  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
+  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
@@ -28164,8 +28021,7 @@ function hlAdminScreenTabs_(screenId){
     secondPaperScreen: ['Second Paper Syllabus', 'Second Paper Notes', 'Second Paper Questions', 'Second Paper PDFs', 'Second Paper Section Notes', 'Second Paper Solutions'],
     secondPaperTopicScreen: ['Second Paper Notes', 'Second Paper Questions', 'Second Paper PDFs'],
     secondPaperYearScreen: ['Second Paper Questions'],
-    specialSetsScreen: ['Special Sets'],
-    mockPostScreen: ['Exam Settings']
+    specialSetsScreen: ['Special Sets']
   };
   if(screenId === 'docListScreen'){
     const t = document.getElementById('docListTitle');
