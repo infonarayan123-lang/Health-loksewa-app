@@ -1913,6 +1913,12 @@
 .qf-switch input:checked + .qf-slider{ background:var(--crimson); }
 .qf-switch input:checked + .qf-slider::after{ transform:translateX(20px); }
 </style>
+<style id="nativeStyle">
+.hl-native-only{ display:none; }
+html.hl-native .hl-native-only{ display:block; }
+html.hl-native .pay-screen-title, html.hl-native #pricingPlansWrap, html.hl-native #pricingOfferBadge, html.hl-native #esewaMethodCard, html.hl-native #khaltiMethodCard,
+html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, html.hl-native #premiumLockDiscountBadge{ display:none !important; }
+</style>
 </head>
 <body>
 <div id="app">
@@ -2882,6 +2888,10 @@
       <div class="pay-screen-title">Choose Payment Plan</div>
 
       <div id="premiumStatusBadge"></div>
+      <div class="hl-native-only content-card" id="nativePremiumNotice" style="text-align:center; padding:18px; margin-top:10px;">
+        <div style="font-size:16px; font-weight:800; margin-bottom:6px;">Premium</div>
+        <p style="font-size:13px; line-height:1.55; color:var(--ink-soft); margin:0;">Premium is managed from your Health Loksewa account. If your account has Premium, it unlocks here automatically after you sign in.</p>
+      </div>
 
       <!-- Pricing tiers — Sheet-driven (edit the "Pricing" tab anytime: PlanKey | Label | Months |
            BasePrice | DiscountPercent — no code changes needed). Picking a tile sets the amount/
@@ -6699,7 +6709,7 @@
     getAuth, signOut, onAuthStateChanged, updateProfile, deleteUser,
     createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
     EmailAuthProvider, reauthenticateWithCredential, updatePassword,
-    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendEmailVerification, reload,
+    GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, sendEmailVerification, reload,
     reauthenticateWithPopup
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
@@ -6734,6 +6744,19 @@
   const VAPID_PUBLIC_KEY = 'BOXvH4iVAB9uyoY2KAMYOx26i7Pk86wBvVb7hbnDJXybACag7r9p7a_IZcyYMy2UpbS9J9upZz44m9rrwaOc4eM';
   let messaging = null;
   window.registerForPushNotifications = async function(prefs){
+    if(window.hlIsNative_ && window.hlIsNative_()){   // Android app: the phone's own push, same saved field
+      try{
+        const PN = window.hlPlugin_('PushNotifications'); if(!PN) return { success: false, reason: 'unsupported' };
+        let perm = await PN.checkPermissions(); if(perm.receive !== 'granted') perm = await PN.requestPermissions();
+        if(perm.receive !== 'granted') return { success: false, reason: 'permission_denied' };
+        const token = await window.hlNativePushToken_();
+        if(!token) return { success: false, reason: 'no_token' };
+        const user = auth.currentUser;
+        if(!user) return { success: false, reason: 'not_logged_in' };
+        await setDoc(doc(db, 'users', user.uid), { fcmToken: token, notificationPrefs: prefs }, { merge: true });
+        return { success: true };
+      }catch(err){ return { success: false, reason: 'error', message: err && err.message }; }
+    }
     try{
       const supported = await isMessagingSupported();
       if(!supported) return { success: false, reason: 'unsupported' };
@@ -6796,7 +6819,7 @@
   // My Device, Change Password, and Delete Account features.
   window.hlFirestore = db;
   window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction, query, where, limit };
-  window.hlSignOut = () => signOut(auth);
+  window.hlSignOut = async () => { await signOut(auth); try{ if(window.hlIsNative_ && window.hlIsNative_()){ const FA = window.hlPlugin_('FirebaseAuthentication'); if(FA) await FA.signOut(); } }catch(e){} };
   window.hlSendPasswordReset = (email) => sendPasswordResetEmail(auth, email);
   // Change Password (in-app, with the current password required first) — used by the
   // dedicated Change Password screen. Throws with a short reason string the screen can show:
@@ -6890,7 +6913,10 @@
           if(pw === null) throw new Error('reauth-cancelled');
           await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, pw));
         } else {
-          await reauthenticateWithPopup(user, new GoogleAuthProvider());
+          if(window.hlIsNative_ && window.hlIsNative_()){
+            const FA = window.hlPlugin_('FirebaseAuthentication'); const res = await FA.signInWithGoogle();
+            await reauthenticateWithCredential(user, GoogleAuthProvider.credential(res.credential.idToken, (res.credential.accessToken || undefined)));
+          } else { await reauthenticateWithPopup(user, new GoogleAuthProvider()); }
         }
       }catch(e){
         throw new Error(e && e.message === 'reauth-cancelled' ? 'reauth-cancelled' : 'reauth-failed');
@@ -7125,6 +7151,7 @@
 
   window.doSignOut = async function(){
     try{ await signOut(auth); }catch(err){}
+    try{ if(window.hlIsNative_ && window.hlIsNative_()){ const FA = window.hlPlugin_('FirebaseAuthentication'); if(FA) await FA.signOut(); } }catch(err){}
   };
 
   // ---- Leaderboard: sync this user's stats (now including Learning Points, period totals, and
@@ -7829,6 +7856,22 @@
     }
   }
   window.signInWithGoogle = async function(){
+    if(window.hlIsNative_ && window.hlIsNative_()){   // Android app: the phone's own Google sign-in (a web popup is not allowed inside an app)
+      try{
+        const FA = window.hlPlugin_('FirebaseAuthentication'); if(!FA) throw new Error('no-plugin');
+        const res = await FA.signInWithGoogle();
+        const idToken = res && res.credential && res.credential.idToken;
+        if(!idToken) throw new Error('no-token');
+        const result = await signInWithCredential(auth, GoogleAuthProvider.credential(idToken, (res.credential.accessToken || undefined)));
+        clearLoginError();
+        await ensureGoogleUserProfile(result.user);
+      }catch(err){
+        const text = String((err && (err.message || err.code)) || err).toLowerCase();
+        if(text.includes('cancel') || text.includes('12501') || text.includes('dismiss')) return;   // the student simply backed out
+        showLoginError('Google sign-in did not work. Please try again, or sign in with your email and password.');
+      }
+      return;
+    }
     const provider = new GoogleAuthProvider();
     try{
       const result = await signInWithPopup(auth, provider);
@@ -27583,6 +27626,80 @@ async function hlLoadExamSettings_(force){
     hlExamSettings_ = d; try{ localStorage.setItem('hl_cache_examsettings', JSON.stringify(d)); }catch(e){}
     if(before !== JSON.stringify(d) && mockPostScreen.classList.contains('active')) renderMockPosts();
   }catch(e){ hlExamSettingsAt_ = 0; }
+}
+// ==========================================================================================
+// ANDROID APP BRIDGE (Oct 2026). Health Loksewa also runs as a real Android app (a Capacitor shell around this same web app, built from
+// the android-app folder). EVERYTHING in this block does NOTHING in a normal browser or the installed web app: it switches on only when
+// window.Capacitor says "native". Inside the Android app it does five things:
+//   1. Screenshot / screen-recording blocking (Android FLAG_SECURE through the PrivacyScreen plugin) on every screen except the few where
+//      students share their progress (HL_SHAREABLE_SCREEN_IDS_ below: edit that list to change it).
+//   2. A small "Notification" stand-in, because the Android WebView has no web Notification API, so the existing permission prompts keep working.
+//   3. Push notifications through the phone's own Firebase push (token saved in the same users/<uid>.fcmToken field), a tapped notification
+//      opens the right screen, and a notification that arrives while the app is open shows as the usual in-app banner.
+//   4. Google sign-in through the phone's own Google sign-in (the web popup is not allowed inside an app) — see window.signInWithGoogle.
+//   5. No prices and no payment buttons (Google Play has its own payment rules): the Premium screen explains that Premium is managed from the account.
+// ==========================================================================================
+function hlIsNative_(){ try{ return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()); }catch(e){ return false; } }
+function hlPlugin_(name){ try{ return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[name]) || null; }catch(e){ return null; } }
+window.hlIsNative_ = hlIsNative_; window.hlPlugin_ = hlPlugin_;
+const HL_NATIVE_ = hlIsNative_();
+if(HL_NATIVE_){ document.documentElement.classList.add('hl-native'); }
+const HL_SHAREABLE_SCREEN_IDS_ = ['homeScreen', 'progressScreen', 'leaderboardScreen', 'profileScreen', 'loginScreen', 'upgradeScreen', 'appLoadingScreen'];
+let hlSecureOn_ = true;   // the plugin starts with protection ON
+async function hlNativeScreenGuard_(el){
+  if(!HL_NATIVE_) return;
+  const want = !HL_SHAREABLE_SCREEN_IDS_.includes(el && el.id);
+  if(want === hlSecureOn_) return;
+  const PS = hlPlugin_('PrivacyScreen'); if(!PS) return;
+  try{ if(want) await PS.enable(); else await PS.disable(); hlSecureOn_ = want; }catch(e){}
+}
+if(HL_NATIVE_ && typeof window.showScreen === 'function'){
+  const hlShowScreenOriginal_ = window.showScreen;
+  window.showScreen = function(el){ const r = hlShowScreenOriginal_.apply(this, arguments); try{ hlNativeScreenGuard_(el); }catch(e){} return r; };
+}
+if(HL_NATIVE_ && !('Notification' in window)){
+  const stand = function(){};
+  stand.permission = 'default';
+  const toState = (s) => (s && s.receive === 'granted') ? 'granted' : ((s && s.receive === 'denied') ? 'denied' : 'default');
+  stand.requestPermission = async function(){
+    const PN = hlPlugin_('PushNotifications'); if(!PN){ stand.permission = 'denied'; return 'denied'; }
+    try{ let s = await PN.checkPermissions(); if(s.receive !== 'granted') s = await PN.requestPermissions(); stand.permission = toState(s); }catch(e){ stand.permission = 'denied'; }
+    return stand.permission;
+  };
+  window.Notification = stand;
+  (async () => { try{ const PN = hlPlugin_('PushNotifications'); if(PN) stand.permission = toState(await PN.checkPermissions()); }catch(e){} })();
+}
+function hlNativePushToken_(){   // asks the phone to register for push and waits for its token
+  return new Promise(async (resolve, reject) => {
+    const PN = hlPlugin_('PushNotifications'); if(!PN){ reject(new Error('no-plugin')); return; }
+    let finished = false, h1 = null, h2 = null;
+    const done = (fn, v) => { if(finished) return; finished = true; try{ if(h1) h1.remove(); if(h2) h2.remove(); }catch(e){} fn(v); };
+    try{
+      h1 = await PN.addListener('registration', (t) => done(resolve, t && t.value));
+      h2 = await PN.addListener('registrationError', (e) => done(reject, new Error((e && e.error) || 'registration-error')));
+      await PN.register();
+      setTimeout(() => done(reject, new Error('timeout')), 20000);
+    }catch(e){ done(reject, e); }
+  });
+}
+window.hlNativePushToken_ = hlNativePushToken_;
+if(HL_NATIVE_){
+  (async () => {
+    const PN = hlPlugin_('PushNotifications'); if(!PN) return;
+    try{
+      await PN.addListener('pushNotificationActionPerformed', (action) => {   // the student tapped a notification
+        try{
+          const d = (action && action.notification && action.notification.data) || {};
+          let key = d.notif || '';
+          if(!key && d.url){ try{ key = new URL(d.url, location.href).searchParams.get('notif') || ''; }catch(e){} }
+          if(key){ history.replaceState({}, document.title, location.pathname + '?notif=' + encodeURIComponent(key)); if(typeof checkForNotificationDeepLinkAndNavigate === 'function') checkForNotificationDeepLinkAndNavigate(); }
+        }catch(e){}
+      });
+      await PN.addListener('pushNotificationReceived', (n) => {   // arrived while the app is open
+        try{ if(window.showInAppNotificationBanner) window.showInAppNotificationBanner((n && n.title) || 'Health Loksewa', (n && n.body) || ''); }catch(e){}
+      });
+    }catch(e){}
+  })();
 }
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
