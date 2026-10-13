@@ -6714,7 +6714,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
   import {
     getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, where,
-    deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction
+    deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction, getCountFromServer
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import {
     getMessaging, getToken, onMessage, isSupported as isMessagingSupported
@@ -6754,6 +6754,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         const user = auth.currentUser;
         if(!user) return { success: false, reason: 'not_logged_in' };
         await setDoc(doc(db, 'users', user.uid), { fcmToken: token, notificationPrefs: prefs }, { merge: true });
+        try{ window.hlSyncPushTopics_(token, prefs); }catch(e){}   // join the channels (not waited for)
         return { success: true };
       }catch(err){ return { success: false, reason: 'error', message: err && err.message }; }
     }
@@ -6773,15 +6774,50 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       const user = auth.currentUser;
       if(!user) return { success: false, reason: 'not_logged_in' };
       await setDoc(doc(db, 'users', user.uid), { fcmToken: token, notificationPrefs: prefs }, { merge: true });
+      try{ window.hlSyncPushTopics_(token, prefs); }catch(e){}   // join the channels (not waited for)
       return { success: true };
     }catch(err){
       return { success: false, reason: 'error', message: err && err.message };
     }
   };
+  // ---- Notifications to everyone at once (Oct 2026). The backend can reach everyone with ONE call through three "channels" (announcement, discount, what's new), but only phones that
+  // joined them. Joining is done by the BACKEND from this student's own saved token and switches (the phone sends nothing but its login), and only when the token or the switches
+  // changed (remembered per account, key hl_topics_synced); a failure is not retried more than once a day. Turning notifications off or deleting the account makes the phone LEAVE. ----
+  window.hlSyncPushTopics_ = async function(token, prefs){
+    try{
+      const user = auth.currentUser; if(!user || !token) return false;
+      const kinds = ['announcement', 'discount', 'whatsNew'];
+      const hash = String(token).slice(-16) + '|' + (prefs ? kinds.map(k => prefs[k] === false ? 0 : 1).join('') : 'x');
+      const key = (typeof uk === 'function') ? uk('hl_topics_synced') : 'hl_topics_synced';
+      const today = new Date().toISOString().slice(0, 10);
+      let state = ''; try{ state = localStorage.getItem(key) || ''; }catch(e){}
+      if(state === 'ok:' + hash || state === 'fail:' + hash + ':' + today) return true;   // already done, or already failed today: no call
+      const idToken = await user.getIdToken();
+      const res = await window.postJsonWithTimeout({ action: 'syncPushTopics', idToken: idToken });
+      const out = await res.json();
+      if(out && out.throttled) return false;   // asked a moment ago: decide next time
+      const good = !!(out && out.ok);
+      try{ localStorage.setItem(key, good ? 'ok:' + hash : 'fail:' + hash + ':' + today); }catch(e){}
+      return good;
+    }catch(e){ return false; }
+  };
+  window.hlUnsubscribeTopicsNow_ = async function(){   // notifications turned off / account being deleted: leave the channels (the backend only accepts the token that is saved for this account)
+    try{
+      const user = auth.currentUser; if(!user) return false;
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const token = snap.exists() ? snap.data().fcmToken : null;
+      if(!token) return false;
+      const idToken = await user.getIdToken();
+      await window.postJsonWithTimeout({ action: 'syncPushTopics', idToken: idToken, unsubscribe: true, oldToken: token });
+      try{ localStorage.removeItem((typeof uk === 'function') ? uk('hl_topics_synced') : 'hl_topics_synced'); }catch(e){}
+      return true;
+    }catch(e){ return false; }
+  };
   window.disablePushNotifications = async function(){
     const user = auth.currentUser;
     if(!user) return false;
     try{
+      try{ await window.hlUnsubscribeTopicsNow_(); }catch(e){}   // leave the "everyone at once" channels first (needs the saved token)
       await setDoc(doc(db, 'users', user.uid), { fcmToken: null, notificationPrefs: null }, { merge: true });
       return true;
     }catch(err){
@@ -6818,7 +6854,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
   // Expose to the rest of the app (outside this module script) — used by Profile's
   // My Device, Change Password, and Delete Account features.
   window.hlFirestore = db;
-  window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction, query, where, limit };
+  window.hlFirestoreFns = { doc, setDoc, getDoc, collection, getDocs, deleteDoc, serverTimestamp, onSnapshot, updateDoc, runTransaction, query, where, limit, getCountFromServer };
   window.hlSignOut = async () => { await signOut(auth); try{ if(window.hlIsNative_ && window.hlIsNative_()){ const FA = window.hlPlugin_('FirebaseAuthentication'); if(FA) await FA.signOut(); } }catch(e){} };
   window.hlSendPasswordReset = (email) => sendPasswordResetEmail(auth, email);
   // Change Password (in-app, with the current password required first) — used by the
@@ -6922,6 +6958,9 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         throw new Error(e && e.message === 'reauth-cancelled' ? 'reauth-cancelled' : 'reauth-failed');
       }
     }
+
+    // 1b) Leave the "notifications to everyone" channels BEFORE the account record (and its notification token) is deleted
+    await step('notification channels', async () => { if(window.hlUnsubscribeTopicsNow_) await window.hlUnsubscribeTopicsNow_(); });
 
     // 2) Study Groups: own posts/replies/shared notes/challenge results, then membership
     say('Removing your Study Group activity…');
@@ -7098,11 +7137,17 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       // apps-script-v5.js) tell who's genuinely inactive today without an expensive per-device
       // subcollection query (a separate, unrelated lastActive field already exists for the My
       // Devices security feature — this is a new, simpler, top-level field just for this).
+      // Free-plan saver: written once a day per account (it used to be written at EVERY app open, even twice a day with the same value)
       try{
-        await setDoc(doc(db, 'users', user.uid), {
-          lastAppOpenDate: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' }) // yyyy-MM-dd
-        }, { merge: true });
+        const openDay = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' });   // yyyy-MM-dd
+        const openKey = (typeof uk === 'function') ? uk('hl_last_open_day') : 'hl_last_open_day';
+        let lastOpenDay = ''; try{ lastOpenDay = localStorage.getItem(openKey) || ''; }catch(e2){}
+        if(lastOpenDay !== openDay){
+          await setDoc(doc(db, 'users', user.uid), { lastAppOpenDate: openDay }, { merge: true });
+          try{ localStorage.setItem(openKey, openDay); }catch(e3){}   // only after the write worked, so a failure is tried again at the next open
+        }
       }catch(e){}
+      // ---- end last-open-day ----
       // Complete the FCM registration that was deferred from the pre-login notification gate —
       // this fires exactly once, the first time a real account exists after the user tapped
       // Allow before they'd even signed up.
@@ -7187,6 +7232,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       }, { merge: true });
     }catch(err){
       // Non-critical — if this fails, the user's own progress is still saved locally either way
+      if(window.hlNoteQuotaError_) window.hlNoteQuotaError_(err);
     }
   };
 
@@ -7207,14 +7253,51 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
     if(!saved || isNaN(saved.getTime()) || saved < start) return 0;
     return value;
   }
+  const HL_LB_MAX_AGE_MS_ = { today: 60 * 60 * 1000, week: 120 * 60 * 1000, month: 240 * 60 * 1000, all: 360 * 60 * 1000 };
+  const hlLbAskedAt_ = {};
+  async function hlLbLoadSnapshot_(period){   // the saved top-100 of one board: 1 database read; null = not available (use the live query)
+    try{
+      const ref = doc(db, 'leaderboardSnapshots', period);
+      let snap = await getDoc(ref), data = snap.exists() ? snap.data() : null;
+      const age = (data && data.updatedAt) ? Date.now() - new Date(data.updatedAt).getTime() : Infinity;
+      if(age > (HL_LB_MAX_AGE_MS_[period] || 3600000) && Date.now() - (hlLbAskedAt_[period] || 0) > 5 * 60 * 1000 && window.postJsonWithTimeout){
+        hlLbAskedAt_[period] = Date.now();   // ask the backend to rebuild it at most once every 5 minutes from this phone
+        try{
+          const token = window.getAiAuthToken ? await window.getAiAuthToken() : '';
+          const res = await window.postJsonWithTimeout({ action: 'refreshLeaderboard', idToken: token, period: period });
+          const out = await res.json();
+          if(out && out.ok && out.refreshed){ snap = await getDoc(ref); data = snap.exists() ? snap.data() : data; }
+        }catch(e){}
+      }
+      return (data && Array.isArray(data.rows) && data.updatedAt) ? data.rows : null;
+    }catch(e){ return null; }
+  }
+  function hlLbOverlayMine_(pool, sortField, period){   // the student's own numbers are always current, whatever the age of the summary
+    try{
+      const mine = window.hlLbMyLiveRow_ ? window.hlLbMyLiveRow_() : null; if(!mine) return pool;
+      const out = pool.slice(), i = out.findIndex(r => r.uid === mine.uid);
+      if(i >= 0){ out[i] = { ...out[i], ...mine }; return out; }
+      const mineVal = hlLbFreshPoints_(mine, sortField, period);
+      const lastVal = out.length >= 100 ? (Number(out[out.length - 1][sortField]) || 0) : 0;   // a full board: must beat its last place
+      if(mineVal > 0 && mineVal > lastVal) out.push(mine);
+      return out;
+    }catch(e){ return pool; }
+  }
   window.fetchLeaderboard = async function(period, subject){
     const sortField = LP_PERIOD_FIELD[period] || 'weekLP';
     try{
-      const q = query(collection(db, 'leaderboard'), orderBy(sortField, 'desc'), limit(100));
-      const snap = await getDocs(q);
+      // Free-plan saver (Oct 2026): read the ONE saved summary of this board (the backend rebuilds it when it is old) instead of the top-100 records
+      let pool = await hlLbLoadSnapshot_(period);
+      if(pool === null){   // no summary yet, an older backend, or the rules are not updated yet: the previous live query
+        const q = query(collection(db, 'leaderboard'), orderBy(sortField, 'desc'), limit(100));
+        const snap = await getDocs(q);
+        pool = []; snap.forEach(docSnap => pool.push({ uid: docSnap.id, ...docSnap.data() }));
+      } else {
+        pool = hlLbOverlayMine_(pool, sortField, period);
+      }
       const results = [];
-      snap.forEach(docSnap => {
-        const row = { uid: docSnap.id, ...docSnap.data() };
+      pool.forEach(r => {
+        const row = { ...r };
         row[sortField] = hlLbFreshPoints_(row, sortField, period); // old-period points count as 0
         results.push(row);
       });
@@ -7234,6 +7317,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       }
       return results;
     }catch(err){
+      if(window.hlNoteQuotaError_) window.hlNoteQuotaError_(err);
       return [];
     }
   };
@@ -7628,7 +7712,12 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
   // itself — the backend's secure step checks the email Google verified.
   function hlIsMasterAccount_(user){ try{ return typeof window.hlIsAdminUser_ === 'function' && window.hlIsAdminUser_() === true; }catch(e){ return false; } }
 
-  window.getAccessStatus = async function(){
+  // ---- Free-plan saver (Oct 2026): access status cache. Every return to Home redrew the "Unlock Premium" line and READ the student's record from the database each
+  // time (several reads per visit). The answer is now remembered for 5 minutes per account (in memory only: every app open starts fresh), forgotten after a payment
+  // (refreshPremiumStatus), always fresh on the Premium screen (force), and never kept after a paid period has ended. Not remembered when the record does not exist yet or the read failed. ----
+  const HL_ACCESS_TTL_MS_ = 5 * 60 * 1000; let hlAccessCache_ = null;
+  window.hlInvalidateAccessStatus_ = function(){ hlAccessCache_ = null; };
+  const hlAccessStatusUncached_ = async function(onSeen){
     const user = auth.currentUser;
     if(!user) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
     if(hlIsMasterAccount_(user)){
@@ -7640,6 +7729,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       if(!snap.exists()) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
 
       const data = snap.data();
+      if(onSeen) onSeen();   // the record exists and was read: this answer may be remembered
 
       if(data.premium === true){
         const expiresAt = data.premiumExpiresAt;
@@ -7669,6 +7759,19 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
     }
   };
+  window.getAccessStatus = async function(force){
+    const user = auth.currentUser, c = hlAccessCache_;
+    if(!force && user && c && c.uid === user.uid && Date.now() - c.at < HL_ACCESS_TTL_MS_){
+      const v = c.value;
+      const expired = v.source === 'paid' && v.premiumEndDate && new Date(v.premiumEndDate) < new Date();   // never keep saying "Premium" after it ended
+      if(!expired) return { ...v };
+    }
+    let seen = false;
+    const v = await hlAccessStatusUncached_(() => { seen = true; });
+    if(user && seen) hlAccessCache_ = { uid: user.uid, at: Date.now(), value: { ...v } };   // not remembered when the record does not exist yet or the read failed
+    return v;
+  };
+  // ---- end access status cache ----
 
   window.checkPremiumStatus = async function(){
     const status = await window.getAccessStatus();
@@ -8285,7 +8388,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzeLQEQA_3So8S_TYpOqQKdVTV1QbvRHF2ifMzU7nqFPqxGhXCyUA0_5HhWBXKAAYJw_w/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzdcnQ1QbnXlGEQOUBj-l3OnkOxmnr0gexrEfnUvgLnZ21G_L4VTyslwSreB88-IxJjUw/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -9028,7 +9131,7 @@ function hlDetailRefresh_(fn){
     // The refresh function itself may be sync or return a Promise (most fetch a Sheet). Either way,
     // wait for it so "Refreshing…" reflects what's actually happening, then confirm it finished
     // rather than just guessing at a fixed delay — and never leave the bar stuck up if it throws.
-    Promise.resolve().then(refreshFn).catch((err) => { if(window.showDebugError) showDebugError('Pull-to-refresh failed: ' + (err && err.message ? err.message : String(err))); })
+    Promise.resolve().then(() => { if(window.hlClearGetCache_) window.hlClearGetCache_(); return refreshFn(); }).catch((err) => { if(window.showDebugError) showDebugError('Pull-to-refresh failed: ' + (err && err.message ? err.message : String(err))); })
       .finally(() => {
         indicator.dataset.state = 'done';
         textEl.textContent = 'Refreshed';
@@ -14549,7 +14652,7 @@ try{
 PER_ACCOUNT_STORAGE_KEYS = [
   'hl_bookmark_collection_map','hl_bookmark_collections','hl_bookmarks','hl_custom_bookmarks',
   'hl_healthday_bookmarks','hl_mnemonic_bookmarks','hl_pdf_bookmarks','hl_quickref_bookmarks',
-  'hl_chapter_stats','hl_topic_done_log','hl_quiz_instant','hl_dictionary_recent','hl_7day_revision_plan','hl_chat_history','hl_custom_mnemonics',
+  'hl_chapter_stats','hl_topic_done_log','hl_quiz_instant','hl_dictionary_recent','hl_7day_revision_plan','hl_chat_history','hl_custom_mnemonics','hl_last_open_day','hl_topics_synced','hl_topic_run',
   'hl_daily_activity','hl_dailyfire_last_date','hl_dailyfire_streak',
   'hl_earned_badges','hl_fc_cards','hl_fc_decks','hl_focus_sessions',
   'hl_learning_points','hl_longest_streak','hl_mistakes_mastered_count','hl_mnemonic_helpful_voted',
@@ -19986,6 +20089,10 @@ async function renderLeaderboard(){
   }
 
   const results = await window.fetchLeaderboard(lbActivePeriod, lbActiveSubject);
+  if(results.length === 0 && hlQuotaActive_()){
+    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; line-height:1.55;">The leaderboard is resting: today's free online limit is full. It will be back ${hlQuotaWhenText_()}. Your points are safe on this phone.</p>`;
+    return;
+  }
   if(results.length === 0){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No leaderboard entries yet — complete a Set to be the first!</p>`;
     return;
@@ -20520,7 +20627,7 @@ async function renderPremiumStatus(){
   // users correctly count as premium too) — but the "already paid" badge below must only
   // fire for a real paid subscription, never for someone still in their free trial.
   await refreshPremiumStatus();
-  const status = window.getAccessStatus ? await window.getAccessStatus() : { source: 'none' };
+  const status = window.getAccessStatus ? await window.getAccessStatus(true) : { source: 'none' };   // the Premium screen always shows the real, fresh answer
   const isPaid = status.source === 'paid';
   const buyControls = ['pricingOfferBadge', 'pricingPlansWrap', 'esewaMethodCard', 'khaltiMethodCard'];
   if(isPaid){
@@ -20804,6 +20911,7 @@ async function checkForKhaltiReturnAndActivate(){
     // anything read from this return URL, which a user could edit before it's even sent. This
     // just refreshes the local view of a status the backend already set.
     if(result.activated){
+      if(window.hlInvalidateAccessStatus_) window.hlInvalidateAccessStatus_();
       if(window.refreshPremiumStatus) await window.refreshPremiumStatus();
       const monthsLabel = result.planMonths === 12 ? '1 year' : result.planMonths === 6 ? '6 months' : `${result.planMonths} month${result.planMonths === 1 ? '' : 's'}`;
       alert(`Payment successful!\n\nPremium unlocked for ${monthsLabel} — thank you for joining Health Loksewa!`);
@@ -20875,6 +20983,7 @@ async function checkForEsewaReturnAndActivate(){
     // using the exact plan length the backend verified from the real amount paid — never
     // anything the client itself claimed.
     if(result.activated){
+      if(window.hlInvalidateAccessStatus_) window.hlInvalidateAccessStatus_();
       if(window.refreshPremiumStatus) await window.refreshPremiumStatus();
       const monthsLabel = result.planMonths === 12 ? '1 year' : result.planMonths === 6 ? '6 months' : `${result.planMonths} month${result.planMonths === 1 ? '' : 's'}`;
       alert(`Payment successful!\n\nPremium unlocked for ${monthsLabel} — thank you for joining Health Loksewa!`);
@@ -23642,9 +23751,7 @@ function markSetCompleted(subject, setNumber, correctCount, wrongCount, skippedC
   p[key].scores[setNumber] = { correct: correctCount, wrong: wrongCount, skipped: skippedCount };
   saveProgress(p);
   updateStudyStreak();
-  if(window.syncStatsToLeaderboard){
-    window.syncStatsToLeaderboard(computeProgressStats());
-  }
+  hlRequestLeaderboardSync_();   // (was a second, immediate leaderboard write; now shares the 10-minute limit)
 }
 
 // ---------- Study Streak: tracks consecutive days of practice (like Duolingo) ----------
@@ -24137,18 +24244,49 @@ function awardLearningPoints(activityKey, count, subject){
   saveLpData(data);
   syncLearningPointsToLeaderboard();
 }
-let lpSyncTimeout = null;
-function syncLearningPointsToLeaderboard(){
-  // Debounced — a quiz can award points for many questions in quick succession; no need to hit
-  // Firestore on every single one
-  clearTimeout(lpSyncTimeout);
-  lpSyncTimeout = setTimeout(() => {
-    if(!window.syncStatsToLeaderboard) return;
-    const stats = computeProgressStats();
-    const periods = computeLpPeriodTotals();
-    window.syncStatsToLeaderboard({ ...stats, todayLP: periods.todayPts, weekLP: periods.weekPts, monthLP: periods.monthPts, subjectPoints: getLpData().subjectPoints });
-  }, 1500);
+// ---- Leaderboard writes (free-plan saver, Oct 2026). Before: every correct answer saved the student's leaderboard record (about 25 database writes for one
+// 50-question set), while the free plan allows only 20,000 writes a day for ALL students. Now: at most ONE write every 10 minutes, only when something changed,
+// and a waiting update is sent when the app goes to the background (but not more often than every 2 minutes). The numbers written are always the student's
+// complete current numbers. ----
+const HL_LB_MIN_GAP_MS_ = 10 * 60 * 1000, HL_LB_HIDDEN_MIN_GAP_MS_ = 2 * 60 * 1000;
+let hlLbLastWriteAt_ = 0, hlLbTimer_ = null, hlLbLastHash_ = '', hlLbPending_ = false, hlLbLastDelay_ = 0;
+function hlLbPayload_(){
+  const stats = computeProgressStats(), periods = computeLpPeriodTotals();
+  return { ...stats, todayLP: periods.todayPts, weekLP: periods.weekPts, monthLP: periods.monthPts, subjectPoints: getLpData().subjectPoints };
 }
+function hlLbMyLiveRow_(){   // the student's own row from their current local numbers (so their own board is never stale)
+  if(!window.currentUser) return null;
+  const p = hlLbPayload_();
+  return { uid: window.currentUser.uid, name: window.currentUser.displayName || 'Student', totalCorrect: p.totalCorrect || 0, totalAttempted: p.totalAttempted || 0, overallPct: p.overallPct || 0,
+    learningPoints: p.learningPoints || 0, todayLP: p.todayLP || 0, weekLP: p.weekLP || 0, monthLP: p.monthLP || 0, subjectPoints: p.subjectPoints || {}, updatedAt: new Date().toISOString() };
+}
+window.hlLbMyLiveRow_ = hlLbMyLiveRow_;
+async function hlLbFlush_(){
+  clearTimeout(hlLbTimer_); hlLbTimer_ = null;
+  if(!hlLbPending_) return;
+  if(hlQuotaActive_()){ hlLbTimer_ = setTimeout(hlLbFlush_, hlQuotaRetryMs_()); return; }   // the free daily limit is full: wait for the reset instead of hammering the database
+  hlLbPending_ = false;
+  if(!window.syncStatsToLeaderboard || !window.currentUser) return;
+  const payload = hlLbPayload_(), hash = JSON.stringify(payload);
+  if(hash === hlLbLastHash_) return;   // nothing changed since the last write
+  hlLbLastHash_ = hash; hlLbLastWriteAt_ = Date.now();
+  try{ await window.syncStatsToLeaderboard(payload); }catch(e){}
+  if(hlQuotaActive_()){ hlLbLastHash_ = ''; hlLbPending_ = true; hlRequestLeaderboardSync_(); }   // the write was refused because the limit is full: send it after the reset
+}
+function hlRequestLeaderboardSync_(){
+  hlLbPending_ = true;
+  if(hlLbTimer_) return;   // one is already scheduled
+  hlLbLastDelay_ = Math.max(1500, hlLbLastWriteAt_ + HL_LB_MIN_GAP_MS_ - Date.now());
+  hlLbTimer_ = setTimeout(hlLbFlush_, hlLbLastDelay_);
+}
+document.addEventListener('visibilitychange', () => {
+  if(!hlLbPending_) return;
+  const sinceWrite = Date.now() - hlLbLastWriteAt_;
+  if(document.visibilityState === 'hidden' && sinceWrite >= HL_LB_HIDDEN_MIN_GAP_MS_) hlLbFlush_();
+  else if(document.visibilityState === 'visible' && sinceWrite >= HL_LB_MIN_GAP_MS_) hlLbFlush_();   // the waiting timer may have been paused in the background
+});
+window.addEventListener('pagehide', () => { if(hlLbPending_ && Date.now() - hlLbLastWriteAt_ >= HL_LB_HIDDEN_MIN_GAP_MS_) hlLbFlush_(); });
+function syncLearningPointsToLeaderboard(){ hlRequestLeaderboardSync_(); }
 
 // ---------- Screen Time & Study Time computation, all derived from the same daily log ----------
 function fmtDuration(totalSec){
@@ -26185,8 +26323,17 @@ async function renderDailyBattleCard(){
     document.getElementById('dailyBattleSubject').textContent = data.subject;
     document.getElementById('dailyBattleMeta').textContent = `${data.totalQuestions} Questions`;
 
-    const participantsSnap = await getDocs(collection(window.hlFirestore, 'dailyBattles', todayISO(), 'participants'));
-    document.getElementById('dailyBattleParticipants').textContent = `${participantsSnap.size} student${participantsSnap.size === 1 ? '' : 's'} participated`;
+    // Free-plan saver: a COUNT query (about 1 database read per 1,000 students) plus one read for "did I already join?", instead of reading every participant
+    const dbFns = window.hlFirestoreFns, dbParts = collection(window.hlFirestore, 'dailyBattles', todayISO(), 'participants');
+    let participantsCount = 0, alreadyDone = false;
+    if(typeof dbFns.getCountFromServer === 'function'){
+      participantsCount = (await dbFns.getCountFromServer(dbParts)).data().count;
+      alreadyDone = (await dbFns.getDoc(dbFns.doc(window.hlFirestore, 'dailyBattles', todayISO(), 'participants', window.currentUser.uid))).exists();
+    } else {   // an older database library: the previous way
+      const participantsSnap = await getDocs(dbParts);
+      participantsCount = participantsSnap.size; alreadyDone = participantsSnap.docs.some(d => d.id === window.currentUser.uid);
+    }
+    document.getElementById('dailyBattleParticipants').textContent = `${participantsCount} student${participantsCount === 1 ? '' : 's'} participated`;
 
     const now = new Date();
     const midnight = new Date(now); midnight.setHours(24,0,0,0);
@@ -26195,7 +26342,6 @@ async function renderDailyBattleCard(){
     const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2,'0');
     document.getElementById('dailyBattleEndsIn').textContent = `Ends in ${h}h ${m}m`;
 
-    const alreadyDone = participantsSnap.docs.some(d => d.id === window.currentUser.uid);
     if(alreadyDone){
       btn.textContent = '✓ Completed Today';
       btn.disabled = true;
@@ -26204,8 +26350,14 @@ async function renderDailyBattleCard(){
       btn.disabled = false;
     }
   }catch(e){
+    if(hlNoteQuotaError_(e)){
+      document.getElementById('dailyBattleSubject').textContent = 'Daily Battle is resting';
+      document.getElementById('dailyBattleParticipants').textContent = 'Back ' + hlQuotaWhenText_();
+      btn.textContent = 'Back later'; btn.disabled = true;
+      return;
+    }
     document.getElementById('dailyBattleSubject').textContent = 'Could not load today\'s battle';
-    btn.textContent = 'Retry';
+    btn.textContent = 'Retry'; btn.disabled = false;   // never leave Retry stuck after a "resting" message
   }
 }
 safeOn('dailyBattleJoinBtn', 'click', async () => {
@@ -26239,10 +26391,18 @@ async function submitDailyBattleResult(correct, total){
       name: window.currentUser.displayName || 'Student', score: correct, total, submittedAt: serverTimestamp(),
     });
     awardLearningPoints('dailyChallenge'); // once per day, on top of any per-question points already awarded above
-    const snap = await getDocs(collection(window.hlFirestore, 'dailyBattles', todayISO(), 'participants'));
-    const scores = snap.docs.map(d => d.data().score).sort((a, b) => b - a);
-    const rank = scores.indexOf(correct) + 1;
-    const totalParticipants = scores.length;
+    // Free-plan saver: rank = (students with a higher score) + 1, from two COUNT queries, instead of reading every participant
+    const dbFns2 = window.hlFirestoreFns, dbParts2 = collection(window.hlFirestore, 'dailyBattles', todayISO(), 'participants');
+    let rank, totalParticipants;
+    if(typeof dbFns2.getCountFromServer === 'function'){
+      totalParticipants = (await dbFns2.getCountFromServer(dbParts2)).data().count;
+      const better = (await dbFns2.getCountFromServer(dbFns2.query(dbParts2, dbFns2.where('score', '>', correct)))).data().count;
+      rank = better + 1;
+    } else {   // an older database library: the previous way
+      const snap = await getDocs(dbParts2);
+      const scores = snap.docs.map(d => d.data().score).sort((a, b) => b - a);
+      rank = scores.indexOf(correct) + 1; totalParticipants = scores.length;
+    }
     const betterThanPct = totalParticipants > 1 ? Math.round(((totalParticipants - rank) / (totalParticipants - 1)) * 100) : 100;
 
     document.getElementById('dbResultScore').textContent = `${correct} / ${total}`;
@@ -26252,7 +26412,7 @@ async function submitDailyBattleResult(correct, total){
       ? `You performed better than ${betterThanPct}% of participants.`
       : `You're the first participant today!`;
     showScreen(dailyBattleResultScreen);
-  }catch(e){}
+  }catch(e){ hlNoteQuotaError_(e); }
 }
 safeOn('dbResultDoneBtn', 'click', () => {
   showScreen(practiceScreen);
@@ -27450,6 +27610,7 @@ function hlSyncFeedbackSwitch_(){
 // signed-in account changes (see onAuthStateChanged).
 // ==========================================================================================
 function hlResetChatForAccountChange_(){
+  hlLbLastHash_ = ''; hlLbLastWriteAt_ = 0; hlLbPending_ = false; clearTimeout(hlLbTimer_); hlLbTimer_ = null;   // another student must never inherit a waiting update
   chatInitialized = false;
   chatHistory = [];
   const box = document.getElementById('chatMessages'); if(box) box.innerHTML = '';
@@ -27505,6 +27666,9 @@ function hlOpenAdminNotify_(){
     + '<div style="font-size:12px; line-height:1.5; margin:4px 0 10px; ' + S + '">Students who switched this kind off in Profile &gt; Notifications, are in Quiet Hours, or never set up notifications are skipped. Always test on your own phone first.</div>'
     + '<label style="font-size:12px; font-weight:700;">Kind</label>'
     + '<select id="hlNfKind" style="' + F + ' margin:4px 0 10px;"><option value="announcement">Important notice</option><option value="discount">Discount or offer</option><option value="whatsNew">New content or app update</option></select>'
+    + '<label style=\"font-size:12px; font-weight:700;\">How to send</label>'
+    + '<select id=\"hlNfMethod\" style=\"' + F + ' margin:4px 0 4px;\"><option value=\"careful\">To each student carefully (respects Quiet Hours; up to 5,000 students)</option><option value=\"everyone\">To everyone at once (fast; any number of students)</option></select>'
+    + '<div id=\"hlNfMethodNote\" style=\"font-size:11.5px; line-height:1.5; margin:0 0 10px; ' + S + '\"></div>'
     + '<label style="font-size:12px; font-weight:700;">Title <span id="hlNfTitleCount" style="font-weight:400; ' + S + '">0/60</span></label>'
     + '<input id="hlNfTitle" type="text" maxlength="60" placeholder="e.g. PHO exam form is open" style="' + F + ' margin:4px 0 10px;">'
     + '<label style="font-size:12px; font-weight:700;">Message <span id="hlNfMsgCount" style="font-weight:400; ' + S + '">0/180</span></label>'
@@ -27517,7 +27681,8 @@ function hlOpenAdminNotify_(){
     + '<div id="hlNfInfo" style="font-size:12.5px; line-height:1.5; margin:10px 0 0; min-height:18px;"></div>'
     + '<button type="button" id="hlNfClose" style="width:100%; margin:12px 0 0; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Close</button></div>';
   const $ = (id) => ov.querySelector('#' + id);
-  const st = { preview: null, previewKind: '', running: false, stop: false };
+  const st = { preview: null, previewKind: '', running: false, stop: false, topicTested: '' };
+  const keyOf = (m) => m.category + '|' + m.title + '|' + m.message;
   const KEY = uk('hl_broadcast_run');
   const say = (t) => { $('hlNfInfo').textContent = t; };
   const read = () => ({ category: $('hlNfKind').value, title: $('hlNfTitle').value.trim(), message: $('hlNfMsg').value.replace(/\s+/g, ' ').trim() });
@@ -27530,13 +27695,22 @@ function hlOpenAdminNotify_(){
     : d.error === 'sendFailed' ? 'The notification service refused the message. Please try again in a minute.'
     : d.error === 'tooMany' ? 'There are more students than this tool can safely send to in one go.'
     : d.error === 'unavailable' ? 'The server could not be reached. Please try again.'
+    : d.error === 'testFirst' ? 'First send a test to your phone with the same kind, title and message (a test counts for one hour).'
+    : d.error === 'sleepTime' ? 'Messages to everyone are only sent between 7 AM and 9 PM Nepal time, so nobody is woken up. Please try again in the morning.'
+    : d.error === 'topicSetup' ? 'The "everyone at once" route could not be set up for your phone. Use the careful method for now.'
     : hlAdminErrorText_(d);
   const refresh = () => {
     const m = read(), bad = problem(m);
     $('hlNfTitleCount').textContent = m.title.length + '/60'; $('hlNfMsgCount').textContent = m.message.length + '/180';
+    const everyone = $('hlNfMethod').value === 'everyone';
+    $('hlNfCheck').style.display = everyone ? 'none' : '';
+    $('hlNfTest').textContent = everyone ? '1. Send a test to my phone only' : '2. Send a test to my phone only';
+    $('hlNfSend').textContent = everyone ? '2. Send to everyone' : '3. Send to students';
+    $('hlNfMethodNote').textContent = everyone ? 'Everyone who allowed this kind of notification gets it at once, however many students there are. Quiet Hours cannot be applied and you cannot see the number beforehand, so this works only between 7 AM and 9 PM Nepal time, and only after a test of this same message.' : 'Each student is checked one by one: those who switched this kind off, are in Quiet Hours or never set up notifications are skipped. Up to 5,000 students.';
     $('hlNfCheck').disabled = st.running;
     $('hlNfTest').disabled = st.running || !!bad;
-    $('hlNfSend').disabled = st.running || !!bad || !(st.preview && st.previewKind === m.category);
+    $('hlNfSend').disabled = st.running || !!bad || (everyone ? st.topicTested !== keyOf(m) : !(st.preview && st.previewKind === m.category));
+    $('hlNfMethod').disabled = st.running;
     $('hlNfStop').style.display = st.running ? 'block' : 'none';
     ['hlNfKind', 'hlNfTitle', 'hlNfMsg'].forEach(id => { $(id).disabled = st.running; });
     $('hlNfClose').disabled = st.running;
@@ -27568,7 +27742,22 @@ function hlOpenAdminNotify_(){
       say('The connection was lost at ' + offset + ' of ' + (total || '?') + '. Nothing is sent twice: use "Continue" below when you are back online.');
     }finally{ st.running = false; refresh(); showResume(); }
   }
+  async function sendToEveryone(m){   // one call reaches everyone in the channel; a repeat of the same send (lost reply) can never send twice
+    if(st.topicTested !== keyOf(m)){ say('First send a test to your phone (button 1).'); return; }
+    if(!(await customConfirm('Send \"' + m.title + '\" to EVERYONE who allowed this kind of notification? It reaches all of them at once and cannot be taken back.'))) return;
+    const KEY2 = uk('hl_topic_run'); let run = null; try{ run = JSON.parse(localStorage.getItem(KEY2) || 'null'); }catch(e){ run = null; }
+    if(!run || run.key !== keyOf(m) || Date.now() - run.at > 30 * 60 * 1000) run = { key: keyOf(m), runId: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10), at: Date.now() };
+    try{ localStorage.setItem(KEY2, JSON.stringify(run)); }catch(e){}
+    st.running = true; refresh(); say('Sending…');
+    try{
+      const d = await post(Object.assign({ action: 'adminTopicBroadcast', mode: 'send', runId: run.runId }, m));
+      if(d && d.ok){ try{ localStorage.removeItem(KEY2); }catch(e){} st.topicTested = ''; say(d.alreadySent ? 'This was already sent a moment ago. Nothing was sent twice.' : 'Sent to everyone who allowed this kind of notification.'); }
+      else say(errText(d));
+    }catch(e){ say('The connection was lost. Press \"Send to everyone\" again: it will not be sent twice.'); }
+    finally{ st.running = false; refresh(); }
+  }
   ['hlNfKind', 'hlNfTitle', 'hlNfMsg'].forEach(id => $(id).addEventListener('input', () => { if(id === 'hlNfKind'){ st.preview = null; say(''); } refresh(); }));
+  $('hlNfMethod').addEventListener('change', () => { st.preview = null; st.topicTested = ''; say(''); refresh(); });
   $('hlNfCheck').onclick = async () => {
     const m = read(); say('Checking…');
     try{
@@ -27583,11 +27772,18 @@ function hlOpenAdminNotify_(){
   $('hlNfTest').onclick = async () => {
     const m = read(); if(problem(m)){ say(problem(m)); return; }
     say('Sending a test to your phone…');
-    try{ const d = await post(Object.assign({ action: 'adminBroadcast', mode: 'test' }, m)); say(d && d.ok ? 'Sent to your phone only. Check how it looks, then send to students.' : errText(d)); }
+    try{
+      const everyone = $('hlNfMethod').value === 'everyone';
+      const d = await post(Object.assign({ action: everyone ? 'adminTopicBroadcast' : 'adminBroadcast', mode: 'test' }, m));
+      if(everyone && d && d.ok) st.topicTested = keyOf(m);
+      say(d && d.ok ? 'Sent to your phone only. Check how it looks, then send to ' + (everyone ? 'everyone.' : 'students.') : errText(d));
+      refresh();
+    }
     catch(e){ say('Could not reach the server. Please check your connection.'); }
   };
   $('hlNfSend').onclick = async () => {
     const m = read(); if(problem(m)){ say(problem(m)); return; }
+    if($('hlNfMethod').value === 'everyone'){ await sendToEveryone(m); return; }
     if(!(st.preview && st.previewKind === m.category)){ say('First press "Check who will receive it".'); return; }
     if(!(await customConfirm('Send "' + m.title + '" to about ' + st.preview.willReceive + ' students now? This cannot be taken back.'))) return;
     loop(0, null, m, st.preview.total);
@@ -27701,6 +27897,114 @@ if(HL_NATIVE_){
     }catch(e){}
   })();
 }
+// ==========================================================================================
+// FREE-LIMIT GUARD (Oct 2026). The free Firestore plan allows 50,000 reads and 20,000 writes a day for ALL students; when that is used up, Firestore answers every request with the
+// error "resource-exhausted" (Quota exceeded) until midnight US Pacific time (the afternoon in Nepal). Before this, the app failed silently (the leaderboard said "No entries yet", Daily Battle said
+// "Could not load", points were lost). Now: (1) the quota error is recognised wherever it appears (explicit catches + one safety net on unhandled errors and on the database library's own
+// console messages), (2) ONE calm banner explains it (at most once an hour) with the reset time in Nepal time, (3) the leaderboard and Daily Battle show a proper "resting" message,
+// (4) leaderboard writes WAIT for the reset instead of hammering the database, then are sent. Nothing here changes behaviour while the limit is not reached.
+// ==========================================================================================
+let hlQuotaUntil_ = 0, hlQuotaBannerAt_ = 0;
+function hlIsQuotaError_(x){
+  try{
+    if(x === null || x === undefined) return false;
+    if(typeof x === 'string') return /resource-exhausted/i.test(x);
+    const code = String(x.code || '').toLowerCase(), msg = String(x.message || x.reason || '').toLowerCase();
+    if(code === 'resource-exhausted' || code === 'firestore/resource-exhausted') return true;
+    if(/resource-exhausted/.test(msg)) return true;
+    return String(x.name || '') === 'FirebaseError' && /quota/.test(msg);
+  }catch(e){ return false; }
+}
+function hlNextPacificMidnightMs_(nowMs){   // when the free daily limit resets: the next midnight in Los Angeles
+  nowMs = nowMs || Date.now();
+  try{
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date(nowMs));
+    const get = (t) => Number((parts.find(p => p.type === t) || {}).value) || 0;
+    let h = get('hour'); if(h === 24) h = 0;
+    return nowMs + (86400 - (h * 3600 + get('minute') * 60 + get('second'))) * 1000;
+  }catch(e){ return nowMs + 6 * 3600 * 1000; }
+}
+function hlNepalTimeText_(ms){
+  try{ return new Date(ms).toLocaleTimeString('en-US', { timeZone: 'Asia/Kathmandu', hour: 'numeric', minute: '2-digit' }); }catch(e){ return ''; }
+}
+function hlQuotaActive_(){ return Date.now() < hlQuotaUntil_; }
+function hlQuotaRetryMs_(){ return Math.min(30 * 60 * 1000, Math.max(60 * 1000, hlQuotaUntil_ - Date.now())); }
+function hlQuotaWhenText_(){ const t = hlNepalTimeText_(hlQuotaUntil_); return t ? ('after about ' + t + ' Nepal time') : 'later today'; }
+function hlShowQuotaBanner_(){
+  if(Date.now() - hlQuotaBannerAt_ < 60 * 60 * 1000) return;   // at most once an hour
+  hlQuotaBannerAt_ = Date.now();
+  try{
+    let box = document.getElementById('hlQuotaBanner'); if(box) box.remove();
+    box = document.createElement('div'); box.id = 'hlQuotaBanner'; box.setAttribute('role', 'status');
+    box.style.cssText = 'position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top, 0px) + 8px); z-index:99999; width:min(92vw, 420px); background:#1f2937; color:#fff; border-radius:14px; padding:12px 40px 12px 14px; box-shadow:0 8px 24px rgba(0,0,0,.35); font-size:13px; line-height:1.5;';
+    const txt = document.createElement('div');
+    txt.textContent = "Today's free online limit is full. Your progress stays saved on this phone. The leaderboard, battles and other online features will work again " + hlQuotaWhenText_() + '.';
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '✕'; x.setAttribute('aria-label', 'Close');
+    x.style.cssText = 'position:absolute; top:6px; right:6px; width:30px; height:30px; border:0; background:transparent; color:#fff; font-size:16px;';
+    x.addEventListener('click', () => box.remove());
+    box.appendChild(txt); box.appendChild(x); document.body.appendChild(box);
+    setTimeout(() => { try{ box.remove(); }catch(e){} }, 14000);
+  }catch(e){}
+}
+function hlNoteQuotaError_(err){   // returns true when err is the free-limit error; remembers it until the reset and explains it once
+  if(!hlIsQuotaError_(err)) return false;
+  hlQuotaUntil_ = hlNextPacificMidnightMs_() + 2 * 60 * 1000;
+  hlShowQuotaBanner_();
+  return true;
+}
+window.hlIsQuotaError_ = hlIsQuotaError_; window.hlNoteQuotaError_ = hlNoteQuotaError_; window.hlQuotaActive_ = hlQuotaActive_; window.hlQuotaRetryMs_ = hlQuotaRetryMs_;
+window.addEventListener('unhandledrejection', (ev) => { try{ hlNoteQuotaError_(ev && ev.reason); }catch(e){} });
+['error', 'warn'].forEach((k) => {   // the database library reports a refused listener / request on the console even when the app handles it
+  const original = console[k];
+  console[k] = function(){ try{ for(let i = 0; i < arguments.length; i++){ if(hlIsQuotaError_(arguments[i])){ hlNoteQuotaError_(arguments[i]); break; } } }catch(e){} return original.apply(this, arguments); };
+});
+// ==========================================================================================
+// HOME ANSWERS REMEMBERED FOR 5 MINUTES (free-plan saver, Oct 2026). Every return to Home re-ran four loaders, and each asked the backend again (questionOfDay, homeCarousel, examDates,
+// notifications): 4 backend requests per return, with no "asked recently" check, many times per session. Now an answer to exactly those four public requests is remembered in memory
+// for 5 minutes (the same address, the same day), so going back and forth costs nothing. Pull-to-refresh and the owner's "Manage this screen" always get a fresh answer
+// (hlClearGetCache_). Only successful GET answers are remembered (never errors, never POST, never any other request); every start of the app begins empty.
+// ==========================================================================================
+const HL_GET_CACHE_ACTIONS_ = ['questionOfDay', 'homeCarousel', 'examDates', 'notifications'];
+const HL_GET_CACHE_TTL_MS_ = 5 * 60 * 1000;
+const hlGetCache_ = new Map();
+function hlClearGetCache_(){ hlGetCache_.clear(); }
+window.hlClearGetCache_ = hlClearGetCache_;
+(function(){
+  const nativeFetch = window.fetch ? window.fetch.bind(window) : null;
+  if(!nativeFetch) return;
+  window.fetch = function(input, init){
+    try{
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      const method = String((init && init.method) || (input && typeof input !== 'string' && input.method) || 'GET').toUpperCase();
+      const base = window.SHEET_API_URL || '';
+      if(method === 'GET' && base && url.indexOf(base + '?') === 0){
+        const m = /[?&]action=([A-Za-z]+)(?:&|$)/.exec(url);
+        if(m && HL_GET_CACHE_ACTIONS_.indexOf(m[1]) !== -1){
+          let day = ''; try{ day = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' }); }catch(e){}
+          const key = url + '|' + day;   // a new Nepal day never reuses yesterday's answer (Question of the Day)
+          const hit = hlGetCache_.get(key);
+          if(hit && Date.now() - hit.at < HL_GET_CACHE_TTL_MS_) return Promise.resolve(new Response(hit.body, { status: 200, headers: { 'Content-Type': hit.type } }));
+          return nativeFetch(input, init).then((res) => {
+            try{
+              if(res && res.ok){
+                const copy = res.clone(), type = res.headers.get('content-type') || 'application/json';
+                copy.text().then((body) => {
+                  try{
+                    if(!body || body.length > 400000) return;
+                    const data = JSON.parse(body);
+                    if(Array.isArray(data) || (data && typeof data === 'object' && !data.error)) hlGetCache_.set(key, { at: Date.now(), body: body, type: type });
+                  }catch(e){}
+                }).catch(() => {});
+              }
+            }catch(e){}
+            return res;
+          });
+        }
+      }
+    }catch(e){}
+    return nativeFetch(input, init);
+  };
+})();
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
 function hlBlockedMap_(){
@@ -28329,7 +28633,7 @@ function hlCmErrorText_(data){
 function hlCmRefreshScreen_(screenId){
   try{
     const fn = SCREEN_REFRESH_MAP && SCREEN_REFRESH_MAP[screenId];
-    if(fn){ fn(); return true; }
+    if(fn){ if(window.hlClearGetCache_) window.hlClearGetCache_(); fn(); return true; }
   }catch(e){}
   return false;
 }
