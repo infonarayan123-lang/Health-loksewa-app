@@ -1108,6 +1108,16 @@
   .profile-logout-card{ border-radius:12px; border:1px solid var(--line); margin:0 4px 18px; padding:2px 16px; }
   .profile-logout-card .profile-menu-item{ border-bottom:none; padding:12px 4px; }
   .profile-logout-card .profile-menu-item.logout{ color:#F87171; }
+  /* ---- CONTENT SHIELD (Oct 2026): on the screens that hold the app's content, text cannot be selected, copied, dragged or printed, and a faint watermark with the student's ID covers the page.
+     Fields where the student types (and their own notes, chat and settings screens) stay usable. A screen is protected unless it is on the exempt list in the script. ---- */
+  body.hl-shield-on .screen.active{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  body.hl-shield-on .screen.active img{ -webkit-user-drag:none; user-drag:none; }
+  body.hl-shield-on .screen.active input, body.hl-shield-on .screen.active textarea, body.hl-shield-on .screen.active [contenteditable="true"]{ -webkit-user-select:text; user-select:text; -webkit-touch-callout:default; }
+  #hlWatermark{ position:fixed; left:0; top:0; right:0; bottom:0; pointer-events:none; z-index:2147483000; display:none; background-repeat:repeat; }
+  body.hl-shield-on #hlWatermark{ display:block; }
+  #hlShieldCover{ position:fixed; left:0; top:0; right:0; bottom:0; z-index:2147483600; background:#0F172A; color:#E2E8F0; display:none; align-items:center; justify-content:center; font:600 15px Inter,sans-serif; text-align:center; padding:24px; }
+  body.hl-shield-cover #hlShieldCover{ display:flex; }
+  @media print{ body.hl-shield-on *{ visibility:hidden !important; } body.hl-shield-on::before{ visibility:visible !important; content:'Printing is not allowed.'; display:block; padding:40px; font:600 18px sans-serif; color:#000; } }
   .profile-subrow{
     display:flex; justify-content:space-between; align-items:center;
     padding:12px 0; border-bottom:1px solid var(--line);
@@ -7281,6 +7291,8 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
           if(out && out.ok && out.refreshed){ snap = await getDoc(ref); data = snap.exists() ? snap.data() : data; }
         }catch(e){}
       }
+      const boardKey = (period !== 'all' && window.hlLbPeriodKey_) ? window.hlLbPeriodKey_(period) : '';
+      if(data && data.periodKey !== undefined && boardKey && data.periodKey !== boardKey) return [];   // the saved board belongs to an earlier day / week / month: nobody has points in the new one yet
       return (data && Array.isArray(data.rows) && data.updatedAt) ? data.rows : null;
     }catch(e){ return null; }
   }
@@ -8400,7 +8412,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyWrDXAyWJtbKSrCuTIWegGZQMFAuhxqBPEiQoSf2lKEt55g1NceN4cIMsR-u76k5GNvg/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzKAiTBfwaL-vucFg5l5mzQEqoFca5DVu8h8PJhOMryV8-1ab7G0DhjAAtTu9DhxwtgKw/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -20221,6 +20233,17 @@ async function renderLeaderboard(){
     `;
   }
 
+  if(myIndex === -1 && !lbActiveSubject){   // not on the board: say exactly what it takes (or that the points will appear soon)
+    const fld = { today: 'todayLP', week: 'weekLP', month: 'monthLP', all: 'learningPoints' }[lbActivePeriod];
+    const mineRow = window.hlLbMyLiveRow_ ? window.hlLbMyLiveRow_() : null, myPts = mineRow ? (Number(mineRow[fld]) || 0) : 0;
+    const when = { today: 'today', week: 'this week', month: 'this month', all: 'of all time' }[lbActivePeriod] || '';
+    let note = '';
+    if(myPts <= 0) note = 'Answer a question to join the board ' + when + '.';
+    else if(results.length >= 100){ const cutoff = Number(results[99].displayPoints) || 0; note = 'The top 100 ' + when + ' starts at ' + cutoff + ' LP. You have ' + myPts + ' LP, so you need ' + Math.max(1, cutoff - myPts + 1) + ' more.'; }
+    else note = 'Your ' + myPts + ' LP will appear on this board within a few minutes.';
+    rankCardWrap.innerHTML = '<div class="content-card" id="lbOutsideNote"><div style="font-size:11px; font-weight:700; opacity:0.8;">MY RANK</div><div style="font-size:13.5px; line-height:1.5; margin-top:4px;">' + hlEsc(note) + '</div></div>';
+  }
+
   const top10 = results.slice(0, 10);
   const medalRanks = ['top1','top2','top3'];
   let html = top10.map((r, i) => {
@@ -24357,6 +24380,57 @@ function hlLbMyLiveRow_(){   // the student's own row from their current local n
     learningPoints: p.learningPoints || 0, todayLP: p.todayLP || 0, weekLP: p.weekLP || 0, monthLP: p.monthLP || 0, subjectPoints: p.subjectPoints || {}, updatedAt: new Date().toISOString() };
 }
 window.hlLbMyLiveRow_ = hlLbMyLiveRow_;
+// ---- PERIOD LEADERBOARDS, app side (Oct 2026). The Today / This Week / This Month boards belong to ONE day / week / month and are fed by the students: after the app saves a student's points
+// (hlLbFlush_), it asks the backend's tiny public note (lbInfo: which period, how many rows, the lowest score) and sends "submitPeriodScore" ONLY if this student's points could make the
+// board; the phone sends no numbers (the backend reads the student's own saved record). At most one request per board every 30 minutes, none for the same points twice, none without points.
+// Why: the old boards were picked from STORED points, which go stale, so old leaders crowded out the students playing now. ----
+const HL_LB_PERIOD_FIELD_ = { today: 'todayLP', week: 'weekLP', month: 'monthLP' };
+const HL_LB_SUBMIT_GAP_MS_ = 30 * 60 * 1000, HL_LB_INFO_TTL_MS_ = 15 * 60 * 1000, HL_LB_BOARD_SIZE_ = 100;
+let hlLbInfo_ = null, hlLbInfoAt_ = 0, hlLbSubmitState_ = { uid: '', last: {}, noGo: {} };
+function hlLbPeriodKey_(period){   // today = the date, week = the date of its Monday, month = yyyy-MM, all in Nepal time (the same as the backend)
+  let today = ''; try{ today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kathmandu' }); }catch(e){}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(today)) return '';
+  if(period === 'today') return today;
+  if(period === 'month') return today.slice(0, 7);
+  const p = today.split('-'), d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+window.hlLbPeriodKey_ = hlLbPeriodKey_;
+async function hlLbGetInfo_(){
+  if(hlLbInfo_ && Date.now() - hlLbInfoAt_ < HL_LB_INFO_TTL_MS_) return hlLbInfo_;
+  try{
+    const res = await fetch(`${SHEET_API_URL}?action=lbInfo`);
+    const d = await res.json();
+    if(d && d.week && d.today && d.month){ hlLbInfo_ = d; hlLbInfoAt_ = Date.now(); return d; }
+  }catch(e){}
+  return null;
+}
+async function hlLbMaybeSubmit_(payload){
+  try{
+    const user = window.currentUser; if(!user || !payload) return;
+    if(hlLbSubmitState_.uid !== user.uid){ hlLbSubmitState_ = { uid: user.uid, last: {}, noGo: {} }; hlLbInfo_ = null; hlLbInfoAt_ = 0; }   // another account on this phone: start fresh
+    const todo = [];
+    Object.keys(HL_LB_PERIOD_FIELD_).forEach(period => {
+      const value = Number(payload[HL_LB_PERIOD_FIELD_[period]]) || 0; if(value <= 0) return;
+      const key = hlLbPeriodKey_(period), last = hlLbSubmitState_.last[period], ng = (hlLbSubmitState_.noGo || {})[period];
+      if(last && last.key === key && (last.value === value || Date.now() - last.at < HL_LB_SUBMIT_GAP_MS_)) return;
+      if(ng && ng.key === key && ng.value === value && Date.now() - ng.at < HL_LB_INFO_TTL_MS_) return;   // already looked: these exact points cannot make this board (re-check after 15 minutes or when they change)
+      todo.push({ period: period, value: value, key: key });
+    });
+    if(!todo.length) return;
+    const info = await hlLbGetInfo_(); if(!info) return;
+    for(const t of todo){
+      const b = info[t.period];
+      if(b && b.key === t.key && b.count >= HL_LB_BOARD_SIZE_ && t.value <= b.min){ hlLbSubmitState_.noGo = hlLbSubmitState_.noGo || {}; hlLbSubmitState_.noGo[t.period] = { key: t.key, value: t.value, at: Date.now() }; continue; }   // cannot make the board: costs nothing
+      const token = window.getAiAuthToken ? await window.getAiAuthToken() : ''; if(!token) return;
+      hlLbSubmitState_.last[t.period] = { key: t.key, value: t.value, at: Date.now() };
+      const res = await postJsonWithTimeout({ action: 'submitPeriodScore', idToken: token, period: t.period });
+      try{ await res.json(); }catch(e){}
+      hlLbInfoAt_ = 0;   // this student changed the board: ask again next time
+    }
+  }catch(e){}
+}
 async function hlLbFlush_(){
   clearTimeout(hlLbTimer_); hlLbTimer_ = null;
   if(!hlLbPending_) return;
@@ -24368,6 +24442,7 @@ async function hlLbFlush_(){
   hlLbLastHash_ = hash; hlLbLastWriteAt_ = Date.now();
   try{ await window.syncStatsToLeaderboard(payload); }catch(e){}
   if(hlQuotaActive_()){ hlLbLastHash_ = ''; hlLbPending_ = true; hlRequestLeaderboardSync_(); }   // the write was refused because the limit is full: send it after the reset
+  if(!hlQuotaActive_()) hlLbMaybeSubmit_(payload);
 }
 function hlRequestLeaderboardSync_(){
   hlLbPending_ = true;
@@ -27280,7 +27355,7 @@ function hlSpRenderSyllabus_(box){
   let html = '';
   if(hlSp_.generalNotes.length){
     html += '<div class="sp-section"><h4>General notes</h4>' + hlSp_.generalNotes.map((n, i) =>
-      '<button type="button" class="sp-topic" data-act="gnote" data-i="' + i + '"><span>' + hlEsc(n.Title || 'Note') + '</span><span class="sp-badges">📝</span></button>').join('') + '</div>';
+      '<button type="button" class="sp-topic" data-act="gnote" data-i="' + i + '"><span>' + (hlSpLocked_(n) ? '🔒 ' : '') + hlEsc(n.Title || 'Note') + '</span><span class="sp-badges">' + (hlSpLocked_(n) ? 'Premium' : '📝') + '</span></button>').join('') + '</div>';
   }
   if(!hlSp_.tree.length){ box.innerHTML = html + hlSpEmptyText_('Topic-wise notes are being prepared. Please check back soon.'); return; }
   hlSp_.tree.forEach((sec, si) => {
@@ -27299,9 +27374,46 @@ function hlSpRenderSyllabus_(box){
   });
   box.innerHTML = html;
 }
+// ---- Second Paper PREMIUM lock (Oct 2026). A row the owner marks "Premium" in the Access column arrives with Locked = true and WITHOUT its link / body / key points / answer. Tapping it asks the
+// backend (login + Premium check, the same way as a Premium Special Set); a student without Premium sees the upgrade message and never receives the content. An unlocked row is remembered only in
+// memory for this account (never saved on the phone). Rows without a lock work exactly as before. ----
+function hlSpLocked_(r){ return !!r && String(r.Locked) === 'true'; }
+function hlSpUnlockKey_(kind, row){ return ((window.currentUser && window.currentUser.uid) || '') + ':' + kind + ':' + (row && row.Id); }
+async function hlSpUnlock_(kind, row, backScreen){   // -> the row with its premium fields filled in, or null (the student has been told why)
+  if(!hlSpLocked_(row)) return row;
+  hlSp_.unlocked = hlSp_.unlocked || {};
+  const key = hlSpUnlockKey_(kind, row);
+  if(hlSp_.unlocked[key]) return Object.assign({}, row, hlSp_.unlocked[key]);
+  if(hlSp_.unlocking) return null;
+  hlSp_.unlocking = true;
+  try{
+    let d = null;
+    try{
+      const res = await postJsonWithTimeout({ action: 'secondPaperUnlock', idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''), kind: kind, id: String(row.Id || '') });
+      d = await res.json();
+    }catch(err){ alert('Could not open this right now. Please check your internet and try again.'); return null; }
+    if(d && d.ok === true && d.fields && typeof d.fields === 'object'){
+      const f = {}; Object.keys(d.fields).forEach(k => { f[k] = String(d.fields[k] == null ? '' : d.fields[k]); });
+      hlSp_.unlocked[key] = f;
+      return Object.assign({}, row, f);
+    }
+    if(d && d.error === 'limit'){
+      if(await showPremiumLockModal('This is for Premium members. Upgrade to Premium to open it?')){ premiumBackTarget = backScreen || document.querySelector('.screen.active'); showScreen(upgradeScreen); renderPremiumStatus(); }
+    } else if(d && d.error === 'auth'){ alert('Please close the app completely and open it again, then try once more.');
+    } else if(d && d.error === 'unavailable'){ alert('Premium could not be checked right now. Please try again in a minute.');
+    } else if(d && d.error === 'notFound'){ alert('This item is not available any more.'); hlSpLoad_();
+    } else { alert('Could not open this right now. Please try again.'); }
+    return null;
+  } finally { hlSp_.unlocking = false; }
+}
+async function hlSpOpenPdfRow_(kind, row, title, backScreen){
+  const full = await hlSpUnlock_(kind, row, backScreen);
+  if(full) hlSpOpenPdf_(title, full.Link, backScreen);
+}
 function hlSpPdfCard_(p){
   const href = hlSpUrl_(p.Link), ctx = [hlSpLabel_('Unit', p.Unit), p.Topic].filter(Boolean).join(' · ');
   const inner = (ctx ? '<div class="ca-date">' + hlEsc(ctx) + '</div>' : '') + '<h4>' + hlEsc(p.Title || 'PDF') + '</h4>' + (p.Description ? '<p>' + hlEsc(p.Description) + '</p>' : '');
+  if(hlSpLocked_(p)){ hlSp_.lockedPdfs = hlSp_.lockedPdfs || {}; hlSp_.lockedPdfs[p.Id] = p; return '<button type="button" class="content-card" data-act="pdflock" data-id="' + hlEsc(p.Id) + '" style="display:block; width:100%; text-align:left; color:inherit;">' + inner.replace('<h4>', '<h4>🔒 ') + '<div class="ca-date">Premium · tap to open</div></button>'; }
   return href ? '<a class="content-card" style="display:block; text-decoration:none; color:inherit;" href="' + hlEsc(href) + '" target="_blank" rel="noopener">' + inner + '</a>' : '<div class="content-card">' + inner + '</div>';
 }
 function hlSpRenderPdfs_(box){
@@ -27322,14 +27434,15 @@ function hlSpRenderTopic_(){
   document.getElementById('spTopicTitle').textContent = c.topic || 'Whole unit';
   document.getElementById('spTopicSub').textContent = [hlSpLabel_('Section', c.section), hlSpLabel_('Unit', c.unit)].filter(Boolean).join(' · ');
   let html = '';
-  if(notes.length) html += '<div class="sp-block-title">Notes</div>' + notes.map((n, i) => '<button type="button" class="sp-topic" data-act="tnote" data-i="' + i + '"><span>' + hlEsc(n.Title || 'Note') + '</span><span class="sp-badges">Read →</span></button>').join('');
+  if(notes.length) html += '<div class="sp-block-title">Notes</div>' + notes.map((n, i) => '<button type="button" class="sp-topic" data-act="tnote" data-i="' + i + '"><span>' + (hlSpLocked_(n) ? '🔒 ' : '') + hlEsc(n.Title || 'Note') + '</span><span class="sp-badges">' + (hlSpLocked_(n) ? 'Premium' : 'Read →') + '</span></button>').join('');
   if(qs.length) html += '<div class="sp-block-title">Past questions</div>' + qs.map((q, i) => '<button type="button" class="sp-topic" data-act="tq" data-i="' + i + '"><span>' + hlEsc([q.Year, q.QNo ? 'Q' + q.QNo : '', q.Marks ? q.Marks + ' marks' : ''].filter(Boolean).join(' · ') || 'Question') + '</span><span class="sp-badges">Read →</span></button>').join('');
   if(pdfs.length) html += '<div class="sp-block-title">PDF resources</div>' + pdfs.map(hlSpPdfCard_).join('');
   document.getElementById('spTopicContent').innerHTML = html || hlSpEmptyText_('No notes or PDFs for this topic yet. Please check back soon.');
 }
-function hlSpOpenNote_(n, backScreen){
-  const link = hlSpUrl_(n.Link);
-  openLegalInfo(n.Title || 'Note', hlSpFormatBody_(n.Body) + (link ? '<p><a href="' + hlEsc(link) + '" target="_blank" rel="noopener">Open the PDF</a></p>' : ''));
+async function hlSpOpenNote_(n, backScreen){
+  const full = await hlSpUnlock_('notes', n, backScreen); if(!full) return;
+  const link = hlSpUrl_(full.Link);
+  openLegalInfo(full.Title || 'Note', hlSpFormatBody_(full.Body) + (link ? '<p><a href="' + hlEsc(link) + '" target="_blank" rel="noopener">Open the PDF</a></p>' : ''));
   legalInfoBackTarget = backScreen;
 }
 // ---- Past questions (Step 2): years > questions > question, key points and model answer ----
@@ -27389,16 +27502,21 @@ function hlSpSaveQuestionNote_(q, head, btn){
   }catch(e){ btn.textContent = 'Could not save'; }
 }
 function hlSpOpenQuestion_(q, backScreen){
+  if(hlSpLocked_(q) && hlSp_.unlocked && hlSp_.unlocked[hlSpUnlockKey_('questions', q)]) q = Object.assign({}, q, hlSp_.unlocked[hlSpUnlockKey_('questions', q)], { Locked: 'false' });   // already unlocked in this session
+  const lockedQ = hlSpLocked_(q);
   const head = [q.Year, q.QNo ? 'Q' + q.QNo : '', q.Marks ? q.Marks + ' marks' : ''].filter(Boolean).join(' · ') || 'Question';
   const place = [hlSpLabel_('Section', q.Section), hlSpLabel_('Unit', q.Unit), q.Topic].filter(Boolean).join(' · ');
   openLegalInfo(head,
     '<h3>Question</h3>' + hlSpFormatBody_(q.Question)
     + (place ? '<p style="color:var(--ink-soft); font-size:12px;">' + hlEsc(place) + '</p>' : '')
-    + (q.KeyPoints ? '<h3>Key points</h3>' + hlSpFormatBody_(q.KeyPoints) : '')
-    + '<h3>Model answer</h3>' + (q.Answer ? hlSpFormatBody_(q.Answer) : '<p>The model answer has not been added yet.</p>')
-    + '<button type="button" id="spSaveQ" style="margin-top:12px;">Save to My Notes</button>');
+    + (lockedQ ? '<h3>Key points and model answer</h3><p>🔒 This is for Premium members.</p><button type="button" id="spUnlockQ" style="margin-top:12px;">Unlock with Premium</button>'
+      : (q.KeyPoints ? '<h3>Key points</h3>' + hlSpFormatBody_(q.KeyPoints) : '')
+        + '<h3>Model answer</h3>' + (q.Answer ? hlSpFormatBody_(q.Answer) : '<p>The model answer has not been added yet.</p>')
+        + '<button type="button" id="spSaveQ" style="margin-top:12px;">Save to My Notes</button>'));
   legalInfoBackTarget = backScreen;
   const btn = document.getElementById('spSaveQ'); if(btn) btn.addEventListener('click', () => hlSpSaveQuestionNote_(q, head, btn));
+  const ubtn = document.getElementById('spUnlockQ');
+  if(ubtn) ubtn.addEventListener('click', async () => { const full = await hlSpUnlock_('questions', q, backScreen); if(full) hlSpOpenQuestion_(Object.assign({}, full, { Locked: 'false' }), backScreen); });
 }
 // ---- PDF notes by section and PDF solutions (final step): free, opened inside the app in "view only" mode ----
 function hlSpViewerUrl_(url){
@@ -27406,18 +27524,18 @@ function hlSpViewerUrl_(url){
   const id = d1 ? d1[1] : (d2 ? d2[1] : null);
   return id ? 'https://drive.google.com/file/d/' + id + '/preview' : 'https://docs.google.com/gview?embedded=1&url=' + encodeURIComponent(url);   // Google's viewer for any other public PDF
 }
-function hlSpOpenPdf_(title, link){
+function hlSpOpenPdf_(title, link, backScreen){
   const url = hlSpUrl_(link);
   if(!url){ alert('This PDF has not been added yet.'); return; }
   document.getElementById('docViewerTitle').textContent = title || 'PDF';
   document.getElementById('docViewerFrame').src = hlSpViewerUrl_(url);
-  docViewerBackTarget = secondPaperScreen;
+  docViewerBackTarget = backScreen || secondPaperScreen;
   currentDocViewerItem = { title: title || 'PDF', link: url, viewOnly: true };
   showScreen(docViewerScreen);
 }
 function hlSpPickTab_(){ return 'menu'; }   // the Second Paper always opens on its three boxes
 function hlSpRenderNotesPdf_(box){
-  const rows = hlSp_.data.sectionNotes.filter(hlSpVisible_).filter(r => hlSpUrl_(r.Link) && (r.Topic || r.Title));
+  const rows = hlSp_.data.sectionNotes.filter(hlSpVisible_).filter(r => (hlSpUrl_(r.Link) || hlSpLocked_(r)) && (r.Topic || r.Title));
   hlSp_.pdfNotes = [];
   if(!rows.length){ box.innerHTML = hlSpEmptyText_('Section notes are being prepared. Please check back soon.'); return; }
   const groups = [], idx = {};
@@ -27431,16 +27549,16 @@ function hlSpRenderNotesPdf_(box){
     g.items.sort((a, b) => hlSpCmp_(a.Order, b.Order));
     const list = g.items.map(r => {
       const i = hlSp_.pdfNotes.push(r) - 1, main = r.Topic || r.Title, sub = (r.Topic && r.Title && hlSpKey_(r.Title) !== hlSpKey_(r.Topic)) ? r.Title : '';
-      return '<button type="button" class="sp-topic" data-act="spnote" data-i="' + i + '"><span>' + hlEsc(main) + (sub ? '<br><span class="sp-badges" style="white-space:normal;">' + hlEsc(sub) + '</span>' : '') + '</span><span class="sp-badges">👁 View</span></button>';
+      return '<button type="button" class="sp-topic" data-act="spnote" data-i="' + i + '"><span>' + hlEsc(main) + (sub ? '<br><span class="sp-badges" style="white-space:normal;">' + hlEsc(sub) + '</span>' : '') + '</span><span class="sp-badges">' + (hlSpLocked_(r) ? '🔒 Premium' : '👁 View') + '</span></button>';
     }).join('');
     return '<div class="sp-section"><h4>' + hlEsc(hlSpLabel_('Section', g.name) || 'General') + (g.title ? ' — ' + hlEsc(g.title) : '') + '</h4><div class="sp-sub">' + hlSpPlural_(g.items.length, 'note') + '</div>' + list + '</div>';
   }).join('');
 }
 function hlSpRenderSolutions_(box){
-  const rows = hlSp_.data.solutions.filter(hlSpVisible_).filter(r => hlSpUrl_(r.Link) && r.Title).sort((a, b) => hlSpCmp_(a.Order, b.Order));
+  const rows = hlSp_.data.solutions.filter(hlSpVisible_).filter(r => (hlSpUrl_(r.Link) || hlSpLocked_(r)) && r.Title).sort((a, b) => hlSpCmp_(a.Order, b.Order));
   hlSp_.solutions = rows;
   if(!rows.length){ box.innerHTML = hlSpEmptyText_('Solutions are being prepared. Please check back soon.'); return; }
-  box.innerHTML = rows.map((r, i) => '<button type="button" class="sp-topic" data-act="spsol" data-i="' + i + '"><span><b>' + hlEsc(r.Title) + '</b><br><span class="sp-badges" style="white-space:normal;">' + hlEsc(r.Description || 'Past question solutions') + '</span></span><span class="sp-badges">👁 View</span></button>').join('');
+  box.innerHTML = rows.map((r, i) => '<button type="button" class="sp-topic" data-act="spsol" data-i="' + i + '"><span><b>' + hlEsc(r.Title) + '</b><br><span class="sp-badges" style="white-space:normal;">' + hlEsc(r.Description || 'Past question solutions') + '</span></span><span class="sp-badges">' + (hlSpLocked_(r) ? '🔒 Premium' : '👁 View') + '</span></button>').join('');
 }
 async function hlSpLoad_(){
   try{
@@ -27474,8 +27592,9 @@ safeOn('spContent', 'click', (e) => {
   const b = e.target.closest('button[data-act]'); if(!b) return;
   if(b.dataset.act === 'spview'){ hlSp_.tab = b.dataset.v; hlSp_.userPicked = true; hlSpPaintTabs_(); hlSpRender_(); return; }
   if(!hlSp_.data) return;
-  if(b.dataset.act === 'spnote'){ const r = hlSp_.pdfNotes && hlSp_.pdfNotes[+b.dataset.i]; if(r) hlSpOpenPdf_(r.Topic || r.Title, r.Link); return; }
-  if(b.dataset.act === 'spsol'){ const r = hlSp_.solutions && hlSp_.solutions[+b.dataset.i]; if(r) hlSpOpenPdf_(r.Title, r.Link); return; }
+  if(b.dataset.act === 'spnote'){ const r = hlSp_.pdfNotes && hlSp_.pdfNotes[+b.dataset.i]; if(r) hlSpOpenPdfRow_('sectionNotes', r, r.Topic || r.Title, secondPaperScreen); return; }
+  if(b.dataset.act === 'spsol'){ const r = hlSp_.solutions && hlSp_.solutions[+b.dataset.i]; if(r) hlSpOpenPdfRow_('solutions', r, r.Title, secondPaperScreen); return; }
+  if(b.dataset.act === 'pdflock'){ const r = hlSp_.lockedPdfs && hlSp_.lockedPdfs[b.dataset.id]; if(r) hlSpOpenPdfRow_('pdfs', r, r.Title, secondPaperScreen); return; }
   if(b.dataset.act === 'gnote'){ const n = hlSp_.generalNotes[+b.dataset.i]; if(n) hlSpOpenNote_(n, secondPaperScreen); return; }
   if(b.dataset.act === 'year'){
     const g = hlSp_.yearGroups && hlSp_.yearGroups[+b.dataset.i]; if(!g) return;
@@ -27490,6 +27609,7 @@ safeOn('spContent', 'click', (e) => {
 });
 safeOn('spTopicContent', 'click', (e) => {
   const b = e.target.closest('button[data-act]'); if(!b) return;
+  if(b.dataset.act === 'pdflock'){ const r = hlSp_.lockedPdfs && hlSp_.lockedPdfs[b.dataset.id]; if(r) hlSpOpenPdfRow_('pdfs', r, r.Title, secondPaperTopicScreen); return; }
   if(b.dataset.act === 'tnote'){ const n = hlSp_.topicNotes[+b.dataset.i]; if(n) hlSpOpenNote_(n, secondPaperTopicScreen); }
   else if(b.dataset.act === 'tq'){ const q = hlSp_.topicQs && hlSp_.topicQs[+b.dataset.i]; if(q) hlSpOpenQuestion_(q, secondPaperTopicScreen); }
 });
@@ -27757,15 +27877,15 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v524';
-const HL_EXPECTED_BACKEND_ = { version: 31, features: {
+const HL_APP_VERSION_ = 'v529';
+const HL_EXPECTED_BACKEND_ = { version: 34, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
   'tab-allowlist': 'Safe list of readable tabs', 'second-paper': 'Second Paper', 'second-paper-questions': 'Second Paper questions', 'second-paper-pdf': 'Second Paper PDFs',
   'special-sets': 'Special Sets', 'admin-users': 'Users & Premium', 'esewa-once': 'eSewa one-time payment safety', 'daily-battle-server': 'Daily Battle made by the backend',
   'admin-broadcast': 'Send notification (careful method)', 'exam-settings': 'Exam Settings', 'leaderboard-snapshots': 'Leaderboard summary (saves database reads)',
   'local-login-check': 'Fast login check (saves outgoing calls)', 'push-topics': 'Notifications to everyone at once', 'user-memory': 'Premium and limits memory (saves database reads)',
-  'scale-jobs': 'Automatic notifications for many students' } };
+  'scale-jobs': 'Automatic notifications for many students', 'second-paper-premium': 'Second Paper Premium lock', 'leaderboard-boards': 'Correct Today / Week / Month leaderboards', 'public-debug-closed': 'Public test links closed (protects your AI quota)' } };
 async function hlBackendCheckRun_(){   // -> { status: ok | older | newer | wrongAddress | unreachable, ... }
   const base = window.SHEET_API_URL || '', t0 = Date.now();
   let data = null;
@@ -28215,6 +28335,74 @@ window.hlCollapseProfileBoxes_ = hlCollapseProfileBoxes_;
   const orig = window.showScreen;
   if(typeof orig !== 'function') return;
   window.showScreen = function(el){ try{ if(el && el.id === 'profileScreen') hlCollapseProfileBoxes_(); }catch(e){} return orig.apply(this, arguments); };
+})();
+// ---- CONTENT SHIELD (Oct 2026). HONEST LIMITS: a website can NOT block screenshots or screen recording (only the Android app can, with the screen-capture flag); nothing can stop a photo of the
+// screen, OCR or the browser's developer tools. This shield makes casual copying hard and makes a leak traceable: (1) no select / copy / cut / drag / long-press menu / print on content screens,
+// (2) PrintScreen empties the clipboard and flashes a cover, (3) the screen is covered while the app is in the background (app-switcher picture), (4) a faint watermark with the student's ID
+// and the date is drawn over the page, so a leaked screenshot shows whose it is. Fields, the student's own notes, AI chat, settings, social screens and calculators are exempt, and so is
+// the owner with Admin view ON (to edit content). Every screen not listed is protected, so a new screen is safe by default. ----
+const HL_SHIELD_EXEMPT_IDS_ = ['appLoadingScreen','appLockScreen','verifyEmailScreen','notifOnboardingScreen','loginScreen','postGateScreen','moodCheckinScreen','moodEmotionsScreen','moodCausesScreen','onboardingWizardScreen','onboardingSummaryScreen','homeScreen','aiChatScreen','profileScreen','appLockSettingsScreen','screenTimeScreen','focusSessionScreen','changePasswordScreen','upgradeScreen','progressScreen','subjectProgressScreen','questionPerformanceScreen','weakAreasScreen','achievementsScreen','achievementDetailScreen','learnHubProgressScreen','revisionProgressScreen','studyActivityScreen','progressGoalsScreen','progressHistoryScreen','reminderScreen','notificationPrefsScreen','leaderboardScreen','notesScreen','scanNoteScreen','pdfAnnotateScreen','handwrittenNoteScreen','noteEditorScreen','noteReaderScreen','noteTrashScreen','studyGroupsScreen','groupCreateScreen','groupPreviewScreen','groupDetailScreen','startDiscussionScreen','discussionThreadScreen','notificationsScreen','studyPlannerSetupScreen','studyPlannerScreen','revisionCalendarScreen','fcCardEditScreen','mnemonicCreateScreen','answerCheckerScreen','studyTimerScreen','faqsScreen','comingSoonScreen'];
+const HL_SHIELD_EXEMPT_RE_ = /Calc|^(hc|ic|epi|stats)[A-Z]/;
+function hlShieldScreenProtected_(el){ return !!(el && el.id) && HL_SHIELD_EXEMPT_IDS_.indexOf(el.id) === -1 && !HL_SHIELD_EXEMPT_RE_.test(el.id); }
+function hlShieldOn_(){ try{ return document.body.classList.contains('hl-shield-on'); }catch(e){ return false; } }
+let hlShieldMarkFor_ = '';
+function hlShieldWatermark_(on){
+  try{
+    let w = document.getElementById('hlWatermark');
+    if(!w){ w = document.createElement('div'); w.id = 'hlWatermark'; document.body.appendChild(w); }
+    if(!on) return;
+    const uid = (window.currentUser && window.currentUser.uid) || 'guest', day = new Date().toISOString().slice(0, 10), key = uid + '|' + day;
+    if(hlShieldMarkFor_ === key && w.style.backgroundImage) return;
+    const c = document.createElement('canvas'); c.width = 340; c.height = 220;
+    const g = c.getContext('2d'); if(!g) return;
+    g.translate(170, 110); g.rotate(-0.42); g.textAlign = 'center'; g.fillStyle = 'rgba(128,128,128,0.17)'; g.font = '600 12px sans-serif';
+    g.fillText('Health Loksewa · ' + day, 0, -8); g.fillText('ID ' + uid, 0, 10);
+    w.style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')'; hlShieldMarkFor_ = key;
+  }catch(e){}
+}
+function hlShieldApply_(){
+  try{
+    const el = document.querySelector('.screen.active');
+    const owner = (typeof hlAdminModeOn_ === 'function') && hlAdminModeOn_();
+    const on = hlShieldScreenProtected_(el) && !owner;
+    document.body.classList.toggle('hl-shield-on', !!on);
+    if(!on) document.body.classList.remove('hl-shield-cover');
+    hlShieldWatermark_(on);
+  }catch(e){}
+}
+window.hlShieldApply_ = hlShieldApply_;
+function hlShieldFieldOk_(e){
+  try{ const t = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement); return !!(t && t.closest && t.closest('input, textarea, [contenteditable="true"], [data-hl-copy-ok]')); }catch(err){ return false; }
+}
+function hlShieldFlash_(){
+  try{
+    document.body.classList.add('hl-shield-cover');
+    setTimeout(() => { if(document.visibilityState !== 'hidden') document.body.classList.remove('hl-shield-cover'); }, 1500);
+  }catch(e){}
+}
+['copy', 'cut', 'dragstart', 'selectstart', 'contextmenu'].forEach(type => document.addEventListener(type, (e) => { if(hlShieldOn_() && !hlShieldFieldOk_(e)) e.preventDefault(); }, true));
+document.addEventListener('keydown', (e) => {
+  if(!hlShieldOn_()) return;
+  const k = String(e.key || '').toLowerCase();
+  if((e.ctrlKey || e.metaKey) && ['c', 'x', 'a', 's', 'p', 'u'].indexOf(k) !== -1 && !hlShieldFieldOk_(e)) e.preventDefault();
+  if(k === 'printscreen'){ try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(' ').catch(() => {}); }catch(err){} hlShieldFlash_(); }
+}, true);
+document.addEventListener('keyup', (e) => {
+  if(hlShieldOn_() && String(e.key || '').toLowerCase() === 'printscreen'){ try{ if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(' ').catch(() => {}); }catch(err){} hlShieldFlash_(); }
+}, true);
+document.addEventListener('visibilitychange', () => {
+  try{
+    if(hlShieldOn_() && document.visibilityState === 'hidden') document.body.classList.add('hl-shield-cover');
+    else document.body.classList.remove('hl-shield-cover');
+  }catch(e){}
+});
+window.addEventListener('pagehide', () => { try{ if(hlShieldOn_()) document.body.classList.add('hl-shield-cover'); }catch(e){} });
+window.addEventListener('pageshow', () => { try{ if(document.visibilityState !== 'hidden') document.body.classList.remove('hl-shield-cover'); }catch(e){} });
+(function(){
+  const cover = document.createElement('div'); cover.id = 'hlShieldCover'; cover.textContent = 'Protected content'; document.body.appendChild(cover);
+  const orig = window.showScreen;
+  if(typeof orig === 'function') window.showScreen = function(el){ const r = orig.apply(this, arguments); hlShieldApply_(); return r; };
+  hlShieldApply_();
 })();
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
