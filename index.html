@@ -8400,7 +8400,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzsc9NDvv7Dp-Y-brmyMBoihbtyVepg8HKW-Nm60qlo-NlEMTvv-zArSdryz463cBE/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbyWrDXAyWJtbKSrCuTIWegGZQMFAuhxqBPEiQoSf2lKEt55g1NceN4cIMsR-u76k5GNvg/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -27757,7 +27757,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v523';
+const HL_APP_VERSION_ = 'v524';
 const HL_EXPECTED_BACKEND_ = { version: 31, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
