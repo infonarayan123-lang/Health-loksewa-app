@@ -1110,9 +1110,9 @@
   .profile-logout-card .profile-menu-item.logout{ color:#F87171; }
   /* ---- CONTENT SHIELD (Oct 2026): on the screens that hold the app's content, text cannot be selected, copied, dragged or printed, and a faint watermark with the student's ID covers the page.
      Fields where the student types (and their own notes, chat and settings screens) stay usable. A screen is protected unless it is on the exempt list in the script. ---- */
-  body.hl-shield-on .screen.active{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
-  body.hl-shield-on .screen.active img{ -webkit-user-drag:none; user-drag:none; }
-  body.hl-shield-on .screen.active input, body.hl-shield-on .screen.active textarea, body.hl-shield-on .screen.active [contenteditable="true"]{ -webkit-user-select:text; user-select:text; -webkit-touch-callout:default; }
+  body.hl-shield-on, body.hl-shield-on *{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }   /* the whole page, so pop-ups, dialogs and overlays opened over a protected screen are covered too */
+  body.hl-shield-on img{ -webkit-user-drag:none; user-drag:none; }
+  body.hl-shield-on input, body.hl-shield-on textarea, body.hl-shield-on [contenteditable="true"], body.hl-shield-on [data-hl-copy-ok]{ -webkit-user-select:text; user-select:text; -webkit-touch-callout:default; }
   #hlWatermark{ position:fixed; left:0; top:0; right:0; bottom:0; pointer-events:none; z-index:2147483000; display:none; background-repeat:repeat; }
   body.hl-shield-on #hlWatermark{ display:block; }
   #hlShieldCover{ position:fixed; left:0; top:0; right:0; bottom:0; z-index:2147483600; background:#0F172A; color:#E2E8F0; display:none; align-items:center; justify-content:center; font:600 15px Inter,sans-serif; text-align:center; padding:24px; }
@@ -27877,7 +27877,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v529';
+const HL_APP_VERSION_ = 'v530';
 const HL_EXPECTED_BACKEND_ = { version: 34, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
