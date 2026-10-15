@@ -1112,7 +1112,7 @@
      Fields where the student types (and their own notes, chat and settings screens) stay usable. A screen is protected unless it is on the exempt list in the script. ---- */
   body.hl-shield-on, body.hl-shield-on *{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }   /* the whole page, so pop-ups, dialogs and overlays opened over a protected screen are covered too */
   body.hl-shield-on img{ -webkit-user-drag:none; user-drag:none; }
-  body.hl-shield-on input, body.hl-shield-on textarea, body.hl-shield-on [contenteditable="true"], body.hl-shield-on [data-hl-copy-ok]{ -webkit-user-select:text; user-select:text; -webkit-touch-callout:default; }
+  body.hl-shield-on input, body.hl-shield-on textarea, body.hl-shield-on [contenteditable]:not([contenteditable="false"]), body.hl-shield-on [data-hl-copy-ok]{ -webkit-user-select:text; user-select:text; -webkit-touch-callout:default; }
   #hlWatermark{ position:fixed; left:0; top:0; right:0; bottom:0; pointer-events:none; z-index:2147483000; display:none; background-repeat:repeat; }
   body.hl-shield-on #hlWatermark{ display:block; }
   #hlShieldCover{ position:fixed; left:0; top:0; right:0; bottom:0; z-index:2147483600; background:#0F172A; color:#E2E8F0; display:none; align-items:center; justify-content:center; font:600 15px Inter,sans-serif; text-align:center; padding:24px; }
@@ -27877,7 +27877,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v530';
+const HL_APP_VERSION_ = 'v532';
 const HL_EXPECTED_BACKEND_ = { version: 34, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
@@ -28155,7 +28155,7 @@ function hlPlugin_(name){ try{ return (window.Capacitor && window.Capacitor.Plug
 window.hlIsNative_ = hlIsNative_; window.hlPlugin_ = hlPlugin_;
 const HL_NATIVE_ = hlIsNative_();
 if(HL_NATIVE_){ document.documentElement.classList.add('hl-native'); }
-const HL_SHAREABLE_SCREEN_IDS_ = ['homeScreen', 'progressScreen', 'leaderboardScreen', 'profileScreen', 'loginScreen', 'upgradeScreen', 'appLoadingScreen'];
+const HL_SHAREABLE_SCREEN_IDS_ = [];   // EMPTY on purpose (Oct 2026, owner's decision): screenshots and screen recording are blocked on EVERY screen. Add a screen id here to allow screenshots on that screen only.
 let hlSecureOn_ = true;   // the plugin starts with protection ON
 async function hlNativeScreenGuard_(el){
   if(!HL_NATIVE_) return;
@@ -28341,8 +28341,8 @@ window.hlCollapseProfileBoxes_ = hlCollapseProfileBoxes_;
 // (2) PrintScreen empties the clipboard and flashes a cover, (3) the screen is covered while the app is in the background (app-switcher picture), (4) a faint watermark with the student's ID
 // and the date is drawn over the page, so a leaked screenshot shows whose it is. Fields, the student's own notes, AI chat, settings, social screens and calculators are exempt, and so is
 // the owner with Admin view ON (to edit content). Every screen not listed is protected, so a new screen is safe by default. ----
-const HL_SHIELD_EXEMPT_IDS_ = ['appLoadingScreen','appLockScreen','verifyEmailScreen','notifOnboardingScreen','loginScreen','postGateScreen','moodCheckinScreen','moodEmotionsScreen','moodCausesScreen','onboardingWizardScreen','onboardingSummaryScreen','homeScreen','aiChatScreen','profileScreen','appLockSettingsScreen','screenTimeScreen','focusSessionScreen','changePasswordScreen','upgradeScreen','progressScreen','subjectProgressScreen','questionPerformanceScreen','weakAreasScreen','achievementsScreen','achievementDetailScreen','learnHubProgressScreen','revisionProgressScreen','studyActivityScreen','progressGoalsScreen','progressHistoryScreen','reminderScreen','notificationPrefsScreen','leaderboardScreen','notesScreen','scanNoteScreen','pdfAnnotateScreen','handwrittenNoteScreen','noteEditorScreen','noteReaderScreen','noteTrashScreen','studyGroupsScreen','groupCreateScreen','groupPreviewScreen','groupDetailScreen','startDiscussionScreen','discussionThreadScreen','notificationsScreen','studyPlannerSetupScreen','studyPlannerScreen','revisionCalendarScreen','fcCardEditScreen','mnemonicCreateScreen','answerCheckerScreen','studyTimerScreen','faqsScreen','comingSoonScreen'];
-const HL_SHIELD_EXEMPT_RE_ = /Calc|^(hc|ic|epi|stats)[A-Z]/;
+const HL_SHIELD_EXEMPT_IDS_ = [];   // EMPTY on purpose (Oct 2026, owner's decision): the shield is ON in every screen after the app opens. Put a screen id here only to switch it off for that screen.
+const HL_SHIELD_EXEMPT_RE_ = /$^/;   // matches nothing
 function hlShieldScreenProtected_(el){ return !!(el && el.id) && HL_SHIELD_EXEMPT_IDS_.indexOf(el.id) === -1 && !HL_SHIELD_EXEMPT_RE_.test(el.id); }
 function hlShieldOn_(){ try{ return document.body.classList.contains('hl-shield-on'); }catch(e){ return false; } }
 let hlShieldMarkFor_ = '';
@@ -28351,7 +28351,9 @@ function hlShieldWatermark_(on){
     let w = document.getElementById('hlWatermark');
     if(!w){ w = document.createElement('div'); w.id = 'hlWatermark'; document.body.appendChild(w); }
     if(!on) return;
-    const uid = (window.currentUser && window.currentUser.uid) || 'guest', day = new Date().toISOString().slice(0, 10), key = uid + '|' + day;
+    if(typeof hlIsNative_ === 'function' && hlIsNative_()){ w.style.backgroundImage = ''; hlShieldMarkFor_ = ''; return; }   // inside the Android app the PHONE blanks screenshots and screen recordings, so no watermark is drawn
+    if(!(window.currentUser && window.currentUser.uid)){ w.style.backgroundImage = ''; hlShieldMarkFor_ = ''; return; }   // nobody signed in: no watermark (and never the previous student's)
+    const uid = window.currentUser.uid, day = new Date().toISOString().slice(0, 10), key = uid + '|' + day;
     if(hlShieldMarkFor_ === key && w.style.backgroundImage) return;
     const c = document.createElement('canvas'); c.width = 340; c.height = 220;
     const g = c.getContext('2d'); if(!g) return;
@@ -28364,7 +28366,7 @@ function hlShieldApply_(){
   try{
     const el = document.querySelector('.screen.active');
     const owner = (typeof hlAdminModeOn_ === 'function') && hlAdminModeOn_();
-    const on = hlShieldScreenProtected_(el) && !owner;
+    const on = (el ? hlShieldScreenProtected_(el) : true) && !owner;
     document.body.classList.toggle('hl-shield-on', !!on);
     if(!on) document.body.classList.remove('hl-shield-cover');
     hlShieldWatermark_(on);
@@ -28372,7 +28374,7 @@ function hlShieldApply_(){
 }
 window.hlShieldApply_ = hlShieldApply_;
 function hlShieldFieldOk_(e){
-  try{ const t = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement); return !!(t && t.closest && t.closest('input, textarea, [contenteditable="true"], [data-hl-copy-ok]')); }catch(err){ return false; }
+  try{ const t = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement); return !!(t && t.closest && t.closest('input, textarea, [contenteditable]:not([contenteditable="false"]), [data-hl-copy-ok]')); }catch(err){ return false; }
 }
 function hlShieldFlash_(){
   try{
