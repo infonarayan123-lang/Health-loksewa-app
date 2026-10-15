@@ -765,7 +765,7 @@
   .formula-item, .note-item, .stat-tile, .progress-detail-card, .leaderboard-row, .bookmark-item,
   .pricing-plan-tile, .flashcard, .badge-tile, .swipe-card, .promo-banner, .focus-row,
   .resource-row .rcard, .set-card, .pay-method-card, .content-card, .profile-status-row,
-  .breakdown-wrap, .result-chart-card, .rv-card{
+  .breakdown-wrap, .result-chart-card, .rv-card, .profile-accordion, .profile-logout-card{
     /* These components are ALWAYS rendered in the app's dark palette, in both themes. Light mode
        overrides seven colour variables, so all seven are re-set to their dark values here —
        re-setting only the text colours left things like a calculator's input box light-cream with
@@ -1089,15 +1089,25 @@
   .profile-menu-item.logout{ color:var(--wrong-on-light); }
   .pm-icon{ font-size:17px; width:22px; text-align:center; }
 
-  .profile-accordion{ border-bottom:1px solid var(--line); margin-bottom:10px; padding-bottom:6px; }
+  /* ---- Profile: ONE uniform look (Oct 2026). Every box on the Profile screen (My Preparation, My Saved Content, Study Time/Notifications, Which exam, the three
+     fold-out boxes and Logout) now uses the same card family, the same sans-serif type (Inter), the same left-aligned rows (icon, text, arrow on the right), the same spacing
+     and the same colours in light and dark mode. The fold-out boxes were missing from the shared card rule, which is why they looked different. ---- */
+  .profile-accordion{ border-radius:12px; border:1px solid var(--line); margin:0 4px 18px; padding:2px 16px; }
   .profile-accordion summary{
-    font-size:13.5px; font-weight:700; color:var(--ink); cursor:pointer;
-    padding:10px 4px; list-style:none; display:flex; align-items:center; justify-content:space-between;
+    font-family:'Inter',sans-serif; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer;
+    padding:12px 4px; list-style:none; display:flex; align-items:center; gap:12px; text-align:left;
   }
+  .profile-accordion summary > i{ font-size:17px; width:22px; text-align:center; flex:none; }
   .profile-accordion summary::-webkit-details-marker{ display:none; }
-  .profile-accordion summary::after{ content:'⌄'; font-size:16px; color:var(--ink-soft); transition:transform 0.2s; }
+  .profile-accordion summary::after{ content:'⌄'; font-size:16px; color:var(--ink-soft); transition:transform 0.2s; margin-left:auto; }
   .profile-accordion[open] summary::after{ transform:rotate(180deg); }
-  .profile-accordion-body{ padding:4px 4px 8px; }
+  .profile-accordion[open] summary{ border-bottom:1px solid var(--line); }
+  .profile-accordion-body{ padding:6px 0 10px; }
+  #profileScreen .calc-card h4{ font-family:'Inter',sans-serif; font-size:14px; font-weight:700; margin-bottom:6px; }
+  #profileScreen .calc-card .profile-menu-item:last-child, #profileScreen .profile-accordion-body > .profile-menu-item:last-child{ border-bottom:none; }
+  .profile-logout-card{ border-radius:12px; border:1px solid var(--line); margin:0 4px 18px; padding:2px 16px; }
+  .profile-logout-card .profile-menu-item{ border-bottom:none; padding:12px 4px; }
+  .profile-logout-card .profile-menu-item.logout{ color:#F87171; }
   .profile-subrow{
     display:flex; justify-content:space-between; align-items:center;
     padding:12px 0; border-bottom:1px solid var(--line);
@@ -2542,7 +2552,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         <button class="profile-menu-item" id="menuNotificationPrefs" style="padding:10px 4px;"><span class="pm-icon"><i class="bi bi-bell"></i></span> Notifications</button>
       </div>
 
-      <div style="padding:4px 4px 18px; border-bottom:1px solid var(--line); margin-bottom:10px;">
+      <div class="calc-card" id="examTypeCard" style="margin:0 4px 18px;">
         <div id="examTypeClickTarget" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between;">
           <div>
             <div style="font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:4px;"><i class="bi bi-bullseye"></i> Which exam are you preparing for?</div>
@@ -2627,6 +2637,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
           <button class="profile-menu-item" id="menuAppLock"><span class="pm-icon"><i class="bi bi-shield-lock"></i></span> App Lock <span id="appLockStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
           <button class="profile-menu-item" id="menuPrivacyPolicy"><span class="pm-icon"><i class="bi bi-lock"></i></span> Privacy Policy</button>
           <button class="profile-menu-item" id="menuBlockedUsers"><span class="pm-icon"><i class="bi bi-slash-circle"></i></span> Blocked users</button>
+          <button class="profile-menu-item" id="menuRestoreData"><span class="pm-icon"><i class="bi bi-upload"></i></span> Restore my data from a file</button>
           <button class="profile-menu-item" id="menuDownloadData"><span class="pm-icon"><i class="bi bi-download"></i></span> Download my data</button>
           <button class="profile-menu-item" id="menuDeleteAccount" style="color:var(--wrong-on-light);"><span class="pm-icon"><i class="bi bi-exclamation-triangle"></i></span> Delete Account</button>
           <button class="profile-menu-item" id="menuHealthConsent"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Mood &amp; health tracking <span id="healthConsentStatusLabel" style="margin-left:auto; font-size:11px; color:var(--ink-soft);">Off</span></button>
@@ -2649,12 +2660,13 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
           <button class="profile-menu-item" id="menuAdminSwitches" style="display:none;"><span class="pm-icon"><i class="bi bi-toggles"></i></span> Feature switches (admin)</button>
           <button class="profile-menu-item" id="menuAdminUsers" style="display:none;"><span class="pm-icon"><i class="bi bi-people"></i></span> Users &amp; Premium (admin)</button>
           <button class="profile-menu-item" id="menuAdminNotify" style="display:none;"><span class="pm-icon"><i class="bi bi-megaphone"></i></span> Send notification (admin)</button>
+          <button class="profile-menu-item" id="menuAdminCheck" style="display:none;"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Backend check (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
 
       <div id="appVersionLine" style="text-align:center; padding:18px 4px 6px; font-size:11.5px; color:var(--ink-soft);">Health Loksewa</div>
-      <button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon"><i class="bi bi-box-arrow-right"></i></span> Logout</button>
+      <div class="profile-logout-card"><button class="profile-menu-item logout" id="profileLogoutBtn"><span class="pm-icon"><i class="bi bi-box-arrow-right"></i></span> Logout</button></div>
     </div>
   </div>
 
@@ -15075,6 +15087,18 @@ function hlCollectPhoneData_(){
   }catch(e){}
   return out;
 }
+function hlCollectPhoneRawData_(){
+  const uid = (window.currentUser && window.currentUser.uid) || 'guest';
+  const suffix = '__u_' + uid, out = {};
+  try{
+    Object.keys(localStorage).forEach(k => {
+      if(!k.endsWith(suffix)) return;
+      const raw = localStorage.getItem(k);
+      if(typeof raw === 'string') out[k.slice(0, -suffix.length)] = raw;
+    });
+  }catch(e){}
+  return out;
+}
 async function hlDownloadMyData_(){
   if(!window.currentUser){ alert('Please log in first.'); return; }
   showQuizLoading('Collecting your data…');
@@ -15088,7 +15112,9 @@ async function hlDownloadMyData_(){
     exportedAt: today.toISOString(),
     appVersion: (typeof APP_VERSION !== 'undefined' && APP_VERSION) || '',
     cloud: cloud || { note: 'Could not reach the server — only the data on this phone is included. Try again when online.' },
-    onThisPhone: hlCollectPhoneData_()
+    onThisPhone: hlCollectPhoneData_(),
+    formatVersion: 2,
+    onThisPhoneRaw: hlCollectPhoneRawData_()   // the exact saved text of each item, used by "Restore my data from a file"
   };
   const json = JSON.stringify(data, null, 2);
   const fileName = 'health-loksewa-my-data-' + stamp + '.json';
@@ -15116,6 +15142,76 @@ async function hlDownloadMyData_(){
   else alert('Sorry, this device does not allow downloading files from the app. Please try again from a browser such as Chrome.');
 }
 safeOn('menuDownloadData', 'click', () => { hlDownloadMyData_(); });
+// ---- "Restore my data from a file" (Oct 2026): the other half of "Download my data". Puts the study data from a downloaded file back on THIS phone for the account that is signed in now
+// (new phone, reinstalled app, or a new web address: saved-on-phone data belongs to one address). Safe by design: only the fixed list of per-account study items
+// (PER_ACCOUNT_STORAGE_KEYS) can be restored; points, Premium status, technical state and health/mood/screen-time entries are NEVER restored from a file (they have their own
+// rules and consent); nothing already on the phone is overwritten unless the student says so; the file is checked before anything is written; online data is not touched.
+const HL_RESTORE_EXCLUDE_ = ['hl_learning_points', 'hl_premium_status', 'hl_topics_synced', 'hl_topic_run', 'hl_last_open_day', 'hl_mood_entries', 'hl_mood_last_shown', 'hl_screentime_goals', 'hl_screentime_log'];
+const HL_RESTORE_MAX_FILE_ = 4 * 1024 * 1024, HL_RESTORE_MAX_ITEM_ = 1500 * 1024;
+function hlRestoreFromText_(text, overwrite){   // -> { ok, error?, found, added, replaced, keptExisting, skippedNever, rejected, failed }
+  const bad = (msg) => ({ ok: false, error: msg });
+  if(!window.currentUser) return bad('Please log in first.');
+  if(typeof text !== 'string' || !text.length) return bad('The file is empty.');
+  if(text.length > HL_RESTORE_MAX_FILE_) return bad('This file is too big to be a Health Loksewa data file.');
+  let data; try{ data = JSON.parse(text); }catch(e){ return bad('This is not a Health Loksewa data file (it could not be read).'); }
+  if(!data || typeof data !== 'object' || Array.isArray(data)) return bad('This is not a Health Loksewa data file.');
+  let source = null;
+  if(data.onThisPhoneRaw && typeof data.onThisPhoneRaw === 'object' && !Array.isArray(data.onThisPhoneRaw)) source = data.onThisPhoneRaw;   // exact text (files from this version)
+  else if(data.onThisPhone && typeof data.onThisPhone === 'object' && !Array.isArray(data.onThisPhone)){                                      // older files: rebuild the text
+    source = {}; Object.keys(data.onThisPhone).forEach(k => { const v = data.onThisPhone[k]; source[k] = (typeof v === 'string') ? v : JSON.stringify(v); });
+  }
+  if(!source) return bad('This file has no saved phone data in it. Use the file made by "Download my data".');
+  const allowed = new Set((typeof PER_ACCOUNT_STORAGE_KEYS !== 'undefined' ? PER_ACCOUNT_STORAGE_KEYS : []).filter(k => HL_RESTORE_EXCLUDE_.indexOf(k) === -1));
+  const rep = { ok: true, found: 0, added: 0, replaced: 0, keptExisting: 0, skippedNever: 0, rejected: 0, failed: 0 };
+  Object.keys(source).forEach(name => {
+    rep.found++;
+    if(!/^hl_[a-z0-9_]{1,60}$/.test(name)) { rep.rejected++; return; }
+    if(HL_RESTORE_EXCLUDE_.indexOf(name) !== -1) { rep.skippedNever++; return; }
+    const value = source[name];
+    if(!allowed.has(name) || typeof value !== 'string' || value.length > HL_RESTORE_MAX_ITEM_) { rep.rejected++; return; }
+    const key = uk(name);
+    let exists = false; try{ exists = localStorage.getItem(key) !== null; }catch(e){}
+    if(exists && !overwrite){ rep.keptExisting++; return; }
+    try{ localStorage.setItem(key, value); if(exists) rep.replaced++; else rep.added++; }catch(e){ rep.failed++; }
+  });
+  return rep;
+}
+function hlRestoreSummaryText_(r){
+  const parts = [];
+  parts.push((r.added + r.replaced) + ' item' + ((r.added + r.replaced) === 1 ? '' : 's') + ' restored' + (r.replaced ? ' (' + r.replaced + ' replaced)' : '') + '.');
+  if(r.keptExisting) parts.push(r.keptExisting + ' already on this phone were kept as they are.');
+  if(r.skippedNever) parts.push(r.skippedNever + ' were skipped on purpose (points, Premium and health entries are never restored from a file).');
+  if(r.rejected) parts.push(r.rejected + ' unknown or unsafe item' + (r.rejected === 1 ? ' was' : 's were') + ' ignored.');
+  if(r.failed) parts.push(r.failed + ' could not be saved (the phone storage may be full).');
+  return parts.join('\n');
+}
+async function hlPickRestoreFile_(){
+  if(!window.currentUser){ alert('Please log in first.'); return; }
+  const name = window.currentUser.displayName || window.currentUser.email || 'this account';
+  if(!(await customConfirm('Choose the file you saved earlier with "Download my data".\n\nIt adds the notes, bookmarks, history and settings from that file to ' + name + ' on THIS phone. Your points, Premium and online data are not changed.\n\nContinue?'))) return;
+  const overwrite = await customConfirm('Replace items that already exist on this phone with the version from the file?\n\nOK = Yes, replace them\nCancel = No, keep what is here and only add what is missing (safer)');
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json,application/json'; input.style.display = 'none';
+  document.body.appendChild(input);
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0]; input.remove();
+    if(!file) return;
+    if(file.size > HL_RESTORE_MAX_FILE_){ alert('This file is too big to be a Health Loksewa data file.'); return; }
+    const reader = new FileReader();
+    reader.onerror = () => { alert('The file could not be read.'); };
+    reader.onload = async () => {
+      const r = hlRestoreFromText_(String(reader.result || ''), !!overwrite);
+      if(!r.ok){ alert(r.error); return; }
+      const msg = hlRestoreSummaryText_(r);
+      if(r.added + r.replaced > 0){ if(await customConfirm(msg + '\n\nReload the app now so every screen shows the restored data?')) location.reload(); }
+      else alert(msg || 'Nothing needed to be restored.');
+    };
+    reader.readAsText(file);
+  });
+  input.click();
+}
+safeOn('menuRestoreData', 'click', () => { hlPickRestoreFile_(); });
+
 // ---- Protecting mood & health entries on the phone (Oct 2026). Real encryption is deliberately
 // NOT used: the key would have to live on the same phone (no real protection), and a PIN-based key
 // would lock fingerprint users out and destroy the records if the PIN were forgotten. Instead:
@@ -27655,6 +27751,104 @@ function hlSafeCssUrl_(u){
 // button; if the connection drops it can be continued (the backend never sends the same batch twice). The title and message are only
 // ever shown as plain text.
 // ==========================================================================================
+// ==========================================================================================
+// BACKEND CHECK (owner only, Oct 2026). Every backend update needs the right steps in Apps Script, and a wrong address or an old version looks exactly like "the app is broken".
+// This screen asks the backend's public ?action=version page, compares the answer with what THIS app needs (HL_EXPECTED_BACKEND_) and says in plain words: up to date, older
+// (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
+// When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
+// ==========================================================================================
+const HL_APP_VERSION_ = 'v523';
+const HL_EXPECTED_BACKEND_ = { version: 31, features: {
+  'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
+  'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
+  'tab-allowlist': 'Safe list of readable tabs', 'second-paper': 'Second Paper', 'second-paper-questions': 'Second Paper questions', 'second-paper-pdf': 'Second Paper PDFs',
+  'special-sets': 'Special Sets', 'admin-users': 'Users & Premium', 'esewa-once': 'eSewa one-time payment safety', 'daily-battle-server': 'Daily Battle made by the backend',
+  'admin-broadcast': 'Send notification (careful method)', 'exam-settings': 'Exam Settings', 'leaderboard-snapshots': 'Leaderboard summary (saves database reads)',
+  'local-login-check': 'Fast login check (saves outgoing calls)', 'push-topics': 'Notifications to everyone at once', 'user-memory': 'Premium and limits memory (saves database reads)',
+  'scale-jobs': 'Automatic notifications for many students' } };
+async function hlBackendCheckRun_(){   // -> { status: ok | older | newer | wrongAddress | unreachable, ... }
+  const base = window.SHEET_API_URL || '', t0 = Date.now();
+  let data = null;
+  try{
+    const res = await fetch(base + '?action=version');
+    const text = await res.text();
+    try{ data = JSON.parse(text); }catch(e){ data = null; }
+  }catch(e){ return { status: 'unreachable', ms: Date.now() - t0 }; }
+  const ms = Date.now() - t0;
+  if(!data || typeof data !== 'object' || data.backend !== 'health-loksewa' || !Array.isArray(data.features)) return { status: 'wrongAddress', ms: ms, said: data && data.error ? String(data.error) : '' };
+  const m = /^v(\d+)/.exec(String(data.version || '')), num = m ? parseInt(m[1], 10) : 0;
+  const missing = Object.keys(HL_EXPECTED_BACKEND_.features).filter(k => data.features.indexOf(k) === -1);
+  const status = (missing.length || num < HL_EXPECTED_BACKEND_.version) ? 'older' : (num > HL_EXPECTED_BACKEND_.version ? 'newer' : 'ok');
+  return { status: status, ms: ms, version: String(data.version || ''), num: num, missing: missing, localLoginCheck: data.localLoginCheck === undefined ? '' : String(data.localLoginCheck) };
+}
+function hlBackendCheckText_(r){
+  const tail = String(window.SHEET_API_URL || '').replace(/\/exec$/, '').slice(-12);
+  const lines = ['Health Loksewa backend check', 'App ' + HL_APP_VERSION_ + ' (needs backend v' + HL_EXPECTED_BACKEND_.version + ' or newer)', 'Address ends: ...' + tail, 'Result: ' + r.status];
+  if(r.version) lines.push('Backend says: ' + r.version);
+  if(r.missing && r.missing.length) lines.push('Missing features: ' + r.missing.join(', '));
+  if(r.localLoginCheck !== undefined && r.version) lines.push('Fast login check: ' + (r.localLoginCheck || '(not reported: older backend)'));
+  if(r.said) lines.push('Backend answered: ' + r.said);
+  if(r.ms !== undefined) lines.push('Answered in ' + r.ms + ' ms');
+  return lines.join('\n');
+}
+function hlOpenAdminCheck_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlCheckOverlay', 'flex-start');
+  const S = 'color:var(--ink-soft-on-elevated);';
+  ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">'
+    + '<div style="font-size:15px; font-weight:800;">Backend check</div>'
+    + '<div id="hlBcAddr" style="font-size:12px; line-height:1.5; margin:4px 0 10px; ' + S + '"></div>'
+    + '<div id="hlBcBox" style="border-radius:10px; padding:12px; font-size:13.5px; line-height:1.55; background:var(--panel); border:1.5px solid var(--line);">Checking…</div>'
+    + '<div id="hlBcList" style="margin-top:10px; font-size:12.5px; line-height:1.6;"></div>'
+    + '<div id="hlBcInfo" style="font-size:12px; margin-top:8px; min-height:16px; ' + S + '"></div>'
+    + '<button class="calc-btn" id="hlBcAgain" style="width:100%; margin:8px 0 0;">Check again</button>'
+    + '<button class="calc-btn" id="hlBcCopy" style="width:100%; margin:8px 0 0;">Copy this report (to send to the developer)</button>'
+    + '<button class="calc-btn" id="hlBcClose" style="width:100%; margin:8px 0 0; background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);">Close</button>'
+    + '</div>';
+  const $ = (id) => document.getElementById(id);
+  let last = null;
+  const tail = String(window.SHEET_API_URL || '').replace(/\/exec$/, '').slice(-12);
+  $('hlBcAddr').textContent = 'This app (' + HL_APP_VERSION_ + ') talks to the backend whose address ends ...' + tail + ' and needs backend v' + HL_EXPECTED_BACKEND_.version + ' or newer.';
+  const paint = (r) => {
+    last = r;
+    const box = $('hlBcBox'), list = $('hlBcList');
+    const good = 'background:rgba(34,197,94,.14); border-color:#22c55e;', warn = 'background:rgba(245,158,11,.16); border-color:#f59e0b;', bad = 'background:rgba(239,68,68,.14); border-color:#ef4444;';
+    const fix = '\n\nWhat to do: open Apps Script, put in the newest backend file (apps-script-v5.js), then Deploy > Manage deployments > the pencil on your NEWEST deployment > Version: New version > Deploy. Do not press "New deployment".';
+    let text = '', style = good;
+    if(r.status === 'ok'){ text = '✅ Your backend is up to date (' + r.version + ').'; }
+    else if(r.status === 'newer'){ text = '✅ Your backend (' + r.version + ') is newer than this app. That is fine.'; }
+    else if(r.status === 'older'){ style = warn; text = '⚠️ Your backend (' + (r.version || 'unknown') + ') is OLDER than this app needs. ' + (r.missing.length ? r.missing.length + ' feature' + (r.missing.length === 1 ? ' is' : 's are') + ' missing (listed below), so some new features will not work or will use the slower old way.' : '') + fix; }
+    else if(r.status === 'wrongAddress'){ style = bad; text = '❌ This address answered, but it is not the Health Loksewa backend' + (r.said ? ' (it said: ' + r.said + ')' : '') + '. It may be an old deployment, an archived one, or a wrong address. The address inside the app must be your newest deployment.' + fix; }
+    else { style = bad; text = '❌ The backend could not be reached. Check the internet connection first. If it is fine, the address may be wrong or the deployment archived.' + fix; }
+    box.setAttribute('style', 'border-radius:10px; padding:12px; font-size:13.5px; line-height:1.55; border:1.5px solid; white-space:pre-wrap; ' + style);
+    box.textContent = text;
+    list.textContent = '';
+    if(r.version){
+      const keys = Object.keys(HL_EXPECTED_BACKEND_.features);
+      keys.forEach(k => {
+        const row = document.createElement('div'), miss = r.missing.indexOf(k) !== -1;
+        row.textContent = (miss ? '❌ ' : '✅ ') + HL_EXPECTED_BACKEND_.features[k];
+        if(miss) row.style.fontWeight = '700';
+        list.appendChild(row);
+      });
+      const ll = document.createElement('div'); ll.style.cssText = 'margin-top:8px;';
+      const lv = r.localLoginCheck;
+      ll.textContent = lv === 'working' ? '✅ Fast login check: working' : (lv === 'not-working' ? '⚠️ Fast login check: NOT working (everything still works, just the older, slower way)' : (lv === 'off' ? 'ℹ️ Fast login check: switched off' : 'ℹ️ Fast login check: not reported (older backend)'));
+      list.appendChild(ll);
+    }
+    $('hlBcInfo').textContent = r.ms !== undefined ? 'Answered in ' + r.ms + ' ms.' : '';
+  };
+  const run = async () => { $('hlBcAgain').disabled = true; $('hlBcBox').textContent = 'Checking…'; try{ paint(await hlBackendCheckRun_()); }finally{ $('hlBcAgain').disabled = false; } };
+  $('hlBcAgain').onclick = run;
+  $('hlBcCopy').onclick = async () => {
+    if(!last){ $('hlBcInfo').textContent = 'Nothing to copy yet.'; return; }
+    const txt = hlBackendCheckText_(last);
+    try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(txt); $('hlBcInfo').textContent = 'Copied. Paste it in the chat.'; return; } }catch(e){}
+    try{ const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed; opacity:0;'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); $('hlBcInfo').textContent = 'Copied. Paste it in the chat.'; }catch(e){ $('hlBcInfo').textContent = 'Could not copy. Take a screenshot instead.'; }
+  };
+  $('hlBcClose').onclick = () => ov.remove();
+  run();
+}
 function hlOpenAdminNotify_(){
   if(!hlAdminModeOn_()) return;
   const ov = hlMakeOverlay_('hlNotifyOverlay', 'flex-start');
@@ -27794,6 +27988,7 @@ function hlOpenAdminNotify_(){
   refresh(); showResume();
 }
 safeOn('menuAdminNotify', 'click', () => { hlOpenAdminNotify_(); });
+safeOn('menuAdminCheck', 'click', () => { hlOpenAdminCheck_(); });
 // ==========================================================================================
 // EXAM SETTINGS (Oct 2026): the Mock Test size (questions), time (minutes) and marks per question of each exam come from the Google
 // Sheet tab "Exam Settings", which the owners edit in the app (Mock Test > Manage this screen). Built-in values (MOCK_POSTS) are the
@@ -28004,6 +28199,22 @@ window.hlClearGetCache_ = hlClearGetCache_;
     }catch(e){}
     return nativeFetch(input, init);
   };
+})();
+// ---- Profile: fold-out boxes close themselves (Oct 2026). Whenever the student ARRIVES at Profile (bottom tab, a back button, after saving a setting) the three fold-out boxes
+// (Display & Appearance, Account & Privacy, Support and About) and the "Which exam" list are closed, so the screen always starts tidy. Opening one stays open while the student
+// uses it; it is closed only at the next arrival. ----
+function hlCollapseProfileBoxes_(){
+  try{
+    document.querySelectorAll('#profileScreen details.profile-accordion').forEach(d => { d.open = false; });
+    const row = document.getElementById('examTypeRow'), caret = document.getElementById('examTypeCaret');
+    if(row && row.style.display !== 'none'){ row.style.display = 'none'; if(caret) caret.textContent = '▾'; }
+  }catch(e){}
+}
+window.hlCollapseProfileBoxes_ = hlCollapseProfileBoxes_;
+(function(){
+  const orig = window.showScreen;
+  if(typeof orig !== 'function') return;
+  window.showScreen = function(el){ try{ if(el && el.id === 'profileScreen') hlCollapseProfileBoxes_(); }catch(e){} return orig.apply(this, arguments); };
 })();
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
@@ -28432,7 +28643,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
-  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
+  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify', 'menuAdminCheck'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
