@@ -2671,6 +2671,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
           <button class="profile-menu-item" id="menuAdminUsers" style="display:none;"><span class="pm-icon"><i class="bi bi-people"></i></span> Users &amp; Premium (admin)</button>
           <button class="profile-menu-item" id="menuAdminNotify" style="display:none;"><span class="pm-icon"><i class="bi bi-megaphone"></i></span> Send notification (admin)</button>
           <button class="profile-menu-item" id="menuAdminCheck" style="display:none;"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Backend check (admin)</button>
+          <button class="profile-menu-item" id="menuAdminAiLimits" style="display:none;"><span class="pm-icon"><i class="bi bi-sliders"></i></span> AI limits (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -18568,7 +18569,7 @@ document.querySelectorAll('[data-ai-action]').forEach(btn => {
     if(window.checkAndIncrementAiFeatureUsage){
       const limitCheck = await window.checkAndIncrementAiFeatureUsage('notesAi', 10);
       if(!limitCheck.allowed){
-        resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12px;">You've reached today's free limit of 10 AI note actions. Upgrade to Premium for unlimited access, or come back tomorrow! 💎</p>`;
+        resultEl.innerHTML = `<p style="color:var(--wrong); font-size:12px;">${hlEsc(hlAiLimitText_('notesAi', limitCheck.limit))} 💎</p>`;
         return;
       }
     }
@@ -21285,6 +21286,7 @@ safeOn('menuPrivacyPolicy', 'click', () => {
 
     <h3>10. Security</h3>
     <p>We protect your information with Firebase login, database security rules that let each student change only their own data, checks on our server, and strong scrambling (hashing) of App Lock and Note Lock PINs. No system is completely secure, but we work to keep your information safe.</p>
+    <p><b>Protecting study content.</b> To stop the study material from being copied and shared, the App switches off copying, printing and (in the Android app) screenshots and screen recording on its screens. On the website, pages carry a faint hidden mark that contains your account ID and the date. We use that mark only to trace leaks of content, never for anything else.</p>
 
     <h3>11. Children</h3>
     <p>The App is meant for students preparing for Loksewa exams and is not directed at children under 13.</p>
@@ -25896,7 +25898,7 @@ safeOn('fcAiGenerateSubmitBtn', 'click', async () => {
   if(window.checkAndIncrementAiFeatureUsage){
     const limitCheck = await window.checkAndIncrementAiFeatureUsage('flashcardGen', 3);
     if(!limitCheck.allowed){
-      alert("You've reached today's free limit of 3 AI flashcard generations. Upgrade to Premium for unlimited access, or come back tomorrow!");
+      alert(hlAiLimitText_('flashcardGen', limitCheck.limit));
       return;
     }
   }
@@ -27885,15 +27887,15 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v535';
-const HL_EXPECTED_BACKEND_ = { version: 34, features: {
+const HL_APP_VERSION_ = 'v537';
+const HL_EXPECTED_BACKEND_ = { version: 35, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
   'tab-allowlist': 'Safe list of readable tabs', 'second-paper': 'Second Paper', 'second-paper-questions': 'Second Paper questions', 'second-paper-pdf': 'Second Paper PDFs',
   'special-sets': 'Special Sets', 'admin-users': 'Users & Premium', 'esewa-once': 'eSewa one-time payment safety', 'daily-battle-server': 'Daily Battle made by the backend',
   'admin-broadcast': 'Send notification (careful method)', 'exam-settings': 'Exam Settings', 'leaderboard-snapshots': 'Leaderboard summary (saves database reads)',
   'local-login-check': 'Fast login check (saves outgoing calls)', 'push-topics': 'Notifications to everyone at once', 'user-memory': 'Premium and limits memory (saves database reads)',
-  'scale-jobs': 'Automatic notifications for many students', 'second-paper-premium': 'Second Paper Premium lock', 'leaderboard-boards': 'Correct Today / Week / Month leaderboards', 'public-debug-closed': 'Public test links closed (protects your AI quota)' } };
+  'scale-jobs': 'Automatic notifications for many students', 'second-paper-premium': 'Second Paper Premium lock', 'leaderboard-boards': 'Correct Today / Week / Month leaderboards', 'public-debug-closed': 'Public test links closed (protects your AI quota)', 'ai-limits-editable': 'AI limits can be changed from the app' } };
 async function hlBackendCheckRun_(){   // -> { status: ok | older | newer | wrongAddress | unreachable, ... }
   const base = window.SHEET_API_URL || '', t0 = Date.now();
   let data = null;
@@ -27926,6 +27928,81 @@ function hlBackendCheckText_(r){
   if(r.said) lines.push('Backend answered: ' + r.said);
   if(r.ms !== undefined) lines.push('Answered in ' + r.ms + ' ms');
   return lines.join('\n');
+}
+// ==========================================================================================
+// AI LIMITS (owner only, Oct 2026). The free daily AI limits are now saved on the backend and the owner changes them here: Profile > Support and About > AI limits (admin).
+// Premium students and the owner accounts stay unlimited. The "limit reached" messages in the app show the REAL number the backend sends (limit); an older backend sends none, so the
+// original numbers are used. 0 means "no free use".
+// ==========================================================================================
+const HL_AI_LIMIT_DEFAULTS_ = { chat: 10, notesAi: 10, flashcardGen: 3, answerCheck: 2 };
+function hlAiLimitText_(bucket, limit){
+  let n = (limit === undefined || limit === null || limit === '') ? NaN : Number(limit);
+  if(!isFinite(n) || n < 0 || Math.floor(n) !== n) n = HL_AI_LIMIT_DEFAULTS_[bucket] != null ? HL_AI_LIMIT_DEFAULTS_[bucket] : 10;
+  if(n === 0) return 'Free AI use is switched off right now. Upgrade to Premium for unlimited access.';
+  const pl = n === 1 ? '' : 's', tail = 'Upgrade to Premium for unlimited access, or come back tomorrow!';
+  if(bucket === 'chat') return "You've reached today's free limit of " + n + ' message' + pl + '. Upgrade to Premium for unlimited AI Assistant access, or come back tomorrow!';
+  if(bucket === 'notesAi') return "You've reached today's free limit of " + n + ' AI note action' + pl + '. ' + tail;
+  if(bucket === 'flashcardGen') return "You've reached today's free limit of " + n + ' AI flashcard generation' + pl + '. ' + tail;
+  return "You've reached today's free limit of " + n + ' answer check' + pl + '. ' + tail;
+}
+async function hlOpenAdminAiLimits_(){
+  if(!hlAdminModeOn_()) return;
+  const FIELDS = [['chat', 'AI Assistant chat messages per day'], ['notesAi', 'AI note actions per day'], ['flashcardGen', 'AI flashcard generations per day'], ['answerCheck', 'Answer checks per day']];
+  const ov = hlMakeOverlay_('hlAiLimOverlay', 'flex-start');
+  const S = 'color:var(--ink-soft-on-elevated);';
+  ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">'
+    + '<div style="font-size:15px; font-weight:800;">AI limits (free students)</div>'
+    + '<div style="font-size:12px; line-height:1.5; margin:4px 0 12px; ' + S + '">How many AI uses a FREE student gets each day (Nepal time). Premium students and your owner accounts are always unlimited. A smaller number costs less AI money. 0 = no free use. Changes apply at once.</div>'
+    + FIELDS.map(f => '<label style="display:block; font-size:13px; font-weight:700; margin:10px 0 4px;">' + f[1] + '</label><input type="number" inputmode="numeric" min="0" max="500" step="1" id="hlAiLim_' + f[0] + '" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid var(--line); background:var(--panel); color:var(--ink-on-elevated); font-size:15px;">').join('')
+    + '<div id="hlAiLimInfo" style="font-size:12px; margin-top:10px; min-height:18px; line-height:1.5; ' + S + '">Loading…</div>'
+    + '<button class="calc-btn" id="hlAiLimSave" style="width:100%; margin:8px 0 0;">Save</button>'
+    + '<button class="calc-btn" id="hlAiLimReset" style="width:100%; margin:8px 0 0; background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);">Put the original numbers back</button>'
+    + '<button class="calc-btn" id="hlAiLimClose" style="width:100%; margin:8px 0 0; background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);">Close</button></div>';
+  const $ = (id) => document.getElementById(id);
+  let busy = false, max = 500;
+  const setBusy = (b) => { busy = b; ['hlAiLimSave', 'hlAiLimReset'].forEach(id => { const el = $(id); if(el) el.disabled = b; }); };
+  const fill = (limits) => { FIELDS.forEach(f => { const el = $('hlAiLim_' + f[0]); if(el && limits && limits[f[0]] !== undefined) el.value = String(limits[f[0]]); }); };
+  const say = (t) => { const el = $('hlAiLimInfo'); if(el) el.textContent = t; };
+  const whyNot = (d) => {
+    if(!d) return 'The server did not answer. Check the internet and try again.';
+    if(d.error === 'auth' || d.error === 'notAdmin') return 'The server did not recognise you as the owner. Close the app completely and open it again.';
+    if(d.error === 'unavailable') return 'Google could not confirm who you are right now. Try again in a minute.';
+    if(d.error === 'invalid') return d.message || 'That value is not allowed.';
+    return 'Could not save. Please try again.';
+  };
+  const call = async (mode, limits) => {
+    const token = window.getAiAuthToken ? await window.getAiAuthToken() : '';
+    const res = await postJsonWithTimeout({ action: 'adminAiLimits', idToken: token, mode: mode, limits: limits });
+    return await res.json();
+  };
+  const show = (d, saved) => {
+    fill(d.limits); if(d.max) max = d.max;
+    const def = d.defaults || HL_AI_LIMIT_DEFAULTS_;
+    say((saved ? saved + ' ' : '') + 'Original numbers: chat ' + def.chat + ', AI notes ' + def.notesAi + ', AI flashcards ' + def.flashcardGen + ', answer checks ' + def.answerCheck + '.');
+  };
+  $('hlAiLimClose').onclick = () => ov.remove();
+  $('hlAiLimSave').onclick = async () => {
+    if(busy) return;
+    const limits = {};
+    for(const f of FIELDS){
+      const raw = String($('hlAiLim_' + f[0]).value).trim();
+      if(!/^\d{1,3}$/.test(raw) || Number(raw) > max){ say('Each number must be a whole number from 0 to ' + max + ' (' + f[1] + ').'); return; }
+      limits[f[0]] = Number(raw);
+    }
+    setBusy(true); say('Saving…');
+    try{ const d = await call('save', limits); if(d && d.ok) show(d, 'Saved.'); else say(whyNot(d)); }catch(e){ say(whyNot(null)); }
+    setBusy(false);
+  };
+  $('hlAiLimReset').onclick = async () => {
+    if(busy) return;
+    if(!(await customConfirm('Put the original AI limits back (chat 10, AI notes 10, AI flashcards 3, answer checks 2)?'))) return;
+    setBusy(true); say('Resetting…');
+    try{ const d = await call('reset'); if(d && d.ok) show(d, 'Original numbers are back.'); else say(whyNot(d)); }catch(e){ say(whyNot(null)); }
+    setBusy(false);
+  };
+  setBusy(true);
+  try{ const d = await call('read'); if(d && d.ok) show(d, ''); else say(whyNot(d)); }catch(e){ say(whyNot(null)); }
+  setBusy(false);
 }
 function hlOpenAdminCheck_(){
   if(!hlAdminModeOn_()) return;
@@ -28127,6 +28204,7 @@ function hlOpenAdminNotify_(){
 }
 safeOn('menuAdminNotify', 'click', () => { hlOpenAdminNotify_(); });
 safeOn('menuAdminCheck', 'click', () => { hlOpenAdminCheck_(); });
+safeOn('menuAdminAiLimits', 'click', () => { hlOpenAdminAiLimits_(); });
 // ==========================================================================================
 // EXAM SETTINGS (Oct 2026): the Mock Test size (questions), time (minutes) and marks per question of each exam come from the Google
 // Sheet tab "Exam Settings", which the owners edit in the app (Mock Test > Manage this screen). Built-in values (MOCK_POSTS) are the
@@ -28855,7 +28933,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
-  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify', 'menuAdminCheck'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
+  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify', 'menuAdminCheck', 'menuAdminAiLimits'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
@@ -30235,7 +30313,7 @@ async function sendChatMessage(){
   if(window.checkAndIncrementChatCount){
     const limitCheck = await window.checkAndIncrementChatCount();
     if(!limitCheck.allowed){
-      appendBubble('ai', "You've reached today's free limit of 10 messages. Upgrade to Premium for unlimited AI Assistant access, or come back tomorrow! 💎");
+      appendBubble('ai', hlAiLimitText_('chat', limitCheck.limit) + ' 💎');
       return;
     }
   }
@@ -30307,7 +30385,7 @@ async function submitAnswerCheck(){
     const limitCheck = await window.checkAndIncrementAiFeatureUsage('answerCheck', 2);
     if(!limitCheck.allowed){
       resultWrap.style.display = 'block';
-      resultWrap.innerHTML = `<div class="content-card"><p style="color:var(--wrong); font-size:13.5px;">You've reached today's free limit of 2 answer checks. Upgrade to Premium for unlimited access, or come back tomorrow! 💎</p></div>`;
+      resultWrap.innerHTML = `<div class="content-card"><p style="color:var(--wrong); font-size:13.5px;">${hlEsc(hlAiLimitText_('answerCheck', limitCheck.limit))} 💎</p></div>`;
       return;
     }
   }
