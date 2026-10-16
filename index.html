@@ -27877,7 +27877,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v532';
+const HL_APP_VERSION_ = 'v533';
 const HL_EXPECTED_BACKEND_ = { version: 34, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
@@ -27901,9 +27901,17 @@ async function hlBackendCheckRun_(){   // -> { status: ok | older | newer | wron
   const status = (missing.length || num < HL_EXPECTED_BACKEND_.version) ? 'older' : (num > HL_EXPECTED_BACKEND_.version ? 'newer' : 'ok');
   return { status: status, ms: ms, version: String(data.version || ''), num: num, missing: missing, localLoginCheck: data.localLoginCheck === undefined ? '' : String(data.localLoginCheck) };
 }
+function hlBackendCheckHere_(){   // where THIS copy of the app is running and which protections are active right now (computed on the phone, no backend needed)
+  const native = typeof hlIsNative_ === 'function' && hlIsNative_();
+  const shield = document.body.classList.contains('hl-shield-on');
+  let shot;
+  if(native) shot = (typeof hlSecureOn_ !== 'undefined' && hlSecureOn_) ? 'BLOCKED (blank) on this screen' : 'ALLOWED on this screen';
+  else shot = 'cannot be blocked on the website / installed web app (only the Android app can)';
+  return ['Running as: ' + (native ? 'ANDROID APP' : 'WEBSITE / installed web app'), 'App build: ' + HL_APP_VERSION_, 'Screenshots and screen recording: ' + shot, 'Copy and print shield: ' + (shield ? 'ON' : 'OFF on this screen (Admin view is ON, so you can edit)')];
+}
 function hlBackendCheckText_(r){
   const tail = String(window.SHEET_API_URL || '').replace(/\/exec$/, '').slice(-12);
-  const lines = ['Health Loksewa backend check', 'App ' + HL_APP_VERSION_ + ' (needs backend v' + HL_EXPECTED_BACKEND_.version + ' or newer)', 'Address ends: ...' + tail, 'Result: ' + r.status];
+  const lines = ['Health Loksewa backend check', 'App ' + HL_APP_VERSION_ + ' (needs backend v' + HL_EXPECTED_BACKEND_.version + ' or newer)', 'Address ends: ...' + tail].concat(hlBackendCheckHere_()).concat(['Result: ' + r.status]);
   if(r.version) lines.push('Backend says: ' + r.version);
   if(r.missing && r.missing.length) lines.push('Missing features: ' + r.missing.join(', '));
   if(r.localLoginCheck !== undefined && r.version) lines.push('Fast login check: ' + (r.localLoginCheck || '(not reported: older backend)'));
@@ -27918,6 +27926,7 @@ function hlOpenAdminCheck_(){
   ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; margin:8px 0; color:var(--ink-on-elevated);">'
     + '<div style="font-size:15px; font-weight:800;">Backend check</div>'
     + '<div id="hlBcAddr" style="font-size:12px; line-height:1.5; margin:4px 0 10px; ' + S + '"></div>'
+    + '<div id="hlBcHere" style="font-size:12.5px; line-height:1.6; margin:0 0 10px; padding:8px 10px; border-radius:8px; background:var(--panel); border:1px solid var(--line); white-space:pre-wrap;"></div>'
     + '<div id="hlBcBox" style="border-radius:10px; padding:12px; font-size:13.5px; line-height:1.55; background:var(--panel); border:1.5px solid var(--line);">Checking…</div>'
     + '<div id="hlBcList" style="margin-top:10px; font-size:12.5px; line-height:1.6;"></div>'
     + '<div id="hlBcInfo" style="font-size:12px; margin-top:8px; min-height:16px; ' + S + '"></div>'
@@ -27928,6 +27937,7 @@ function hlOpenAdminCheck_(){
   const $ = (id) => document.getElementById(id);
   let last = null;
   const tail = String(window.SHEET_API_URL || '').replace(/\/exec$/, '').slice(-12);
+  $('hlBcHere').textContent = hlBackendCheckHere_().join('\n');
   $('hlBcAddr').textContent = 'This app (' + HL_APP_VERSION_ + ') talks to the backend whose address ends ...' + tail + ' and needs backend v' + HL_EXPECTED_BACKEND_.version + ' or newer.';
   const paint = (r) => {
     last = r;
