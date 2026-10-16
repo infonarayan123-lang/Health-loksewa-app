@@ -22102,6 +22102,14 @@ let APP_VERSION;
 try{
 APP_VERSION = '1.0.0';
 }catch(err){ APP_VERSION = undefined; if(window.showDebugError) showDebugError("A required setting (" + "APP_VERSION" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
+function hlUpdateVersionLine_(){
+  try{
+    const native = typeof hlIsNative_ === 'function' && hlIsNative_();
+    const admin = typeof hlAdminModeOn_ === 'function' && hlAdminModeOn_();
+    document.getElementById('appVersionLine').textContent = `Health Loksewa v${APP_VERSION} · build ${HL_APP_VERSION_} · ${native ? 'Android app' : 'Website'}` + (admin ? ' · Admin view ON (protections off)' : '');
+  }catch(e){}
+}
+window.hlUpdateVersionLine_ = hlUpdateVersionLine_;
 document.getElementById('appVersionLine').textContent = `Health Loksewa v${APP_VERSION}`;
 
 // ---------- My Device: lightweight multi-device awareness using Firestore ----------
@@ -27877,7 +27885,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v533';
+const HL_APP_VERSION_ = 'v535';
 const HL_EXPECTED_BACKEND_ = { version: 34, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
@@ -28334,6 +28342,7 @@ window.hlClearGetCache_ = hlClearGetCache_;
 // (Display & Appearance, Account & Privacy, Support and About) and the "Which exam" list are closed, so the screen always starts tidy. Opening one stays open while the student
 // uses it; it is closed only at the next arrival. ----
 function hlCollapseProfileBoxes_(){
+  try{ hlUpdateVersionLine_(); }catch(e){}
   try{
     document.querySelectorAll('#profileScreen details.profile-accordion').forEach(d => { d.open = false; });
     const row = document.getElementById('examTypeRow'), caret = document.getElementById('examTypeCaret');
@@ -28367,8 +28376,8 @@ function hlShieldWatermark_(on){
     if(hlShieldMarkFor_ === key && w.style.backgroundImage) return;
     const c = document.createElement('canvas'); c.width = 340; c.height = 220;
     const g = c.getContext('2d'); if(!g) return;
-    g.translate(170, 110); g.rotate(-0.42); g.textAlign = 'center'; g.fillStyle = 'rgba(128,128,128,0.17)'; g.font = '600 12px sans-serif';
-    g.fillText('Health Loksewa · ' + day, 0, -8); g.fillText('ID ' + uid, 0, 10);
+    g.translate(170, 110); g.rotate(-0.42); g.textAlign = 'center'; g.fillStyle = 'rgba(128,128,128,0.035)'; g.font = '700 13px sans-serif';   // 3.5% strength: not visible while studying, but it IS in every screenshot taken on the website (readable after the contrast is raised)
+    g.fillText('Health Loksewa Hub · ' + day, 0, -8); g.fillText('ID ' + uid, 0, 10);
     w.style.backgroundImage = 'url(' + c.toDataURL('image/png') + ')'; hlShieldMarkFor_ = key;
   }catch(e){}
 }
@@ -28733,9 +28742,12 @@ safeOn('battleResultOppMenuBtn', 'click', hlOpenOpponentMenu_);
 
 function hlRoleKey_(uid){ return 'hl_role__u_' + uid; }
 function hlRoleLoad_(uid){
+  // SECURITY (Oct 2026): only a "not an owner" answer is ever trusted from the phone's storage. A saved "owner: true" could be forged by editing it
+  // (it would show the admin screens and switch off the copy shield for an hour), so it is ignored and removed: the owner is confirmed by the server every session.
   try{
     const c = JSON.parse(localStorage.getItem(hlRoleKey_(uid)) || 'null');
-    if(c && typeof c.owner === 'boolean') return { uid: uid, owner: c.owner, at: Number(c.at) || 0 };
+    if(c && c.owner === false) return { uid: uid, owner: false, at: Number(c.at) || 0 };
+    if(c && c.owner !== false) localStorage.removeItem(hlRoleKey_(uid));
   }catch(e){}
   return null;
 }
@@ -28772,7 +28784,7 @@ function hlRefreshRole_(){
         const before = hlIsAdminUser_();
         const now = Date.now();
         window.__hlRole = { uid: uid, owner: data.owner, at: now };
-        try{ localStorage.setItem(hlRoleKey_(uid), JSON.stringify({ owner: data.owner, at: now })); }catch(e){}
+        try{ if(data.owner === false) localStorage.setItem(hlRoleKey_(uid), JSON.stringify({ owner: false, at: now })); else localStorage.removeItem(hlRoleKey_(uid)); }catch(e){}   // never save "owner: true" on the phone
         if(before !== data.owner) hlRoleChanged_();
         return data.owner;
       }
