@@ -2072,8 +2072,8 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username">
       </div>
       <div class="field" id="fieldPhone" style="display:none;">
-        <label>Phone Number</label>
-        <input type="tel" id="loginPhone" placeholder="98XXXXXXXX" autocomplete="tel">
+        <label>Phone Number <span style="opacity:0.7; font-weight:400;">(optional)</span></label>
+        <input type="tel" id="loginPhone" placeholder="98XXXXXXXX (optional)" autocomplete="tel">
       </div>
       <div class="field">
         <label id="passwordLabel">Password</label>
@@ -2672,6 +2672,12 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
           <button class="profile-menu-item" id="menuAdminNotify" style="display:none;"><span class="pm-icon"><i class="bi bi-megaphone"></i></span> Send notification (admin)</button>
           <button class="profile-menu-item" id="menuAdminCheck" style="display:none;"><span class="pm-icon"><i class="bi bi-heart-pulse"></i></span> Backend check (admin)</button>
           <button class="profile-menu-item" id="menuAdminAiLimits" style="display:none;"><span class="pm-icon"><i class="bi bi-sliders"></i></span> AI limits (admin)</button>
+          <button class="profile-menu-item" id="menuAdminContent" style="display:none;"><span class="pm-icon"><i class="bi bi-collection"></i></span> All content (admin)</button>
+          <button class="profile-menu-item" id="menuAdminLog" style="display:none;"><span class="pm-icon"><i class="bi bi-journal-text"></i></span> Admin log (admin)</button>
+          <button class="profile-menu-item" id="menuAdminExams" style="display:none;"><span class="pm-icon"><i class="bi bi-mortarboard"></i></span> Exams setup (admin)</button>
+          <button class="profile-menu-item" id="menuAdminTexts" style="display:none;"><span class="pm-icon"><i class="bi bi-pencil-square"></i></span> Edit texts (admin)</button>
+          <button class="profile-menu-item" id="menuAdminFeatures" style="display:none;"><span class="pm-icon"><i class="bi bi-toggles"></i></span> Features on/off (admin)</button>
+          <button class="profile-menu-item" id="menuAdminDashboard" style="display:none;"><span class="pm-icon"><i class="bi bi-speedometer2"></i></span> Dashboard (admin)</button>
           <button class="profile-menu-item" id="menuTerms"><span class="pm-icon"><i class="bi bi-file-earmark-text"></i></span> Terms and Conditions</button>
         </div>
       </details>
@@ -6586,6 +6592,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
     <div class="home-body">
       <div class="section-title">Subject-wise MCQs — choose a subject</div>
       <div id="subjectPickList"></div>
+      <button class="calc-btn" id="subjectPickAdminAdd" style="display:none; margin-top:14px; width:100%;">➕ Add questions to this exam (admin)</button>
     </div>
   </div>
 
@@ -6812,7 +6819,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       const kinds = ['announcement', 'discount', 'whatsNew'];
       const hash = String(token).slice(-16) + '|' + (prefs ? kinds.map(k => prefs[k] === false ? 0 : 1).join('') : 'x');
       const key = (typeof uk === 'function') ? uk('hl_topics_synced') : 'hl_topics_synced';
-      const today = new Date().toISOString().slice(0, 10);
+      const today = hlDayKey_(new Date());
       let state = ''; try{ state = localStorage.getItem(key) || ''; }catch(e){}
       if(state === 'ok:' + hash || state === 'fail:' + hash + ':' + today) return true;   // already done, or already failed today: no call
       const idToken = await user.getIdToken();
@@ -7033,7 +7040,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       for(let i = 0; i <= 62; i++){
         const d = new Date(); d.setDate(d.getDate() - i);
         days.add(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
-        days.add(d.toISOString().slice(0, 10));
+        days.add(hlDayKey_(d));
       }
       await Promise.all([...days].map(day => deleteDoc(doc(db, 'dailyBattles', day, 'participants', uid)).catch(() => {})));
     });
@@ -7253,9 +7260,11 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         subjectPoints: stats.subjectPoints || {},
         updatedAt: new Date().toISOString()
       }, { merge: true });
+      return true;
     }catch(err){
       // Non-critical — if this fails, the user's own progress is still saved locally either way
       if(window.hlNoteQuotaError_) window.hlNoteQuotaError_(err);
+      return false;   // tells the caller the numbers did NOT reach the server, so it can send them again later
     }
   };
 
@@ -8090,15 +8099,16 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
     let fullName = '', phone = '', confirmPassword = '';
     if(isRegisterMode){
       fullName = document.getElementById('loginFullName').value.trim();
-      phone = document.getElementById('loginPhone').value.trim();
+      phone = hlPhoneClean_(document.getElementById('loginPhone').value);
       confirmPassword = document.getElementById('loginConfirmPassword').value;
 
       if(!fullName){
         showLoginError('Please enter your full name.');
         return;
       }
-      if(!phone || !/^[0-9]{7,15}$/.test(phone)){
-        showLoginError('Please enter a valid phone number (numbers only).');
+      const phoneMsg = hlPhoneProblem_(phone);   // the phone number is OPTIONAL: empty is fine; if typed it must be 7 to 15 digits
+      if(phoneMsg){
+        showLoginError(phoneMsg);
         return;
       }
       if(password.length < 6){
@@ -8413,7 +8423,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzKAiTBfwaL-vucFg5l5mzQEqoFca5DVu8h8PJhOMryV8-1ab7G0DhjAAtTu9DhxwtgKw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxqBp2dLfWM33AKsfBJfyBsbljSDBZaUQ19PhT6kjd7dehYbRqxH8HO-HT4NNMJT66vWg/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -11953,7 +11963,7 @@ function renderSleepHistory(){
   const avgHrs = Math.floor(avgMinutes / 60), avgMins = Math.round(avgMinutes % 60);
   document.getElementById('sleepHistory').innerHTML = `
     <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Last ${entries.length} nights — average ${avgHrs}h ${avgMins}m</div>
-    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))}: ${e.bedtime} → ${e.waketime} (${Math.floor(e.durationMinutes/60)}h ${e.durationMinutes%60}m)</div>`).join('')}
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))}: ${hlEsc(e.bedtime)} → ${hlEsc(e.waketime)} (${Math.floor(e.durationMinutes/60)}h ${e.durationMinutes%60}m)</div>`).join('')}
   `;
 }
 
@@ -11991,7 +12001,7 @@ function renderBpHistory(){
   }
   document.getElementById('bpHistory').innerHTML = `
     <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
-    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))} ${e.time}: ${e.systolic}/${e.diastolic}${e.pulse ? ' · Pulse ' + e.pulse : ''}</div>`).join('')}
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))} ${hlEsc(e.time)}: ${hlEsc(e.systolic)}/${hlEsc(e.diastolic)}${e.pulse ? ' · Pulse ' + hlEsc(e.pulse) : ''}</div>`).join('')}
   `;
 }
 
@@ -12020,7 +12030,7 @@ function renderGlucoseHistory(){
   if(entries.length === 0){ el.innerHTML = ''; return; }
   el.innerHTML = `
     <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
-    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))} ${e.time}: ${e.reading} mg/dL (${e.type})</div>`).join('')}
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))} ${hlEsc(e.time)}: ${hlEsc(e.reading)} mg/dL (${hlEsc(e.type)})</div>`).join('')}
   `;
 }
 
@@ -12049,7 +12059,7 @@ function renderHrHistory(){
   if(entries.length === 0){ el.innerHTML = ''; return; }
   el.innerHTML = `
     <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent readings</div>
-    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))} ${e.time}: ${e.bpm} BPM (${e.type})</div>`).join('')}
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:3px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))} ${hlEsc(e.time)}: ${hlEsc(e.bpm)} BPM (${hlEsc(e.type)})</div>`).join('')}
   `;
 }
 
@@ -12362,7 +12372,7 @@ function renderGratitudeHistory(){
   if(entries.length === 0){ el.innerHTML = ''; return; }
   el.innerHTML = `
     <div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">Recent entries</div>
-    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:4px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))}: ${e.items.join(' · ')}</div>`).join('')}
+    ${entries.map(e => `<div style="font-size:11.5px; color:var(--ink-soft); padding:4px 0;">${formatDualDate(new Date(e.date + 'T00:00:00'))}: ${hlEsc((e.items || []).join(' · '))}</div>`).join('')}
   `;
 }
 
@@ -12377,7 +12387,7 @@ function calculateHabitStreak(log, habitName){
   let streak = 0;
   const checkDate = new Date();
   for(let i = 0; i < 1000; i++){ // capped — defensive against any malformed-data infinite loop
-    const dateKey = checkDate.toISOString().slice(0, 10);
+    const dateKey = hlDayKey_(checkDate);
     if(log[dateKey] && log[dateKey].includes(habitName)){
       streak++;
       checkDate.setDate(checkDate.getDate() - 1);
@@ -12765,7 +12775,7 @@ async function loadSalaryScaleOptions(){
       serviceEl.innerHTML = `<option value="">No salary scale data added yet</option>`;
       return;
     }
-    serviceEl.innerHTML = `<option value="">-- सेवा छान्नुहोस् --</option>` + serviceNames.map(s => `<option value="${s}">${s}</option>`).join('');
+    serviceEl.innerHTML = `<option value="">-- सेवा छान्नुहोस् --</option>` + serviceNames.map(s => `<option value="${hlEsc(s)}">${hlEsc(s)}</option>`).join('');
   }catch(err){
     serviceEl.innerHTML = `<option value="">Could not load — check your connection</option>`;
   }
@@ -13043,13 +13053,13 @@ safeOn('calcComparisonBtn', 'click', () => {
   resultEl.innerHTML = `
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
       <div>
-        <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">${salaryScaleCache[idxA].Post}</div>
+        <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">${hlEsc(salaryScaleCache[idxA].Post)}</div>
         <div class="calc-result" style="font-size:12px;">Basic: Rs. ${a.basicSalary.toFixed(0)}</div>
         <div class="calc-result" style="font-size:12px;">Gross: Rs. ${a.grossMonthly.toFixed(0)}</div>
         <div class="calc-result" style="font-size:12px; font-weight:800; color:var(--gold);">Net (approx): Rs. ${a.netMonthly.toFixed(0)}</div>
       </div>
       <div>
-        <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">${salaryScaleCache[idxB].Post}</div>
+        <div style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px;">${hlEsc(salaryScaleCache[idxB].Post)}</div>
         <div class="calc-result" style="font-size:12px;">Basic: Rs. ${b.basicSalary.toFixed(0)}</div>
         <div class="calc-result" style="font-size:12px;">Gross: Rs. ${b.grossMonthly.toFixed(0)}</div>
         <div class="calc-result" style="font-size:12px; font-weight:800; color:var(--gold);">Net (approx): Rs. ${b.netMonthly.toFixed(0)}</div>
@@ -13206,7 +13216,7 @@ function applyStudyResourcesData(data){
   }
   wrap.innerHTML = dictionaryPdfList.map((p, i) => `
     <a href="#" class="link-card dictionary-pdf-item" data-index="${i}" style="margin-bottom:8px;">
-      <div class="lc-text"><h4>${p.name}</h4></div>
+      <div class="lc-text"><h4>${hlEsc(p.name)}</h4></div>
       <div class="lc-arrow">👁</div>
     </a>
   `).join('');
@@ -13267,7 +13277,7 @@ function renderDictionaryRecentChips(){
   const wrap = document.getElementById('dictionaryRecentChips');
   const recent = getDictionaryRecentSearches();
   if(recent.length === 0){ wrap.innerHTML = ''; return; }
-  wrap.innerHTML = recent.map(t => `<button class="note-folder-chip dictionary-recent-chip" data-term="${t.replace(/"/g, '&quot;')}">${t}</button>`).join('');
+  wrap.innerHTML = recent.map(t => `<button class="note-folder-chip dictionary-recent-chip" data-term="${hlEsc(t)}">${hlEsc(t)}</button>`).join('');
   document.querySelectorAll('.dictionary-recent-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       document.getElementById('dictionarySearchBox').value = chip.dataset.term;
@@ -13395,8 +13405,10 @@ function getAllMnemonics(){
 function renderMnemonicCategories(){
   const wrap = document.getElementById('mnemonicsCategoryRow');
   if(!wrap) return;
-  const chip = (label, value) => `<button class="note-folder-chip mnemonic-cat-chip ${mnemonicActiveCategory === value ? 'active' : ''}" data-cat="${value || ''}" style="white-space:nowrap;">${label}</button>`;
-  wrap.innerHTML = chip('All', null) + MNEMONIC_CATEGORIES.map(c => chip(c, c)).join('');
+  const chip = (label, value) => `<button class="note-folder-chip mnemonic-cat-chip ${mnemonicActiveCategory === value ? 'active' : ''}" data-cat="${hlEsc(value || '')}" style="white-space:nowrap;">${hlEsc(label)}</button>`;
+  const cats = MNEMONIC_CATEGORIES.slice();
+  getAllMnemonics().forEach(m => { const c = String((m && m.category) || '').trim().slice(0, 40); if(c && !cats.some(x => x.toLowerCase() === c.toLowerCase())) cats.push(c); });   // a new category typed in the Sheet gets its own chip
+  wrap.innerHTML = chip('All', null) + cats.map(c => chip(c, c)).join('');
   document.querySelectorAll('.mnemonic-cat-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       mnemonicActiveCategory = btn.dataset.cat || null;
@@ -13428,7 +13440,7 @@ function getFilteredMnemonics(searchTerm){
     list = list.filter(m => m.topic.toLowerCase().includes(term) || m.explain.toLowerCase().includes(term) ||
       m.trick.toLowerCase().includes(term) || m.category.toLowerCase().includes(term));
   }
-  if(mnemonicActiveCategory) list = list.filter(m => m.category === mnemonicActiveCategory);
+  if(mnemonicActiveCategory) list = list.filter(m => String(m.category || '').trim().toLowerCase() === String(mnemonicActiveCategory).toLowerCase());
 
   if(mnemonicActiveFilter === 'saved'){
     const saved = getMnemonicBookmarks();
@@ -13790,9 +13802,9 @@ async function renderHealthGuide(){
 
     wrap.innerHTML = Object.keys(groups).map(cat => `
       <div class="content-card" style="margin-bottom:14px;">
-        <h4 style="margin-bottom:10px;">${cat}</h4>
+        <h4 style="margin-bottom:10px;">${hlEsc(cat)}</h4>
         ${groups[cat].map((r, i) => `
-          <div class="faq-item" data-hg="${cat}-${i}">
+          <div class="faq-item" data-hg="${hlEsc(cat)}-${i}">
             <div class="faq-question"><span>${hlRich_(r.Title)}</span><span class="faq-chevron">▾</span></div>
             <div class="faq-answer">${hlRich_(r.Content)}
               <div style="margin-top:10px;"><button class="hg-ai-btn" data-cat="${encodeURIComponent(cat)}" data-i="${i}" style="background:none; border:1px solid var(--line); border-radius:8px; color:var(--ink-soft); font-size:12px; font-weight:600; padding:6px 10px; cursor:pointer;">Ask AI about this</button></div>
@@ -14928,13 +14940,24 @@ function friendlyFetchError(err){
   return (err && err.message) ? err.message : String(err);
 }
 
+// ---- DAY KEYS (Oct 2026). Every "which day is it" key in the app now means the NEPAL calendar day (UTC+5:45, no daylight saving). Before, the app used the UTC date, which is
+// "yesterday" in Nepal from midnight until 5:45 am: streaks broke or doubled for early studiers, the week started on the wrong day, and flashcards came back a day early.
+// hlDayKey_(moment) = the Nepal day of that moment. hlLocalDayKey_(date) = the calendar day on this phone, for dates built as local midnight (new Date(y, m, d)). ----
+function hlDayKey_(d){
+  const t = (d instanceof Date) ? d.getTime() : new Date(d).getTime();
+  if(!isFinite(t)) return '';
+  return new Date(t + 20700000).toISOString().slice(0, 10);
+}
+function hlLocalDayKey_(d){
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
 function todayISO(){
-  return new Date().toISOString().slice(0, 10);
+  return hlDayKey_(new Date());
 }
 function addDaysISO(days){
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return hlDayKey_(d);
 }
 
 // ---------- Mood check-in: full multi-step flow (level → emotions → causes/note → save).
@@ -15610,7 +15633,7 @@ function bucketActivity(mode){
   if(mode === 'daily'){
     for(let i = 6; i >= 0; i--){
       const d = new Date(now); d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+      const key = hlDayKey_(d);
       const entry = log[key] || { questions: 0, correct: 0 };
       buckets.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }), questions: entry.questions, correct: entry.correct, studyTimeSec: getStudyTimeForDate(key), topics: topicsDoneInPeriod_(tlog, key) });
     }
@@ -15619,7 +15642,7 @@ function bucketActivity(mode){
       let qSum = 0, cSum = 0, tSum = 0, tpSum = 0;
       for(let d = 0; d < 7; d++){
         const day = new Date(now); day.setDate(day.getDate() - (i * 7 + d));
-        const key = day.toISOString().slice(0, 10);
+        const key = hlDayKey_(day);
         const entry = log[key];
         if(entry){ qSum += entry.questions; cSum += entry.correct; }
         tSum += getStudyTimeForDate(key);
@@ -15790,7 +15813,7 @@ function renderHomeMoodRow(){
   let weekHtml = '';
   for(let i = 6; i >= 0; i--){
     const d = new Date(now); d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
+    const key = hlDayKey_(d);
     const dayEntries = entries.filter(e => e.date === key);
     const icon = dayEntries.length > 0 ? (MOOD_LEVEL_MAP[dayEntries[dayEntries.length - 1].level] || {}).icon : null;
     weekHtml += `
@@ -16177,8 +16200,8 @@ function openRevisionTopicPicker(subject){
     wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:12.5px; text-align:center; padding:10px 0;">Only one topic here — use "Revise Whole Subject" above.</p>`;
   } else {
     wrap.innerHTML = topics.map(t => `
-      <button class="note-item revision-topic-row" data-topic="${t.topic.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-        <span class="ni-title" style="font-size:13px;">${t.topic}</span>
+      <button class="note-item revision-topic-row" data-topic="${hlEsc(t.topic)}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+        <span class="ni-title" style="font-size:13px;">${hlEsc(t.topic)}</span>
         <span style="font-size:12px; color:var(--gold); font-weight:700;">${t.count}</span>
       </button>
     `).join('');
@@ -16244,7 +16267,7 @@ function renderRevisionCalendar(){
   for(let i = 0; i < startWeekday; i++) html += '<div></div>';
   for(let d = 1; d <= daysInMonth; d++){
     const dateObj = new Date(year, month, d);
-    const dateISO = dateObj.toISOString().split('T')[0];
+    const dateISO = hlLocalDayKey_(dateObj);
     const isToday = d === todayDate;
     const isPast = dateObj < new Date(year, month, todayDate);
     let dot = '';
@@ -16293,7 +16316,7 @@ function renderExamRevisionPlan(){
   const weakTop = subjects.slice(0, 3);
   planCard.innerHTML = `
     <h4 style="margin-bottom:10px;">Exam Revision Plan</h4>
-    ${weakTop.length > 0 ? weakTop.map(s => `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--wrong);">${s.subject}</span><span style="font-weight:700;">${s.count} due</span></div>`).join('') : `<p style="font-size:12.5px; color:var(--ink-soft);">No weak subjects identified yet — keep practicing and this will fill in.</p>`}
+    ${weakTop.length > 0 ? weakTop.map(s => `<div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--wrong);">${hlEsc(s.subject)}</span><span style="font-weight:700;">${s.count} due</span></div>`).join('') : `<p style="font-size:12.5px; color:var(--ink-soft);">No weak subjects identified yet — keep practicing and this will fill in.</p>`}
     <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--gold);">Total Mistakes Tracked</span><span style="font-weight:700;">${mistakeCount}</span></div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px; padding:4px 0; border-top:1px solid var(--line);"><span style="color:var(--correct);">Final Quick Review</span><span style="font-weight:700;">Use Quick Revision anytime</span></div>
   `;
@@ -16377,7 +16400,7 @@ function renderStudyPlannerSetup(){
   const subjects = (currentMcqPost === 'pho') ? KNOWN_SUBJECTS : (KNOWN_SUBJECTS_BY_POST[currentMcqPost] || KNOWN_SUBJECTS);
   document.getElementById('spSubjectChecklist').innerHTML = subjects.map(s => `
     <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; padding:6px 0; border-top:1px solid var(--line);">
-      <input type="checkbox" class="sp-subject-check" value="${s}" ${(settings.subjects || []).includes(s) ? 'checked' : ''}> ${s}
+      <input type="checkbox" class="sp-subject-check" value="${hlEsc(s)}" ${(settings.subjects || []).includes(s) ? 'checked' : ''}> ${hlEsc(s)}
     </label>
   `).join('');
 }
@@ -16909,7 +16932,7 @@ function renderFolderChips(){
   const notes = getActiveNotes();
   const folders = ['All', ...new Set(notes.map(n => n.folder || 'General'))];
   document.getElementById('notesFolderChips').innerHTML = folders.map(f => `
-    <button class="note-folder-chip ${(f === 'All' && !notesSelectedFolder) || f === notesSelectedFolder ? 'active' : ''}" data-folder="${f}">${f}</button>
+    <button class="note-folder-chip ${(f === 'All' && !notesSelectedFolder) || f === notesSelectedFolder ? 'active' : ''}" data-folder="${hlEsc(f)}">${hlEsc(f)}</button>
   `).join('');
   document.querySelectorAll('.note-folder-chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -17379,9 +17402,9 @@ safeOn('drawerPrintBtn', 'click', () => {
   const body = document.getElementById('noteBodyInput').value;
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`
-    <html><head><title>${title}</title>
+    <html><head><title>${hlEsc(title)}</title>
     <style>body{font-family:sans-serif; padding:30px; line-height:1.6; white-space:pre-wrap;} h1{font-size:20px;}</style>
-    </head><body><h1>${title}</h1><div>${body.replace(/</g, '&lt;')}</div></body></html>
+    </head><body><h1>${hlEsc(title)}</h1><div>${body.replace(/</g, '&lt;')}</div></body></html>
   `);
   printWindow.document.close();
   printWindow.focus();
@@ -17402,6 +17425,16 @@ function hlEsc(v){
   return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 // Only real web links may be used in href/src (blocks javascript: and other tricks)
+// ---- PHONE NUMBER AT SIGN-UP IS OPTIONAL (Oct 2026). Empty is fine (Google sign-in already leaves it empty). If something is typed it is cleaned (spaces and dashes removed, Nepali digits
+// \u0966-\u096F turned into 0-9) and must then be 7 to 15 digits. hlPhoneProblem_ returns '' when fine, or the message to show. ----
+function hlPhoneClean_(raw){
+  return String(raw == null ? '' : raw).trim().replace(/[\u0966-\u096F]/g, c => String(c.charCodeAt(0) - 0x0966)).replace(/[\s\-]/g, '');
+}
+function hlPhoneProblem_(cleaned){
+  const v = String(cleaned == null ? '' : cleaned).trim();
+  if(v === '') return '';
+  return /^[0-9]{7,15}$/.test(v) ? '' : 'The phone number must be numbers only (7 to 15 digits). You can also leave it empty.';
+}
 function hlSafeUrl(u){
   const v = String(u == null ? '' : u).trim();
   return /^https?:\/\//i.test(v) ? hlEsc(v) : '#';
@@ -17539,14 +17572,29 @@ function toggleQuickRefBookmark(subtopic){
   else list.unshift(subtopic);
   try{ localStorage.setItem(uk('hl_quickref_bookmarks'), JSON.stringify(list)); }catch(e){}
 }
+// QUICK REFERENCES: the built-in list of categories and subtopics stays as it was, and now ANY new row the owner adds in the "Quick References" tab appears too: a row whose Subtopic is not
+// in the built-in list is shown under its "Category" (a new category is created if needed; with no Category it goes under "More"), optionally with an "Icon" (an emoji).
+function hlQuickRefCats_(){
+  const base = QUICK_REF_CATEGORIES.map(c => ({ name: c.name, icon: c.icon, subtopics: c.subtopics.slice() }));
+  const known = new Set(base.flatMap(c => c.subtopics.map(x => x.toLowerCase())));
+  (Array.isArray(QUICK_REFERENCES) ? QUICK_REFERENCES : []).forEach(r => {
+    const sub = String((r && r.Subtopic) || '').trim().slice(0, 100);
+    if(!sub || known.has(sub.toLowerCase())) return;
+    const catName = (String((r && r.Category) || '').trim() || 'More').slice(0, 60);
+    let cat = base.find(c => c.name.toLowerCase() === catName.toLowerCase());
+    if(!cat){ cat = { name: catName, icon: (String((r && r.Icon) || '').trim() || '📌').slice(0, 4), subtopics: [] }; base.push(cat); }
+    cat.subtopics.push(sub); known.add(sub.toLowerCase());
+  });
+  return base;
+}
 function renderQuickRefHub(){
   const wrap = document.getElementById('quickRefCategoryWrap');
-  wrap.innerHTML = QUICK_REF_CATEGORIES.map(cat => `
+  wrap.innerHTML = hlQuickRefCats_().map(cat => `
     <div class="content-card" style="margin-bottom:12px;">
-      <h4 style="margin-bottom:8px;">${cat.icon} ${hlEsc(cat.name)}</h4>
+      <h4 style="margin-bottom:8px;">${hlEsc(cat.icon)} ${hlEsc(cat.name)}</h4>
       ${cat.subtopics.map(sub => `
-        <button class="note-item quickref-row" data-subtopic="${sub.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-          <span class="ni-title" style="font-size:13px;">${isQuickRefBookmarked(sub) ? '🔖 ' : ''}${sub}</span>
+        <button class="note-item quickref-row" data-subtopic="${hlEsc(sub)}" style="width:100%; text-align:left; border:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+          <span class="ni-title" style="font-size:13px;">${isQuickRefBookmarked(sub) ? '🔖 ' : ''}${hlEsc(sub)}</span>
           <span style="color:var(--ink-soft);">→</span>
         </button>
       `).join('')}
@@ -17557,8 +17605,8 @@ function renderQuickRefHub(){
   });
 }
 function openQuickRefSubtopic(subtopic){
-  if(QUICK_REF_EXTERNAL_LINKS[subtopic]){ QUICK_REF_EXTERNAL_LINKS[subtopic](); return; }
-  const entry = QUICK_REFERENCES.find(r => r.Subtopic === subtopic);
+  if(Object.prototype.hasOwnProperty.call(QUICK_REF_EXTERNAL_LINKS, subtopic) && typeof QUICK_REF_EXTERNAL_LINKS[subtopic] === 'function'){ QUICK_REF_EXTERNAL_LINKS[subtopic](); return; }
+  const entry = QUICK_REFERENCES.find(r => String((r && r.Subtopic) || '').trim() === subtopic);
   document.getElementById('qrDetailTitle').textContent = subtopic;
   const contentWrap = document.getElementById('qrDetailContent');
   if(entry && entry.Content){
@@ -17600,20 +17648,20 @@ function renderQuickRefSearch(term){
   }
   catWrap.style.display = 'none';
   resultsWrap.style.display = 'block';
-  const allSubtopics = QUICK_REF_CATEGORIES.flatMap(cat => cat.subtopics.map(sub => ({ sub, cat: cat.name })));
+  const allSubtopics = hlQuickRefCats_().flatMap(cat => cat.subtopics.map(sub => ({ sub, cat: cat.name })));
   const matches = allSubtopics.filter(({ sub }) => {
     if(sub.toLowerCase().includes(q)) return true;
-    const entry = QUICK_REFERENCES.find(r => r.Subtopic === sub);
+    const entry = QUICK_REFERENCES.find(r => String((r && r.Subtopic) || '').trim() === sub);
     return entry && (entry.Content || '').toLowerCase().includes(q);
   });
   if(matches.length === 0){
-    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No matches for "${term}".</p>`;
+    resultsWrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No matches for "${hlEsc(term)}".</p>`;
     return;
   }
   resultsWrap.innerHTML = matches.map(({ sub, cat }) => `
-    <button class="note-item quickref-search-row" data-subtopic="${sub.replace(/"/g, '&quot;')}" style="width:100%; text-align:left; border:none; cursor:pointer;">
-      <div class="ni-title" style="font-size:13px;">${sub}</div>
-      <div class="ni-meta">${cat}</div>
+    <button class="note-item quickref-search-row" data-subtopic="${hlEsc(sub)}" style="width:100%; text-align:left; border:none; cursor:pointer;">
+      <div class="ni-title" style="font-size:13px;">${hlEsc(sub)}</div>
+      <div class="ni-meta">${hlEsc(cat)}</div>
     </button>
   `).join('');
   document.querySelectorAll('.quickref-search-row').forEach(btn => {
@@ -17629,6 +17677,7 @@ async function openQuickRefScreen(){
     const res = await fetch(`${SHEET_API_URL}?action=quickReferences`);
     QUICK_REFERENCES = await res.json();
     quickRefLoaded = true;
+    renderQuickRefHub();   // draw the list again now that the owner's own rows have arrived
   }catch(e){}
 }
 safeOn('goToQuickRefFromHub', 'click', (e) => {
@@ -19936,7 +19985,7 @@ function getCurrentLevelInfo(xp){
   let level = 1;
   // Safe to walk forward one level at a time — xpRequiredForLevel grows faster than any real XP
   // total could realistically keep pace with, so this always terminates quickly in practice.
-  while(xpRequiredForLevel(level + 1) <= xp) level++;
+  while(level < 1000 && xpRequiredForLevel(level + 1) <= xp) level++;   // capped: a damaged XP number can never freeze the app
   const current = { level, name: levelTitleFor(level), minXp: xpRequiredForLevel(level) };
   const next = { level: level + 1, name: levelTitleFor(level + 1), minXp: xpRequiredForLevel(level + 1) };
   return { current, next }; // next is now NEVER null — there is always a further level to climb toward
@@ -20446,7 +20495,7 @@ let mbhActiveCollection = null; // null = all collections
 function renderMbhCollectionChips(){
   const wrap = document.getElementById('mbhCollectionRow');
   const collections = getBookmarkCollections();
-  const chip = (label, value) => `<button class="note-folder-chip mbh-collection-chip ${mbhActiveCollection === value ? 'active' : ''}" data-col="${value || ''}" style="white-space:nowrap;">${label}</button>`;
+  const chip = (label, value) => `<button class="note-folder-chip mbh-collection-chip ${mbhActiveCollection === value ? 'active' : ''}" data-col="${hlEsc(value || '')}" style="white-space:nowrap;">${hlEsc(label)}</button>`;
   wrap.innerHTML = chip('All Collections', null) + collections.map(c => chip('📁 ' + c, c)).join('');
   document.querySelectorAll('.mbh-collection-chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -20493,10 +20542,10 @@ function renderMbhList(searchTerm){
       <div class="content-card" style="margin-bottom:10px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
           <span style="font-size:10.5px; color:var(--ink-soft);">${meta.icon} ${meta.label}</span>
-          ${item.collection ? `<span style="font-size:10px; color:var(--gold); font-weight:700;">${item.collection}</span>` : ''}
+          ${item.collection ? `<span style="font-size:10px; color:var(--gold); font-weight:700;">${hlEsc(item.collection)}</span>` : ''}
         </div>
         <div style="font-size:13.5px; font-weight:700; color:var(--ink);">${hlEsc(item.title)}</div>
-        ${item.subtitle ? `<div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">${item.subtitle}</div>` : ''}
+        ${item.subtitle ? `<div style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;">${hlEsc(item.subtitle)}</div>` : ''}
         <div style="display:flex; gap:8px; margin-top:10px;">
           <button class="calc-btn mbh-open-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px;">Open</button>
           ${collections.length > 0 ? `<button class="calc-btn mbh-move-btn" data-idx="${i}" style="margin:0; flex:1; font-size:11.5px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Move</button>` : ''}
@@ -20557,12 +20606,12 @@ function renderBookmarks(){
 
     const optionsHtml = ['A','B','C','D'].map(letter => {
       const isCorrect = q.CorrectAnswer === letter;
-      return `<div class="bq-option${isCorrect ? ' bq-option-correct' : ''}">${letter}. ${q['Option' + letter] || ''}${isCorrect ? ' ✅' : ''}</div>`;
+      return `<div class="bq-option${isCorrect ? ' bq-option-correct' : ''}">${letter}. ${hlRich_(q['Option' + letter] || '')}${isCorrect ? ' ✅' : ''}</div>`;
     }).join('');
 
     return `
     <div class="bookmark-item" data-index="${i}">
-      <div class="bq-subject">${metaLine}</div>
+      <div class="bq-subject">${hlEsc(metaLine)}</div>
       <div class="bq-text bookmark-toggle" data-index="${i}">${hlRich_(q.Question)} <span class="bq-expand-hint">(tap to ${'{expand}'})</span></div>
       <div class="bq-details" id="bqDetails${i}" style="display:none;">
         ${optionsHtml}
@@ -20947,7 +20996,7 @@ safeOn('esewaPayBtn', 'click', async () => {
     const fields = await res.json();
 
     if(!fields.payment_url){
-      statusEl.textContent = 'Could not start payment. Please try again.';
+      statusEl.textContent = hlPayReasonText_(fields && fields.error) || 'Could not start payment. Please try again.';
       btn.disabled = false;
       return;
     }
@@ -20994,7 +21043,7 @@ safeOn('khaltiPayBtn', 'click', async () => {
     const result = await res.json();
 
     if(!result.success || !result.paymentUrl){
-      statusEl.textContent = 'Could not start payment. Please try again.';
+      statusEl.textContent = hlPayReasonText_(result && result.reason) || 'Could not start payment. Please try again.';
       btn.disabled = false;
       return;
     }
@@ -21022,7 +21071,7 @@ async function checkForKhaltiReturnAndActivate(){
     const result = await res.json();
 
     if(!result.valid){
-      alert('Payment could not be verified (' + (result.reason || 'unknown') + '). If you were charged, please contact support with your payment screenshot.');
+      alert(hlPayFailText_(result.reason));
       return;
     }
 
@@ -21083,7 +21132,7 @@ async function checkForEsewaReturnAndActivate(){
     const result = await res.json();
 
     if(!result.valid){
-      alert('Payment could not be verified (' + (result.reason || 'unknown') + '). If you were charged, please contact support with your payment screenshot.');
+      alert(hlPayFailText_(result.reason));
       return;
     }
 
@@ -21136,35 +21185,52 @@ function openLegalInfo(title, htmlContent){
   showScreen(legalInfoScreen);
 }
 
-safeOn('menuContactUs', 'click', () => {
-  openLegalInfo('Contact Us', `
-    <p>Have a question, found a bug, or need help with your account? We'd love to hear from you.</p>
-
-    <h3>Email</h3>
-    <p><a href="mailto:healthloksewa026@gmail.com">healthloksewa026@gmail.com</a></p>
-
-    <h3>Follow / Message Us</h3>
-    <div class="social-icons-row">
-      <a href="https://www.facebook.com/share/1JEwtuyPrP/" target="_blank" rel="noopener noreferrer" class="social-icon-btn" style="background:#1877F2;" title="Facebook" aria-label="Facebook">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z"/></svg>
-      </a>
-      <a href="https://www.youtube.com/@HealthLoksewaHub" target="_blank" rel="noopener noreferrer" class="social-icon-btn" style="background:#FF0000;" title="YouTube" aria-label="YouTube">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M23.5 6.2s-.2-1.6-.9-2.4c-.9-1-1.9-1-2.3-1.1C17.3 2.5 12 2.5 12 2.5s-5.3 0-8.3.2c-.4 0-1.4.1-2.3 1.1C.7 4.6.5 6.2.5 6.2S.3 8.1.3 10v1.9c0 1.9.2 3.8.2 3.8s.2 1.6.9 2.4c.9 1 2.1 1 2.6 1.1 1.9.2 8 .2 8 .2s5.3 0 8.3-.2c.4 0 1.4-.1 2.3-1.1.7-.8.9-2.4.9-2.4s.2-1.9.2-3.8V10c0-1.9-.2-3.8-.2-3.8zM9.7 14.6V7.4l6.4 3.6-6.4 3.6z"/></svg>
-      </a>
-      <a href="https://chat.whatsapp.com/K0ycUbNVwNo0P8mCSfVCE8" target="_blank" rel="noopener noreferrer" class="social-icon-btn" style="background:#25D366;" title="WhatsApp group" aria-label="WhatsApp group">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.5A9.5 9.5 0 0 0 3.7 17L2.5 21.5l4.6-1.2A9.5 9.5 0 1 0 12 2.5zm5.5 13.4c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.9-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.8.2.1.4.2.4.3.1.3.1.7-.1 1.3z"/></svg>
-      </a>
-      <a href="https://www.tiktok.com/@health_loksewa_hub" target="_blank" rel="noopener noreferrer" class="social-icon-btn" style="background:#010101;" title="TikTok" aria-label="TikTok">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M16.6 2h-3.3v14.1c0 1.6-1.3 3-3 3s-3-1.4-3-3 1.3-3 3-3c.3 0 .6 0 .9.1V9.9c-.3 0-.6-.1-.9-.1-3.4 0-6.2 2.8-6.2 6.2s2.8 6.2 6.2 6.2 6.2-2.8 6.2-6.2V8.6c1.2.9 2.7 1.4 4.3 1.4V6.7c-2.4 0-4.2-1.9-4.2-4.2V2z"/></svg>
-      </a>
-    </div>
-
-    <p>We typically respond within a few days. Please include as much detail as possible (your account email, what happened, and any screenshots) so we can help quickly.</p>
-  `);
-});
-
-safeOn('menuAppGuidelines', 'click', () => {
-  openLegalInfo('App Guidelines', `
+// ADMIN LOG (owner only, Oct 2026): the newest 100 changes (who, what, which tab, old and new value). Read-only. Everything is shown as plain text.
+function hlLogTimeText_(t){
+  const raw = String(t == null ? '' : t);
+  if(/^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(raw)){ const d = new Date(raw); if(isFinite(d.getTime())){ const n = new Date(d.getTime() + 20700000).toISOString(); return n.slice(0, 10) + ' ' + n.slice(11, 16) + ' Nepal'; } }
+  return raw.slice(0, 40);
+}
+async function hlOpenAdminLog_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlLogOverlay', 'flex-start');
+  ov.textContent = '';
+  const card = document.createElement('div'); card.style.cssText = 'background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:520px; margin:8px 0; color:var(--ink-on-elevated);';
+  const title = document.createElement('div'); title.style.cssText = 'font-size:15px; font-weight:800;'; title.textContent = 'Admin log (newest first)';
+  const info = document.createElement('div'); info.id = 'hlLogInfo'; info.style.cssText = 'font-size:12px; margin:4px 0 10px; color:var(--ink-soft-on-elevated);'; info.textContent = 'Loading…';
+  const list = document.createElement('div'); list.id = 'hlLogList';
+  const mk = (id, label) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'calc-btn'; b.id = id; b.textContent = label; b.style.cssText = 'width:100%; margin:8px 0 0; background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);'; return b; };
+  const refresh = mk('hlLogRefresh', 'Refresh'), close = mk('hlLogClose', 'Close');
+  card.appendChild(title); card.appendChild(info); card.appendChild(list); card.appendChild(refresh); card.appendChild(close); ov.appendChild(card);
+  close.onclick = () => ov.remove();
+  const load = async () => {
+    info.textContent = 'Loading…'; refresh.disabled = true;
+    let d = null; try{ d = await hlCmPost_({ action: 'adminViewLog', limit: 100 }); }catch(e){ d = null; }
+    refresh.disabled = false; list.textContent = '';
+    if(!d || !d.ok){ info.textContent = !d ? 'The server did not answer. Check the internet and try again.' : ((d.error === 'auth' || d.error === 'notAdmin') ? 'The server did not recognise you as the owner. Close the app completely and open it again.' : 'Could not load the log.'); return; }
+    info.textContent = d.rows.length ? ('Showing ' + d.rows.length + ' of ' + d.total + ' changes. Times are Nepal time.') : 'Nothing has been changed yet.';
+    d.rows.forEach(r => {
+      const row = document.createElement('div'); row.style.cssText = 'border-top:1px solid var(--line); padding:8px 0; font-size:12.5px; word-break:break-word;';
+      const l1 = document.createElement('div'); l1.style.cssText = 'font-weight:700;'; l1.textContent = [r.action, r.tab && ('· ' + r.tab), r.row && ('· row ' + r.row)].filter(Boolean).join(' ');
+      const l2 = document.createElement('div'); l2.style.cssText = 'font-size:11.5px; color:var(--ink-soft-on-elevated);'; l2.textContent = hlLogTimeText_(r.time) + ' — ' + String(r.who || '');
+      row.appendChild(l1); row.appendChild(l2);
+      [['Before', r.before], ['After', r.after]].forEach(([lab, val]) => { if(val){ const x = document.createElement('div'); x.style.cssText = 'font-size:11.5px; margin-top:3px; opacity:0.85;'; x.textContent = lab + ': ' + String(val).slice(0, 160); row.appendChild(x); } });
+      list.appendChild(row);
+    });
+  };
+  refresh.onclick = load; load();
+}
+// ==========================================================================================
+// APP SETTINGS (Oct 2026): Contact Us, About Us, App Guidelines, Feedback and the Rate Us button now read the owner's "App Settings" tab (Admin view > All content > App Settings).
+// Nothing changes until the owner edits it: every default below is the ORIGINAL text/link, word for word. A link or the email set to EMPTY is hidden; a text set to EMPTY keeps the original.
+// Links must be https:// and the email must look like an email, or they are ignored. Text is shown through hlRich_ (safe formatting only): a blank line = new paragraph, "# " = heading.
+// ==========================================================================================
+const HL_SOCIAL_DEFS_ = [{"key": "facebook_url", "title": "Facebook", "bg": "#1877F2", "dflt": "https://www.facebook.com/share/1JEwtuyPrP/", "svg": "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"#fff\"><path d=\"M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z\"/></svg>"}, {"key": "youtube_url", "title": "YouTube", "bg": "#FF0000", "dflt": "https://www.youtube.com/@HealthLoksewaHub", "svg": "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"#fff\"><path d=\"M23.5 6.2s-.2-1.6-.9-2.4c-.9-1-1.9-1-2.3-1.1C17.3 2.5 12 2.5 12 2.5s-5.3 0-8.3.2c-.4 0-1.4.1-2.3 1.1C.7 4.6.5 6.2.5 6.2S.3 8.1.3 10v1.9c0 1.9.2 3.8.2 3.8s.2 1.6.9 2.4c.9 1 2.1 1 2.6 1.1 1.9.2 8 .2 8 .2s5.3 0 8.3-.2c.4 0 1.4-.1 2.3-1.1.7-.8.9-2.4.9-2.4s.2-1.9.2-3.8V10c0-1.9-.2-3.8-.2-3.8zM9.7 14.6V7.4l6.4 3.6-6.4 3.6z\"/></svg>"}, {"key": "whatsapp_url", "title": "WhatsApp group", "bg": "#25D366", "dflt": "https://chat.whatsapp.com/K0ycUbNVwNo0P8mCSfVCE8", "svg": "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"#fff\"><path d=\"M12 2.5A9.5 9.5 0 0 0 3.7 17L2.5 21.5l4.6-1.2A9.5 9.5 0 1 0 12 2.5zm5.5 13.4c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.9-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1.2-.2.7-.8.9-1 .2-.3.4-.2.6-.1.2.1 1.5.7 1.7.8.2.1.4.2.4.3.1.3.1.7-.1 1.3z\"/></svg>"}, {"key": "tiktok_url", "title": "TikTok", "bg": "#010101", "dflt": "https://www.tiktok.com/@health_loksewa_hub", "svg": "<svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"#fff\"><path d=\"M16.6 2h-3.3v14.1c0 1.6-1.3 3-3 3s-3-1.4-3-3 1.3-3 3-3c.3 0 .6 0 .9.1V9.9c-.3 0-.6-.1-.9-.1-3.4 0-6.2 2.8-6.2 6.2s2.8 6.2 6.2 6.2 6.2-2.8 6.2-6.2V8.6c1.2.9 2.7 1.4 4.3 1.4V6.7c-2.4 0-4.2-1.9-4.2-4.2V2z\"/></svg>"}, {"key": "telegram_url", "title": "Telegram", "bg": "#229ED9", "dflt": "", "svg": "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"#fff\"><path d=\"M9.8 15.3l-.4 4.2c.6 0 .8-.3 1.1-.6l2.6-2.5 5.4 4c1 .5 1.7.3 2-.9l3.6-17c.3-1.5-.6-2.1-1.5-1.7L1.6 9.9c-1.4.5-1.4 1.3-.2 1.7l5.4 1.7 12.5-7.9c.6-.4 1.1-.2.7.2L9.8 15.3z\"/></svg>"}, {"key": "instagram_url", "title": "Instagram", "bg": "#C13584", "dflt": "", "svg": "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><circle cx=\"17.5\" cy=\"6.5\" r=\"1.2\" fill=\"#fff\" stroke=\"none\"/></svg>"}, {"key": "website_url", "title": "Website", "bg": "#334155", "dflt": "", "svg": "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18\"/></svg>"}];
+const HL_CONTACT_INTRO_DEFAULT_ = "<p>Have a question, found a bug, or need help with your account? We'd love to hear from you.</p>";
+const HL_CONTACT_REPLY_DEFAULT_ = "<p>We typically respond within a few days. Please include as much detail as possible (your account email, what happened, and any screenshots) so we can help quickly.</p>";
+const HL_FEEDBACK_INTRO_DEFAULT_ = "<p>Your feedback helps make Health Loksewa better for everyone. Tell us what you love, what's confusing, or what you'd like to see added.</p>";
+const HL_EMAIL_DEFAULT_ = "healthloksewa026@gmail.com";
+function hlDefaultGuidelinesHtml_(){ return `
     <p>A quick guide to what's available in Health Loksewa and how to get the most out of it.</p>
 
     <h3>Home</h3>
@@ -21193,29 +21259,79 @@ safeOn('menuAppGuidelines', 'click', () => {
     </ul>
 
     <p style="margin-top:16px; font-size:12px; color:var(--ink-soft);">Have a question this guide doesn't answer? Use Feedback or Contact Us below.</p>
-  `);
-});
-
-safeOn('menuAboutUs', 'click', () => {
-  openLegalInfo('About Us', `
+  `; }
+function hlDefaultAboutHtml_(){ return `
     <p>Health Loksewa is an independent educational app built to help students in Nepal prepare for government Loksewa health service examinations — Public Health Officer, Health Assistant, Staff Nurse, AHW, and ANM — as well as NHPC licensing exams for Health Assistants and BPH graduates.</p>
     <h3>Our Mission</h3>
     <p>To make focused, structured, and consistent Loksewa exam preparation accessible to everyone, right from their phone — with organized MCQ practice, real exam-pattern mock tests, and helpful study tools.</p>
     <h3>Developer</h3>
     <p>Health Loksewa is created and maintained by Narayan Prasad Rimal.</p>
     <p style="margin-top:16px; font-size:12px; color:var(--ink-soft);">Health Loksewa is an independent app and is not affiliated with the Public Service Commission (Lok Sewa Aayog) or the Government of Nepal.</p>
-  `);
+  `; }
+let hlAppSettings_ = null, hlAppSettingsAt_ = 0;
+async function hlLoadAppSettings_(){
+  const now = Date.now();
+  if(hlAppSettings_ && now - hlAppSettingsAt_ < 300000) return hlAppSettings_;
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 8000);
+  try{
+    const res = await fetch(SHEET_API_URL + '?action=appSettings', { signal: controller.signal });
+    const d = await res.json();
+    if(d && d.settings && typeof d.settings === 'object' && !Array.isArray(d.settings)){
+      hlAppSettings_ = d.settings; hlAppSettingsAt_ = now;
+      try{ localStorage.setItem('hl_app_settings_cache', JSON.stringify(d.settings)); }catch(e){}
+      clearTimeout(timer); return hlAppSettings_;
+    }
+  }catch(e){}
+  clearTimeout(timer);
+  if(!hlAppSettings_){ try{ const c = JSON.parse(localStorage.getItem('hl_app_settings_cache') || 'null'); if(c && typeof c === 'object' && !Array.isArray(c)) hlAppSettings_ = c; }catch(e){} }
+  return hlAppSettings_ || {};
+}
+function hlSetting_(key, dflt){
+  const s2 = hlAppSettings_ || {};
+  return (Object.prototype.hasOwnProperty.call(s2, key) && typeof s2[key] === 'string') ? s2[key] : dflt;
+}
+function hlSafeHttps_(u){ const v = String(u == null ? '' : u).trim(); return /^https:\/\/[^\s"'<>\\]{4,300}$/i.test(v) ? v : ''; }
+function hlSettingEmail_(){ const v = String(hlSetting_('contact_email', HL_EMAIL_DEFAULT_) || '').trim(); return /^[A-Za-z0-9._%+\-]{1,64}@[A-Za-z0-9.\-]{1,190}\.[A-Za-z]{2,}$/.test(v) ? v : ''; }
+function hlTextToHtml_(text){
+  return String(text || '').replace(/\r\n?/g, '\n').split(/\n{2,}/).map(block => {
+    const t = block.trim(); if(!t) return '';
+    if(/^#\s+/.test(t)){
+      const nl = t.indexOf('\n'), head = (nl === -1 ? t : t.slice(0, nl)).replace(/^#\s+/, ''), rest = nl === -1 ? '' : t.slice(nl + 1).trim();
+      return '<h3>' + hlEsc(head) + '</h3>' + (rest ? '<p>' + hlRich_(rest).replace(/\n/g, '<br>') + '</p>' : '');
+    }
+    return '<p>' + hlRich_(t).replace(/\n/g, '<br>') + '</p>';
+  }).join('');
+}
+function hlPageOrDefault_(key, defaultHtml){ const t = hlSetting_(key, ''); return t && t.trim() ? hlTextToHtml_(t) : defaultHtml; }
+safeOn('menuContactUs', 'click', async () => {
+  await hlLoadAppSettings_();
+  let h = hlPageOrDefault_('contact_intro', HL_CONTACT_INTRO_DEFAULT_);
+  const email = hlSettingEmail_();
+  if(email) h += '\n\n    <h3>Email</h3>\n    <p><a href="mailto:' + hlEsc(email) + '">' + hlEsc(email) + '</a></p>';
+  const links = HL_SOCIAL_DEFS_.map(d => { const u = hlSafeHttps_(hlSetting_(d.key, d.dflt)); return u ? '<a href="' + hlEsc(u) + '" target="_blank" rel="noopener noreferrer" class="social-icon-btn" style="background:' + d.bg + ';" title="' + hlEsc(d.title) + '" aria-label="' + hlEsc(d.title) + '">' + d.svg + '</a>' : ''; }).join('\n      ');
+  if(links) h += '\n\n    <h3>Follow / Message Us</h3>\n    <div class="social-icons-row">\n      ' + links + '\n    </div>';
+  h += '\n\n    ' + hlPageOrDefault_('contact_reply_note', HL_CONTACT_REPLY_DEFAULT_);
+  openLegalInfo('Contact Us', h);
+});
+safeOn('menuAppGuidelines', 'click', async () => {
+  await hlLoadAppSettings_();
+  openLegalInfo('App Guidelines', hlPageOrDefault_('guidelines_text', hlDefaultGuidelinesHtml_()));
+});
+safeOn('menuAboutUs', 'click', async () => {
+  await hlLoadAppSettings_();
+  openLegalInfo('About Us', hlPageOrDefault_('about_text', hlDefaultAboutHtml_()));
+});
+safeOn('menuFeedback', 'click', async () => {
+  await hlLoadAppSettings_();
+  const email = hlSettingEmail_();
+  openLegalInfo('Feedback', '\n    ' + hlPageOrDefault_('feedback_text', HL_FEEDBACK_INTRO_DEFAULT_) + (email ? '\n    <h3>Send Feedback</h3>\n    <p><a href="mailto:' + hlEsc(email) + '?subject=Health%20Loksewa%20Feedback">' + hlEsc(email) + '</a></p>' : '') + '\n  ');
 });
 
-safeOn('menuFeedback', 'click', () => {
-  openLegalInfo('Feedback', `
-    <p>Your feedback helps make Health Loksewa better for everyone. Tell us what you love, what's confusing, or what you'd like to see added.</p>
-    <h3>Send Feedback</h3>
-    <p><a href="mailto:healthloksewa026@gmail.com?subject=Health%20Loksewa%20Feedback">healthloksewa026@gmail.com</a></p>
-  `);
-});
 
-safeOn('menuRateUs', 'click', () => {
+safeOn('menuRateUs', 'click', async () => {
+  await hlLoadAppSettings_();
+  const u = hlSafeHttps_(hlSetting_('play_store_url', ''));
+  if(u){ try{ window.open(u, '_blank', 'noopener'); }catch(e){} return; }
   alert('Thank you for wanting to rate us! Once Health Loksewa is live on the Play Store, this button will take you straight there. 🙂');
 });
 
@@ -21226,7 +21342,7 @@ safeOn('menuPrivacyPolicy', 'click', () => {
 
     <h3>1. Information you give us</h3>
     <ul>
-      <li><b>Account:</b> your full name, email address, and phone number (only if you type it when signing up; it is empty if you sign in with Google).</li>
+      <li><b>Account:</b> your full name, email address, and an optional phone number (you can leave it empty when you sign up; it is also empty if you sign in with Google).</li>
       <li><b>Password:</b> handled by Google Firebase. It is stored in encrypted form and we can never see it.</li>
       <li><b>Exams you choose</b>, your notification settings, and your answers in the App.</li>
     </ul>
@@ -21426,8 +21542,8 @@ function renderPostPickerInto(containerId){
   if(!container) return;
   const selected = getSelectedPosts();
   container.innerHTML = EXAM_TYPES.map(t => `
-    <button class="exam-type-btn ${selected.includes(t.key) ? 'active' : ''}" data-exam="${t.key}">
-      <span class="radio-dot"></span> ${t.label}
+    <button class="exam-type-btn ${selected.includes(t.key) ? 'active' : ''}" data-exam="${hlEsc(t.key)}">
+      <span class="radio-dot"></span> ${hlEsc(t.label)}
     </button>
   `).join('');
   container.querySelectorAll('.exam-type-btn').forEach(btn => {
@@ -22455,7 +22571,7 @@ function paintExamSlide(){
 
   wrap.innerHTML = `
     <div>
-      <div class="cd-label">${ex.name}</div>
+      <div class="cd-label">${hlEsc(ex.name)}</div>
       <div class="cd-title">${ex.link ? 'Tap to view exam routine PDF →' : 'Stay consistent — every day counts!'}</div>
     </div>
     <div>
@@ -22934,7 +23050,7 @@ function paintQotdQuestion(q, todayKey){
     <div id="qotdOptions">
       ${letters.map(l => `
         <button class="qotd-opt-btn" data-letter="${l}">
-          <b>${l}.</b> ${q['Option' + l]}
+          <b>${l}.</b> ${hlRich_(q['Option' + l])}
         </button>
       `).join('')}
     </div>
@@ -22966,7 +23082,7 @@ function paintQotdAnswered(data){
         let cls = '';
         if(l === question.CorrectAnswer) cls = 'correct-opt';
         else if(l === chosen) cls = 'wrong-opt';
-        return `<div class="qotd-opt-btn ${cls}" style="cursor:default;"><b>${l}.</b> ${question['Option' + l]}</div>`;
+        return `<div class="qotd-opt-btn ${cls}" style="cursor:default;"><b>${l}.</b> ${hlRich_(question['Option' + l])}</div>`;
       }).join('')}
     </div>
     <div class="qotd-explanation-box">${hlRich_(question.Explanation || '')}</div>
@@ -23586,11 +23702,12 @@ function driveEmbedUrl(shareUrl){
 }
 
 function renderSyllabusPosts(){
+  hlMergeSyllabusExams_();
   document.getElementById('syllabusPostGrid').innerHTML = SYLLABUS_POSTS.map((post, i) => {
     const visual = SYLLABUS_VISUALS[post.key] || {icon:"👁", css:"gk-c1"};
     return `
-    <button class="dash-card ${visual.css} syllabus-post-btn" data-index="${i}">
-      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${visual.icon}</div>
+    <button class="dash-card ${hlEsc(visual.css)} syllabus-post-btn" data-index="${i}">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${hlEsc(visual.icon)}</div>
       <div class="dc-label" style="font-size:14px;">${hlEsc(post.label)}</div>
       <div class="dc-sub">Federal + all 7 provinces</div>
     </button>
@@ -23805,6 +23922,8 @@ SET_SIZE = 50;
 // so the screen never sits blank waiting on the network; counts fill in right after.
 
 function renderSubjectPick(){
+  // Owner only (Admin view): add questions to any subject of THIS exam, even a brand-new subject that has no question to open the usual Add bar from.
+  try{ const ab = document.getElementById('subjectPickAdminAdd'); if(ab){ ab.style.display = (typeof hlAdminModeOn_ === 'function' && hlAdminModeOn_()) ? 'block' : 'none'; ab.onclick = () => { if(hlAdminModeOn_()) hlOpenAdminAddModal_(null); }; } }catch(e){}
   // Purely instant — just names, no counts, no network call, no waiting.
   try{
     const marksForThisPost = EXAM_MARKS_BY_POST[currentMcqPost] || {};
@@ -23845,7 +23964,7 @@ function renderSubjectPick(){
     document.getElementById('subjectPickList').innerHTML = `
       <div style="padding:20px; background:#2a0a0a; border:2px solid #F87171; border-radius:12px;">
         <p style="color:#F87171; font-weight:800; margin-bottom:8px;">Diagnostic: renderSubjectPick threw an error</p>
-        <p style="color:#fca5a5; font-size:12px; font-family:monospace; white-space:pre-wrap;">${err && err.message ? err.message : String(err)}</p>
+        <p style="color:#fca5a5; font-size:12px; font-family:monospace; white-space:pre-wrap;">${hlEsc(err && err.message ? err.message : String(err))}</p>
       </div>`;
   }
 }
@@ -23885,7 +24004,7 @@ function markSetCompleted(subject, setNumber, correctCount, wrongCount, skippedC
 
 // ---------- Study Streak: tracks consecutive days of practice (like Duolingo) ----------
 function updateStudyStreak(){
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = hlDayKey_(new Date());
   let lastDate = null, streak = 0;
   try{
     lastDate = localStorage.getItem(uk('hl_streak_last_date'));
@@ -23897,7 +24016,7 @@ function updateStudyStreak(){
   if(lastDate){
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayKey = yesterday.toISOString().slice(0, 10);
+    const yesterdayKey = hlDayKey_(yesterday);
     streak = (lastDate === yesterdayKey) ? streak + 1 : 1; // continued streak, or reset if a day was missed
   } else {
     streak = 1; // very first day ever
@@ -23918,9 +24037,9 @@ function getStudyStreak(){
     const lastDate = localStorage.getItem(uk('hl_streak_last_date'));
     const streak = parseInt(localStorage.getItem(uk('hl_streak_count')) || '0', 10);
     if(!lastDate) return 0;
-    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayKey = hlDayKey_(new Date());
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayKey = yesterday.toISOString().slice(0, 10);
+    const yesterdayKey = hlDayKey_(yesterday);
     // If they haven't practiced today OR yesterday, the streak has been broken (even if not yet reset in storage)
     if(lastDate !== todayKey && lastDate !== yesterdayKey) return 0;
     return streak;
@@ -24203,7 +24322,7 @@ function computeLpPeriodTotals(){
 function getWeekKey(date){
   const d = new Date(date);
   const monday = new Date(d); monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  return monday.toISOString().slice(0, 10); // the Monday date IS the week's identifier
+  return hlDayKey_(monday); // the Monday date IS the week's identifier
 }
 let WEEKLY_REWARD_TIERS;
 try{
@@ -24450,10 +24569,17 @@ async function hlLbFlush_(){
   const payload = hlLbPayload_(), hash = JSON.stringify(payload);
   if(hash === hlLbLastHash_) return;   // nothing changed since the last write
   hlLbLastHash_ = hash; hlLbLastWriteAt_ = Date.now();
-  try{ await window.syncStatsToLeaderboard(payload); }catch(e){}
+  let wrote = true;
+  try{ wrote = await window.syncStatsToLeaderboard(payload); }catch(e){ wrote = false; }
   if(hlQuotaActive_()){ hlLbLastHash_ = ''; hlLbPending_ = true; hlRequestLeaderboardSync_(); }   // the write was refused because the limit is full: send it after the reset
-  if(!hlQuotaActive_()) hlLbMaybeSubmit_(payload);
+  else if(wrote === false){   // the write failed (poor network, ...): forget it so the same numbers are sent again, but give up after 3 failures in a row (a permanently refused write must not loop)
+    hlLbFailStreak_++; hlLbLastHash_ = '';
+    if(hlLbFailStreak_ < 3){ hlLbPending_ = true; hlRequestLeaderboardSync_(); }
+  }
+  else hlLbFailStreak_ = 0;
+  if(!hlQuotaActive_() && wrote !== false) hlLbMaybeSubmit_(payload);
 }
+let hlLbFailStreak_ = 0;
 function hlRequestLeaderboardSync_(){
   hlLbPending_ = true;
   if(hlLbTimer_) return;   // one is already scheduled
@@ -24614,9 +24740,9 @@ function renderMcqPosts(){
   const selected = getSelectedPosts();
   const posts = selected.length > 0 ? MCQ_POSTS.filter(p => selected.includes(p.key)) : MCQ_POSTS;
   document.getElementById('mcqPostGrid').innerHTML = posts.map(post => `
-    <button class="dash-card ${post.css} mcq-post-btn" data-key="${post.key}">
-      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+    <button class="dash-card ${hlEsc(post.css)} mcq-post-btn" data-key="${hlEsc(post.key)}">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${hlEsc(post.icon)}</div>
+      <div class="dc-label" style="font-size:14px;">${hlEsc(post.label)}</div>
       <div class="dc-sub">Subject-wise MCQs</div>
     </button>
   `).join('');
@@ -24647,8 +24773,8 @@ function renderMockPosts(){
   const allPosts = hlMockPosts_();
   const posts = selected.length > 0 ? allPosts.filter(p => selected.includes(p.key)) : allPosts;
   document.getElementById('mockPostGrid').innerHTML = posts.map(post => `
-    <button class="dash-card ${post.css} mock-post-btn" data-key="${post.key}">
-      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
+    <button class="dash-card ${hlEsc(post.css)} mock-post-btn" data-key="${hlEsc(post.key)}">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${hlEsc(post.icon)}</div>
       <div class="dc-label" style="font-size:14px;">${hlEsc(post.label)}</div>
       <div class="dc-sub">${post.questionCount} Qs · ${post.minutes} min · ${post.marksEach} mark${post.marksEach>1?'s':''} each</div>
     </button>
@@ -24879,9 +25005,9 @@ function renderPastQuestionsPosts(){
   const selected = getSelectedPosts();
   const posts = selected.length > 0 ? PAST_QUESTIONS_POSTS.filter(p => selected.includes(p.key)) : PAST_QUESTIONS_POSTS;
   document.getElementById('pastQuestionsPostGrid').innerHTML = posts.map(post => `
-    <button class="dash-card ${post.css} pq-post-btn" data-key="${post.key}">
-      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${post.icon}</div>
-      <div class="dc-label" style="font-size:14px;">${post.label}</div>
+    <button class="dash-card ${hlEsc(post.css)} pq-post-btn" data-key="${hlEsc(post.key)}">
+      <div class="dc-icon" style="font-size:16px; letter-spacing:1px;">${hlEsc(post.icon)}</div>
+      <div class="dc-label" style="font-size:14px;">${hlEsc(post.label)}</div>
       <div class="dc-sub">Real past exam papers</div>
     </button>
   `).join('');
@@ -25116,7 +25242,7 @@ function renderSetList(totalSets, exactCount){
     certWrap.innerHTML = `
       <div class="certificate-banner">
         <h4>Subject Complete!</h4>
-        <p>You've finished all ${totalSets} Sets of ${selectedSubject}. Download your certificate!</p>
+        <p>You've finished all ${totalSets} Sets of ${hlEsc(selectedSubject)}. Download your certificate!</p>
         <button id="generateCertBtn">Download Certificate</button>
       </div>
     `;
@@ -25416,7 +25542,7 @@ function fcApplyRating(card, rating){
   }
   const nextDate = todayDateOnly();
   nextDate.setDate(nextDate.getDate() + card.interval);
-  card.nextReviewDate = nextDate.toISOString().split('T')[0];
+  card.nextReviewDate = hlLocalDayKey_(nextDate);
   card.lastReviewedAt = new Date().toISOString();
   // Mastery status auto-derived — students never manage this manually
   if(card.repetitions === 0) card.status = 'new';
@@ -25841,7 +25967,7 @@ function renderFcProgress(){
 }
 safeOn('fcAiGenerateBtn', 'click', () => {
   const decks = ensureDefaultFcDeck();
-  document.getElementById('fcAiDeckSelect').innerHTML = decks.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('fcAiDeckSelect').innerHTML = decks.map(d => `<option value="${hlEsc(d.id)}">${hlEsc(d.name)}</option>`).join('');
   document.getElementById('fcAiSetupCard').style.display = 'block';
   document.getElementById('fcAiResultsWrap').style.display = 'none';
   showScreen(fcAiGenerateScreen);
@@ -26394,7 +26520,7 @@ function renderBattleLiveQuestion(){
   document.getElementById('battleLiveQuestionText').textContent = q.Question;
   const optsWrap = document.getElementById('battleLiveOptionsWrap');
   optsWrap.innerHTML = ['A','B','C','D'].map(letter => `
-    <button class="calc-btn battle-live-option" data-letter="${letter}" style="display:block; width:100%; text-align:left; margin-bottom:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:13px;">${letter}. ${q['Option' + letter] || ''}</button>
+    <button class="calc-btn battle-live-option" data-letter="${letter}" style="display:block; width:100%; text-align:left; margin-bottom:8px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line); font-size:13px;">${letter}. ${hlEsc(q['Option' + letter] || '')}</button>
   `).join('');
   document.querySelectorAll('.battle-live-option').forEach(btn => {
     btn.addEventListener('click', () => battleLiveAnswer(btn.dataset.letter));
@@ -27887,15 +28013,15 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v537';
-const HL_EXPECTED_BACKEND_ = { version: 35, features: {
+const HL_APP_VERSION_ = 'v547';
+const HL_EXPECTED_BACKEND_ = { version: 41, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
   'tab-allowlist': 'Safe list of readable tabs', 'second-paper': 'Second Paper', 'second-paper-questions': 'Second Paper questions', 'second-paper-pdf': 'Second Paper PDFs',
   'special-sets': 'Special Sets', 'admin-users': 'Users & Premium', 'esewa-once': 'eSewa one-time payment safety', 'daily-battle-server': 'Daily Battle made by the backend',
   'admin-broadcast': 'Send notification (careful method)', 'exam-settings': 'Exam Settings', 'leaderboard-snapshots': 'Leaderboard summary (saves database reads)',
   'local-login-check': 'Fast login check (saves outgoing calls)', 'push-topics': 'Notifications to everyone at once', 'user-memory': 'Premium and limits memory (saves database reads)',
-  'scale-jobs': 'Automatic notifications for many students', 'second-paper-premium': 'Second Paper Premium lock', 'leaderboard-boards': 'Correct Today / Week / Month leaderboards', 'public-debug-closed': 'Public test links closed (protects your AI quota)', 'ai-limits-editable': 'AI limits can be changed from the app' } };
+  'scale-jobs': 'Automatic notifications for many students', 'second-paper-premium': 'Second Paper Premium lock', 'leaderboard-boards': 'Correct Today / Week / Month leaderboards', 'public-debug-closed': 'Public test links closed (protects your AI quota)', 'ai-limits-editable': 'AI limits can be changed from the app', 'payment-amount-check': 'eSewa refuses an amount that is not a real plan', 'app-settings': 'Contact, About and links editable in the app', 'admin-log-view': 'Admin log viewer', 'exams-registry': 'New exams and subjects from the app', 'payments-live-switch': 'Payments TEST / LIVE switch (closed to students in test mode)', 'app-texts': 'Change any line of text from the app', 'feature-groups': 'Features on/off for every feature', 'admin-dashboard': 'Owner dashboard' } };
 async function hlBackendCheckRun_(){   // -> { status: ok | older | newer | wrongAddress | unreachable, ... }
   const base = window.SHEET_API_URL || '', t0 = Date.now();
   let data = null;
@@ -27909,7 +28035,7 @@ async function hlBackendCheckRun_(){   // -> { status: ok | older | newer | wron
   const m = /^v(\d+)/.exec(String(data.version || '')), num = m ? parseInt(m[1], 10) : 0;
   const missing = Object.keys(HL_EXPECTED_BACKEND_.features).filter(k => data.features.indexOf(k) === -1);
   const status = (missing.length || num < HL_EXPECTED_BACKEND_.version) ? 'older' : (num > HL_EXPECTED_BACKEND_.version ? 'newer' : 'ok');
-  return { status: status, ms: ms, version: String(data.version || ''), num: num, missing: missing, localLoginCheck: data.localLoginCheck === undefined ? '' : String(data.localLoginCheck) };
+  return { status: status, ms: ms, version: String(data.version || ''), num: num, missing: missing, localLoginCheck: data.localLoginCheck === undefined ? '' : String(data.localLoginCheck), payments: (data.payments && typeof data.payments === 'object') ? { esewa: String(data.payments.esewa || ''), khalti: String(data.payments.khalti || '') } : null };
 }
 function hlBackendCheckHere_(){   // where THIS copy of the app is running and which protections are active right now (computed on the phone, no backend needed)
   const native = typeof hlIsNative_ === 'function' && hlIsNative_();
@@ -27919,16 +28045,42 @@ function hlBackendCheckHere_(){   // where THIS copy of the app is running and w
   else shot = 'cannot be blocked on the website / installed web app (only the Android app can)';
   return ['Running as: ' + (native ? 'ANDROID APP' : 'WEBSITE / installed web app'), 'App build: ' + HL_APP_VERSION_, 'Screenshots and screen recording: ' + shot, 'Copy and print shield: ' + (shield ? 'ON' : 'OFF on this screen (Admin view is ON, so you can edit)')];
 }
+// Payments status for the owner (TEST or LIVE), in plain words. level: ok / warn / danger / info.
+function hlPaymentsStatus_(p){
+  const out = [];
+  if(!p) return [{ level: 'info', text: 'Payments: not reported (older backend)' }];
+  const e = p.esewa, k = p.khalti;
+  out.push(e === 'live' ? { level: 'ok', text: 'eSewa: LIVE (real payments)' }
+    : e === 'test-open' ? { level: 'danger', text: 'eSewa: TEST mode and UNLOCKED. Anyone can get free Premium with eSewa\'s public test login! Remove the setting PAYMENTS_TEST_UNLOCK before launch.' }
+    : e === 'test-closed' ? { level: 'warn', text: 'eSewa: TEST mode. Payment is CLOSED for students (safe). Add the live eSewa keys before launch.' }
+    : { level: 'info', text: 'eSewa: ' + (e || 'unknown') });
+  out.push(k === 'live' ? { level: 'ok', text: 'Khalti: LIVE (real payments)' }
+    : k === 'test-open' ? { level: 'danger', text: 'Khalti: TEST mode and UNLOCKED. Remove the setting PAYMENTS_TEST_UNLOCK before launch.' }
+    : k === 'test-closed' ? { level: 'warn', text: 'Khalti: sandbox key saved but not LIVE. Payment is CLOSED for students (safe).' }
+    : k === 'off' ? { level: 'info', text: 'Khalti: not set up yet (no key saved). Students cannot use Khalti.' }
+    : { level: 'info', text: 'Khalti: ' + (k || 'unknown') });
+  return out;
+}
 function hlBackendCheckText_(r){
   const tail = String(window.SHEET_API_URL || '').replace(/\/exec$/, '').slice(-12);
   const lines = ['Health Loksewa backend check', 'App ' + HL_APP_VERSION_ + ' (needs backend v' + HL_EXPECTED_BACKEND_.version + ' or newer)', 'Address ends: ...' + tail].concat(hlBackendCheckHere_()).concat(['Result: ' + r.status]);
   if(r.version) lines.push('Backend says: ' + r.version);
   if(r.missing && r.missing.length) lines.push('Missing features: ' + r.missing.join(', '));
   if(r.localLoginCheck !== undefined && r.version) lines.push('Fast login check: ' + (r.localLoginCheck || '(not reported: older backend)'));
+  if(r.version) hlPaymentsStatus_(r.payments).forEach(x => lines.push('Payments - ' + x.text));
   if(r.said) lines.push('Backend answered: ' + r.said);
   if(r.ms !== undefined) lines.push('Answered in ' + r.ms + ' ms');
   return lines.join('\n');
 }
+// Payment messages in plain words (Oct 2026). While the backend is in payment TEST mode it refuses every payment ("payments_not_live"): the student is told it is not open yet.
+function hlPayReasonText_(reason){
+  const r = String(reason == null ? '' : reason);
+  if(r === 'payments_not_live') return 'Payments are not open yet. Please try again later. You have not been charged.';
+  if(r === 'khalti_not_configured') return 'Khalti payment is not available yet. Please use eSewa.';
+  if(r === 'amount_does_not_match_any_plan') return 'This price is no longer available. Close the app, open it again and choose your plan again.';
+  return '';
+}
+function hlPayFailText_(reason){ return hlPayReasonText_(reason) || ('Payment could not be verified (' + (reason || 'unknown') + '). If you were charged, please contact support with your payment screenshot.'); }
 // ==========================================================================================
 // AI LIMITS (owner only, Oct 2026). The free daily AI limits are now saved on the backend and the owner changes them here: Profile > Support and About > AI limits (admin).
 // Premium students and the owner accounts stay unlimited. The "limit reached" messages in the app show the REAL number the backend sends (limit); an older backend sends none, so the
@@ -28050,6 +28202,7 @@ function hlOpenAdminCheck_(){
       const lv = r.localLoginCheck;
       ll.textContent = lv === 'working' ? '✅ Fast login check: working' : (lv === 'not-working' ? '⚠️ Fast login check: NOT working (everything still works, just the older, slower way)' : (lv === 'off' ? 'ℹ️ Fast login check: switched off' : 'ℹ️ Fast login check: not reported (older backend)'));
       list.appendChild(ll);
+      hlPaymentsStatus_(r.payments).forEach(x => { const pr = document.createElement('div'); pr.style.cssText = 'margin-top:6px; font-weight:' + (x.level === 'danger' ? '800' : '600') + ';' + (x.level === 'danger' ? ' color:var(--wrong);' : ''); pr.textContent = (x.level === 'ok' ? '✅ ' : x.level === 'danger' ? '🚨 ' : x.level === 'warn' ? '⚠️ ' : 'ℹ️ ') + x.text; list.appendChild(pr); });
     }
     $('hlBcInfo').textContent = r.ms !== undefined ? 'Answered in ' + r.ms + ' ms.' : '';
   };
@@ -28205,6 +28358,12 @@ function hlOpenAdminNotify_(){
 safeOn('menuAdminNotify', 'click', () => { hlOpenAdminNotify_(); });
 safeOn('menuAdminCheck', 'click', () => { hlOpenAdminCheck_(); });
 safeOn('menuAdminAiLimits', 'click', () => { hlOpenAdminAiLimits_(); });
+safeOn('menuAdminContent', 'click', () => { if(hlAdminModeOn_()) hlOpenContentManager_('__cmall', 0); });
+safeOn('menuAdminLog', 'click', () => { hlOpenAdminLog_(); });
+safeOn('menuAdminExams', 'click', () => { hlOpenAdminExams_(); });
+safeOn('menuAdminTexts', 'click', () => { hlOpenAdminTexts_(); });
+safeOn('menuAdminFeatures', 'click', () => { hlOpenAdminFeatures_(); });
+safeOn('menuAdminDashboard', 'click', () => { hlOpenAdminDashboard_(); });
 // ==========================================================================================
 // EXAM SETTINGS (Oct 2026): the Mock Test size (questions), time (minutes) and marks per question of each exam come from the Google
 // Sheet tab "Exam Settings", which the owners edit in the app (Mock Test > Manage this screen). Built-in values (MOCK_POSTS) are the
@@ -28450,7 +28609,7 @@ function hlShieldWatermark_(on){
     if(!on) return;
     if(typeof hlIsNative_ === 'function' && hlIsNative_()){ w.style.backgroundImage = ''; hlShieldMarkFor_ = ''; return; }   // inside the Android app the PHONE blanks screenshots and screen recordings, so no watermark is drawn
     if(!(window.currentUser && window.currentUser.uid)){ w.style.backgroundImage = ''; hlShieldMarkFor_ = ''; return; }   // nobody signed in: no watermark (and never the previous student's)
-    const uid = window.currentUser.uid, day = new Date().toISOString().slice(0, 10), key = uid + '|' + day;
+    const uid = window.currentUser.uid, day = hlDayKey_(new Date()), key = uid + '|' + day;
     if(hlShieldMarkFor_ === key && w.style.backgroundImage) return;
     const c = document.createElement('canvas'); c.width = 340; c.height = 220;
     const g = c.getContext('2d'); if(!g) return;
@@ -28503,6 +28662,419 @@ window.addEventListener('pageshow', () => { try{ if(document.visibilityState !==
   if(typeof orig === 'function') window.showScreen = function(el){ const r = orig.apply(this, arguments); hlShieldApply_(); return r; };
   hlShieldApply_();
 })();
+// ---- alert() SAFETY NET (Oct 2026). Some in-app browsers and installed-web-app windows silently swallow window.alert(): the message never appears and the student sees nothing happen.
+// A real alert waits for a tap (always far longer than 50 ms). If alert() returns almost at once, the message is shown in an in-app box instead. Where alert works normally, nothing changes. ----
+(function(){
+  const nativeAlert = (typeof window.alert === 'function') ? window.alert.bind(window) : null;
+  let lastText = '', lastAt = 0;
+  function showNotice(text){
+    try{
+      const now = Date.now(); if(text === lastText && now - lastAt < 1500) return; lastText = text; lastAt = now;
+      let ov = document.getElementById('hlNoticeOverlay');
+      if(!ov){
+        ov = document.createElement('div'); ov.id = 'hlNoticeOverlay'; ov.setAttribute('role', 'alertdialog');
+        ov.style.cssText = 'position:fixed; left:0; top:0; right:0; bottom:0; z-index:2147483640; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; padding:20px;';
+        const card = document.createElement('div'); card.id = 'hlNoticeCard';
+        card.style.cssText = 'background:var(--panel-elevated, #1E293B); color:var(--ink-on-elevated, #F1F5F9); border-radius:14px; padding:18px; width:100%; max-width:420px; max-height:80vh; overflow:auto; font-size:14px; line-height:1.5; box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+        const list = document.createElement('div'); list.id = 'hlNoticeList'; card.appendChild(list);
+        const ok = document.createElement('button'); ok.id = 'hlNoticeOk'; ok.type = 'button'; ok.textContent = 'OK';
+        ok.style.cssText = 'margin-top:14px; width:100%; padding:11px; border:none; border-radius:10px; background:var(--accent, #14B8A6); color:#fff; font-size:15px; font-weight:700; cursor:pointer;';
+        ok.addEventListener('click', () => { try{ ov.remove(); }catch(e){} });
+        card.appendChild(ok); ov.appendChild(card); document.body.appendChild(ov);
+      }
+      const list = document.getElementById('hlNoticeList'), p = document.createElement('p');
+      p.style.cssText = 'margin:0 0 8px; white-space:pre-wrap;'; p.textContent = text; list.appendChild(p);
+      while(list.children.length > 4) list.removeChild(list.firstChild);
+    }catch(e){}
+  }
+  window.hlShowNotice_ = showNotice;
+  window.alert = function(msg){
+    const text = String(msg === undefined || msg === null ? '' : msg);
+    if(!nativeAlert){ showNotice(text); return; }
+    const t0 = Date.now();
+    try{ nativeAlert(text); }catch(e){}
+    if(Date.now() - t0 < 50) showNotice(text);
+  };
+})();
+// ==========================================================================================
+// EXAMS REGISTRY (Oct 2026). The owner adds NEW exams and NEW subjects from inside the app (Admin view > Exams setup / All content > Exams). The backend answers ?action=exams with the
+// exams that are valid; this block checks them AGAIN on the phone and feeds the lists that name the exams: the exam picker (EXAM_TYPES), Mock Test (MOCK_POSTS), Subject MCQs (MCQ_POSTS),
+// Past Questions (PAST_QUESTIONS_POSTS), the subject lists (KNOWN_SUBJECTS_BY_POST, and KNOWN_SUBJECTS for pho), Rapid Fire pace, the tile colours/icons and the Syllabus list.
+// TOURNAMENT_POSTS is NOT touched: the database rules bind every tournament entry to a fixed exam size, so tournaments stay for the built-in exams only.
+// Applying is repeatable and reversible: everything that was added is remembered and taken out again before the next apply, so a removed exam disappears cleanly and the built-in lists
+// come back exactly as they were. A saved copy (hl_exams_cache) is applied at start so the first screen already has the owner's exams, even offline. ==========================================
+const HL_EXAM_BUILTIN_ = ['pho', 'ha', 'sn', 'ahw', 'anm', 'ha_license', 'bph_license'];
+const HL_EXAMS_CACHE_KEY_ = 'hl_exams_cache';
+let hlExamsApplied_ = { keys: [], subjects: {}, syllabus: [] };
+let hlExamsData_ = null, hlExamsAt_ = 0;
+function hlHashStr_(str){ let h = 0; for(let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0; return h; }
+function hlExamClean_(raw){
+  if(!raw || typeof raw !== 'object') return null;
+  const key = String(raw.key == null ? '' : raw.key);
+  if(!/^[a-z][a-z0-9_]{1,19}$/.test(key) || key === 'constructor' || key === 'prototype' || HL_EXAM_BUILTIN_.indexOf(key) !== -1) return null;
+  const name = String(raw.name == null ? '' : raw.name).trim().replace(/\s+/g, ' ');
+  if(!name || name.length > 60 || /[<>]/.test(name)) return null;
+  const subjects = [], seen = {};
+  (Array.isArray(raw.subjects) ? raw.subjects : []).forEach(n => { if(typeof n !== 'string') return; const t = n.trim().replace(/\s+/g, ' '); if(!t || t.length > 80 || /[<>]/.test(t) || seen[t.toLowerCase()]) return; seen[t.toLowerCase()] = 1; if(subjects.length < 40) subjects.push(t); });
+  if(!subjects.length) return null;
+  const num = (v, lo, hi, d) => { const n = Number(v); return (isFinite(n) && n >= lo && n <= hi) ? n : d; };
+  let icon = String(raw.icon == null ? '' : raw.icon).replace(/[<>"'&]/g, '').trim(); if(!icon || icon.length > 4) icon = '📝';
+  const syl = String(raw.syllabusUrl == null ? '' : raw.syllabusUrl).trim();
+  return { key, name, icon, subjects, questions: Math.round(num(raw.questions, 5, 200, 50)), marks: num(raw.marks, 0.25, 10, 1), minutes: num(raw.minutes, 1, 300, 45), pace: Math.round(num(raw.pace, 15, 180, 54)),
+    syllabusUrl: /^https:\/\/[^\s"'<>\\]{4,300}$/i.test(syl) ? syl : '' };
+}
+function hlExamsUndo_(){
+  const ks = hlExamsApplied_.keys.slice();
+  const drop = (arr) => { for(let i = arr.length - 1; i >= 0; i--) if(ks.indexOf(arr[i].key) !== -1) arr.splice(i, 1); };
+  drop(EXAM_TYPES); drop(MOCK_POSTS); drop(MCQ_POSTS); drop(PAST_QUESTIONS_POSTS);
+  ks.forEach(k => { delete SYLLABUS_VISUALS[k]; delete KNOWN_SUBJECTS_BY_POST[k]; delete RAPID_FIRE_PACE_SEC[k]; });
+  Object.keys(hlExamsApplied_.subjects).forEach(k => {
+    const list = (k === 'pho') ? KNOWN_SUBJECTS : KNOWN_SUBJECTS_BY_POST[k];
+    if(Array.isArray(list)) hlExamsApplied_.subjects[k].forEach(n => { const i = list.indexOf(n); if(i !== -1) list.splice(i, 1); });
+    if(k === 'pho' && Array.isArray(SUBJECTS_WITH_COUNTS)) hlExamsApplied_.subjects[k].forEach(n => { const i = SUBJECTS_WITH_COUNTS.findIndex(x => x && x.name === n); if(i !== -1) SUBJECTS_WITH_COUNTS.splice(i, 1); });
+  });
+  for(let i = SYLLABUS_POSTS.length - 1; i >= 0; i--) if(SYLLABUS_POSTS[i] && SYLLABUS_POSTS[i].fromExams) SYLLABUS_POSTS.splice(i, 1);
+  hlExamsApplied_ = { keys: [], subjects: {}, syllabus: [] };
+}
+function hlApplyExams_(data){
+  if(!data || typeof data !== 'object' || !Array.isArray(data.exams)) return -1;   // not a real answer (an older backend, an error): keep what we have
+  hlExamsUndo_();
+  const done = [];
+  data.exams.slice(0, 60).forEach(raw => {
+    if(done.length >= 12) return;   // at most 12 VALID exams (junk entries do not count)
+    const e = hlExamClean_(raw); if(!e || done.indexOf(e.key) !== -1) return;
+    const css = 'gk-c' + (1 + (hlHashStr_(e.key) % 8));
+    EXAM_TYPES.push({ key: e.key, label: e.name });
+    MOCK_POSTS.push({ key: e.key, label: e.name, ready: true, icon: e.icon, css, questionCount: e.questions, marksEach: e.marks, minutes: e.minutes });
+    MCQ_POSTS.push({ key: e.key, label: e.name, ready: true, icon: e.icon, css });
+    PAST_QUESTIONS_POSTS.push({ key: e.key, label: e.name, ready: true, icon: e.icon, css });
+    SYLLABUS_VISUALS[e.key] = { icon: e.icon, css };
+    KNOWN_SUBJECTS_BY_POST[e.key] = e.subjects.slice();
+    RAPID_FIRE_PACE_SEC[e.key] = e.pace;
+    hlExamsApplied_.syllabus.push({ key: e.key, label: e.name + ' Syllabus', url: e.syllabusUrl || '#', fromExams: true });
+    done.push(e.key);
+  });
+  hlExamsApplied_.keys = done;
+  const ext = (data.extend && typeof data.extend === 'object' && !Array.isArray(data.extend)) ? data.extend : {};
+  HL_EXAM_BUILTIN_.forEach(k => {
+    if(!Object.prototype.hasOwnProperty.call(ext, k) || !Array.isArray(ext[k])) return;
+    const list = (k === 'pho') ? KNOWN_SUBJECTS : KNOWN_SUBJECTS_BY_POST[k]; if(!Array.isArray(list)) return;
+    const added = [];
+    ext[k].slice(0, 40).forEach(n => { if(typeof n !== 'string') return; const t = n.trim().replace(/\s+/g, ' '); if(!t || t.length > 80 || /[<>]/.test(t) || list.indexOf(t) !== -1) return; list.push(t); added.push(t); if(k === 'pho' && Array.isArray(SUBJECTS_WITH_COUNTS)) SUBJECTS_WITH_COUNTS.push({ name: t }); });
+    if(added.length) hlExamsApplied_.subjects[k] = added;
+  });
+  hlMergeSyllabusExams_();
+  return done.length;
+}
+function hlMergeSyllabusExams_(){   // the Syllabus tab wins; an exam it does not list gets its own row (with the registry's SyllabusUrl, or "#")
+  try{
+    const have = {}; SYLLABUS_POSTS.forEach(p => { if(p && !p.fromExams) have[p.key] = 1; });
+    for(let i = SYLLABUS_POSTS.length - 1; i >= 0; i--) if(SYLLABUS_POSTS[i] && SYLLABUS_POSTS[i].fromExams) SYLLABUS_POSTS.splice(i, 1);
+    hlExamsApplied_.syllabus.forEach(r => { if(!have[r.key]) SYLLABUS_POSTS.push({ key: r.key, label: r.label, url: r.url, fromExams: true }); });
+  }catch(e){}
+}
+function hlRefreshExamScreens_(){
+  try{
+    const a = document.querySelector('.screen.active'); if(!a) return;
+    const f = { mcqPostScreen: 'renderMcqPosts', mockPostScreen: 'renderMockPosts', pastQuestionsPostScreen: 'renderPastQuestionsPosts', syllabusScreen: 'renderSyllabusPosts' }[a.id];
+    if(f && typeof window[f] === 'function') window[f]();
+    ['examTypeRow', 'postGateRow'].forEach(id => { if(document.getElementById(id) && typeof renderPostPickerInto === 'function') renderPostPickerInto(id); });
+  }catch(e){}
+}
+async function hlLoadExams_(force){
+  const now = Date.now();
+  if(!force && hlExamsData_ && now - hlExamsAt_ < 300000) return hlExamsData_;
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 8000);
+  try{
+    const res = await fetch(SHEET_API_URL + '?action=exams', { signal: controller.signal });
+    const d = await res.json();
+    clearTimeout(timer);
+    if(d && Array.isArray(d.exams)){
+      hlExamsData_ = d; hlExamsAt_ = now;
+      try{ localStorage.setItem(HL_EXAMS_CACHE_KEY_, JSON.stringify(d)); }catch(e){}
+      hlApplyExams_(d); hlRefreshExamScreens_();
+      return d;
+    }
+  }catch(e){ clearTimeout(timer); }
+  return hlExamsData_;
+}
+(function(){ try{ const c = JSON.parse(localStorage.getItem(HL_EXAMS_CACHE_KEY_) || 'null'); if(c){ hlExamsData_ = c; hlApplyExams_(c); } }catch(e){}   setTimeout(() => { hlLoadExams_(true); }, 1500); })();
+// Exams setup (owner only): the button that checks every row of the Exams tab in plain words and creates the missing subject tabs.
+async function hlOpenAdminExams_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlExamsOverlay', 'flex-start'); ov.textContent = '';
+  const card = document.createElement('div'); card.style.cssText = 'background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:520px; margin:8px 0; color:var(--ink-on-elevated);';
+  const mk = (tag, css, text, id) => { const e = document.createElement(tag); if(css) e.style.cssText = css; if(text != null) e.textContent = text; if(id) e.id = id; return e; };
+  const btn = (id, label, ghost) => { const b = mk('button', 'width:100%; margin:8px 0 0;' + (ghost ? ' background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);' : ''), label, id); b.type = 'button'; b.className = 'calc-btn'; return b; };
+  card.appendChild(mk('div', 'font-size:15px; font-weight:800;', 'Exams setup'));
+  card.appendChild(mk('div', 'font-size:12px; line-height:1.55; margin:6px 0 10px; color:var(--ink-soft-on-elevated);', 'Add a NEW exam, or new subjects for an existing exam, in the Exams tab (one row per exam). Then press the button below: it checks every row in plain words and creates the missing subject tabs in that exam\'s Google Sheet. You can press it as often as you like.'));
+  const open = btn('hlExamsOpenTab', 'Open the Exams tab', true), run = btn('hlExamsRun', 'Check my exams and create missing tabs', false), close = btn('hlExamsClose', 'Close', true);
+  const info = mk('div', 'font-size:12.5px; margin-top:10px; min-height:18px; line-height:1.5;', '', 'hlExamsInfo'), list = mk('div', 'margin-top:6px;', '', 'hlExamsList');
+  [open, run, info, list, close].forEach(x => card.appendChild(x)); ov.appendChild(card);
+  close.onclick = () => ov.remove();
+  open.onclick = () => { ov.remove(); hlOpenContentManager_('__cmall', Math.max(0, HL_ALL_CONTENT_TABS_.indexOf('Exams'))); };
+  let busy = false;
+  run.onclick = async () => {
+    if(busy) return; busy = true; run.disabled = true; info.textContent = 'Checking… this can take a minute.'; list.textContent = '';
+    let d = null; try{ d = await hlCmPost_({ action: 'adminExamsSetup' }); }catch(e){ d = null; }
+    busy = false; run.disabled = false;
+    if(!d || !d.ok){ info.textContent = !d ? 'The server did not answer. Check the internet and try again.' : ((d.error === 'auth' || d.error === 'notAdmin') ? 'The server did not recognise you as the owner. Close the app completely and open it again.' : 'Could not check the exams. Please try again.'); return; }
+    const rows = Array.isArray(d.report) ? d.report : [];
+    info.textContent = (rows.length ? '' : 'The Exams tab has no exam rows yet. Add one, then press this again. ') + 'Created ' + Number(d.created || 0) + ' tab(s).' + (d.remaining ? ' ' + d.remaining + ' more to create: press the button again.' : '');
+    rows.forEach(r => {
+      const box = mk('div', 'border-top:1px solid var(--line); padding:8px 0; font-size:12.5px; word-break:break-word;');
+      const icon = r.status === 'ok' ? (r.messages && r.messages.length ? '⚠️' : '✅') : (r.status === 'hidden' ? '⏸️' : '❌');
+      box.appendChild(mk('div', 'font-weight:700;', icon + ' ' + String(r.name || r.key || '') + (r.kind === 'extend' ? ' (new subjects for this exam)' : '') + ' · key ' + String(r.key || '') + ' · row ' + String(r.row || '')));
+      (r.messages || []).forEach(m => box.appendChild(mk('div', 'font-size:11.5px; margin-top:3px; opacity:0.9;', String(m))));
+      if(r.created && r.created.length) box.appendChild(mk('div', 'font-size:11.5px; margin-top:3px; color:var(--correct);', 'Created: ' + r.created.map(String).join(', ')));
+      list.appendChild(box);
+    });
+    if(typeof window.hlClearGetCache_ === 'function') window.hlClearGetCache_();
+    hlLoadExams_(true);
+  };
+}
+// ==========================================================================================
+// CONTROL EVERYTHING FROM THE APP (Oct 2026). Two owner tools, both saved in the Google Sheet so every student gets them with no new app release:
+// (1) EDIT TEXTS: Admin view > Edit texts, then TAP any line of text (a label, a button, a message, a placeholder) and type the new wording. The change is one row of the App Texts tab
+//     (Original | Replacement). The app replaces that exact text, as PLAIN TEXT only, wherever it is shown; remove the change and the original returns. The owner's own admin screens, input
+//     boxes, scripts and styles are never touched, so the owner can never lock himself out.
+// (2) FEATURES ON/OFF: Admin view > Features on/off. About 35 switches (each a group of screens). A student who opens a switched-off feature is told it is off for now. Saved as the
+//     App Settings key features_off. The owner in Admin view is not blocked. Shared screens (quiz, results, document viewer, legal pages, login, Home, Profile, Upgrade) are never switched off. ==========================================================================================
+const HL_FEATURE_GROUPS_ = [{"key":"ai_chat","name":"AI Assistant and Answer Checker","screens":["aiChatScreen","answerCheckerScreen"]},{"key":"subject_mcq","name":"Subject MCQs","screens":["mcqPostScreen"]},{"key":"mock_test","name":"Mock Test","screens":["mockPostScreen"]},{"key":"past_questions","name":"Past Questions","screens":["pastQuestionsPostScreen","pastQuestionsYearScreen"]},{"key":"special_sets","name":"Special Sets","screens":["specialSetsScreen"]},{"key":"rapid_fire","name":"Rapid Fire","screens":["rapidFireScreen","rapidFireSetupScreen"]},{"key":"second_paper","name":"Second Paper","screens":["secondPaperScreen","secondPaperTopicScreen","secondPaperYearScreen"]},{"key":"battles","name":"Battles","screens":["battleScreen","quickBattleSearchScreen","battleLobbyScreen","battleLiveScreen","battleResultScreen","dailyBattleResultScreen"]},{"key":"tournaments","name":"Tournaments","screens":["tournamentPostScreen","tournamentScreen","monthlyTournamentScreen"]},{"key":"leaderboard","name":"Leaderboard","screens":["leaderboardScreen"]},{"key":"study_groups","name":"Study Groups","screens":["studyGroupsScreen","groupCreateScreen","groupPreviewScreen","groupDetailScreen","startDiscussionScreen","discussionThreadScreen"]},{"key":"flashcards","name":"Flashcards","screens":["flashcardsScreen","fcDeckDetailScreen","fcCardEditScreen","fcStudyScreen","fcProgressScreen","fcAiGenerateScreen","fcCommunityScreen"]},{"key":"notes","name":"My Notes","screens":["notesScreen","scanNoteScreen","pdfAnnotateScreen","handwrittenNoteScreen","noteEditorScreen","noteReaderScreen","noteTrashScreen"]},{"key":"revision","name":"Revision and Study Planner","screens":["revisionScreen","examRevisionScreen","sevenDayRevisionScreen","revisionCalendarScreen","revisionSubjectPickScreen","revisionTopicPickScreen","studyPlannerSetupScreen","studyPlannerScreen"]},{"key":"bookmarks","name":"Bookmarks","screens":["bookmarksScreen","myBookmarksHubScreen"]},{"key":"mistake_book","name":"Mistake Book","screens":["mistakeBookScreen"]},{"key":"mnemonics","name":"Mnemonics","screens":["mnemonicsScreen","mnemonicCreateScreen","mnemonicPracticeScreen","mnemonicDetailScreen"]},{"key":"formulas","name":"Formulas and Quick Reference","screens":["formulaScreen","quickRefScreen","quickRefDetailScreen"]},{"key":"health_guide","name":"Health Guide and CPR","screens":["healthGuideScreen","cprDemoScreen"]},{"key":"health_days","name":"Health Days","screens":["healthDaysScreen","healthDayCalendarScreen","healthDayDetailScreen"]},{"key":"dictionaries","name":"Dictionaries","screens":["dictionaryScreen","enNpDictionaryScreen"]},{"key":"health_calcs","name":"Health, Indicator, Epidemiology and Statistics calculators","screens":["bmiCalcScreen","healthCalcScreen","hcBmrScreen","hcIbwScreen","hcWhrScreen","hcWhtrScreen","hcBsaScreen","hcBfScreen","hcEddScreen","hcAgeScreen","hcChildGrowthScreen","indicatorCalcScreen","icImrScreen","icMmrScreen","icCfrScreen","icAttackScreen","icCbrScreen","icCdrScreen","icNmrScreen","icU5mrScreen","epiCalcScreen","epiScreeningScreen","epiIncidenceScreen","epiPrevalenceScreen","epiRiskOddsScreen","epiCfrScreen","epiVeScreen","epiSarScreen","epiParScreen","epiNnhScreen","statsCalcScreen","statsDescriptiveScreen","statsZScreen","statsSampleSizeScreen","statsCiScreen","statsChiScreen","statsRngScreen","statsTtestScreen","statsAnovaScreen","statsCorrScreen","statsAlphaScreen"]},{"key":"salary_calcs","name":"Salary, Tax and Pension calculators","screens":["taxCalcScreen","salaryCalcScreen","salaryComparisonScreen","realSalaryScreen","pensionScreen","basicCalcScreen"]},{"key":"study_timer","name":"Study Timer and Focus","screens":["studyTimerScreen","focusSessionScreen","studyToolsCalcScreen"]},{"key":"wellbeing","name":"Wellness and My Health tools","screens":["myHealthScreen","wellnessScreen","safetySignalScreen","everydayToolsScreen","immunizationScreen"]},{"key":"live_class","name":"Live Class","screens":["liveClassScreen"]},{"key":"news","name":"News Portal","screens":["newsPortalScreen"]},{"key":"web_portal","name":"Web Portal","screens":["webPortalScreen"]},{"key":"resources","name":"Resources, Videos and Inspiration","screens":["resourcesScreen","studyResourcesScreen","videoScreen","inspirationHubScreen","inspirationDetailScreen"]},{"key":"current_affairs","name":"Current Affairs and Documents","screens":["currentAffairsScreen","gkScreen","ainSangrahaScreen","samsamayikScreen","docListScreen"]},{"key":"syllabus","name":"Syllabus","screens":["syllabusScreen"]},{"key":"progress","name":"Progress and Achievements","screens":["progressScreen","subjectProgressScreen","subjectDetailScreen","questionPerformanceScreen","weakAreasScreen","achievementsScreen","achievementDetailScreen","learnHubProgressScreen","revisionProgressScreen","studyActivityScreen","progressGoalsScreen","progressHistoryScreen"]},{"key":"notifications_center","name":"Notifications and What's New","screens":["notificationsScreen","whatsNewScreen"]},{"key":"faqs","name":"FAQs","screens":["faqsScreen"]},{"key":"learn_hub","name":"Learn Hub","screens":["learnScreen"]}];
+function hlFeaturesOffSet_(){
+  let raw = '';
+  if(hlAppSettings_) raw = hlSetting_('features_off', '');
+  else { try{ const c = JSON.parse(localStorage.getItem('hl_app_settings_cache') || 'null'); if(c && typeof c.features_off === 'string') raw = c.features_off; }catch(e){} }
+  const set = {}; String(raw).split(/[,;\s]+/).forEach(k => { if(/^[a-z][a-z0-9_]{1,30}$/.test(k)) set[k] = 1; });
+  return set;
+}
+function hlFeatureOffFor_(screenId){
+  const off = hlFeaturesOffSet_();
+  for(let i = 0; i < HL_FEATURE_GROUPS_.length; i++){ const g = HL_FEATURE_GROUPS_[i]; if(off[g.key] && g.screens.indexOf(screenId) !== -1) return g; }
+  return null;
+}
+(function(){
+  const orig = window.showScreen; if(typeof orig !== 'function') return;
+  window.showScreen = function(el){
+    try{
+      hlLoadAppSettings_().catch(() => {}); hlLoadTexts_().catch(() => {});   // each is remembered for 5 minutes: cheap
+      const id = el && el.id;
+      if(id && !(typeof hlAdminModeOn_ === 'function' && hlAdminModeOn_())){
+        const g = hlFeatureOffFor_(id);
+        if(g){ alert('"' + g.name + '" is switched off for now. Please try again later.'); return; }
+      }
+    }catch(e){}
+    return orig.apply(this, arguments);
+  };
+})();
+function hlOpenAdminFeatures_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlFeaturesOverlay', 'flex-start'); ov.textContent = ''; ov.setAttribute('data-hl-notext', '1');
+  const card = document.createElement('div'); card.style.cssText = 'background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:520px; margin:8px 0; color:var(--ink-on-elevated);';
+  const mk = (tag, css, text, id) => { const e = document.createElement(tag); if(css) e.style.cssText = css; if(text != null) e.textContent = text; if(id) e.id = id; return e; };
+  card.appendChild(mk('div', 'font-size:15px; font-weight:800;', 'Features on/off'));
+  card.appendChild(mk('div', 'font-size:12px; line-height:1.55; margin:6px 0 10px; color:var(--ink-soft-on-elevated);', 'Tick = ON for students. Un-tick a feature to switch it off for everyone: they will be told it is off for now. You (in Admin view) can still open everything.'));
+  const off = hlFeaturesOffSet_(), boxes = [], list = mk('div', 'max-height:52vh; overflow:auto; border-top:1px solid var(--line);');
+  HL_FEATURE_GROUPS_.forEach(g => {
+    const row = mk('label', 'display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--line); font-size:13px;'); const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = !off[g.key]; cb.setAttribute('data-key', g.key); cb.style.cssText = 'width:20px; height:20px; flex:none;';
+    row.appendChild(cb); row.appendChild(mk('span', 'flex:1;', g.name)); list.appendChild(row); boxes.push(cb);
+  });
+  card.appendChild(list);
+  const info = mk('div', 'font-size:12.5px; margin-top:10px; min-height:18px; line-height:1.5;', '', 'hlFeatInfo');
+  const save = mk('button', 'width:100%; margin:10px 0 0;', 'Save', 'hlFeatSave'), all = mk('button', 'width:100%; margin:8px 0 0; background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);', 'Switch everything ON', 'hlFeatAll'), close = mk('button', 'width:100%; margin:8px 0 0; background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);', 'Close', 'hlFeatClose');
+  [save, all, close].forEach(b => { b.type = 'button'; b.className = 'calc-btn'; });
+  [info, save, all, close].forEach(x => card.appendChild(x)); ov.appendChild(card);
+  close.onclick = () => ov.remove(); all.onclick = () => { boxes.forEach(b => { b.checked = true; }); info.textContent = 'Everything is ticked. Press Save.'; };
+  let busy = false;
+  save.onclick = async () => {
+    if(busy) return; busy = true; save.disabled = true; info.textContent = 'Saving…';
+    const value = boxes.filter(b => !b.checked).map(b => b.getAttribute('data-key')).join(',');
+    let d = null; try{ d = await hlCmPost_({ action: 'adminSetAppSetting', key: 'features_off', value: value }); }catch(e){ d = null; }
+    busy = false; save.disabled = false;
+    if(!d || !d.ok){ info.textContent = !d ? 'The server did not answer. Check the internet and try again.' : ((d.error === 'auth' || d.error === 'notAdmin') ? 'The server did not recognise you as the owner. Close the app completely and open it again.' : (d.message || 'Could not save. Please try again.')); return; }
+    hlAppSettings_ = Object.assign({}, hlAppSettings_ || {}, { features_off: String(d.value || '') }); hlAppSettingsAt_ = Date.now();
+    try{ localStorage.setItem('hl_app_settings_cache', JSON.stringify(hlAppSettings_)); }catch(e){}
+    const n = value ? value.split(',').length : 0; info.textContent = n ? 'Saved. ' + n + ' feature(s) are switched OFF for students.' : 'Saved. Everything is ON.';
+  };
+}
+// ---- Edit texts ----
+const HL_TEXTS_CACHE_KEY_ = 'hl_texts_cache';
+const HL_NOTEXT_ADMIN_SEL_ = '[data-hl-notext],[id^="menuAdmin"],[id^="hlAiLim"],[id^="hlCheck"],[id^="hlExams"],[id^="hlLog"],[id^="hlNotify"],[id^="hlReports"],[id^="hlSwitches"],[id^="hlUsers"],[id^="hlAa"],[id^="hlAdmin"],[id^="hlCm"],[id^="hlTexts"],[id^="hlFeat"],[id^="hlDash"]';
+const HL_NOTEXT_TAG_SEL_ = 'script,style,textarea,input,select,[contenteditable]';
+const HL_TEXT_ATTRS_ = ['placeholder', 'title', 'aria-label'];
+let hlTextMap_ = new Map(), hlTextsAt_ = 0, hlTextsOrig_ = new WeakMap(), hlTextsDone_ = new WeakMap(), hlAttrDone_ = new WeakMap(), hlTextsObs_ = null, hlTextsPending_ = new Set(), hlTextsTimer_ = null, hlEditTexts_ = false;
+function hlTextNorm_(x){ return String(x == null ? '' : x).replace(/\s+/g, ' ').trim(); }
+function hlTextsFor_(x){ const r = hlTextMap_.size ? hlTextMap_.get(hlTextNorm_(x)) : undefined; return r === undefined ? x : r; }
+function hlTextsSkipEl_(el){ return !el || !el.closest || !!el.closest(HL_NOTEXT_ADMIN_SEL_) || !!el.closest(HL_NOTEXT_TAG_SEL_); }
+function hlTextsApplyNode_(n){
+  try{
+    if(n.nodeType === 3){
+      const par = n.parentNode; if(!par || hlTextsSkipEl_(par.nodeType === 1 ? par : par.parentElement)) return;
+      const cur = n.nodeValue;
+      if(hlTextsDone_.get(n) === cur) return;                       // this is the text we set ourselves: leave it
+      const key = hlTextNorm_(cur); if(!key) return;
+      const rp = hlTextMap_.get(key);
+      if(rp === undefined){ hlTextsOrig_.delete(n); hlTextsDone_.delete(n); return; }
+      const lead = cur.match(/^\s*/)[0], trail = cur.match(/\s*$/)[0], out = lead + rp + trail;
+      hlTextsOrig_.set(n, key); hlTextsDone_.set(n, out); n.nodeValue = out; return;
+    }
+    if(n.nodeType !== 1) return;                                   // only elements are walked (comments etc. are ignored)
+    if(n.closest(HL_NOTEXT_ADMIN_SEL_)) return;                    // the owner's own screens are never changed
+    const els = [n].concat(Array.from(n.querySelectorAll ? n.querySelectorAll('[placeholder],[title],[aria-label]') : []));
+    els.forEach(el => { if(!el.getAttribute || el.closest(HL_NOTEXT_ADMIN_SEL_) || el.matches('script,style')) return; HL_TEXT_ATTRS_.forEach(a => {
+      const v = el.getAttribute(a); if(v == null) return; const rec = hlAttrDone_.get(el) || {}; if(rec[a] === v) return;
+      const rp = hlTextMap_.get(hlTextNorm_(v)); if(rp === undefined){ if(rec[a] !== undefined){ delete rec[a]; } return; }
+      rec[a] = rp; rec['o_' + a] = hlTextNorm_(v); hlAttrDone_.set(el, rec); el.setAttribute(a, rp); }); });
+    const w = document.createTreeWalker(n, NodeFilter.SHOW_TEXT); let x; const batch = []; while((x = w.nextNode())) batch.push(x); batch.forEach(hlTextsApplyNode_);
+  }catch(e){}
+}
+function hlTextsFlush_(){
+  hlTextsTimer_ = null; const items = Array.from(hlTextsPending_); hlTextsPending_.clear();
+  items.forEach(n => { if(n.isConnected !== false) hlTextsApplyNode_(n); });
+}
+function hlTextsStartObserver_(){
+  if(hlTextsObs_ || typeof MutationObserver === 'undefined' || !document.body) return;
+  hlTextsObs_ = new MutationObserver(muts => {
+    muts.forEach(m => { if(m.type === 'childList') m.addedNodes.forEach(n => hlTextsPending_.add(n)); else hlTextsPending_.add(m.type === 'attributes' ? m.target : m.target); });
+    if(!hlTextsTimer_) hlTextsTimer_ = setTimeout(hlTextsFlush_, 120);
+  });
+  hlTextsObs_.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: HL_TEXT_ATTRS_ });
+}
+function hlTextsFullPass_(){   // after the list changed: put back originals that are no longer changed, apply the new wording, and catch up with everything on screen
+  try{
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let x; const all = []; while((x = w.nextNode())) all.push(x);
+    all.forEach(n => {
+      const o = hlTextsOrig_.get(n); const par = n.parentNode; if(!par || hlTextsSkipEl_(par.nodeType === 1 ? par : par.parentElement)) return;
+      if(o !== undefined){
+        const rp = hlTextMap_.get(o), lead = n.nodeValue.match(/^\s*/)[0], trail = n.nodeValue.match(/\s*$/)[0];
+        if(rp === undefined){ n.nodeValue = lead + o + trail; hlTextsOrig_.delete(n); hlTextsDone_.delete(n); }   // the change was removed: the original comes back
+        else { const out = lead + rp + trail; hlTextsDone_.set(n, out); n.nodeValue = out; }
+      }
+      else hlTextsApplyNode_(n);
+    });
+    document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => { if(el.closest(HL_NOTEXT_ADMIN_SEL_)) return; const rec = hlAttrDone_.get(el); HL_TEXT_ATTRS_.forEach(a => {
+      if(rec && rec['o_' + a] !== undefined){ const rp = hlTextMap_.get(rec['o_' + a]); el.setAttribute(a, rp === undefined ? rec['o_' + a] : rp); if(rp === undefined){ delete rec[a]; delete rec['o_' + a]; } else rec[a] = rp; }
+      else { const v = el.getAttribute(a); if(v != null){ const rp = hlTextMap_.get(hlTextNorm_(v)); if(rp !== undefined){ const r2 = hlAttrDone_.get(el) || {}; r2[a] = rp; r2['o_' + a] = hlTextNorm_(v); hlAttrDone_.set(el, r2); el.setAttribute(a, rp); } } } }); });
+  }catch(e){}
+}
+function hlTextsSet_(list){
+  const m = new Map();
+  (Array.isArray(list) ? list : []).slice(0, 600).forEach(r => { if(!r || typeof r.o !== 'string' || typeof r.r !== 'string') return; const o = hlTextNorm_(r.o); const rp = r.r.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim(); if(!o || o.length > 300 || !rp || rp.length > 600 || m.has(o)) return; m.set(o, rp); });
+  hlTextMap_ = m; if(m.size) hlTextsStartObserver_(); hlTextsFullPass_(); return m.size;
+}
+async function hlLoadTexts_(force){
+  const now = Date.now(); if(!force && hlTextsAt_ && now - hlTextsAt_ < 300000) return hlTextMap_.size;
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 8000);
+  try{
+    const res = await fetch(SHEET_API_URL + '?action=appTexts', { signal: controller.signal }); const d = await res.json(); clearTimeout(timer);
+    if(d && Array.isArray(d.texts)){ hlTextsAt_ = now; try{ localStorage.setItem(HL_TEXTS_CACHE_KEY_, JSON.stringify(d.texts)); }catch(e){} return hlTextsSet_(d.texts); }
+  }catch(e){ clearTimeout(timer); }
+  return hlTextMap_.size;
+}
+(function(){
+  try{ const c = JSON.parse(localStorage.getItem(HL_TEXTS_CACHE_KEY_) || 'null'); if(Array.isArray(c) && c.length) hlTextsSet_(c); }catch(e){}
+  setTimeout(() => { hlLoadTexts_(true).catch(() => {}); }, 1800);
+  const na = window.alert; if(typeof na === 'function') window.alert = function(msg){ return na.call(window, hlTextsFor_(msg)); };
+})();
+function hlTextsBanner_(on){
+  let b = document.getElementById('hlTextsBanner');
+  if(!on){ if(b) b.remove(); return; }
+  if(b) return;
+  b = document.createElement('div'); b.id = 'hlTextsBanner'; b.setAttribute('data-hl-notext', '1'); b.style.cssText = 'position:fixed; left:0; right:0; top:0; z-index:99990; background:#0d3b66; color:#fff; padding:calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px; font-size:13px; font-weight:700; display:flex; gap:10px; align-items:center;';
+  const t = document.createElement('span'); t.style.flex = '1'; t.textContent = '✏️ Edit texts: tap any text to change it'; const d = document.createElement('button'); d.type = 'button'; d.id = 'hlTextsDone'; d.textContent = 'Done'; d.style.cssText = 'background:#fff; color:#0d3b66; border:0; border-radius:8px; padding:6px 14px; font-weight:800;';
+  d.onclick = () => { hlEditTexts_ = false; hlTextsBanner_(false); }; b.appendChild(t); b.appendChild(d); document.body.appendChild(b);
+}
+function hlOpenAdminTexts_(){
+  if(!hlAdminModeOn_()) return;
+  hlEditTexts_ = true; hlTextsBanner_(true);
+  alert('Edit texts is ON. Tap any text on any screen to change it. Press Done at the top when you finish.');
+}
+function hlTextsEditDialog_(info){   // info: { kind: 'text'|'attr', original, current }
+  const old = document.getElementById('hlTextsEditOverlay'); if(old) old.remove();
+  const ov = hlMakeOverlay_('hlTextsEditOverlay', 'center'); ov.textContent = ''; ov.setAttribute('data-hl-notext', '1');
+  const card = document.createElement('div'); card.style.cssText = 'background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:480px; color:var(--ink-on-elevated);';
+  const mk = (tag, css, text, id) => { const e = document.createElement(tag); if(css) e.style.cssText = css; if(text != null) e.textContent = text; if(id) e.id = id; return e; };
+  const changed = hlTextMap_.has(info.original);
+  card.appendChild(mk('div', 'font-size:15px; font-weight:800;', 'Change this text'));
+  card.appendChild(mk('div', 'font-size:11.5px; margin-top:8px; color:var(--ink-soft-on-elevated);', 'Original text'));
+  card.appendChild(mk('div', 'font-size:13px; padding:8px; border:1px dashed var(--line); border-radius:8px; word-break:break-word; margin-top:3px;', info.original, 'hlTextsOrigBox'));
+  card.appendChild(mk('div', 'font-size:11.5px; margin-top:10px; color:var(--ink-soft-on-elevated);', 'New text (shown to every student)'));
+  const ta = document.createElement('textarea'); ta.id = 'hlTextsNew'; ta.rows = 3; ta.maxLength = 600; ta.value = changed ? hlTextMap_.get(info.original) : info.original; ta.style.cssText = 'box-sizing:border-box; width:100%; padding:9px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:14px; font-family:inherit; margin-top:3px;'; card.appendChild(ta);
+  const msg = mk('div', 'font-size:12.5px; min-height:18px; margin-top:8px; line-height:1.5;', '', 'hlTextsMsg'); card.appendChild(msg);
+  const btn = (id, label, ghost) => { const b = mk('button', 'width:100%; margin:8px 0 0;' + (ghost ? ' background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);' : ''), label, id); b.type = 'button'; b.className = 'calc-btn'; return b; };
+  const save = btn('hlTextsSave', 'Save', false), rm = btn('hlTextsRemove', 'Remove my change (back to the original)', true), cancel = btn('hlTextsCancel', 'Cancel', true);
+  card.appendChild(save); if(changed) card.appendChild(rm); card.appendChild(cancel); ov.appendChild(card);
+  cancel.onclick = () => ov.remove(); let busy = false;
+  const send = async (remove) => {
+    if(busy) return; const nv = ta.value.replace(/\r\n?/g, '\n').trim();
+    if(!remove){ if(!nv){ msg.textContent = 'Type the new text first. To go back to the original press "Remove my change".'; return; } if(nv.length > 600){ msg.textContent = 'At most 600 letters.'; return; } }
+    busy = true; save.disabled = true; rm.disabled = true; msg.textContent = 'Saving…';
+    let d = null; try{ d = await hlCmPost_({ action: 'adminSetText', original: info.original, replacement: remove ? '' : nv, remove: !!remove }); }catch(e){ d = null; }
+    busy = false; save.disabled = false; rm.disabled = false;
+    if(!d || !d.ok){ msg.textContent = !d ? 'The server did not answer. Check the internet and try again.' : ((d.error === 'auth' || d.error === 'notAdmin') ? 'The server did not recognise you as the owner. Close the app completely and open it again.' : (d.message || 'Could not save. Please try again.')); return; }
+    const m2 = new Map(hlTextMap_); if(d.removed) m2.delete(info.original); else m2.set(info.original, String(d.r));
+    hlTextMap_ = m2; if(m2.size) hlTextsStartObserver_(); try{ localStorage.setItem(HL_TEXTS_CACHE_KEY_, JSON.stringify(Array.from(m2, ([o, r]) => ({ o, r })))); }catch(e){}
+    hlTextsAt_ = Date.now(); hlTextsFullPass_(); ov.remove();
+  };
+  save.onclick = () => send(false); rm.onclick = () => send(true);
+}
+document.addEventListener('click', function(e){
+  if(!hlEditTexts_) return;
+  try{
+    if(!hlAdminModeOn_()){ hlEditTexts_ = false; hlTextsBanner_(false); return; }
+    const t = e.target; if(!(t instanceof Element)) return;
+    if(t.closest(HL_NOTEXT_ADMIN_SEL_)) return;                  // the owner's own screens and this banner work normally
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    const inp = t.closest('input[placeholder],textarea[placeholder]');
+    if(inp){ const cur = inp.getAttribute('placeholder'), rec = hlAttrDone_.get(inp), o = rec && rec['o_placeholder'] ? rec['o_placeholder'] : hlTextNorm_(cur); if(o) hlTextsEditDialog_({ kind: 'attr', original: o, current: cur }); return; }
+    let n = null;
+    if(document.caretRangeFromPoint){ const r = document.caretRangeFromPoint(e.clientX, e.clientY); if(r && r.startContainer && r.startContainer.nodeType === 3 && (t.contains(r.startContainer) || (r.startContainer.parentNode && r.startContainer.parentNode.contains(t)))) n = r.startContainer; }
+    if(!n){ const w = document.createTreeWalker(t, NodeFilter.SHOW_TEXT); let x; while((x = w.nextNode())){ if(hlTextNorm_(x.nodeValue) && !hlTextsSkipEl_(x.parentElement)) { n = x; break; } } }
+    if(!n || hlTextsSkipEl_(n.parentElement)) return;
+    const o = hlTextsOrig_.get(n) || hlTextNorm_(n.nodeValue); if(!o || o.length > 300) return;
+    hlTextsEditDialog_({ kind: 'text', original: o, current: n.nodeValue });
+  }catch(err){}
+}, true);
+// ---- OWNER DASHBOARD (Oct 2026): one read-only screen: students, Premium students, open reports, your own changes, backend version, payments TEST/LIVE and the last 5 admin changes. ----
+function hlDashNum_(n){ return (typeof n === 'number' && isFinite(n) && n >= 0) ? n.toLocaleString('en-US') : '—'; }
+function hlOpenAdminDashboard_(){
+  if(!hlAdminModeOn_()) return;
+  const ov = hlMakeOverlay_('hlDashOverlay', 'flex-start'); ov.textContent = ''; ov.setAttribute('data-hl-notext', '1');
+  const card = document.createElement('div'); card.style.cssText = 'background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:520px; margin:8px 0; color:var(--ink-on-elevated);';
+  const mk = (tag, css, text, id) => { const e = document.createElement(tag); if(css) e.style.cssText = css; if(text != null) e.textContent = text; if(id) e.id = id; return e; };
+  card.appendChild(mk('div', 'font-size:15px; font-weight:800;', 'Dashboard'));
+  const when = mk('div', 'font-size:11.5px; margin:3px 0 10px; color:var(--ink-soft-on-elevated);', '', 'hlDashWhen'); card.appendChild(when);
+  const grid = mk('div', 'display:grid; grid-template-columns:1fr 1fr; gap:8px;', '', 'hlDashGrid'); card.appendChild(grid);
+  const status = mk('div', 'margin-top:12px; font-size:12.5px; line-height:1.55;', '', 'hlDashStatus'), recent = mk('div', 'margin-top:12px;', '', 'hlDashRecent'), info = mk('div', 'font-size:12.5px; margin-top:10px; min-height:18px;', '', 'hlDashInfo');
+  [status, recent, info].forEach(x => card.appendChild(x));
+  const btn = (id, label, ghost) => { const b = mk('button', 'width:100%; margin:8px 0 0;' + (ghost ? ' background:transparent; color:var(--ink-on-elevated); border:1.5px solid var(--line);' : ''), label, id); b.type = 'button'; b.className = 'calc-btn'; return b; };
+  const refresh = btn('hlDashRefresh', 'Refresh', false), logB = btn('hlDashLog', 'Open the Admin log', true), chk = btn('hlDashCheck', 'Backend check', true), close = btn('hlDashClose', 'Close', true);
+  [refresh, logB, chk, close].forEach(b => card.appendChild(b)); ov.appendChild(card);
+  close.onclick = () => ov.remove(); logB.onclick = () => { ov.remove(); hlOpenAdminLog_(); }; chk.onclick = () => { ov.remove(); hlOpenAdminCheck_(); };
+  const tile = (label, value, onTap) => { const t = mk(onTap ? 'button' : 'div', 'text-align:left; border:1px solid var(--line); border-radius:10px; padding:10px; background:transparent; color:inherit; font-family:inherit;'); if(onTap){ t.type = 'button'; t.onclick = onTap; }
+    t.appendChild(mk('div', 'font-size:20px; font-weight:800;', hlDashNum_(value))); t.appendChild(mk('div', 'font-size:11.5px; color:var(--ink-soft-on-elevated);', label)); return t; };
+  let busy = false;
+  const load = async () => {
+    if(busy) return; busy = true; refresh.disabled = true; info.textContent = 'Loading…';
+    let d = null; try{ d = await hlCmPost_({ action: 'adminDashboard' }); }catch(e){ d = null; }
+    busy = false; refresh.disabled = false;
+    if(!d || !d.ok){ info.textContent = !d ? 'The server did not answer. Check the internet and try again.' : ((d.error === 'auth' || d.error === 'notAdmin') ? 'The server did not recognise you as the owner. Close the app completely and open it again.' : 'Could not load the dashboard. Please try again.'); return; }
+    info.textContent = ''; when.textContent = 'Counted ' + hlLogTimeText_(d.countedAt) + '. Counts are remembered for 1 minute.';
+    grid.textContent = '';
+    grid.appendChild(tile('Students', d.students)); grid.appendChild(tile('Premium students', d.premium));
+    grid.appendChild(tile('Open reports (tap to review)', d.openReports, () => { ov.remove(); hlOpenAdminReports_(); }));
+    grid.appendChild(tile('Your text changes', d.textChanges)); grid.appendChild(tile('Features switched OFF (tap)', d.featuresOff, () => { ov.remove(); hlOpenAdminFeatures_(); })); grid.appendChild(tile('New exams you added (tap)', d.newExams, () => { ov.remove(); hlOpenAdminExams_(); }));
+    status.textContent = '';
+    const m = /^v(\d+)/.exec(String(d.version || '')), have = m ? parseInt(m[1], 10) : 0, need = HL_EXPECTED_BACKEND_.version;
+    const lines = [{ level: have >= need ? 'ok' : 'warn', text: have >= need ? 'Backend ' + String(d.version).slice(0, 30) + ' (this app needs v' + need + ' or newer)' : 'Backend ' + String(d.version).slice(0, 30) + ' is OLDER than this app needs (v' + need + '). Upload the new backend.' }].concat(hlPaymentsStatus_(d.payments));
+    lines.forEach(x => { const l = document.createElement('div'); l.style.cssText = 'margin-top:4px;' + (x.level === 'danger' ? ' font-weight:800; color:var(--wrong);' : ''); l.textContent = (x.level === 'ok' ? '✅ ' : x.level === 'danger' ? '🚨 ' : x.level === 'warn' ? '⚠️ ' : 'ℹ️ ') + x.text; status.appendChild(l); });
+    recent.textContent = ''; recent.appendChild(mk('div', 'font-size:12px; font-weight:800; margin-bottom:4px;', 'Your last changes'));
+    const rows = Array.isArray(d.recent) ? d.recent.slice(0, 5) : [];
+    if(!rows.length) recent.appendChild(mk('div', 'font-size:12px; color:var(--ink-soft-on-elevated);', 'No changes yet.'));
+    rows.forEach(r => { const x = mk('div', 'border-top:1px solid var(--line); padding:6px 0; font-size:12px; word-break:break-word;'); x.textContent = hlLogTimeText_(r && r.time) + ' · ' + String(r && r.action || '').slice(0, 60) + (r && r.tab ? ' · ' + String(r.tab).slice(0, 60) : '') + ' · ' + String(r && r.who || '').split('@')[0].slice(0, 40); recent.appendChild(x); });
+  };
+  refresh.onclick = load; load();
+}
 // ---- the block list ----
 function hlBlockedKey_(){ return uk('hl_blocked'); }
 function hlBlockedMap_(){
@@ -28933,7 +29505,7 @@ function hlRenderAdminBar_(activeScreen){
   try{
     if(window.currentUser){ if(hlIsAdminUser_()) localStorage.setItem('hl_debug_admin_device', '1'); else localStorage.removeItem('hl_debug_admin_device'); }
   }catch(e){}
-  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify', 'menuAdminCheck', 'menuAdminAiLimits'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
+  try{ ['menuAdminReports', 'menuAdminSwitches', 'menuAdminUsers', 'menuAdminNotify', 'menuAdminCheck', 'menuAdminAiLimits', 'menuAdminContent', 'menuAdminLog', 'menuAdminExams', 'menuAdminTexts', 'menuAdminFeatures', 'menuAdminDashboard'].forEach(id => { const rb = document.getElementById(id); if(rb) rb.style.display = hlAdminModeOn_() ? '' : 'none'; }); }catch(e){}   // the Reports and Feature switches items show only while Admin view is ON
   const menuBtn = document.getElementById('menuAdminView');
   if(menuBtn){
     const isAdmin = hlIsAdminUser_();
@@ -29072,7 +29644,14 @@ function hlOpenAdminAddModal_(currentQ){
 // allow-list of tabs). Form fields come from the tab's own header row, so saved data always
 // matches the Sheet format. All text here is shown with hlEsc / as plain text.
 // ==========================================================================================
+// Every tab the owner can edit (mirrors the backend list; "Past Questions List" is managed on the Past Questions screen). "App Settings" comes first.
+const HL_ALL_CONTENT_TABS_ = ["App Settings", "Exams", "App Texts", "Inspiration Hub", "Health Guide", "Mnemonics", "Quick References", "Formulas", "Health Days", "FAQs", "Dictionary", "Dictionary PDFs", "English Nepali Dictionary", "Syllabus", "Resources", "Video Lessons", "Notifications", "Home Carousel", "Quotes", "Exam Dates", "Promotions", "App Updates", "New Updates", "Premium Features", "Pricing", "Live Class", "Immunization", "WebPortalLinks", "NewsPortalSources", "TaxSlabs", "TaxDeductionLimits", "SalaryScale", "SalaryAllowances", "PayrollRates", "Constitution Documents", "Guidelines", "Health Acts and Regulations", "Other Acts and Regulations", "Samsamayik Documents", "Second Paper Syllabus", "Second Paper Notes", "Second Paper PDFs", "Second Paper Questions", "Second Paper Section Notes", "Second Paper Solutions", "Special Sets", "Exam Settings"];
 function hlAdminScreenTabs_(screenId){
+  if(screenId === '__cmall') return HL_ALL_CONTENT_TABS_.slice();
+  if(screenId === 'legalInfoScreen'){
+    const lt = document.getElementById('legalInfoTitle');
+    return (lt && ['Contact Us', 'About Us', 'App Guidelines', 'Feedback'].indexOf(lt.textContent) !== -1) ? ['App Settings'] : [];
+  }
   const map = {
     inspirationHubScreen: ['Inspiration Hub'], healthGuideScreen: ['Health Guide'], mnemonicsScreen: ['Mnemonics'],
     quickRefScreen: ['Quick References'], formulaScreen: ['Formulas'], healthDaysScreen: ['Health Days'], faqsScreen: ['FAQs'],
@@ -29087,7 +29666,7 @@ function hlAdminScreenTabs_(screenId){
     secondPaperTopicScreen: ['Second Paper Notes', 'Second Paper Questions', 'Second Paper PDFs'],
     secondPaperYearScreen: ['Second Paper Questions'],
     specialSetsScreen: ['Special Sets'],
-    mockPostScreen: ['Exam Settings']
+    mockPostScreen: ['Exam Settings', 'Exams'], mcqPostScreen: ['Exams']
   };
   if(screenId === 'docListScreen'){
     const t = document.getElementById('docListTitle');
@@ -29133,6 +29712,14 @@ function hlCmErrorText_(data){
 }
 function hlCmRefreshScreen_(screenId){
   try{
+    if(screenId === '__cmall'){ hlAppSettings_ = null; if(window.hlClearGetCache_) window.hlClearGetCache_(); return true; }
+    if(screenId === 'legalInfoScreen'){
+      hlAppSettings_ = null;
+      const lt = document.getElementById('legalInfoTitle'), mid = lt ? { 'Contact Us': 'menuContactUs', 'About Us': 'menuAboutUs', 'App Guidelines': 'menuAppGuidelines', 'Feedback': 'menuFeedback' }[lt.textContent] : null;
+      const mb = mid ? document.getElementById(mid) : null;
+      if(mb){ mb.click(); return true; }
+      return false;
+    }
     const fn = SCREEN_REFRESH_MAP && SCREEN_REFRESH_MAP[screenId];
     if(fn){ if(window.hlClearGetCache_) window.hlClearGetCache_(); fn(); return true; }
   }catch(e){}
@@ -29159,6 +29746,8 @@ async function hlOpenContentManager_(screenId, tabIndex){
     : '';
   const notes = [];
   if(tab === 'Pricing') notes.push('Payments are checked against this tab. Changing a price changes what students must pay — tell Claude too, so the app\'s backup price matches.');
+  if(tab === 'Exams') notes.push('One row = one exam. SheetId = the long code of the exam\'s own Google Sheet (the part of its address between /d/ and /edit). Subjects: one per line, or separated by ; . A row whose Key is pho, ha, sn, ahw, anm, ha_license or bph_license only ADDS those subjects to that exam. Visible = No hides a row. After editing, open Exams setup to check the rows and create the subject tabs.');
+  if(tab === 'App Settings') notes.push('Links must start with https://. An EMPTY link hides that button; an EMPTY text keeps the original text. Keep the Key names exactly as they are. Texts: a blank line starts a new paragraph, and a line starting with "# " is a heading.');
   if(tab === 'Past Questions List') notes.push('Removing a name here only hides the paper from the app; its tab (with the questions) stays in the Sheet.');
   const noteHtml = notes.map(n => '<div style="font-size:11.5px; border:1.5px solid var(--gold); border-radius:8px; padding:8px; margin-bottom:10px;">' + hlEsc(n) + '</div>').join('');
 
@@ -29965,7 +30554,7 @@ function reviewRow(q, i, status, chosen){
     else if(isRight) mark = 'Correct answer';
     else if(isChosen) mark = 'Your answer';
     return `<div class="rv-opt${isRight ? ' correct' : (isChosen ? ' chosen-wrong' : '')}">
-      <span class="rv-bubble">${L}</span><span class="rv-text">${text || ''}</span>${mark ? `<span class="rv-mark">${mark}</span>` : ''}
+      <span class="rv-bubble">${L}</span><span class="rv-text">${hlRich_(text || '')}</span>${mark ? `<span class="rv-mark">${mark}</span>` : ''}
     </div>`;
   }).join('');
 
@@ -29979,7 +30568,7 @@ function reviewRow(q, i, status, chosen){
     <div class="rv-head">
       <span class="rv-num">Q${i + 1}</span>
       <span class="rv-pill ${status.toLowerCase()}">${status}</span>
-      ${tag ? `<span class="rv-tag">${tag}</span>` : ''}
+      ${tag ? `<span class="rv-tag">${hlEsc(tag)}</span>` : ''}
     </div>
     <div class="rv-q">${hlRich_(q.Question)}</div>
     ${note}
