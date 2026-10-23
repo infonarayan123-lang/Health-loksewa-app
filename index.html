@@ -21097,12 +21097,15 @@ async function checkForKhaltiReturnAndActivate(){
 // the URL" pattern as the eSewa-return check above. ----------
 function checkForNotificationDeepLinkAndNavigate(){
   const params = new URLSearchParams(window.location.search);
-  const notifKey = params.get('notif');
-  if(!notifKey) return; // not opened from a notification tap — nothing to do
+  const notifKey = params.get('notif') || params.get('go');   // ?notif= comes from a notification tap; ?go= comes from a link on the website (only the fixed list below is ever opened)
+  if(!notifKey) return; // not opened from a notification tap or a website link — nothing to do
 
   // Clean the URL immediately so refreshing doesn't re-trigger this
   window.history.replaceState({}, document.title, window.location.pathname);
 
+  // ?exam=<key> (used with ?go=exam): only a plain key like pho or ha_license counts
+  const examRaw = params.get('exam') || '';
+  const examKey = /^[a-z][a-z0-9_]{1,19}$/.test(examRaw) ? examRaw : '';
   const NOTIF_DEEPLINK_MAP = {
     whatsnew: () => { showScreen(whatsNewScreen); if(window.renderWhatsNew) renderWhatsNew(); },
     notifications: () => { showScreen(notificationsScreen); if(window.loadNotifications) loadNotifications(); },
@@ -21112,8 +21115,25 @@ function checkForNotificationDeepLinkAndNavigate(){
     leaderboard: () => { showScreen(leaderboardScreen); if(typeof renderLeaderboard === 'function') renderLeaderboard(); },
     // News Portal daily summary notification (sent by the backend) opens the News Portal
     news: () => { showScreen(newsPortalScreen); if(typeof renderNewsPortal === 'function') renderNewsPortal(); },
+    // Links from the website (Home rows): the same screens the app's own cards open
+    exams: () => { showScreen(mcqPostScreen); renderMcqPosts(); },
+    practice: () => { showScreen(practiceScreen); },
+    mock: () => { showScreen(mockPostScreen); renderMockPosts(); },
+    past: () => { showScreen(pastQuestionsPostScreen); renderPastQuestionsPosts(); },
+    premium: () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); },
+    second: () => { Promise.resolve(hlSpOpen_()).catch(() => {}); },
+    rapid: () => { showScreen(rapidFireScreen); renderRapidFireModes(); },
+    flash: () => { showScreen(flashcardsScreen); renderFlashcardsHome(); },
+    ai: () => { showScreen(aiChatScreen); initChat(); },
+    progress: () => { showScreen(progressScreen); renderProgressScreen(); },
+    // One exam: its subject list (the same thing a tap on that exam card does); an unknown or not-ready exam opens the exam list instead
+    exam: () => {
+      const post = (typeof MCQ_POSTS !== 'undefined' && Array.isArray(MCQ_POSTS)) ? MCQ_POSTS.find(p => p.key === examKey) : null;
+      if(post && post.ready){ currentMcqPost = post.key; showScreen(subjectPickScreen); renderSubjectPick(); }
+      else { showScreen(mcqPostScreen); renderMcqPosts(); }
+    },
   };
-  const action = NOTIF_DEEPLINK_MAP[notifKey];
+  const action = Object.prototype.hasOwnProperty.call(NOTIF_DEEPLINK_MAP, notifKey) ? NOTIF_DEEPLINK_MAP[notifKey] : null;   // only the listed keys count (never __proto__, constructor and the like)
   if(action){
     try{ action(); }catch(e){ if(window.showDebugError) showDebugError('Notification deep link failed: ' + (e && e.message ? e.message : String(e))); }
   }
@@ -28013,7 +28033,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v558';
+const HL_APP_VERSION_ = 'v560';
 const HL_EXPECTED_BACKEND_ = { version: 48, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
