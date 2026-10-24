@@ -28033,7 +28033,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v560';
+const HL_APP_VERSION_ = 'v561';
 const HL_EXPECTED_BACKEND_ = { version: 48, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
@@ -29198,12 +29198,25 @@ async function hlSubmitReport_(r){
   data.targetName = r.targetName ? String(r.targetName).slice(0, 100) : null;
   await setDoc(doc(window.hlFirestore, 'reports', id), data);
 }
+// Student reports a mistake in a question (wrong answer, typo, outdated). Uses the existing reports list: type 'other', reason 'misleading' or 'other'.
+function hlReportQuestion_(q){
+  if(!window.currentUser || !window.currentUser.uid){ alert('Please sign in to report a mistake in a question.'); return Promise.resolve(false); }
+  const text = String((q && q.Question) || '');
+  const meta = [q && q.Subject, q && q.Topic].filter(Boolean).join(' | ');
+  return hlOpenReportDialog_({
+    title: 'Report a mistake in this question',
+    about: text.slice(0, 120),
+    snippet: ((meta ? meta + ' | ' : '') + 'Marked answer: ' + String((q && q.CorrectAnswer) || '?') + ' | ' + text).slice(0, 300),
+    type: 'other', ref: 'question:' + hlSimpleHash_(text), reasonKeys: ['misleading', 'other'],
+    thanks: 'Thank you. We will check this question.'
+  });
+}
 function hlOpenReportDialog_(ctx){
   return new Promise((resolve) => {
     const ov = hlMakeOverlay_('hlReportOverlay');
     const T = 'color:var(--ink-on-elevated);', S = 'color:var(--ink-soft-on-elevated);';
     const F = 'width:100%; box-sizing:border-box; padding:8px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-size:13px;';
-    const reasons = hlReportReasons_().map(([k, label]) => '<label style="display:flex; gap:8px; align-items:center; font-size:13px; padding:5px 0; cursor:pointer;"><input type="radio" name="hlReason" value="' + k + '" style="width:18px; height:18px;"> <span>' + label + '</span></label>').join('');
+    const reasons = hlReportReasons_().filter(([k]) => !ctx.reasonKeys || ctx.reasonKeys.indexOf(k) !== -1).map(([k, label]) => '<label style="display:flex; gap:8px; align-items:center; font-size:13px; padding:5px 0; cursor:pointer;"><input type="radio" name="hlReason" value="' + k + '" style="width:18px; height:18px;"> <span>' + label + '</span></label>').join('');
     ov.innerHTML = '<div style="background:var(--panel-elevated); border-radius:14px; padding:16px; width:100%; max-width:440px; max-height:90vh; overflow-y:auto; ' + T + '">'
       + '<div style="font-size:15px; font-weight:800; margin-bottom:4px;">' + hlEsc(ctx.title || 'Report') + '</div>'
       + (ctx.about ? '<div style="font-size:12px; margin-bottom:8px; ' + S + ' word-break:break-word;">' + hlEsc(ctx.about) + '</div>' : '')
@@ -30209,6 +30222,10 @@ function handleAnswer(letter){
     });
   }
 
+  { const rw = document.createElement('div'); rw.style.cssText = 'display:flex; gap:8px; margin-top:6px;';
+    const rb = document.createElement('button'); rb.type = 'button'; rb.id = 'reportQuestionBtn'; rb.className = 'chat-save-btn'; rb.style.display = 'block'; rb.textContent = 'Report a mistake';
+    rb.addEventListener('click', () => { hlReportQuestion_(q); }); rw.appendChild(rb); fb.appendChild(rw); }
+
   const nextBtn = document.getElementById('nextBtn');
   nextBtn.disabled = false;
   // Real fix: this button was becoming clickable but never updating its own text away from
@@ -30608,6 +30625,7 @@ function reviewRow(q, i, status, chosen){
     ${explanation}
     <div class="rv-actions">
       <button class="rv-act" data-act="bookmark" data-idx="${i}">${isBookmarked(q) ? 'Bookmarked' : 'Bookmark'}</button>
+      <button class="rv-act" data-act="report" data-idx="${i}">Report a mistake</button>
       ${q.Explanation ? `<button class="rv-act" data-act="listen" data-idx="${i}">Listen</button><button class="rv-act" data-act="save" data-idx="${i}">Save to Notes</button>` : ''}
     </div>
   </div>`;
@@ -30664,6 +30682,7 @@ function handleReviewClick(e){
     if(act.dataset.act === 'bookmark'){ toggleBookmark(q); act.textContent = isBookmarked(q) ? 'Bookmarked' : 'Bookmark'; }
     else if(act.dataset.act === 'listen'){ speakText(q.Explanation || '', act); }
     else if(act.dataset.act === 'save'){ saveQuestionToNotes(q); act.textContent = 'Saved to Notes'; }
+    else if(act.dataset.act === 'report'){ hlReportQuestion_(q); }
   }
 }
 
