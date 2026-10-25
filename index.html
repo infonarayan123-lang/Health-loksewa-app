@@ -876,54 +876,49 @@
   }
 
   .dash-card.c-qotd.qotd-card{
-    /* Notebook paper: warm off-white base + faint ruled blue lines + subtle paper texture */
-    background-color:#F7F1DE;
-    background-image:
-      repeating-linear-gradient(
-        transparent, transparent 27px,
-        rgba(90,130,200,0.35) 27px, rgba(90,130,200,0.35) 28px
-      ),
-      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.5), transparent 60%),
-      radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.04), transparent 60%);
-    background-position: 0 6px, 0 0, 0 0;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.12), inset 0 0 40px rgba(120,90,40,0.05);
+    /* Bright card, the same look as the website and the share pictures: white inside a violet, blue and teal frame */
+    background:linear-gradient(#FFFFFF,#FFFFFF) padding-box, linear-gradient(135deg,#7C3AED 0%,#2563EB 52%,#0D9488 100%) border-box;
+    border:3px solid transparent; border-radius:20px;
+    box-shadow:0 8px 24px rgba(37,99,235,0.20);
     grid-column:1 / -1;
-    flex-direction:column; align-items:stretch; gap:6px;
+    flex-direction:column; align-items:stretch; gap:8px;
     cursor:default; min-height:0;
-    padding:20px 22px 18px;
-    border:1px solid #E4D9B8;
+    padding:18px 18px 16px;
   }
   .qotd-card-header{ display:flex; align-items:center; gap:9px; }
-  .qotd-card-header .dc-icon{ font-size:20px; }
+  .qotd-card-header .dc-icon{ display:none; }
   .qotd-card-header .dc-label{
-    color:#2A2420 !important;
-    font-family:'Kalam', cursive; font-weight:700; font-size:16px;
+    background:linear-gradient(90deg,#E11D48,#EA580C); color:#FFFFFF !important;
+    font-weight:800; font-size:12px; letter-spacing:.09em; text-transform:uppercase;
+    padding:7px 14px; border-radius:999px;
   }
-  .qotd-card-body{ color:#2A2420; font-size:13.5px; font-family:'Kalam', cursive; }
+  .qotd-card-body{ color:#0B1C3D; font-size:14px; }
   .qotd-card-body .qotd-q-text{
-    font-family:'Kalam', cursive; font-weight:700; font-size:16px;
-    margin-bottom:12px; line-height:1.6; color:#1F1B15;
+    font-weight:800; font-size:16.5px;
+    margin:6px 0 12px; line-height:1.5; color:#0B1C3D;
   }
+  /* all four options share ONE format; after a tap the right one is green and a wrong pick is red */
   .qotd-opt-btn{
     display:block; width:100%; text-align:left;
-    padding:9px 12px; margin-bottom:7px;
-    border:1.5px solid #D8CDA8; border-radius:8px;
-    background:rgba(255,255,255,0.55); color:#2A2420;
-    font-family:'Kalam', cursive; font-weight:400; font-size:14.5px; cursor:pointer;
+    padding:12px 14px; margin-bottom:9px;
+    border:2px solid #C7D2FE; border-radius:14px;
+    background:#F5F7FF; color:#0B1C3D;
+    font-weight:600; font-size:14.5px; line-height:1.4; cursor:pointer;
   }
-  .qotd-opt-btn:active{ background:rgba(255,255,255,0.8); }
-  .qotd-opt-btn.correct-opt{ background:#DCEFDD; border-color:#2F7D5D; color:#1F4A31; font-weight:700; }
-  .qotd-opt-btn.wrong-opt{ background:#F6DCD9; border-color:#C0392B; color:#7A241C; text-decoration:line-through; opacity:0.85; }
+  .qotd-opt-btn:active{ background:#E8EDFF; border-color:#6366F1; }
+  .qotd-opt-btn.correct-opt{ background:#DCFCE7; border-color:#16A34A; color:#0B1C3D; font-weight:800; }
+  .qotd-opt-btn.wrong-opt{ background:#FEE2E2; border-color:#DC2626; color:#7F1D1D; font-weight:700; }
+  .qotd-opt-btn.correct-opt::after{ content:"\2713  Correct"; display:block; margin-top:3px; font-size:12px; font-weight:800; color:#15803D; }
+  .qotd-opt-btn.wrong-opt::after{ content:"\2717  Your answer"; display:block; margin-top:3px; font-size:12px; font-weight:800; color:#B91C1C; }
   .qotd-answered-msg{
-    text-align:center; padding:10px 6px 4px; color:#2A2420;
+    text-align:center; padding:6px 6px 2px; color:#0B1C3D;
   }
-  .qotd-answered-msg .big-icon{ font-size:32px; margin-bottom:4px; }
-  .qotd-answered-msg h3{ font-family:'Kalam', cursive; font-weight:700; font-size:17px; margin-bottom:3px; color:#1F1B15; }
-  .qotd-answered-msg p{ opacity:0.85; font-size:13px; font-family:'Kalam', cursive; }
+  .qotd-answered-msg .big-icon{ font-size:30px; margin-bottom:2px; }
+  .qotd-answered-msg h3{ font-weight:800; font-size:16.5px; margin-bottom:3px; color:#0B1C3D; }
+  .qotd-answered-msg p{ opacity:0.9; font-size:13px; color:#1F2A5C; }
   .qotd-explanation-box{
-    background:rgba(255,255,255,0.5); border:1px dashed #B8A876; border-radius:8px;
-    padding:10px 13px; margin-top:8px; font-size:12.5px; color:#3A3428; line-height:1.6;
-    font-family:'Kalam', cursive;
+    background:#EEF2FF; border:1.5px solid #C7D2FE; border-radius:14px;
+    padding:12px 14px; margin-top:8px; font-size:13px; color:#1F2A5C; line-height:1.55;
   }
 
   /* ---------- Profile Screen ---------- */
@@ -28033,7 +28028,7 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v561';
+const HL_APP_VERSION_ = 'v562';
 const HL_EXPECTED_BACKEND_ = { version: 48, features: {
   'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
