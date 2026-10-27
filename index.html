@@ -516,16 +516,19 @@
   .quote-banner{
     position:relative;
     display:flex; align-items:center; gap:10px;
-    background:radial-gradient(ellipse at 30% 20%, #262220 0%, #0E0C0A 75%);
+    background:
+      radial-gradient(circle at 8% 14%, rgba(255,255,255,0.06) 0, rgba(255,255,255,0) 30%),
+      radial-gradient(circle at 96% 104%, rgba(255,213,74,0.12) 0, rgba(255,213,74,0) 34%),
+      linear-gradient(135deg, #6D28D9 0%, #2563EB 52%, #0F766E 100%);
     border-radius:16px; padding:22px 18px;
     margin-bottom:18px;
     overflow:hidden;
-    box-shadow:0 6px 20px rgba(0,0,0,0.35), inset 0 0 40px rgba(255,255,255,0.03);
+    box-shadow:0 8px 22px rgba(76,29,149,0.35), inset 0 0 0 1px rgba(255,255,255,0.14);
   }
   .quote-mark{
-    font-family:'Tinos',serif; font-size:34px; line-height:1;
-    color:#fff; flex-shrink:0; opacity:0.9;
-    text-shadow:0 0 10px rgba(255,255,255,0.55), 0 0 22px rgba(255,255,255,0.25);
+    font-family:'Tinos',serif; font-size:36px; line-height:1;
+    color:#FFD54A; flex-shrink:0; opacity:1;
+    text-shadow:0 1px 3px rgba(0,0,0,0.30);
   }
   .quote-mark-right{ align-self:flex-end; }
   .quote-text-wrap{
@@ -538,17 +541,17 @@
   }
   .quote-text{
     color:#fff;
-    text-shadow:0 0 8px rgba(255,255,255,0.5), 0 0 16px rgba(255,255,255,0.2);
+    text-shadow:0 1px 2px rgba(0,0,0,0.35);
     position:relative; z-index:1;
   }
   .quote-text-shimmer{
     position:absolute; top:0; left:0; right:0;
     background:linear-gradient(110deg,
-      #ff5a5a, #ffb347, #fff066, #6bffb0, #5ad1ff, #b58bff, #ff5a5a);
+      #FFE08A, #FFFFFF, #BDEBFF, #E9D5FF, #FFE08A);
     background-size:300% 100%;
     -webkit-background-clip:text; background-clip:text;
     color:transparent; -webkit-text-fill-color:transparent;
-    mix-blend-mode:overlay; opacity:0.85;
+    mix-blend-mode:overlay; opacity:0.8;
     animation:rainbowFlow 5s linear infinite;
     z-index:2; pointer-events:none;
   }
@@ -556,6 +559,23 @@
     from{ background-position:0% 50%; }
     to{ background-position:300% 50%; }
   }
+
+  /* ---------- THE HEALTH LOKSEWA THEME: one motivation band, the same on the website and in the app ---------- */
+  .hlj{ position:relative; margin:22px 0; padding:22px 18px 20px; border-radius:20px; color:#FFFFFF; overflow:hidden; background-color:#2563EB; background-image:linear-gradient(135deg,#6D28D9 0%,#2563EB 52%,#0F766E 100%); box-shadow:0 10px 26px rgba(76,29,149,0.32), inset 0 0 0 1px rgba(255,255,255,0.16); }
+  .hlj-top{ display:flex; align-items:center; gap:14px; }
+  .hlj-art{ flex:none; width:54px; height:54px; }
+  .hlj-eyebrow{ margin:0 0 4px; font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#FFFFFF; }
+  .hlj-eyebrow::before{ content:""; display:inline-block; width:18px; height:3px; margin-right:8px; vertical-align:middle; border-radius:2px; background:#FFD54A; }
+  .hlj-title{ margin:0; font-size:22px; line-height:1.25; font-weight:800; color:#FFFFFF; }
+  .hlj-ne{ margin:4px 0 0; font-size:15px; font-weight:600; color:#FFFFFF; }
+  .hlj-story{ margin:12px 0 18px; font-size:14px; line-height:1.55; color:#FFFFFF; }
+  .hlj-steps{ list-style:none; margin:0; padding:0; display:flex; }
+  .hlj-steps li{ flex:1; min-width:0; position:relative; text-align:center; font-size:11.5px; font-weight:700; color:#FFFFFF; }
+  .hlj-steps li::before{ content:""; position:absolute; top:15px; left:-50%; width:100%; height:2px; background:rgba(255,255,255,0.55); }
+  .hlj-steps li:first-child::before{ display:none; }
+  .hlj-dot{ position:relative; z-index:1; display:flex; align-items:center; justify-content:center; width:30px; height:30px; margin:0 auto 6px; border-radius:50%; background:#FFFFFF; color:#4C1D95; font-size:13px; font-weight:800; }
+  .hlj-steps li:last-child .hlj-dot{ background:#FFD54A; color:#4C1D95; }
+  @media (max-width:380px){ .hlj{ padding:20px 14px 18px; } .hlj-title{ font-size:20px; } .hlj-story{ font-size:13.5px; } .hlj-art{ width:46px; height:46px; } }
 
   /* ---------- Question of the Day card + screen ---------- */
   .dash-card.c-progress{ grid-column:1 / -1; }
@@ -920,6 +940,60 @@
     background:#EEF2FF; border:1.5px solid #C7D2FE; border-radius:14px;
     padding:12px 14px; margin-top:8px; font-size:13px; color:#1F2A5C; line-height:1.55;
   }
+
+  /* ---------- Study Notes (v563): the owner's written notes in one uniform format: a list of cards, and a reader with a coloured bar and heading cards ---------- */
+  body{ --sn-acc:var(--navy); }
+  body.light-mode{ --sn-acc:var(--navy-on-light, #0F766E); }
+  .sn-chips{ display:flex; gap:8px; overflow-x:auto; padding:10px 0 12px; -webkit-overflow-scrolling:touch; }
+  .sn-chip{ flex:none; min-height:44px; padding:0 14px; border-radius:999px; border:1.5px solid var(--line); background:var(--panel); color:var(--ink); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .sn-chip[aria-pressed="true"]{ background:#0F766E; border-color:#0F766E; color:#FFFFFF; }
+  .sn-cat{ font-size:19px; font-weight:800; color:var(--sn-acc); margin:22px 2px 12px; line-height:1.4; overflow-wrap:anywhere; }
+  .sn-item{ display:flex; align-items:center; gap:14px; width:100%; text-align:left; box-sizing:border-box; padding:18px 16px; margin-bottom:12px; background:var(--panel); border:1px solid var(--line); border-radius:24px; color:var(--ink); font:inherit; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); }
+  .sn-item .sn-ico{ flex:none; font-size:30px; line-height:1; color:var(--sn-acc); }
+  .sn-item .sn-txt{ flex:1; min-width:0; }
+  .sn-item .sn-t{ font-weight:800; font-size:16px; line-height:1.45; overflow-wrap:anywhere; }
+  .sn-item .sn-m{ display:block; font-size:13px; color:var(--ink-soft); margin-top:5px; }
+  .sn-item .sn-go{ flex:none; padding:9px 18px; border-radius:999px; background:rgba(20,184,166,0.14); border:1.5px solid var(--sn-acc); font-size:14px; font-weight:800; color:var(--ink); }
+  .sn-badge{ display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; font-weight:800; margin-left:6px; vertical-align:middle; }
+  .sn-badge.lock{ background:#F59E0B; color:#1F1300; }
+  .sn-badge.done{ background:#15803D; color:#FFFFFF; }
+  .sn-empty{ text-align:center; padding:28px 12px; color:var(--ink-soft); font-size:14px; line-height:1.6; }
+  .sn-views{ display:flex; margin:0 0 4px; border:1.5px solid var(--line); border-radius:12px; overflow:hidden; width:fit-content; }
+  .sn-vbtn{ min-height:44px; padding:0 18px; border:0; background:var(--panel); color:var(--ink); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .sn-vbtn[aria-pressed="true"]{ background:#0F766E; color:#FFFFFF; }
+  .sn-rows{ border-top:1px solid var(--line); }
+  .sn-row{ display:flex; align-items:center; gap:14px; width:100%; text-align:left; box-sizing:border-box; padding:14px 4px; background:none; border:0; border-bottom:1px solid var(--line); color:var(--ink); font:inherit; cursor:pointer; }
+  .sn-row .sn-ci{ flex:none; width:46px; height:46px; border-radius:50%; background:rgba(20,184,166,0.18); color:var(--sn-acc); display:flex; align-items:center; justify-content:center; }
+  .sn-row .sn-txt{ flex:1; min-width:0; }
+  .sn-row .sn-t{ font-weight:700; font-size:16px; line-height:1.5; overflow-wrap:anywhere; }
+  .sn-row .sn-m{ display:block; font-size:12px; color:var(--ink-soft); margin-top:3px; }
+  .sn-row .sn-chev{ flex:none; width:36px; height:36px; border-radius:50%; background:var(--sn-acc); color:#04141F; display:flex; align-items:center; justify-content:center; }
+  body.light-mode .sn-row .sn-chev{ color:#FFFFFF; }
+  #studyNoteReaderScreen .back-link{ display:flex; align-items:center; gap:12px; margin:0; padding:26px 18px 24px; background:var(--panel-elevated); color:#FFFFFF; border-radius:0 0 28px 28px; font-size:19px; font-weight:800; line-height:1.35; cursor:pointer; }
+  body.light-mode #studyNoteReaderScreen .back-link{ background:var(--navy-on-light, #0F766E); }
+  #studyNoteReaderScreen .back-link .sn-bk{ flex:none; font-size:26px; line-height:1; }
+  #studyNoteReaderScreen .back-link .sn-bt{ flex:1; min-width:0; text-align:center; padding-right:26px; overflow-wrap:anywhere; }
+  .sn-vh{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .sn-hm{ font-size:13px; color:var(--ink-soft); margin:16px 2px 0; }
+  .sn-tools{ display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 16px; }
+  .sn-tool{ min-height:44px; padding:0 14px; border-radius:12px; border:1.5px solid var(--line); background:var(--panel); color:var(--ink); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .sn-card{ background:var(--panel); border:1px solid var(--line); border-radius:24px; padding:20px 18px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.18); }
+  .sn-card h3{ font-size:1.3em; margin:0 0 12px; color:var(--sn-acc); line-height:1.4; font-weight:800; overflow-wrap:anywhere; }
+  .sn-body{ font-size:var(--sn-fs,17px); line-height:1.85; color:var(--ink); overflow-wrap:anywhere; }
+  .sn-body p{ margin:0 0 12px; }
+  .sn-body ul{ list-style:none; margin:0 0 12px; padding:0; }
+  .sn-body ul li{ position:relative; padding-left:26px; margin-bottom:10px; }
+  .sn-body ul li::before{ content:""; position:absolute; left:4px; top:0.85em; width:10px; height:10px; border-radius:50%; background:var(--sn-acc); transform:translateY(-50%); }
+  .sn-body ol{ margin:0 0 12px; padding-left:26px; }
+  .sn-body ol li{ margin-bottom:10px; }
+  .sn-body ol li::marker{ color:var(--sn-acc); font-weight:800; }
+  .sn-key{ margin:6px 0 14px; padding:12px 14px; border-radius:14px; border-left:5px solid #F59E0B; background:rgba(245,158,11,0.14); font-weight:600; }
+  .sn-key::before{ content:"Key point"; display:block; font-size:11px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:2px; }
+  .sn-tablewrap{ overflow-x:auto; margin:6px 0 14px; }
+  .sn-tablewrap table{ border-collapse:collapse; min-width:100%; font-size:0.92em; }
+  .sn-tablewrap th, .sn-tablewrap td{ border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  .sn-tablewrap th{ background:rgba(20,184,166,0.16); }
+  .sn-foot{ font-size:12px; color:var(--ink-soft); line-height:1.6; margin:6px 2px 24px; overflow-wrap:anywhere; }
 
   /* ---------- Profile Screen ---------- */
   .profile-hero{
@@ -1477,8 +1551,7 @@
   .promo-banner .pb-sub{ color:var(--ink-soft); font-size:11.5px; margin-top:4px; }
   .focus-row{
     display:flex; align-items:center; justify-content:space-between;
-    border-radius:12px; padding:11px 14px; border:1px solid var(--line);
-  }
+    border-radius:12px; padding:11px 14px; border:1px solid var(--line); gap:12px; }
   .focus-row .focus-label{ color:var(--ink-soft); font-size:11px; }
   .focus-row .focus-value{ color:var(--ink); font-size:13px; font-weight:700; margin-top:2px; }
   .focus-row .focus-change{ color:var(--crimson); font-size:11.5px; font-weight:700; cursor:pointer; }
@@ -2232,7 +2305,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       <div class="home-greeting" id="homeGreeting">नमस्ते! 👋</div>
       <div class="home-title">What do you want to study today?</div>
 
-      <div class="focus-row" id="homeFocusRow" style="display:none; margin:0 16px 14px;">
+      <div class="focus-row" id="homeFocusRow" style="display:none; margin:0 0 14px;">
         <div>
           <div class="focus-label">Today's Focus</div>
           <div class="focus-value" id="homeFocusValue">—</div>
@@ -2240,7 +2313,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         <div class="focus-change" id="homeFocusChange">Practice →</div>
       </div>
 
-      <div class="swipe-card" id="homeSwipeCard" style="margin:0 16px 16px;">
+      <div class="swipe-card" id="homeSwipeCard" style="margin:0 0 16px;">
         <div id="homeProgressPanel">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:14px 14px 0;">
             <div>
@@ -2420,6 +2493,8 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         <div class="rcard" id="webPortalExam"><div class="ri">📝</div><div class="rl">Lok Sewa Aayog</div></div>
         <div class="rcard" id="webPortalResearch"><div class="ri">📚</div><div class="rl">Research &amp; Education</div></div>
       </div>
+
+      <div id="homeThemeBand"><section class="hlj" aria-label="Study today. Serve tomorrow."><div class="hlj-top"><svg class="hlj-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="8" y="14" width="48" height="34" rx="4" fill="rgba(255,255,255,0.18)" stroke="#fff" stroke-width="3" stroke-linejoin="round"/><path d="M10 18l22 17 22-17" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M32 38l3 6 6.6.9-4.8 4.6 1.2 6.5L32 52.8l-5.9 3.2 1.2-6.5-4.8-4.6 6.6-.9z" fill="#FFD54A"/></svg><div><p class="hlj-eyebrow">Your journey</p><div class="hlj-title" role="heading" aria-level="2">Study today. Serve tomorrow.</div><p class="hlj-ne" lang="ne">आज पढ्नुहोस्, भोलि सेवा गर्नुहोस्।</p></div></div><p class="hlj-story">Every appointment letter begins with one quiet hour of study. Make today count.</p><ol class="hlj-steps" aria-label="Your journey: Learn, Practise, Revise, Pass, Serve"><li><span class="hlj-dot" aria-hidden="true">1</span>Learn</li><li><span class="hlj-dot" aria-hidden="true">2</span>Practise</li><li><span class="hlj-dot" aria-hidden="true">3</span>Revise</li><li><span class="hlj-dot" aria-hidden="true">4</span>Pass</li><li><span class="hlj-dot" aria-hidden="true">&#9733;</span>Serve</li></ol></section></div>
 
       <div class="app-footer">
         <div class="footer-brand">Health Loksewa</div>
@@ -3570,6 +3645,22 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
     </div>
   </div>
 
+  <div class="screen" id="studyNotesScreen">
+    <div class="back-link" data-back="learn">← Back</div>
+    <div class="home-body">
+      <div class="section-title">Study Notes</div>
+      <p style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">Written notes in one clear format, for revision. For study only: please check important facts in the official source.</p>
+      <input type="text" class="formula-search-box" id="snSearch" placeholder="Search notes…" autocomplete="off" aria-label="Search notes">
+      <div id="snChips" class="sn-chips" role="group" aria-label="Categories"></div>
+      <div id="snViews" class="sn-views" role="group" aria-label="How to show the notes"></div>
+      <div id="snList"></div>
+    </div>
+  </div>
+  <div class="screen" id="studyNoteReaderScreen">
+    <div class="back-link" data-back="studyNotes">← Back</div>
+    <div class="home-body" id="snReader"></div>
+  </div>
+
   <div class="screen" id="quickRefScreen">
     <div class="back-link" data-back="studyResources">← Back</div>
     <div class="home-body">
@@ -3620,6 +3711,11 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         <div class="dc-icon"><i class="bi bi-journal-bookmark"></i></div>
         <div class="dc-label">Syllabus</div>
         <div class="dc-sub">By post</div>
+      </a>
+      <a class="dash-card hub-tile t4" href="#" id="goToStudyNotesFromLearn">
+        <div class="dc-icon"><i class="bi bi-journal-text"></i></div>
+        <div class="dc-label">Study Notes</div>
+        <div class="dc-sub">Read &amp; revise</div>
       </a>
       <a class="dash-card hub-tile t2" href="#" id="goToGkFromLearn">
         <div class="dc-icon"><i class="bi bi-lightbulb"></i></div>
@@ -6163,6 +6259,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
         <div id="noteAutoSaveStatus" style="font-size:11.5px; color:var(--ink-soft);"></div>
         <div style="display:flex; gap:8px;">
+          <button class="calc-btn" id="noteDetailsBtn" type="button" title="Note details: folder, tags, pin, revision" aria-label="Note details: folder, tags, pin and revision" style="position:relative; margin:0; width:44px; min-height:44px; padding:0; display:flex; align-items:center; justify-content:center; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v6h8V3"/><path d="M7 21v-7h10v7"/></svg><span id="noteDetailsDot" aria-hidden="true" style="display:none; position:absolute; top:5px; right:5px; width:10px; height:10px; border-radius:50%; background:#F59E0B; border:2px solid var(--panel);"></span></button>
           <button class="calc-btn" id="noteMoreBtn" style="margin:0; width:36px; padding:7px 0; font-size:16px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">⋮</button>
           <button class="calc-btn" id="noteDeleteBtn" style="margin:0; width:auto; padding:7px 14px; font-size:12px; background:var(--panel); color:var(--wrong-on-light); border:1.5px solid var(--wrong);">Delete</button>
         </div>
@@ -6231,6 +6328,41 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         <p id="noteImageStorageNote" style="font-size:10px; color:var(--ink-soft); margin-top:8px;"></p>
       </div>
 
+      <div class="calc-card" id="noteExportCard" style="margin-top:12px; display:none;">
+        <h4>Export</h4>
+        <div style="display:flex; gap:8px;">
+          <button class="calc-btn" id="noteExportTxtBtn" style="margin:0; flex:1; font-size:12px;">Export TXT</button>
+          <button class="calc-btn" id="noteExportMdBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export Markdown</button>
+          <button class="calc-btn" id="noteExportPdfBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export PDF</button>
+        </div>
+      </div>
+
+      <input type="file" id="noteAttachFileInput" style="display:none;">
+    </div>
+
+    <div id="noteMoreDrawerBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:60;"></div>
+    <div id="noteMoreDrawer" style="display:none; position:fixed; top:0; right:0; bottom:0; width:78%; max-width:300px; background:var(--panel-elevated); z-index:61; padding:20px 0; overflow-y:auto; box-shadow:-4px 0 18px rgba(0,0,0,0.35);">
+      <div style="font-size:13px; font-weight:700; color:var(--ink-soft); padding:0 18px 14px;">NOTE OPTIONS</div>
+      <button class="note-drawer-item" id="drawerReaderViewBtn">Reader View</button>
+      <button class="note-drawer-item" id="drawerShareBtn">Share Note</button>
+      <button class="note-drawer-item" id="drawerAttachFileBtn">Attach File</button>
+      <button class="note-drawer-item" id="drawerAddImageBtn">Add Image</button>
+      <button class="note-drawer-item" id="drawerAddLinkBtn">Add Link</button>
+      <button class="note-drawer-item" id="drawerTableBtn">▦ Table</button>
+      <button class="note-drawer-item" id="drawerStickyNoteBtn">Sticky Note</button>
+      <button class="note-drawer-item" id="drawerVoiceRecordBtn">Voice Recording</button>
+      <button class="note-drawer-item" id="drawerLockNoteBtn">Lock Note</button>
+      <button class="note-drawer-item" id="drawerExportBtn">Export</button>
+      <button class="note-drawer-item" id="drawerPrintBtn">Print</button>
+    </div>
+  </div>
+
+  <div class="screen" id="noteDetailsScreen">
+    <div class="back-link" data-back="noteEditor" id="noteDetailsBackLink">← Back to note</div>
+    <div class="home-body">
+      <div class="section-title">Note details</div>
+      <div id="noteDetailsNoteName" style="font-size:13px; font-weight:700; color:var(--ink); overflow-wrap:anywhere;"></div>
+      <div id="noteDetailsSaveStatus" role="status" aria-live="polite" style="font-size:11.5px; color:var(--ink-soft); margin-top:2px;"></div>
       <div class="calc-card" style="margin-top:16px;">
         <div class="calc-field"><label>Folder</label>
           <select id="noteFolderSelect" style="width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:'Inter',sans-serif;">
@@ -6264,32 +6396,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
         <div id="noteReviewDateDual" style="font-size:11px; color:var(--ink-soft);"></div>
       </div>
 
-      <div class="calc-card" id="noteExportCard" style="margin-top:12px; display:none;">
-        <h4>Export</h4>
-        <div style="display:flex; gap:8px;">
-          <button class="calc-btn" id="noteExportTxtBtn" style="margin:0; flex:1; font-size:12px;">Export TXT</button>
-          <button class="calc-btn" id="noteExportMdBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export Markdown</button>
-          <button class="calc-btn" id="noteExportPdfBtn" style="margin:0; flex:1; font-size:12px; background:var(--panel); color:var(--ink); border:1.5px solid var(--line);">Export PDF</button>
-        </div>
-      </div>
-
-      <input type="file" id="noteAttachFileInput" style="display:none;">
-    </div>
-
-    <div id="noteMoreDrawerBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:60;"></div>
-    <div id="noteMoreDrawer" style="display:none; position:fixed; top:0; right:0; bottom:0; width:78%; max-width:300px; background:var(--panel-elevated); z-index:61; padding:20px 0; overflow-y:auto; box-shadow:-4px 0 18px rgba(0,0,0,0.35);">
-      <div style="font-size:13px; font-weight:700; color:var(--ink-soft); padding:0 18px 14px;">NOTE OPTIONS</div>
-      <button class="note-drawer-item" id="drawerReaderViewBtn">Reader View</button>
-      <button class="note-drawer-item" id="drawerShareBtn">Share Note</button>
-      <button class="note-drawer-item" id="drawerAttachFileBtn">Attach File</button>
-      <button class="note-drawer-item" id="drawerAddImageBtn">Add Image</button>
-      <button class="note-drawer-item" id="drawerAddLinkBtn">Add Link</button>
-      <button class="note-drawer-item" id="drawerTableBtn">▦ Table</button>
-      <button class="note-drawer-item" id="drawerStickyNoteBtn">Sticky Note</button>
-      <button class="note-drawer-item" id="drawerVoiceRecordBtn">Voice Recording</button>
-      <button class="note-drawer-item" id="drawerLockNoteBtn">Lock Note</button>
-      <button class="note-drawer-item" id="drawerExportBtn">Export</button>
-      <button class="note-drawer-item" id="drawerPrintBtn">Print</button>
+      <button class="start-btn" id="noteDetailsDoneBtn" type="button" style="margin-top:16px;">Done</button>
     </div>
   </div>
 
@@ -7746,6 +7853,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
   // (refreshPremiumStatus), always fresh on the Premium screen (force), and never kept after a paid period has ended. Not remembered when the record does not exist yet or the read failed. ----
   const HL_ACCESS_TTL_MS_ = 5 * 60 * 1000; let hlAccessCache_ = null;
   window.hlInvalidateAccessStatus_ = function(){ hlAccessCache_ = null; };
+  window.hlLastPremiumEnd_ = function(){ try{ const u = auth.currentUser; return u ? (localStorage.getItem('hl_prem_end_' + u.uid) || '') : ''; }catch(e){ return ''; } };
   const hlAccessStatusUncached_ = async function(onSeen){
     const user = auth.currentUser;
     if(!user) return { isPremium: false, source: 'none', trialHoursLeft: null, trialEnded: false, premiumStartDate: null, premiumEndDate: null };
@@ -7762,7 +7870,8 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
 
       if(data.premium === true){
         const expiresAt = data.premiumExpiresAt;
-        if(!expiresAt || new Date(expiresAt) >= new Date()){
+        if(!expiresAt || String(expiresAt).slice(0, 10) >= new Date().toISOString().slice(0, 10)){   // the end date itself is still a valid day (the server uses the same rule)
+          try{ if(expiresAt) localStorage.setItem('hl_prem_end_' + user.uid, String(expiresAt).slice(0, 10)); }catch(e){}   // remembered so Home can say 'Premium ended on ...' later
           return {
             isPremium: true, source: 'paid', trialHoursLeft: null, trialEnded: false,
             premiumStartDate: data.premiumActivatedAt || null,
@@ -7770,6 +7879,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
           };
         }
         // Expired paid subscription — automatically revert to free, no manual action needed
+        try{ if(expiresAt) localStorage.setItem('hl_prem_end_' + user.uid, String(expiresAt).slice(0, 10)); }catch(e){}
         try{ await setDoc(ref, { premium: false }, { merge: true }); }catch(e){}
       }
 
@@ -7792,7 +7902,7 @@ html.hl-native #premiumLockBasePrice, html.hl-native #premiumLockFinalPrice, htm
     const user = auth.currentUser, c = hlAccessCache_;
     if(!force && user && c && c.uid === user.uid && Date.now() - c.at < HL_ACCESS_TTL_MS_){
       const v = c.value;
-      const expired = v.source === 'paid' && v.premiumEndDate && new Date(v.premiumEndDate) < new Date();   // never keep saying "Premium" after it ended
+      const expired = v.source === 'paid' && v.premiumEndDate && String(v.premiumEndDate).slice(0, 10) < new Date().toISOString().slice(0, 10);   // never keep saying "Premium" after it ended
       if(!expired) return { ...v };
     }
     let seen = false;
@@ -8418,7 +8528,7 @@ RAPID_FIRE_MODES = [
 // ============================================================
 let SHEET_API_URL;
 try{
-SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzrqtH4b98Ac8JkBBFkI6k7uoAr9h0bK_9YYZwvCdhUTQafBZYj2JdBS9-lNtHzT-MfMw/exec";
+SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxmyJxdGGZmbjCCEDdQ0GrX4C8QQpO9OzSczy_CDaizIZNxC0de6foO1bgXhi9P1sgwHQ/exec";
 // Exposed on window because the module script (a separate top-level scope entirely — its own
 // `let`/`const` bindings, including SHEET_API_URL's, are never shared with this classic script or
 // vice versa) now also needs this URL, for checkAndIncrementAiFeatureUsage's new backend call.
@@ -8492,6 +8602,8 @@ const bookmarksScreen = document.getElementById('bookmarksScreen');
 const myBookmarksHubScreen = document.getElementById('myBookmarksHubScreen');
 const formulaScreen = document.getElementById('formulaScreen');
 const quickRefScreen = document.getElementById('quickRefScreen');
+const studyNotesScreen = document.getElementById('studyNotesScreen');
+const studyNoteReaderScreen = document.getElementById('studyNoteReaderScreen');
 const quickRefDetailScreen = document.getElementById('quickRefDetailScreen');
 const videoScreen = document.getElementById('videoScreen');
 const learnScreen = document.getElementById('learnScreen');
@@ -8595,6 +8707,7 @@ const startDiscussionScreen = document.getElementById('startDiscussionScreen');
 const discussionThreadScreen = document.getElementById('discussionThreadScreen');
 const notesScreen = document.getElementById('notesScreen');
 const noteEditorScreen = document.getElementById('noteEditorScreen');
+const noteDetailsScreen = document.getElementById('noteDetailsScreen');
 const noteTrashScreen = document.getElementById('noteTrashScreen');
 const noteReaderScreen = document.getElementById('noteReaderScreen');
 const handwrittenNoteScreen = document.getElementById('handwrittenNoteScreen');
@@ -8624,7 +8737,7 @@ const quizScreen = document.getElementById('quizScreen');
 const resultsScreen = document.getElementById('resultsScreen');
 let ALL_SCREENS;
 try{
-ALL_SCREENS = [appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, liveClassScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, secondPaperScreen, secondPaperTopicScreen, secondPaperYearScreen, specialSetsScreen];
+ALL_SCREENS = [noteDetailsScreen, studyNotesScreen, studyNoteReaderScreen, appLoadingScreen, notifOnboardingScreen, appLockScreen, verifyEmailScreen, loginScreen, postGateScreen, moodCheckinScreen, moodEmotionsScreen, moodCausesScreen, onboardingWizardScreen, onboardingSummaryScreen, homeScreen, learnScreen, liveClassScreen, practiceScreen, syllabusScreen, currentAffairsScreen, docViewerScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, resourcesScreen, webPortalScreen, newsPortalScreen, aiChatScreen, profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen, healthGuideScreen, cprDemoScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, videoScreen, studyResourcesScreen, inspirationHubScreen, inspirationDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, healthDayDetailScreen, healthDayCalendarScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, faqsScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen, reminderScreen, notificationPrefsScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, notificationsScreen, whatsNewScreen, mcqPostScreen, mockPostScreen, comingSoonScreen, subjectPickScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, setSelectScreen, setupScreen, quizScreen, resultsScreen, secondPaperScreen, secondPaperTopicScreen, secondPaperYearScreen, specialSetsScreen];
 }catch(err){ ALL_SCREENS = undefined; if(window.showDebugError) showDebugError("A required setting (" + "ALL_SCREENS" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 window.showScreen = showScreen;
 window.notifOnboardingScreen = notifOnboardingScreen;
@@ -8634,7 +8747,7 @@ window.moodCheckinScreen = moodCheckinScreen;
 window.homeScreen = homeScreen;
 let SCREEN_BY_KEY;
 try{
-SCREEN_BY_KEY = { home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen, tournament: tournamentScreen, achievements: achievementsScreen };
+SCREEN_BY_KEY = { noteDetails: noteDetailsScreen, studyNotes: studyNotesScreen, home: homeScreen, currentAffairs: currentAffairsScreen, syllabus: syllabusScreen, subjectPick: subjectPickScreen, setSelect: setSelectScreen, gk: gkScreen, mcqPost: mcqPostScreen, progress: progressScreen, calculatorHub: calculatorScreen, studyResources: studyResourcesScreen, tournamentPost: tournamentPostScreen, pastQuestionsPost: pastQuestionsPostScreen, profile: profileScreen, learn: learnScreen, practice: practiceScreen, rapidFire: rapidFireScreen, epiCalcHub: epiCalcScreen, healthCalcHub: healthCalcScreen, indicatorCalcHub: indicatorCalcScreen, statsCalcHub: statsCalcScreen, notes: notesScreen, noteEditor: noteEditorScreen, flashcards: flashcardsScreen, healthDays: healthDaysScreen, healthGuide: healthGuideScreen, mnemonics: mnemonicsScreen, quickRef: quickRefScreen, myBookmarksHub: myBookmarksHubScreen, battle: battleScreen, revision: revisionScreen, revisionSubjectPick: revisionSubjectPickScreen, examRevision: examRevisionScreen, studyGroups: studyGroupsScreen, groupDetail: groupDetailScreen, subjectProgress: subjectProgressScreen, tournament: tournamentScreen, achievements: achievementsScreen };
 }catch(err){ SCREEN_BY_KEY = undefined; if(window.showDebugError) showDebugError("A required setting (" + "SCREEN_BY_KEY" + ") failed to initialize.\n\nReal error: " + (err && err.message ? err.message : String(err))); }
 let docViewerBackTarget = homeScreen;
 let currentDocViewerItem = null;
@@ -8816,7 +8929,7 @@ function getFeatureArea(screenEl){
   const groups = {
     'Learn Hub': [learnScreen, currentAffairsScreen, syllabusScreen, gkScreen, videoScreen, docViewerScreen,
       healthGuideScreen, cprDemoScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen,
-      quickRefScreen, quickRefDetailScreen, studyResourcesScreen, formulaScreen, dictionaryScreen, healthDaysScreen,
+      studyNotesScreen, studyNoteReaderScreen, quickRefScreen, quickRefDetailScreen, studyResourcesScreen, formulaScreen, dictionaryScreen, healthDaysScreen,
       healthDayDetailScreen, healthDayCalendarScreen],
     'Practice & MCQs': [practiceScreen, quizScreen, resultsScreen, subjectPickScreen, setSelectScreen, setupScreen,
       mcqPostScreen, mockPostScreen, specialSetsScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentScreen, tournamentPostScreen,
@@ -8824,7 +8937,7 @@ function getFeatureArea(screenEl){
       battleResultScreen, dailyBattleResultScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen,
       revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, mistakeBookScreen, bookmarksScreen,
       myBookmarksHubScreen, answerCheckerScreen],
-    'Notes': [notesScreen, noteEditorScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen],
+    'Notes': [notesScreen, noteEditorScreen, noteDetailsScreen, noteTrashScreen, noteReaderScreen, handwrittenNoteScreen, scanNoteScreen, pdfAnnotateScreen],
     'Flash Cards': [flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen],
     'AI Assistant': [aiChatScreen],
     'Study Groups': [studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen],
@@ -9062,6 +9175,7 @@ SCREEN_REFRESH_MAP = {
   upgradeScreen: () => renderPremiumStatus(),
   fcCommunityScreen: () => renderCommunityDecks(),
   battleScreen: () => renderDailyBattleCard(),
+  studyNotesScreen: () => hlSnLoad_(),
   quickRefScreen: () => renderQuickRefHub(),
   monthlyTournamentScreen: () => renderMonthlyTournamentScreen(),
   rapidFireScreen: () => renderRapidFireModes(),
@@ -9189,7 +9303,7 @@ function updateBottomNav(activeScreen){
   nav.style.display = 'flex';
 
   const homeScreens = [window.homeScreen];
-  const learnScreens = [learnScreen, secondPaperScreen, secondPaperTopicScreen, secondPaperYearScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
+  const learnScreens = [learnScreen, secondPaperScreen, secondPaperTopicScreen, secondPaperYearScreen, syllabusScreen, gkScreen, ainSangrahaScreen, samsamayikScreen, docListScreen, docViewerScreen, currentAffairsScreen, resourcesScreen, webPortalScreen, newsPortalScreen, videoScreen, studyResourcesScreen, formulaScreen, studyNotesScreen, studyNoteReaderScreen, quickRefScreen, quickRefDetailScreen, mnemonicsScreen, mnemonicDetailScreen, mnemonicCreateScreen, mnemonicPracticeScreen, healthDaysScreen, dictionaryScreen, enNpDictionaryScreen, inspirationHubScreen, inspirationDetailScreen, healthDayDetailScreen, healthDayCalendarScreen, faqsScreen, calculatorScreen, basicCalcScreen, bmiCalcScreen, healthCalcScreen, hcBmrScreen, hcIbwScreen, hcWhrScreen, hcWhtrScreen, hcBsaScreen, hcBfScreen, hcEddScreen, hcAgeScreen, hcChildGrowthScreen, indicatorCalcScreen, icImrScreen, icMmrScreen, icCfrScreen, icAttackScreen, icCbrScreen, icCdrScreen, icNmrScreen, icU5mrScreen, epiCalcScreen, epiScreeningScreen, epiIncidenceScreen, epiPrevalenceScreen, epiRiskOddsScreen, epiCfrScreen, epiVeScreen, epiSarScreen, epiParScreen, epiNnhScreen, statsCalcScreen, statsDescriptiveScreen, statsZScreen, statsSampleSizeScreen, statsCiScreen, statsChiScreen, statsRngScreen, statsTtestScreen, statsAnovaScreen, statsCorrScreen, statsAlphaScreen, studyToolsCalcScreen, studyTimerScreen, immunizationScreen, pensionScreen, taxCalcScreen, salaryCalcScreen, salaryComparisonScreen, realSalaryScreen, myHealthScreen, everydayToolsScreen, wellnessScreen, safetySignalScreen, healthGuideScreen, cprDemoScreen];
   const practiceScreens = [practiceScreen, mcqPostScreen, subjectPickScreen, setSelectScreen, setupScreen, resultsScreen, mockPostScreen, specialSetsScreen, pastQuestionsPostScreen, pastQuestionsYearScreen, tournamentPostScreen, tournamentScreen, monthlyTournamentScreen, revisionScreen, revisionSubjectPickScreen, revisionTopicPickScreen, revisionCalendarScreen, examRevisionScreen, sevenDayRevisionScreen, studyPlannerSetupScreen, studyPlannerScreen, bookmarksScreen, myBookmarksHubScreen, mistakeBookScreen, flashcardsScreen, fcDeckDetailScreen, fcCardEditScreen, fcStudyScreen, fcProgressScreen, fcAiGenerateScreen, fcCommunityScreen, answerCheckerScreen, battleScreen, battleLobbyScreen, quickBattleSearchScreen, battleLiveScreen, battleResultScreen, dailyBattleResultScreen, rapidFireScreen, rapidFireSetupScreen];
   const myProgressScreens = [progressScreen, subjectProgressScreen, subjectDetailScreen, questionPerformanceScreen, weakAreasScreen, achievementsScreen, achievementDetailScreen, learnHubProgressScreen, revisionProgressScreen, studyActivityScreen, progressGoalsScreen, progressHistoryScreen, leaderboardScreen, studyGroupsScreen, groupCreateScreen, groupPreviewScreen, groupDetailScreen, startDiscussionScreen, discussionThreadScreen, notesScreen];
   const profileScreens = [profileScreen, appLockSettingsScreen, screenTimeScreen, focusSessionScreen, changePasswordScreen, legalInfoScreen, upgradeScreen, notificationsScreen, reminderScreen, notificationPrefsScreen];
@@ -17680,6 +17794,238 @@ safeOn('goToQuickRefFromHub', 'click', (e) => {
   openQuickRefScreen();
 });
 
+// ---------- STUDY NOTES (v563): the owner's written notes in ONE uniform reader. The LIST comes from the backend (?action=studyNotes: titles only, kept on the phone for offline). The TEXT of a note is fetched when a student
+// opens it (login required; a Premium note uses the same check as the Second Paper). Only FREE notes are kept on the phone for offline reading (at most 20, newest last); a Premium note is kept in memory only.
+// Everything is drawn from plain text with every character escaped: a note can use only these marks: "# heading" (one card each), "- bullet", "1. number", "> key point", "| a | b |" (table), "**bold**". ----
+const hlSn_ = { data: null, failed: false, cat: 'All', q: '', cur: null, unlocked: {}, opening: false, fs: 17, view: 'cards' };
+try{ if(localStorage.getItem('hl_sn_view') === 'list') hlSn_.view = 'list'; }catch(e){}
+try{ const f = parseInt(localStorage.getItem('hl_sn_fs') || '17', 10); if(f >= 14 && f <= 26) hlSn_.fs = f; }catch(e){}
+function hlSnInline_(s){ return hlEsc(s).replace(/\*\*([^*]+?)\*\*/g, '<b>$1</b>'); }
+function hlSnParse_(text){
+  const lines = String(text == null ? '' : text).replace(/\r\n?/g, '\n').split('\n');
+  const secs = []; let cur = null, list = null, tbl = null;
+  const toNum = (s) => { let n = 0; for(const ch of String(s)){ const d = '०१२३४५६७८९'.indexOf(ch); n = n * 10 + (d >= 0 ? d : (+ch || 0)); } return n; };
+  const start = (title) => { if(secs.length >= 80) return false; cur = { title: String(title || '').trim().slice(0, 200), blocks: [] }; secs.push(cur); list = null; tbl = null; return true; };
+  for(const raw of lines){
+    const line = String(raw).slice(0, 1500).replace(/\s+$/, '');
+    if(!line.trim()){ list = null; tbl = null; continue; }
+    let m;
+    if(/^\s*#{1,3}\s*$/.test(line)) continue;   // a line with only # marks (an empty heading) is ignored
+    if((m = line.match(/^\s*#{1,3}\s+(.+)$/))){ if(!start(m[1])) break; continue; }
+    if(!cur && !start('')) break;
+    if(cur.blocks.length >= 300) continue;
+    if(/^\s*\|/.test(line)){
+      const cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim().slice(0, 300)).slice(0, 8);
+      if(!tbl){ tbl = { type: 'table', rows: [], header: false }; cur.blocks.push(tbl); }
+      list = null;
+      if(cells.length && cells.every(c => /^:?-{2,}:?$/.test(c))){ if(tbl.rows.length === 1) tbl.header = true; continue; }
+      if(tbl.rows.length < 60) tbl.rows.push(cells);
+      continue;
+    }
+    tbl = null;
+    if((m = line.match(/^\s*[-*•]\s+(.+)$/))){ if(!list || list.type !== 'ul'){ list = { type: 'ul', items: [] }; cur.blocks.push(list); } if(list.items.length < 200) list.items.push(m[1]); continue; }
+    if((m = line.match(/^\s*([0-9०-९]{1,3})[.)]\s+(.+)$/))){ if(!list || list.type !== 'ol'){ list = { type: 'ol', start: toNum(m[1]), items: [] }; cur.blocks.push(list); } if(list.items.length < 200) list.items.push(m[2]); continue; }
+    list = null;
+    if((m = line.match(/^>\s?(.*)$/))){ if(m[1].trim()) cur.blocks.push({ type: 'key', text: m[1].trim() }); continue; }
+    cur.blocks.push({ type: 'p', text: line.trim() });
+  }
+  return secs.filter(x => x.title || x.blocks.length);
+}
+function hlSnTable_(b){
+  const rows = b.rows; if(!rows.length) return '';
+  const head = b.header ? '<thead><tr>' + rows[0].map(c => '<th>' + hlSnInline_(c) + '</th>').join('') + '</tr></thead>' : '';
+  const body = (b.header ? rows.slice(1) : rows).map(r => '<tr>' + r.map(c => '<td>' + hlSnInline_(c) + '</td>').join('') + '</tr>').join('');
+  return '<div class="sn-tablewrap"><table>' + head + '<tbody>' + body + '</tbody></table></div>';
+}
+function hlSnBlock_(b){
+  if(b.type === 'p') return '<p>' + hlSnInline_(b.text) + '</p>';
+  if(b.type === 'ul') return '<ul>' + b.items.map(i => '<li>' + hlSnInline_(i) + '</li>').join('') + '</ul>';
+  if(b.type === 'ol') return '<ol start="' + (parseInt(b.start, 10) || 1) + '">' + b.items.map(i => '<li>' + hlSnInline_(i) + '</li>').join('') + '</ol>';
+  if(b.type === 'key') return '<div class="sn-key">' + hlSnInline_(b.text) + '</div>';
+  if(b.type === 'table') return hlSnTable_(b);
+  return '';
+}
+function hlSnNorm_(d){
+  const notes = [];
+  (Array.isArray(d && d.notes) ? d.notes : []).forEach(r => {
+    if(!r || typeof r !== 'object') return;
+    const id = String(r.Id == null ? '' : r.Id);
+    if(!/^[a-z0-9]{1,12}-[a-z0-9]{1,6}(\.\d{1,4})?$/.test(id) || !r.Title) return;
+    const rm = parseInt(r.ReadMins, 10);
+    notes.push({ Id: id, Title: String(r.Title).slice(0, 160), Category: String(r.Category || 'General').slice(0, 60), Section: String(r.Section || '').slice(0, 80), Exam: String(r.Exam || '').slice(0, 40),
+      ReadMins: (rm >= 1 && rm <= 120) ? rm : 1, Updated: String(r.Updated || '').slice(0, 20), Source: String(r.Source || '').slice(0, 200), Locked: r.Locked === true || String(r.Locked) === 'true' });
+  });
+  const cats = []; notes.forEach(n => { if(cats.indexOf(n.Category) === -1) cats.push(n.Category); });
+  return { notes: notes, categories: cats, hash: String((d && d.hash) || '') };
+}
+function hlSnReadSet_(){ try{ const o = JSON.parse(localStorage.getItem('hl_sn_read') || '{}'); return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {}; }catch(e){ return {}; } }
+function hlSnMarkRead_(id, on){
+  const o = hlSnReadSet_(); if(on) o[id] = 1; else delete o[id];
+  const ks = Object.keys(o); if(ks.length > 600) ks.slice(0, ks.length - 600).forEach(k => delete o[k]);
+  try{ localStorage.setItem('hl_sn_read', JSON.stringify(o)); }catch(e){}
+}
+function hlSnCacheGet_(id){
+  try{ const o = JSON.parse(localStorage.getItem('hl_sn_bodies') || 'null'); const r = o && o.map && o.map[id]; return (r && typeof r.b === 'string') ? { title: String(r.t || ''), body: r.b, updated: String(r.u || ''), source: String(r.s || '') } : null; }catch(e){ return null; }
+}
+function hlSnCachePut_(id, full){
+  try{
+    let o = JSON.parse(localStorage.getItem('hl_sn_bodies') || 'null');
+    if(!o || !o.map || !Array.isArray(o.order)) o = { order: [], map: {} };
+    o.order = o.order.filter(x => x !== id); o.order.push(id); o.map[id] = { t: full.title, b: full.body, u: full.updated, s: full.source };
+    while(o.order.length > 1 && (o.order.length > 20 || JSON.stringify(o).length > 1200000)){ const old = o.order.shift(); delete o.map[old]; }
+    localStorage.setItem('hl_sn_bodies', JSON.stringify(o));
+  }catch(e){}
+}
+function hlSnMeta_(n){ return [n.Section, n.ReadMins + ' min read', (n.Exam && n.Exam.toUpperCase() !== 'ALL') ? n.Exam : ''].filter(Boolean).join(' · '); }
+function hlSnItemHtml_(n, read){
+  return '<button type="button" class="sn-item" data-id="' + hlEsc(n.Id) + '"><span class="sn-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" focusable="false"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V9h5.5L13 3.5zM8 13h8v1.6H8V13zm0 3.2h8v1.6H8v-1.6zM8 9.8h3v1.6H8V9.8z"/></svg></span><span class="sn-txt"><span class="sn-t">' + hlEsc(n.Title)
+    + (n.Locked ? '<span class="sn-badge lock">Premium</span>' : '') + (read ? '<span class="sn-badge done">Done</span>' : '') + '</span><span class="sn-m">' + hlEsc(hlSnMeta_(n)) + '</span></span><span class="sn-go">Read</span></button>';
+}
+function hlSnRowHtml_(n, read){
+  return '<button type="button" class="sn-row" data-id="' + hlEsc(n.Id) + '"><span class="sn-ci" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" focusable="false"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V9h5.5L13 3.5zM8 13h8v1.6H8V13zm0 3.2h8v1.6H8v-1.6zM8 9.8h3v1.6H8V9.8z"/></svg></span><span class="sn-txt"><span class="sn-t">' + hlEsc(n.Title)
+    + (n.Locked ? '<span class="sn-badge lock">Premium</span>' : '') + (read ? '<span class="sn-badge done">Done</span>' : '') + '</span><span class="sn-m">' + hlEsc(hlSnMeta_(n)) + '</span></span><span class="sn-chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M9 5l7 7-7 7"/></svg></span></button>';
+}
+function hlSnPaintViews_(){
+  const box = document.getElementById('snViews'); if(!box) return;
+  box.innerHTML = [['cards', 'Cards'], ['list', 'List']].map(v => '<button type="button" class="sn-vbtn" data-v="' + v[0] + '" aria-pressed="' + (hlSn_.view === v[0]) + '">' + v[1] + '</button>').join('');
+}
+function hlSnPaintList_(){
+  const box = document.getElementById('snList'); if(!box) return;
+  const d = hlSn_.data;
+  if(!d){ box.innerHTML = hlSn_.failed ? '<div class="sn-empty">Could not load the notes. Please check your internet.<br><button type="button" class="sn-tool" id="snRetry" style="margin-top:10px;">Try again</button></div>' : '<div class="sn-empty">Loading the notes…</div>'; return; }
+  if(!d.notes.length){ box.innerHTML = '<div class="sn-empty">Notes are being prepared. Please check back soon.</div>'; return; }
+  const q = hlSn_.q.trim().toLowerCase(), read = hlSnReadSet_();
+  const rows = d.notes.filter(n => (hlSn_.cat === 'All' || n.Category === hlSn_.cat) && (!q || (n.Title + ' ' + n.Section + ' ' + n.Category + ' ' + n.Exam).toLowerCase().indexOf(q) !== -1));
+  if(!rows.length){ box.innerHTML = '<div class="sn-empty">No note matches your search.</div>'; return; }
+  const asList = hlSn_.view === 'list'; let html = '', last = null, open = false;
+  rows.forEach(n => {
+    if(hlSn_.cat === 'All' && n.Category !== last){ if(open){ html += '</div>'; open = false; } last = n.Category; html += '<div class="sn-cat">' + hlEsc(n.Category) + '</div>'; }
+    if(asList && !open){ html += '<div class="sn-rows">'; open = true; }
+    html += asList ? hlSnRowHtml_(n, !!read[n.Id]) : hlSnItemHtml_(n, !!read[n.Id]);
+  });
+  if(open) html += '</div>';
+  box.innerHTML = html;
+}
+function hlSnPaint_(){
+  const chips = document.getElementById('snChips'); if(!chips) return;
+  hlSnPaintViews_();
+  const cats = hlSn_.data ? hlSn_.data.categories : [];
+  if(hlSn_.cat !== 'All' && cats.indexOf(hlSn_.cat) === -1) hlSn_.cat = 'All';
+  chips.innerHTML = cats.length > 1 ? ['All'].concat(cats).map(c => '<button type="button" class="sn-chip" data-cat="' + hlEsc(c) + '" aria-pressed="' + (c === hlSn_.cat) + '">' + hlEsc(c) + '</button>').join('') : '';
+  hlSnPaintList_();
+}
+async function hlSnLoad_(){
+  try{
+    const h = (hlSn_.data && hlSn_.data.hash) ? '&h=' + encodeURIComponent(hlSn_.data.hash) : '';
+    const res = await fetch(`${SHEET_API_URL}?action=studyNotes${h}`);
+    const d = await res.json();
+    if(d && d.unchanged === true && hlSn_.data){ hlSn_.failed = false; }
+    else if(d && Array.isArray(d.notes)){
+      hlSn_.data = hlSnNorm_(d); hlSn_.failed = false;
+      try{ localStorage.setItem('hl_cache_studynotes', JSON.stringify(d)); }catch(e){}
+    } else throw new Error('unexpected answer');
+  }catch(err){ if(!hlSn_.data) hlSn_.failed = true; }
+  hlSnPaint_();
+}
+async function hlSnOpenList_(){
+  let cached = null; try{ cached = JSON.parse(localStorage.getItem('hl_cache_studynotes') || 'null'); }catch(e){}
+  hlSn_.data = (cached && Array.isArray(cached.notes)) ? hlSnNorm_(cached) : null; hlSn_.failed = false;
+  hlSnPaint_(); showScreen(studyNotesScreen);
+  await hlSnLoad_();
+}
+async function hlSnBody_(n){
+  const mem = hlSn_.unlocked[n.Id]; if(mem) return mem;
+  const cached = n.Locked ? null : hlSnCacheGet_(n.Id);
+  let d = null;
+  try{
+    const res = await postJsonWithTimeout({ action: 'studyNoteBody', idToken: (window.getAiAuthToken ? await window.getAiAuthToken() : ''), id: String(n.Id) });
+    d = await res.json();
+  }catch(err){ if(cached) return cached; alert('Could not open this note right now. Please check your internet and try again.'); return null; }
+  if(d && d.ok === true && typeof d.body === 'string'){
+    const full = { title: String(d.title || n.Title), body: d.body, updated: String(d.updated || ''), source: String(d.source || '') };
+    if(n.Locked) hlSn_.unlocked[n.Id] = full; else hlSnCachePut_(n.Id, full);
+    return full;
+  }
+  if(d && d.error === 'limit'){
+    if(await showPremiumLockModal('This note is for Premium members. Upgrade to Premium to open it?')){ premiumBackTarget = studyNotesScreen; showScreen(upgradeScreen); renderPremiumStatus(); }
+    return null;
+  }
+  if(d && d.error === 'notFound'){ alert('This note is not available any more.'); hlSnLoad_(); return null; }
+  if(d && d.error === 'rateLimited'){ alert('You have opened many notes today. Please try again tomorrow.'); return cached || null; }
+  if(d && d.error === 'auth'){ alert('Please close the app completely and open it again, then try once more.'); return cached || null; }
+  if(d && d.error === 'unavailable'){ alert('Premium could not be checked right now. Please try again in a minute.'); return null; }
+  alert('Could not open this note right now. Please try again.'); return cached || null;
+}
+function hlSnRenderReader_(n, full){
+  hlSn_.cur = { n: n, full: full };
+  const box = document.getElementById('snReader'); if(!box) return;
+  const secs = hlSnParse_(full.body), read = !!hlSnReadSet_()[n.Id];
+  const meta = [n.Section, n.ReadMins + ' min read', full.updated ? 'Updated ' + full.updated : ''].filter(Boolean).join(' · ');
+  const bl = studyNoteReaderScreen.querySelector('.back-link');
+  if(bl){ bl.innerHTML = '<span class="sn-bk" aria-hidden="true">←</span><span class="sn-bt">' + hlEsc(full.title || n.Title) + '</span>'; bl.setAttribute('role', 'button'); bl.setAttribute('tabindex', '0'); bl.setAttribute('aria-label', 'Back'); }
+  box.innerHTML = '<h2 class="sn-vh">' + hlEsc(full.title || n.Title) + '</h2><div class="sn-hm">' + hlEsc([n.Category, meta].filter(Boolean).join(' · ')) + '</div>'
+    + '<div class="sn-tools"><button type="button" class="sn-tool" data-t="smaller" aria-label="Smaller text">A−</button><button type="button" class="sn-tool" data-t="bigger" aria-label="Larger text">A+</button>'
+    + '<button type="button" class="sn-tool" data-t="done" aria-pressed="' + read + '">' + (read ? '✓ Marked as read' : 'Mark as read') + '</button></div>'
+    + secs.map(x => '<div class="sn-card">' + (x.title ? '<h3>' + hlSnInline_(x.title) + '</h3>' : '') + '<div class="sn-body">' + x.blocks.map(hlSnBlock_).join('') + '</div></div>').join('')
+    + '<div class="sn-foot">' + (full.source ? 'Source: ' + hlEsc(full.source) + '<br>' : '') + 'For study only. Please check important facts, dates and rules in the official source.<br><button type="button" class="sn-tool" data-t="report" style="margin-top:8px;">Report a mistake</button></div>';
+  studyNoteReaderScreen.style.setProperty('--sn-fs', hlSn_.fs + 'px');
+}
+async function hlSnOpenNote_(n){
+  if(hlSn_.opening) return; hlSn_.opening = true;
+  try{
+    const full = await hlSnBody_(n); if(!full) return;
+    hlSnRenderReader_(n, full); showScreen(studyNoteReaderScreen);
+    try{ studyNoteReaderScreen.scrollTop = 0; window.scrollTo(0, 0); }catch(e){}
+  } finally { hlSn_.opening = false; }
+}
+(function(){ const bl = studyNoteReaderScreen.querySelector('.back-link'); if(bl) bl.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); bl.click(); } }); })();
+safeOn('goToStudyNotesFromLearn', 'click', (e) => { e.preventDefault(); hlSnOpenList_(); });
+safeOn('snChips', 'click', (e) => { const b = e.target.closest('button[data-cat]'); if(!b) return; hlSn_.cat = b.dataset.cat; hlSnPaint_(); });
+safeOn('snViews', 'click', (e) => { const b = e.target.closest('button[data-v]'); if(!b) return; hlSn_.view = b.dataset.v === 'list' ? 'list' : 'cards'; try{ localStorage.setItem('hl_sn_view', hlSn_.view); }catch(err){} hlSnPaintViews_(); hlSnPaintList_(); });
+safeOn('snSearch', 'input', (e) => { hlSn_.q = String(e.target.value || '').slice(0, 80); hlSnPaintList_(); });
+safeOn('snList', 'click', (e) => {
+  if(e.target.closest('#snRetry')){ hlSn_.failed = false; hlSnPaintList_(); hlSnLoad_(); return; }
+  const b = e.target.closest('button.sn-item, button.sn-row'); if(!b || !hlSn_.data) return;
+  const n = hlSn_.data.notes.find(x => x.Id === b.dataset.id); if(n) hlSnOpenNote_(n);
+});
+safeOn('snReader', 'click', (e) => {
+  const b = e.target.closest('button[data-t]'); if(!b || !hlSn_.cur) return;
+  const t = b.dataset.t, n = hlSn_.cur.n;
+  if(t === 'smaller' || t === 'bigger'){
+    hlSn_.fs = Math.max(14, Math.min(26, hlSn_.fs + (t === 'bigger' ? 2 : -2)));
+    try{ localStorage.setItem('hl_sn_fs', String(hlSn_.fs)); }catch(err){}
+    studyNoteReaderScreen.style.setProperty('--sn-fs', hlSn_.fs + 'px'); return;
+  }
+  if(t === 'done'){ const on = !hlSnReadSet_()[n.Id]; hlSnMarkRead_(n.Id, on); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? '✓ Marked as read' : 'Mark as read'; hlSnPaintList_(); return; }
+  if(t === 'report'){
+    if(!window.currentUser || !window.currentUser.uid){ alert('Please sign in to report a mistake.'); return; }
+    hlOpenReportDialog_({ title: 'Report a mistake in this note', about: String(n.Title).slice(0, 120), snippet: [n.Category, n.Title, n.Section].filter(Boolean).join(' | ').slice(0, 300),
+      type: 'other', ref: 'studynote:' + n.Id, reasonKeys: ['misleading', 'other'], thanks: 'Thank you. We will check this note.' });
+  }
+});
+
+// ---------- My Notes editor: Folder, Tags, Pin and Exam Revision live on their own "Note details" screen (the fields keep their ids, so saving and loading are unchanged) ----------
+function hlNoteDetailsHas_(){
+  const f = document.getElementById('noteFolderSelect'), t = document.getElementById('noteTagsInput'), p = document.getElementById('notePinnedCheckbox'), d = document.getElementById('noteReviewDateInput');
+  return !!((f && f.value && f.value !== 'General') || (t && t.value.trim()) || (p && p.checked) || (d && d.value) || document.querySelector('#noteDetailsScreen .note-revision-btn.active'));
+}
+function hlNoteDetailsPaint_(){
+  const b = document.getElementById('noteDetailsBtn'), dot = document.getElementById('noteDetailsDot'); if(!b) return;
+  const has = hlNoteDetailsHas_(); if(dot) dot.style.display = has ? 'block' : 'none';
+  b.setAttribute('aria-label', 'Note details: folder, tags, pin and revision' + (has ? ' (some are set)' : ''));
+}
+safeOn('noteDetailsBtn', 'click', () => {
+  const t = document.getElementById('noteTitleInput'), nm = document.getElementById('noteDetailsNoteName');
+  if(nm) nm.textContent = (t && t.value.trim()) || 'Untitled note';
+  showScreen(noteDetailsScreen);
+});
+safeOn('noteDetailsDoneBtn', 'click', () => { const bl = document.querySelector('#noteDetailsScreen .back-link'); if(bl) bl.click(); });
+['change', 'input', 'click'].forEach(ev => noteDetailsScreen.addEventListener(ev, () => setTimeout(hlNoteDetailsPaint_, 0)));
+try{ new MutationObserver(hlNoteDetailsPaint_).observe(noteEditorScreen, { attributes: true, attributeFilter: ['class'] }); }catch(e){}
+try{
+  const src = document.getElementById('noteAutoSaveStatus'), dst = document.getElementById('noteDetailsSaveStatus');
+  if(src && dst) new MutationObserver(() => { dst.textContent = src.textContent; }).observe(src, { childList: true, characterData: true, subtree: true });
+}catch(e){}
 function getReaderSettings(){
   try{ return JSON.parse(localStorage.getItem('hl_reader_settings') || 'null') || { fontSize:17, lineSpacing:170, brightness:100, theme:'dark' }; }
   catch(e){ return { fontSize:17, lineSpacing:170, brightness:100, theme:'dark' }; }
@@ -20648,16 +20994,30 @@ async function renderHomePremiumBanner(){
   if(!window.getAccessStatus){ banner.textContent = ''; return; }
   const status = await window.getAccessStatus();
   banner.onclick = () => { premiumBackTarget = homeScreen; showScreen(upgradeScreen); renderPremiumStatus(); };
+  const todayIso = new Date().toISOString().slice(0, 10);   // the same day rule as the server
+  const dayDiff = (a, b) => Math.round((Date.parse(a + 'T00:00:00Z') - Date.parse(b + 'T00:00:00Z')) / 86400000);
 
   if(status.source === 'paid'){
-    banner.textContent = 'You are in Pro version';
-    banner.onclick = null; // already Premium — nothing to tap through to
+    const end = status.premiumEndDate ? String(status.premiumEndDate).slice(0, 10) : '';
+    const left = /^\d{4}-\d\d-\d\d$/.test(end) ? dayDiff(end, todayIso) : null;
+    if(left !== null && left >= 0 && left <= 7){   // Premium is about to end: say so, and a tap goes to the Premium screen
+      banner.textContent = left === 0 ? 'Your Premium ends today — tap to renew' : (left === 1 ? 'Your Premium ends tomorrow — tap to renew' : 'Your Premium ends in ' + left + ' days (' + end + ') — tap to renew');
+    } else {
+      banner.textContent = 'You are in Pro version';
+      banner.onclick = null; // already Premium — nothing to tap through to
+    }
   } else if(status.source === 'trial'){
     banner.textContent = `You are in ${status.trialHoursLeft}-hour trial period — unlock Premium to access all features`;
-  } else if(status.trialEnded){
-    banner.textContent = 'Your free trial has ended — unlock Premium to access all features';
   } else {
-    banner.textContent = 'Unlock Premium to access all features';
+    let lastEnd = ''; try{ lastEnd = window.hlLastPremiumEnd_ ? window.hlLastPremiumEnd_() : ''; }catch(e){}
+    const ago = /^\d{4}-\d\d-\d\d$/.test(lastEnd) ? dayDiff(todayIso, lastEnd) : null;
+    if(ago !== null && ago > 0 && ago <= 30){   // Premium ended in the last 30 days (this phone saw the end date)
+      banner.textContent = 'Your Premium ended on ' + lastEnd + ' — tap to renew';
+    } else if(status.trialEnded){
+      banner.textContent = 'Your free trial has ended — unlock Premium to access all features';
+    } else {
+      banner.textContent = 'Unlock Premium to access all features';
+    }
   }
 }
 
@@ -28028,9 +28388,10 @@ function hlSafeCssUrl_(u){
 // (and exactly which features are missing and what to do), newer than the app (fine), the wrong address, or not reachable. It changes nothing and sends nothing but that question.
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
-const HL_APP_VERSION_ = 'v562';
-const HL_EXPECTED_BACKEND_ = { version: 48, features: {
-  'content-login': 'Questions need a login', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
+const HL_APP_VERSION_ = 'v572';
+const HL_EXPECTED_BACKEND_ = { version: 51, features: {
+  'payment-extends': 'Premium renewals add days', 'site-people': 'Photo cards on the website Home (Site People)',
+  'content-login': 'Questions need a login', 'study-notes': 'Study Notes (written notes)', 'whoAmI': 'Owner recognition', 'admin-content': 'Manage this screen (Content Manager)', 'bulk-add': 'Add many questions at once',
   'khalti-cleanup': 'Khalti pending-payment cleanup', 'version': 'This version page', 'gk-edit': 'GK question editing', 'deck-removal': 'Remove a deck',
   'tab-allowlist': 'Safe list of readable tabs', 'second-paper': 'Second Paper', 'second-paper-questions': 'Second Paper questions', 'second-paper-pdf': 'Second Paper PDFs',
   'special-sets': 'Special Sets', 'admin-users': 'Users & Premium', 'esewa-once': 'eSewa one-time payment safety', 'daily-battle-server': 'Daily Battle made by the backend',
@@ -28855,7 +29216,7 @@ async function hlOpenAdminExams_(){
 //     boxes, scripts and styles are never touched, so the owner can never lock himself out.
 // (2) FEATURES ON/OFF: Admin view > Features on/off. About 35 switches (each a group of screens). A student who opens a switched-off feature is told it is off for now. Saved as the
 //     App Settings key features_off. The owner in Admin view is not blocked. Shared screens (quiz, results, document viewer, legal pages, login, Home, Profile, Upgrade) are never switched off. ==========================================================================================
-const HL_FEATURE_GROUPS_ = [{"key":"ai_chat","name":"AI Assistant and Answer Checker","screens":["aiChatScreen","answerCheckerScreen"]},{"key":"subject_mcq","name":"Subject MCQs","screens":["mcqPostScreen"]},{"key":"mock_test","name":"Mock Test","screens":["mockPostScreen"]},{"key":"past_questions","name":"Past Questions","screens":["pastQuestionsPostScreen","pastQuestionsYearScreen"]},{"key":"special_sets","name":"Special Sets","screens":["specialSetsScreen"]},{"key":"rapid_fire","name":"Rapid Fire","screens":["rapidFireScreen","rapidFireSetupScreen"]},{"key":"second_paper","name":"Second Paper","screens":["secondPaperScreen","secondPaperTopicScreen","secondPaperYearScreen"]},{"key":"battles","name":"Battles","screens":["battleScreen","quickBattleSearchScreen","battleLobbyScreen","battleLiveScreen","battleResultScreen","dailyBattleResultScreen"]},{"key":"tournaments","name":"Tournaments","screens":["tournamentPostScreen","tournamentScreen","monthlyTournamentScreen"]},{"key":"leaderboard","name":"Leaderboard","screens":["leaderboardScreen"]},{"key":"study_groups","name":"Study Groups","screens":["studyGroupsScreen","groupCreateScreen","groupPreviewScreen","groupDetailScreen","startDiscussionScreen","discussionThreadScreen"]},{"key":"flashcards","name":"Flashcards","screens":["flashcardsScreen","fcDeckDetailScreen","fcCardEditScreen","fcStudyScreen","fcProgressScreen","fcAiGenerateScreen","fcCommunityScreen"]},{"key":"notes","name":"My Notes","screens":["notesScreen","scanNoteScreen","pdfAnnotateScreen","handwrittenNoteScreen","noteEditorScreen","noteReaderScreen","noteTrashScreen"]},{"key":"revision","name":"Revision and Study Planner","screens":["revisionScreen","examRevisionScreen","sevenDayRevisionScreen","revisionCalendarScreen","revisionSubjectPickScreen","revisionTopicPickScreen","studyPlannerSetupScreen","studyPlannerScreen"]},{"key":"bookmarks","name":"Bookmarks","screens":["bookmarksScreen","myBookmarksHubScreen"]},{"key":"mistake_book","name":"Mistake Book","screens":["mistakeBookScreen"]},{"key":"mnemonics","name":"Mnemonics","screens":["mnemonicsScreen","mnemonicCreateScreen","mnemonicPracticeScreen","mnemonicDetailScreen"]},{"key":"formulas","name":"Formulas and Quick Reference","screens":["formulaScreen","quickRefScreen","quickRefDetailScreen"]},{"key":"health_guide","name":"Health Guide and CPR","screens":["healthGuideScreen","cprDemoScreen"]},{"key":"health_days","name":"Health Days","screens":["healthDaysScreen","healthDayCalendarScreen","healthDayDetailScreen"]},{"key":"dictionaries","name":"Dictionaries","screens":["dictionaryScreen","enNpDictionaryScreen"]},{"key":"health_calcs","name":"Health, Indicator, Epidemiology and Statistics calculators","screens":["bmiCalcScreen","healthCalcScreen","hcBmrScreen","hcIbwScreen","hcWhrScreen","hcWhtrScreen","hcBsaScreen","hcBfScreen","hcEddScreen","hcAgeScreen","hcChildGrowthScreen","indicatorCalcScreen","icImrScreen","icMmrScreen","icCfrScreen","icAttackScreen","icCbrScreen","icCdrScreen","icNmrScreen","icU5mrScreen","epiCalcScreen","epiScreeningScreen","epiIncidenceScreen","epiPrevalenceScreen","epiRiskOddsScreen","epiCfrScreen","epiVeScreen","epiSarScreen","epiParScreen","epiNnhScreen","statsCalcScreen","statsDescriptiveScreen","statsZScreen","statsSampleSizeScreen","statsCiScreen","statsChiScreen","statsRngScreen","statsTtestScreen","statsAnovaScreen","statsCorrScreen","statsAlphaScreen"]},{"key":"salary_calcs","name":"Salary, Tax and Pension calculators","screens":["taxCalcScreen","salaryCalcScreen","salaryComparisonScreen","realSalaryScreen","pensionScreen","basicCalcScreen"]},{"key":"study_timer","name":"Study Timer and Focus","screens":["studyTimerScreen","focusSessionScreen","studyToolsCalcScreen"]},{"key":"wellbeing","name":"Wellness and My Health tools","screens":["myHealthScreen","wellnessScreen","safetySignalScreen","everydayToolsScreen","immunizationScreen"]},{"key":"live_class","name":"Live Class","screens":["liveClassScreen"]},{"key":"news","name":"News Portal","screens":["newsPortalScreen"]},{"key":"web_portal","name":"Web Portal","screens":["webPortalScreen"]},{"key":"resources","name":"Resources, Videos and Inspiration","screens":["resourcesScreen","studyResourcesScreen","videoScreen","inspirationHubScreen","inspirationDetailScreen"]},{"key":"current_affairs","name":"Current Affairs and Documents","screens":["currentAffairsScreen","gkScreen","ainSangrahaScreen","samsamayikScreen","docListScreen"]},{"key":"syllabus","name":"Syllabus","screens":["syllabusScreen"]},{"key":"progress","name":"Progress and Achievements","screens":["progressScreen","subjectProgressScreen","subjectDetailScreen","questionPerformanceScreen","weakAreasScreen","achievementsScreen","achievementDetailScreen","learnHubProgressScreen","revisionProgressScreen","studyActivityScreen","progressGoalsScreen","progressHistoryScreen"]},{"key":"notifications_center","name":"Notifications and What's New","screens":["notificationsScreen","whatsNewScreen"]},{"key":"faqs","name":"FAQs","screens":["faqsScreen"]},{"key":"learn_hub","name":"Learn Hub","screens":["learnScreen"]}];
+const HL_FEATURE_GROUPS_ = [{"key":"study_notes","name":"Study Notes","screens":["studyNotesScreen","studyNoteReaderScreen"]},{"key":"ai_chat","name":"AI Assistant and Answer Checker","screens":["aiChatScreen","answerCheckerScreen"]},{"key":"subject_mcq","name":"Subject MCQs","screens":["mcqPostScreen"]},{"key":"mock_test","name":"Mock Test","screens":["mockPostScreen"]},{"key":"past_questions","name":"Past Questions","screens":["pastQuestionsPostScreen","pastQuestionsYearScreen"]},{"key":"special_sets","name":"Special Sets","screens":["specialSetsScreen"]},{"key":"rapid_fire","name":"Rapid Fire","screens":["rapidFireScreen","rapidFireSetupScreen"]},{"key":"second_paper","name":"Second Paper","screens":["secondPaperScreen","secondPaperTopicScreen","secondPaperYearScreen"]},{"key":"battles","name":"Battles","screens":["battleScreen","quickBattleSearchScreen","battleLobbyScreen","battleLiveScreen","battleResultScreen","dailyBattleResultScreen"]},{"key":"tournaments","name":"Tournaments","screens":["tournamentPostScreen","tournamentScreen","monthlyTournamentScreen"]},{"key":"leaderboard","name":"Leaderboard","screens":["leaderboardScreen"]},{"key":"study_groups","name":"Study Groups","screens":["studyGroupsScreen","groupCreateScreen","groupPreviewScreen","groupDetailScreen","startDiscussionScreen","discussionThreadScreen"]},{"key":"flashcards","name":"Flashcards","screens":["flashcardsScreen","fcDeckDetailScreen","fcCardEditScreen","fcStudyScreen","fcProgressScreen","fcAiGenerateScreen","fcCommunityScreen"]},{"key":"notes","name":"My Notes","screens":["notesScreen","scanNoteScreen","pdfAnnotateScreen","handwrittenNoteScreen","noteEditorScreen","noteDetailsScreen","noteReaderScreen","noteTrashScreen"]},{"key":"revision","name":"Revision and Study Planner","screens":["revisionScreen","examRevisionScreen","sevenDayRevisionScreen","revisionCalendarScreen","revisionSubjectPickScreen","revisionTopicPickScreen","studyPlannerSetupScreen","studyPlannerScreen"]},{"key":"bookmarks","name":"Bookmarks","screens":["bookmarksScreen","myBookmarksHubScreen"]},{"key":"mistake_book","name":"Mistake Book","screens":["mistakeBookScreen"]},{"key":"mnemonics","name":"Mnemonics","screens":["mnemonicsScreen","mnemonicCreateScreen","mnemonicPracticeScreen","mnemonicDetailScreen"]},{"key":"formulas","name":"Formulas and Quick Reference","screens":["formulaScreen","quickRefScreen","quickRefDetailScreen"]},{"key":"health_guide","name":"Health Guide and CPR","screens":["healthGuideScreen","cprDemoScreen"]},{"key":"health_days","name":"Health Days","screens":["healthDaysScreen","healthDayCalendarScreen","healthDayDetailScreen"]},{"key":"dictionaries","name":"Dictionaries","screens":["dictionaryScreen","enNpDictionaryScreen"]},{"key":"health_calcs","name":"Health, Indicator, Epidemiology and Statistics calculators","screens":["bmiCalcScreen","healthCalcScreen","hcBmrScreen","hcIbwScreen","hcWhrScreen","hcWhtrScreen","hcBsaScreen","hcBfScreen","hcEddScreen","hcAgeScreen","hcChildGrowthScreen","indicatorCalcScreen","icImrScreen","icMmrScreen","icCfrScreen","icAttackScreen","icCbrScreen","icCdrScreen","icNmrScreen","icU5mrScreen","epiCalcScreen","epiScreeningScreen","epiIncidenceScreen","epiPrevalenceScreen","epiRiskOddsScreen","epiCfrScreen","epiVeScreen","epiSarScreen","epiParScreen","epiNnhScreen","statsCalcScreen","statsDescriptiveScreen","statsZScreen","statsSampleSizeScreen","statsCiScreen","statsChiScreen","statsRngScreen","statsTtestScreen","statsAnovaScreen","statsCorrScreen","statsAlphaScreen"]},{"key":"salary_calcs","name":"Salary, Tax and Pension calculators","screens":["taxCalcScreen","salaryCalcScreen","salaryComparisonScreen","realSalaryScreen","pensionScreen","basicCalcScreen"]},{"key":"study_timer","name":"Study Timer and Focus","screens":["studyTimerScreen","focusSessionScreen","studyToolsCalcScreen"]},{"key":"wellbeing","name":"Wellness and My Health tools","screens":["myHealthScreen","wellnessScreen","safetySignalScreen","everydayToolsScreen","immunizationScreen"]},{"key":"live_class","name":"Live Class","screens":["liveClassScreen"]},{"key":"news","name":"News Portal","screens":["newsPortalScreen"]},{"key":"web_portal","name":"Web Portal","screens":["webPortalScreen"]},{"key":"resources","name":"Resources, Videos and Inspiration","screens":["resourcesScreen","studyResourcesScreen","videoScreen","inspirationHubScreen","inspirationDetailScreen"]},{"key":"current_affairs","name":"Current Affairs and Documents","screens":["currentAffairsScreen","gkScreen","ainSangrahaScreen","samsamayikScreen","docListScreen"]},{"key":"syllabus","name":"Syllabus","screens":["syllabusScreen"]},{"key":"progress","name":"Progress and Achievements","screens":["progressScreen","subjectProgressScreen","subjectDetailScreen","questionPerformanceScreen","weakAreasScreen","achievementsScreen","achievementDetailScreen","learnHubProgressScreen","revisionProgressScreen","studyActivityScreen","progressGoalsScreen","progressHistoryScreen"]},{"key":"notifications_center","name":"Notifications and What's New","screens":["notificationsScreen","whatsNewScreen"]},{"key":"faqs","name":"FAQs","screens":["faqsScreen"]},{"key":"learn_hub","name":"Learn Hub","screens":["learnScreen"]}];
 function hlFeaturesOffSet_(){
   let raw = '';
   if(hlAppSettings_) raw = hlSetting_('features_off', '');
@@ -29673,7 +30034,7 @@ function hlOpenAdminAddModal_(currentQ){
 // matches the Sheet format. All text here is shown with hlEsc / as plain text.
 // ==========================================================================================
 // Every tab the owner can edit (mirrors the backend list; "Past Questions List" is managed on the Past Questions screen). "App Settings" comes first.
-const HL_ALL_CONTENT_TABS_ = ["App Settings", "Exams", "App Texts", "Site News", "Site Links", "Site Documents", "Public Holidays", "Site Products", "Site Highlights", "Site FAQs", "Site Testimonials", "Site Company", "Inspiration Hub", "Health Guide", "Mnemonics", "Quick References", "Formulas", "Health Days", "FAQs", "Dictionary", "Dictionary PDFs", "English Nepali Dictionary", "Syllabus", "Resources", "Video Lessons", "Notifications", "Home Carousel", "Quotes", "Exam Dates", "Promotions", "App Updates", "New Updates", "Premium Features", "Pricing", "Live Class", "Immunization", "WebPortalLinks", "NewsPortalSources", "TaxSlabs", "TaxDeductionLimits", "SalaryScale", "SalaryAllowances", "PayrollRates", "Constitution Documents", "Guidelines", "Health Acts and Regulations", "Other Acts and Regulations", "Samsamayik Documents", "Second Paper Syllabus", "Second Paper Notes", "Second Paper PDFs", "Second Paper Questions", "Second Paper Section Notes", "Second Paper Solutions", "Special Sets", "Exam Settings"];
+const HL_ALL_CONTENT_TABS_ = ["App Settings", "Exams", "App Texts", "Site News", "Site Links", "Site Documents", "Public Holidays", "Site Products", "Site Highlights", "Site FAQs", "Site Testimonials", "Site Company", "Inspiration Hub", "Health Guide", "Mnemonics", "Quick References", "Formulas", "Health Days", "FAQs", "Dictionary", "Dictionary PDFs", "English Nepali Dictionary", "Syllabus", "Resources", "Video Lessons", "Notifications", "Home Carousel", "Quotes", "Exam Dates", "Promotions", "App Updates", "New Updates", "Premium Features", "Pricing", "Live Class", "Immunization", "WebPortalLinks", "NewsPortalSources", "TaxSlabs", "TaxDeductionLimits", "SalaryScale", "SalaryAllowances", "PayrollRates", "Constitution Documents", "Guidelines", "Health Acts and Regulations", "Other Acts and Regulations", "Samsamayik Documents", "Study Notes", "Second Paper Syllabus", "Second Paper Notes", "Second Paper PDFs", "Second Paper Questions", "Second Paper Section Notes", "Second Paper Solutions", "Special Sets", "Exam Settings", "Site People"];
 function hlAdminScreenTabs_(screenId){
   if(screenId === '__cmall') return HL_ALL_CONTENT_TABS_.slice();
   if(screenId === 'legalInfoScreen'){
@@ -29682,7 +30043,7 @@ function hlAdminScreenTabs_(screenId){
   }
   const map = {
     inspirationHubScreen: ['Inspiration Hub'], healthGuideScreen: ['Health Guide'], mnemonicsScreen: ['Mnemonics'],
-    quickRefScreen: ['Quick References'], formulaScreen: ['Formulas'], healthDaysScreen: ['Health Days'], faqsScreen: ['FAQs'],
+    studyNotesScreen: ['Study Notes'], studyNoteReaderScreen: ['Study Notes'], quickRefScreen: ['Quick References'], formulaScreen: ['Formulas'], healthDaysScreen: ['Health Days'], faqsScreen: ['FAQs'],
     dictionaryScreen: ['Dictionary', 'Dictionary PDFs'], enNpDictionaryScreen: ['English Nepali Dictionary'],
     syllabusScreen: ['Syllabus'], resourcesScreen: ['Resources'], videoScreen: ['Video Lessons'],
     notificationsScreen: ['Notifications'], homeScreen: ['Home Carousel', 'Quotes', 'Exam Dates', 'Promotions'],
