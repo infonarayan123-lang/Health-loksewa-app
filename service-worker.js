@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pho-loksewa-v581';
+const CACHE_NAME = 'pho-loksewa-v592';
 const FILES_TO_CACHE = [
   './index.html',
   './manifest.json',
@@ -60,7 +60,7 @@ self.addEventListener('notificationclick', (event) => {
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
+    caches.open(CACHE_NAME).then((cache) => Promise.all(FILES_TO_CACHE.map((f) => cache.add(f).catch(() => null))))   // Nov 2026: a file that cannot be saved no longer stops the others
   );
   self.skipWaiting();
 });
