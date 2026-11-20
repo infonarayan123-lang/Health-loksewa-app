@@ -27853,7 +27853,7 @@ function openRapidFireSetup(modeKey){
   rapidFireSelectedMode = modeKey;
   rapidFireSelectedMinutes = 10;
 
-  document.getElementById('rapidFireSetupTitle').textContent = `${mode.icon} ${mode.label}`;
+  document.getElementById('rapidFireSetupTitle').innerHTML = `${mode.icon} ${mode.label}`;
   document.getElementById('rapidFireSetupDesc').textContent = mode.desc;
 
   const needsSubject = (modeKey === 'concept' || modeKey === 'topic');
@@ -29105,7 +29105,7 @@ function hlSafeCssUrl_(u){
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
 try{ if(document.fonts && document.fonts.load){ document.fonts.load('400 16px Tinos'); document.fonts.load('700 16px Tinos'); document.fonts.load('400 16px "Noto Serif Devanagari"', '\u0905'); document.fonts.load('700 16px "Noto Serif Devanagari"', '\u0905'); } }catch(e){}   // the pictures (canvas) need the fonts ready
-const HL_APP_VERSION_ = 'v592';
+const HL_APP_VERSION_ = 'v593';
 const HL_EXPECTED_BACKEND_ = { version: 57, features: {
   'client-error-log': "Error log from students' phones", 'usage-numbers': 'Usage numbers (anonymous)',
   'my-payments': 'My payments',
