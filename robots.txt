@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://infonarayan123-lang.github.io/Health-Loksewa-Hub-lang.github.io/sitemap.xml
