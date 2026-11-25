@@ -37,7 +37,7 @@
     x.font = '800 ' + (56 * s) + 'px ' + FONT; L.ql = wrap(x, q.q, IN); L.qY = y; y += L.ql.length * 56 * s * 1.28 + 34 * s;
     x.font = '600 ' + (40 * s) + 'px ' + FONT; L.opts = [];
     ['A', 'B', 'C', 'D'].forEach(function(l, i){
-      if(!q.opts[i]) return;
+      if(!q.opts || !q.opts[i]) return;
       var lines = wrap(x, q.opts[i], IN - 150 * s), h = Math.max(92 * s, lines.length * 40 * s * 1.28 + 40 * s);
       L.opts.push({ l: l, lines: lines, y: y, h: h }); y += h + 18 * s;
     });
