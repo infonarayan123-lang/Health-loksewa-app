@@ -2169,6 +2169,22 @@ button,input,select,textarea{font-family:var(--hl-font)}
     .screen.active .content-card:nth-child(5){ animation-delay:.2s; } .screen.active .content-card:nth-child(n+6){ animation-delay:.25s; }
   }
 
+  /* ---------- Nov 2026 (v603): deeper polish. Styling only: no text, size or position of any control changes. Motion off when the phone asks for reduced motion. ---------- */
+  .profile-hero{ background-image:radial-gradient(230px 170px at 92% 0%, rgba(139,92,246,.36), transparent 70%), radial-gradient(210px 170px at 4% 100%, rgba(255,213,74,.20), transparent 70%), linear-gradient(160deg, #0B1426 0%, #0D9488 100%); }
+  .section-title{ position:relative; }
+  .section-title::after{ content:""; position:absolute; left:0; bottom:-6px; width:38px; height:3px; border-radius:3px; background:linear-gradient(90deg, #14B8A6, #8B5CF6, #F43F5E); pointer-events:none; }
+  .start-btn:not(:disabled){ box-shadow:0 8px 22px -6px rgba(20,163,168,.60); }
+  .bottom-nav-item{ position:relative; }
+  .bottom-nav-item.active::before{ content:""; position:absolute; top:-9px; left:50%; width:26px; height:3px; margin-left:-13px; border-radius:3px; background:linear-gradient(90deg, #14B8A6, #8B5CF6); box-shadow:0 0 10px rgba(20,184,166,.8); pointer-events:none; }
+  .dash-card{ transition:transform .12s ease; } .dash-card:active{ transform:scale(.98); }
+  @media (prefers-reduced-motion: no-preference){
+    .quote-banner{ background-size:auto, auto, 170% 170%; animation:hlQuoteDrift 10s ease-in-out infinite alternate; }
+    .bottom-nav-item.active::before{ animation:hlNavMark .3s ease-out backwards; }
+    .profile-hero{ background-size:auto, auto, 100% 100%; }
+  }
+  @keyframes hlQuoteDrift{ from{ background-position:0 0, 0 0, 0% 40%; } to{ background-position:0 0, 0 0, 100% 60%; } }
+  @keyframes hlNavMark{ from{ transform:scaleX(.2); opacity:0; } to{ transform:none; opacity:1; } }
+
   /* ---------- Results Screen ---------- */
 
   /* Nov 2026: celebration banner on the results screen (only for real achievements). Motion only when the phone does not ask for reduced motion. */
@@ -6632,7 +6648,7 @@ a#forgotPasswordLink, a#loginToggleLink, a#editNameLink, a#homeViewFullProgressL
         <button class="hw-color-btn" data-color="#1976d2" style="background:#1976d2;"></button>
         <button class="hw-color-btn" data-color="#388e3c" style="background:#388e3c;"></button>
         <span style="font-size:11px; color:var(--ink-soft); margin-left:10px;">Width:</span>
-        <input type="range" id="hwWidthSlider" min="2" max="20" value="4" style="flex:1;">
+        <input type="range" id="hwWidthSlider" min="2" max="20" value="4" style="flex:1; min-width:0;">
       </div>
     </div>
   </div>
@@ -29247,7 +29263,7 @@ function hlSafeCssUrl_(u){
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
 try{ if(document.fonts && document.fonts.load){ document.fonts.load('400 16px Tinos'); document.fonts.load('700 16px Tinos'); document.fonts.load('400 16px "Noto Serif Devanagari"', '\u0905'); document.fonts.load('700 16px "Noto Serif Devanagari"', '\u0905'); } }catch(e){}   // the pictures (canvas) need the fonts ready
-const HL_APP_VERSION_ = 'v601';
+const HL_APP_VERSION_ = 'v603';
 const HL_EXPECTED_BACKEND_ = { version: 57, features: {
   'client-error-log': "Error log from students' phones", 'usage-numbers': 'Usage numbers (anonymous)',
   'my-payments': 'My payments',
