@@ -2213,6 +2213,22 @@ button,input,select,textarea{font-family:var(--hl-font)}
   .screen{ background-image:radial-gradient(280px 240px at 100% 0%, rgba(139,92,246,.26), transparent 70%), radial-gradient(260px 240px at 0% 100%, rgba(20,184,166,.22), transparent 70%), radial-gradient(200px 200px at 0% 45%, rgba(244,63,94,.10), transparent 70%), radial-gradient(circle at 1px 1px, rgba(148,163,184,.10) 1px, transparent 1.4px); background-size:auto, auto, auto, 26px 26px; background-repeat:no-repeat, no-repeat, no-repeat, repeat; }
   body.light-mode .screen{ background-image:radial-gradient(280px 240px at 100% 0%, rgba(139,92,246,.14), transparent 70%), radial-gradient(260px 240px at 0% 100%, rgba(20,184,166,.14), transparent 70%), radial-gradient(200px 200px at 0% 45%, rgba(244,63,94,.07), transparent 70%), radial-gradient(circle at 1px 1px, rgba(15,23,42,.06) 1px, transparent 1.4px); }
 
+  /* ---------- Nov 2026 (v606): last finishing touches. Styling only. ---------- */
+  html{ -webkit-tap-highlight-color:rgba(20,184,166,.18); }
+  ::selection{ background:rgba(20,184,166,.35); }
+  .score-card{ background-image:radial-gradient(260px 180px at 100% 0%, rgba(139,92,246,.40), transparent 70%), radial-gradient(240px 180px at 0% 100%, rgba(255,213,74,.16), transparent 70%); box-shadow:0 14px 30px -14px rgba(20,184,166,.55); }
+  @media (prefers-reduced-motion: no-preference){
+    .score-card .score-big{ animation:hlScorePop .6s cubic-bezier(.3,1.4,.5,1) .1s backwards; }
+  }
+  @keyframes hlScorePop{ from{ transform:scale(.6); opacity:0; } to{ transform:none; opacity:1; } }
+
+  /* ---------- Nov 2026 (v607): finished-looking empty lists (no notes, no bookmarks, no mistakes, no decks, no cards). Text is unchanged. ---------- */
+  .hl-empty{ position:relative; text-align:center !important; padding:74px 18px 22px !important; margin:10px 0; line-height:1.55; border:1px dashed var(--line); border-radius:16px; background:linear-gradient(180deg, rgba(20,184,166,.07), transparent 70%); }
+  .hl-empty::before{ content:""; position:absolute; left:50%; top:20px; width:42px; height:42px; margin-left:-21px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #5EEAD4, #14B8A6 45%, #8B5CF6 100%); box-shadow:0 0 0 7px rgba(20,184,166,.14), 0 10px 22px -8px rgba(139,92,246,.7); }
+  .hl-empty::after{ content:""; position:absolute; left:50%; top:33px; width:16px; height:16px; margin-left:-8px; border-radius:50%; background:rgba(255,255,255,.85); opacity:.9; }
+  @media (prefers-reduced-motion: no-preference){ .hl-empty::before{ animation:hlEmptyPulse 3s ease-in-out infinite; } }
+  @keyframes hlEmptyPulse{ 0%,100%{ box-shadow:0 0 0 7px rgba(20,184,166,.14), 0 10px 22px -8px rgba(139,92,246,.7); } 50%{ box-shadow:0 0 0 12px rgba(20,184,166,.06), 0 10px 22px -8px rgba(139,92,246,.7); } }
+
   /* ---------- Results Screen ---------- */
 
   /* Nov 2026: celebration banner on the results screen (only for real achievements). Motion only when the phone does not ask for reduced motion. */
@@ -17136,7 +17152,7 @@ function renderMistakeBook(){
 
   const practiceAllBtn = document.getElementById('practiceAllMistakesBtn');
   if(list.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No mistakes tracked yet — questions you get wrong during practice will show up here automatically.</p>`;
+    wrap.innerHTML = `<p class="hl-empty" style="color:var(--ink-soft); font-size:13.5px;">No mistakes tracked yet — questions you get wrong during practice will show up here automatically.</p>`;
     practiceBtn.style.display = 'none';
     if(practiceAllBtn) practiceAllBtn.style.display = 'none';
     document.getElementById('mistakeProgressCard').innerHTML = '';
@@ -17547,7 +17563,7 @@ function renderNotes(){
 
   const wrap = document.getElementById('notesListContent');
   if(unpinned.length === 0 && pinned.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px; text-align:center; padding:20px 0;">${notesSearchQuery ? 'No notes match your search.' : 'No notes yet — tap ＋ to write your first one.'}</p>`;
+    wrap.innerHTML = `<p class="hl-empty" style="color:var(--ink-soft); font-size:13.5px; text-align:center; padding:20px 0;">${notesSearchQuery ? 'No notes match your search.' : 'No notes yet — tap ＋ to write your first one.'}</p>`;
     return;
   }
   wrap.innerHTML = notesViewMode === 'grid'
@@ -21363,7 +21379,7 @@ function renderMbhList(searchTerm){
 
   const wrap = document.getElementById('mbhListContent');
   if(list.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">No bookmarks here yet.</p>`;
+    wrap.innerHTML = `<p class="hl-empty" style="color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0;">No bookmarks here yet.</p>`;
     return;
   }
   const collections = getBookmarkCollections();
@@ -21423,7 +21439,7 @@ function renderBookmarks(){
   const list = getBookmarks();
 
   if(list.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13.5px;">No bookmarks yet — tap the ☆ star on any question during practice to save it here.</p>`;
+    wrap.innerHTML = `<p class="hl-empty" style="color:var(--ink-soft); font-size:13.5px;">No bookmarks yet — tap the ☆ star on any question during practice to save it here.</p>`;
     return;
   }
 
@@ -26849,7 +26865,7 @@ function renderFlashcardsHome(){
 
   const wrap = document.getElementById('fcDeckList');
   if(decks.length === 0){
-    wrap.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No decks yet.</p>`;
+    wrap.innerHTML = `<p class="hl-empty" style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No decks yet.</p>`;
     return;
   }
   wrap.innerHTML = decks.map(deck => {
@@ -26965,7 +26981,7 @@ function openFcDeckDetail(deckId){
   document.getElementById('fcDeckDetailStats').textContent = `${cards.length} cards · ${due} due · ${masteryPct}% mastery`;
   const listEl = document.getElementById('fcDeckCardList');
   if(cards.length === 0){
-    listEl.innerHTML = `<p style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No cards in this deck yet.</p>`;
+    listEl.innerHTML = `<p class="hl-empty" style="color:var(--ink-soft); font-size:13px; text-align:center; padding:16px 0;">No cards in this deck yet.</p>`;
   } else {
     const statusDot = { new:'var(--wrong)', learning:'var(--gold)', familiar:'#1976d2', mastered:'var(--correct)' };
     listEl.innerHTML = cards.map(c => `
@@ -29291,7 +29307,7 @@ function hlSafeCssUrl_(u){
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
 try{ if(document.fonts && document.fonts.load){ document.fonts.load('400 16px Tinos'); document.fonts.load('700 16px Tinos'); document.fonts.load('400 16px "Noto Serif Devanagari"', '\u0905'); document.fonts.load('700 16px "Noto Serif Devanagari"', '\u0905'); } }catch(e){}   // the pictures (canvas) need the fonts ready
-const HL_APP_VERSION_ = 'v605';
+const HL_APP_VERSION_ = 'v607';
 const HL_EXPECTED_BACKEND_ = { version: 57, features: {
   'client-error-log': "Error log from students' phones", 'usage-numbers': 'Usage numbers (anonymous)',
   'my-payments': 'My payments',
