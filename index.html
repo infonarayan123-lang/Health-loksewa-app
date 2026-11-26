@@ -2196,6 +2196,23 @@ button,input,select,textarea{font-family:var(--hl-font)}
     .screen.active .dash-grid > *:nth-child(8){ animation-delay:.28s; } .screen.active .dash-grid > *:nth-child(n+9){ animation-delay:.32s; }
   }
 
+  /* ---------- Nov 2026 (v605): vibrant colours like the website. Cards and tiles cycle teal, violet, amber, rose, sky, green (their text stays white). Stronger glows behind screens. Styling only. ---------- */
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(6n+1){ --accent:#14B8A6; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(6n+2){ --accent:#8B5CF6; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(6n+3){ --accent:#F59E0B; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(6n+4){ --accent:#F43F5E; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(6n+5){ --accent:#38BDF8; }
+  .dash-grid > .dash-card:not(.qotd-card):nth-child(6n){ --accent:#22C55E; }
+  .dash-grid > .dash-card:not(.qotd-card){ --hl-acc:var(--accent, #14B8A6); }
+  .tool-tile:nth-child(6n+1){ --accent:#14B8A6; }
+  .tool-tile:nth-child(6n+2){ --accent:#8B5CF6; }
+  .tool-tile:nth-child(6n+3){ --accent:#F59E0B; }
+  .tool-tile:nth-child(6n+4){ --accent:#F43F5E; }
+  .tool-tile:nth-child(6n+5){ --accent:#38BDF8; }
+  .tool-tile:nth-child(6n){ --accent:#22C55E; }
+  .screen{ background-image:radial-gradient(280px 240px at 100% 0%, rgba(139,92,246,.26), transparent 70%), radial-gradient(260px 240px at 0% 100%, rgba(20,184,166,.22), transparent 70%), radial-gradient(200px 200px at 0% 45%, rgba(244,63,94,.10), transparent 70%), radial-gradient(circle at 1px 1px, rgba(148,163,184,.10) 1px, transparent 1.4px); background-size:auto, auto, auto, 26px 26px; background-repeat:no-repeat, no-repeat, no-repeat, repeat; }
+  body.light-mode .screen{ background-image:radial-gradient(280px 240px at 100% 0%, rgba(139,92,246,.14), transparent 70%), radial-gradient(260px 240px at 0% 100%, rgba(20,184,166,.14), transparent 70%), radial-gradient(200px 200px at 0% 45%, rgba(244,63,94,.07), transparent 70%), radial-gradient(circle at 1px 1px, rgba(15,23,42,.06) 1px, transparent 1.4px); }
+
   /* ---------- Results Screen ---------- */
 
   /* Nov 2026: celebration banner on the results screen (only for real achievements). Motion only when the phone does not ask for reduced motion. */
@@ -29274,7 +29291,7 @@ function hlSafeCssUrl_(u){
 // When the app starts needing a newer backend feature, add it to HL_EXPECTED_BACKEND_ here.
 // ==========================================================================================
 try{ if(document.fonts && document.fonts.load){ document.fonts.load('400 16px Tinos'); document.fonts.load('700 16px Tinos'); document.fonts.load('400 16px "Noto Serif Devanagari"', '\u0905'); document.fonts.load('700 16px "Noto Serif Devanagari"', '\u0905'); } }catch(e){}   // the pictures (canvas) need the fonts ready
-const HL_APP_VERSION_ = 'v604';
+const HL_APP_VERSION_ = 'v605';
 const HL_EXPECTED_BACKEND_ = { version: 57, features: {
   'client-error-log': "Error log from students' phones", 'usage-numbers': 'Usage numbers (anonymous)',
   'my-payments': 'My payments',
